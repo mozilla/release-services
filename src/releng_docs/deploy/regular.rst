@@ -5,9 +5,9 @@ Regular deployment
 
 Regular production deployment of all projects happens once every two weeks.
 
-.. _deploy-managers:
+.. _deploy-coordinator:
 
-Administrators that perform this regular release are:
+Deployment coordinators are:
 
 - `Rok Garbas`_
 - `Bastien Abadie`_
@@ -15,8 +15,15 @@ Administrators that perform this regular release are:
 - `Jan Keromnes`_
 
 Release schedule is published in `Release Services calendar`_.
-Protocol we follow is:
 
+.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
+.. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
+.. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
+.. _`Jan Keromnes`: https://phonebook.mozilla.org/?search/Jan%20Keromnes
+.. _`Release Services calendar`: https://calendar.google.com/calendar/embed?src=mozilla.com_sq62ki4vs3cgpclvkdbhe3rgic%40group.calendar.google.com
+
+
+Protocol we follow is:
 
 1. Push to staging channel
 --------------------------
@@ -34,7 +41,52 @@ To trigger automatic deployment to staging channel you need to **force push** fr
     git push -f origin origin/master:staging
 
 
-2. Notify about running staging deployment
+2. Close staging branch
+-----------------------
+
+Now you need to close staging branch by checking **Protect this branch** via
+`staging settings page`_.
+
+.. image:: staging_settings_page.png
+
+.. _`staging settings page`: https://github.com/mozilla/release-services/settings/branches/staging
+
+
+3. Create version bump Pull Request
+-----------------------------------
+
+In a branch we create new Pull Request which will bump the version.
+
+.. code-block:: console
+
+    git clone git@github.com:mozilla/release-services.git
+    cd release-services
+    git checkout -b version-bump origin/staging
+    echo "$((($(cat VERSION)) + 1))" | tee VERSION2
+    sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
+    mv VERSION2 VERSION
+    git commit VERSION .taskcluster.yml -m "bumping version to v$(cat ./VERSION)"
+
+Then push create a PR from ``version-bump`` branch.
+
+This PR will also be used to collect QA for projects on staging and production.
+
+The title of PR should be:::
+
+    Deploying v<VERSION>
+
+For this adjust the description of PR to:::
+
+    This Pull Request contains the version bump and should be merged once
+    deployment is successful.
+
+    Deployment coordinator for this release is: @<YOUR_GITHUB_HANDLE>
+
+    Deployment to staging: `<LINK_TO_TASKCLUSTER>'.
+    Deployment to production: `<LINK_TO_TASKCLUSTER>'.
+   
+
+4. Notify about running staging deployment
 ------------------------------------------
 
 Once pushed to staging branch a deployment will start via taskcluster github
@@ -46,18 +98,11 @@ integration. You can find a link to taskcluster deployment group at the
 To make everybody aware that this is happening announce staging deployment on
 `#release-services` IRC channel.::
 
-    I'm pushed commit `<SHORT_SHA_OF_COMMIT>' to staging branch. Until
-    tomorrow, when we deploy to production, staging branch is closed.
-    Deployment to staging is happening here: `<LINK_TO_TASKCLUSTER>'.
+    I've pushed to staging branch. Until tomorrow, when we deploy to
+    production, staging branch is closed. You can follow the progress
+    at <LINK_TO_PR>.
 
-
-3. Close staging branch
------------------------
-
-Now you need to close staging branch by checking **Protect this branch** via
-`staging settings page`_.
-
-.. image:: staging_settings_page.png
+.. _`page listing commits of staging branch`: https://github.com/mozilla/release-services/commits/staging
 
 
 4. Testing projects on staging channel
@@ -132,6 +177,7 @@ TODO: release is in flight + link to taskcluster
    .. todo:: need to explain how to revert when a deployment goes bad.
 
 TODO: we can already do this while waiting for the release to happen
+
 #. Fill in the release notes on GitHub
 
    `New GitHub Release`_
@@ -144,6 +190,9 @@ TODO: we can already do this while waiting for the release to happen
            | cut -d' ' -f2- \
            | sort \
            | grep -v 'setup: bumping to'
+
+.. _`New GitHub Release`: https://github.com/mozilla/release-services/releases/new
+
 
 #. Bump version, but **DO NOT** push upstream
 
@@ -173,6 +222,9 @@ TODO: we can already do this while waiting for the release to happen
    .. code-block:: console
 
        docker push mozillareleng/services:base-$(cat ./VERSION)
+
+.. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
+.. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction
 
 #. Once base image is pushed to docker hub, commit the version bump and push it
    to upstream repository.
@@ -204,15 +256,3 @@ TODO: we can already do this while waiting for the release to happen
          nickname: Previously annonced release of mozilla/release-services
          (*.mozilla-releng.net, *.moz.tools) to productions is now complete.
          Changes -> <link-to-release-notes>.
-
-
-.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
-.. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
-.. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
-.. _`Jan Keromnes`: https://phonebook.mozilla.org/?search/Jan%20Keromnes
-.. _`New GitHub Release`: https://github.com/mozilla/release-services/releases/new
-.. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
-.. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction
-.. _`Release Services calendar`: https://calendar.google.com/calendar/embed?src=mozilla.com_sq62ki4vs3cgpclvkdbhe3rgic%40group.calendar.google.com
-.. _`page listing commits of staging branch`: https://github.com/mozilla/release-services/commits/staging
-.. _`staging settings page`: https://github.com/mozilla/release-services/settings/branches/staging
