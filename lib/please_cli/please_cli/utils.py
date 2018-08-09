@@ -188,3 +188,6 @@ def docker_image_id(image):
     image_sha256 = hashlib.sha256(config.read()).hexdigest()
     return 'sha256:{}'.format(image_sha256)
 
+
+def normalize_name(x):
+    x.replace('/', '_').replace('-', '_')

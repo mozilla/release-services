@@ -10,6 +10,7 @@ import cli_common.cli
 import cli_common.log
 import click
 import please_cli.config
+import please_cli.utils
 
 log = cli_common.log.get_logger(__name__)
 
@@ -136,7 +137,7 @@ def cmd(project, zsh, quiet, command, nix_shell,
         envs['TASKCLUSTER_ACCESS_TOKEN'] = taskcluster_access_token
 
     for require in project_config.get('requires', []):
-        env_name = '{}_URL'.format(require.replace('/', '_').replace('-', '_').upper())
+        env_name = '{}_URL'.format(please_cli.utils.normalize_name(require).upper())
         env_value = '{}://{}:{}'.format(
             please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('schema', 'https'),
             please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('host', envs['HOST']),
@@ -145,14 +146,13 @@ def cmd(project, zsh, quiet, command, nix_shell,
         envs[env_name] = env_value
 
     for env_name, env_value in run_options.get('envs', {}).items():
-        env_name = env_name.replace('/', '_').replace('-', '_').upper()
+        env_name = please_cli.utils.normalize_name(env_name).upper()
         envs[env_name] = env_value
 
-    if len(envs) > 0:
-        click.echo(' => Setting environment variables:')
-        for env_name, env_value in envs.items():
-            click.echo(f'    - {env_name}="{env_value}"')
-            os.environ[env_name] = env_value
+    click.echo(' => Setting environment variables:')
+    for env_name, env_value in envs.items():
+        click.echo(f'    - {env_name}="{env_value}"')
+        os.environ[env_name] = env_value
 
     if command:
         handle_stream_line = None

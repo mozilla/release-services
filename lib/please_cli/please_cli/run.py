@@ -163,7 +163,7 @@ def cmd(ctx, project, quiet, nix_shell,
     elif run_type == 'FLASK':
 
         for env_name, env_value in run_options.get('envs', {}).items():
-            env_name = env_name.replace('-', '_').upper()
+            env_name = please_cli.utils.normalize_name(env_name).upper()
             os.environ[env_name] = env_value
 
         if not os.path.exists(ca_cert_file) or \
@@ -186,7 +186,7 @@ def cmd(ctx, project, quiet, nix_shell,
 
         command = [
             'gunicorn',
-            project_name.replace('/', '_') + '.flask:app',
+            please_cli.utils.normalize_name(project_name) + '.flask:app',
             '--bind', '{}:{}'.format(host, port),
             '--ca-certs={}'.format(ca_cert_file),
             '--certfile={}'.format(server_cert_file),
@@ -225,12 +225,12 @@ def cmd(ctx, project, quiet, nix_shell,
         os.environ['PORT'] = port
 
         for env_name, env_value in run_options.get('envs', {}).items():
-            env_name = 'WEBPACK_' + env_name.replace('-', '_').upper()
+            env_name = 'WEBPACK_' + please_cli.utils.normalize_name(env_name).upper()
             os.environ[env_name] = env_value
 
         # XXX: once we move please_cli.config.PROJECTS to nix we wont need this
         for require in project_config.get('requires', []):
-            env_name = 'WEBPACK_{}_URL'.format(require.replace('-', '_').upper())
+            env_name = 'WEBPACK_{}_URL'.format(please_cli.utils.normalize_name(require).upper())
             env_value = '{}://{}:{}'.format(
                 please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('schema', 'https'),
                 please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('host', host),
@@ -265,7 +265,7 @@ def cmd(ctx, project, quiet, nix_shell,
         )
 
         for require in project_config.get('requires', []):
-            env_name = '{}_URL'.format(require.replace('/', '_').replace('-', '_').upper())
+            env_name = '{}_URL'.format(please_cli.utils.normalize_name(require).upper())
             env_value = '{}://{}:{}'.format(
                 please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('schema', 'https'),
                 please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('host', host),
@@ -274,12 +274,11 @@ def cmd(ctx, project, quiet, nix_shell,
             envs[env_name] = env_value
 
         for env_name, env_value in run_options.get('envs', {}).items():
-            env_name = env_name.replace('/', '_').replace('-', '_').upper()
+            env_name = please_cli.utils.normalize_name(env_name).upper()
             envs[env_name] = env_value
 
-        if len(envs) > 0:
-            for env_name, env_value in envs.items():
-                os.environ[env_name] = env_value
+        for env_name, env_value in envs.items():
+            os.environ[env_name] = env_value
 
         command = ['yarn', 'start']
 

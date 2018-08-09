@@ -25,7 +25,7 @@ const load = () => {
 };
 
 // When SENTRY_DSN is configured send logs to Sentry
-if (SENTRY_DSN != null) {
+if (SENTRY_DSN !== null) {
   raven
     .config(
       SENTRY_DSN,
