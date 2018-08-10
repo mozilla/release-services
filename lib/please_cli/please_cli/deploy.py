@@ -622,8 +622,8 @@ def cmd_DOCKERHUB(ctx,
         # Puth the hash to the end of the tag
         image_tag_versioned = '-'.join(reversed(tag_base.split('-', 1)))
         # Stable tag, e.g. shipit-api-staging
-        image_tag = docker_image_tag_format.format(project=project,
-                                                   nix_path_attribute=nix_path_attribute,
+        image_tag = docker_image_tag_format.format(project=project.replace('/', '-'),
+                                                   nix_path_attribute=nix_path_attribute.replace('/', '-'),
                                                    channel=channel)
         for tag in (image_tag_versioned, image_tag):
             click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, tag), nl=False)
