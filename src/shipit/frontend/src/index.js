@@ -1,25 +1,40 @@
+/* TODO: explain what this file is about
+ *
+ */
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'font-awesome/css/font-awesome.min.css';
-
 import React from 'react';
 import raven from 'raven-js';
 import { render } from 'react-dom';
-import App from './App';
-import {
-  BACKEND_URL,
-  RELEASE_CHANNEL,
-  RELEASE_VERSION,
-  SENTRY_DSN,
-} from './config';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
 
+import App from './app';
+import { SENTRY_DSN } from './config';
+
+// import actions from './actions';
+const initialState = {};
+function reducer(state = initialState, action) {
+  switch (action.type) {
+    default:
+      return state;
+  }
+}
+
+
+const store = createStore(
+  reducer,
+  initialState,
+  /* eslint-disable no-underscore-dangle */
+  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
+  /* eslint-enable */
+);
 const root = document.getElementById('root');
+
 const load = () => {
   render(
-    <App
-      backend_url={BACKEND_URL}
-      release_version={RELEASE_VERSION}
-      release_channel={RELEASE_CHANNEL}
-    />,
+    <Provider store={store}>
+      <App />
+    </Provider>,
     root,
   );
 };
@@ -31,8 +46,8 @@ if (SENTRY_DSN !== null) {
       SENTRY_DSN,
       {
         debug: true,
-        release: RELEASE_VERSION,
-        environment: RELEASE_CHANNEL,
+        // release: RELEASE_VERSION,
+        // environment: RELEASE_CHANNEL,
         tags: {
           server_name: 'mozilla/release-services',
           site: 'shipit/frontend',

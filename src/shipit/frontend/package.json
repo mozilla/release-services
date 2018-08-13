@@ -6,6 +6,15 @@
   "author": "Rail Aliiev <rail@mozilla.com>",
   "license": "MPL-2.0",
   "devDependencies": {
+    "@neutrinojs/airbnb": "^8.3.0",
+    "@neutrinojs/env": "^8.3.0",
+    "@neutrinojs/hot": "^8.3.0",
+    "@neutrinojs/jest": "^8.3.0",
+    "@neutrinojs/react": "^8.3.0",
+    "enzyme": "^3.4.1",
+    "neutrino": "^8.3.0",
+    "react-addons-test-utils": "^15.6.2",
+    "react-hot-loader": "^4.3.4"
   },
   "scripts": {
     "build": "neutrino build",
@@ -14,5 +23,14 @@
     "test": "neutrino test"
   },
   "dependencies": {
+    "bootstrap": "^4.1.3",
+    "raven-js": "^3.26.4",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-redux": "^5.0.7",
+    "react-router-dom": "^4.3.1",
+    "reactstrap": "^6.3.1",
+    "redux": "^4.0.0",
+    "redux-saga": "^0.16.0"
   }
 }

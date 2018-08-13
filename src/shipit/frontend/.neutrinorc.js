@@ -32,6 +32,8 @@ const HTTPS = process.env.HTTPS_DISABLED ? false :
 
 module.exports = {
   use: [
+    '@neutrinojs/jest',
+    '@neutrinojs/hot',
     [
       '@neutrinojs/airbnb',
       {eslint: {
