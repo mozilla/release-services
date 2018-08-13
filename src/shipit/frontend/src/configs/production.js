@@ -1,5 +1,5 @@
 module.exports = {
-  API_URL: process.env.SHIPIT_WORKFLOW_URL || 'https://shipit-workflow.mozilla-releng.net',
+  API_URL: process.env.SHIPIT_API_URL || 'https://api.shipit.mozilla-releng.net',
   TREEHERDER_URL: 'https://treeherder.mozilla.org',
   TASKCLUSTER_TOOLS_URL: 'https://tools.taskcluster.net',
   AUTH0: {

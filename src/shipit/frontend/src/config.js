@@ -13,7 +13,7 @@ const getConfigFromBody = (name, _default) => {
   return url;
 };
 
-export const BACKEND_URL = getConfigFromBody('shipit-workflow-url', process.env.SHIPIT_WORKFLOW_URL);
+export const BACKEND_URL = getConfigFromBody('shipit-api-url', process.env.SHIPIT_WORKFLOW_URL);
 export const RELEASE_CHANNEL = getConfigFromBody('release-channel', process.env.RELEASE_CHANNEL);
 export const RELEASE_VERSION = getConfigFromBody('release-version', process.env.RELEASE_VERSION);
 export const SENTRY_DSN = getConfigFromBody('sentry-dsn', process.env.SENTRY_DSN || null);

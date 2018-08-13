@@ -8,7 +8,7 @@ import os
 
 import backend_common.auth0
 import cli_common.taskcluster
-import shipit_workflow.config
+import shipit_api.config
 
 DEBUG = bool(os.environ.get('DEBUG', False))
 
@@ -26,7 +26,7 @@ required = [
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
-    shipit_workflow.config.PROJECT_NAME,
+    shipit_api.config.PROJECT_NAME,
     required=required,
     existing={x: os.environ.get(x) for x in required if x in os.environ},
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),

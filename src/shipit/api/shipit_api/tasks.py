@@ -11,7 +11,7 @@ import slugid
 import taskcluster
 
 from cli_common.log import get_logger
-from shipit_workflow.release import is_rc
+from shipit_api.release import is_rc
 
 log = get_logger(__name__)
 

@@ -15,7 +15,7 @@ paths:
   /releases:
     post:
       summary: Add a new release
-      operationId: shipit_workflow.api.add_release
+      operationId: shipit_api.api.add_release
       consumes:
       - "application/json"
       parameters:
@@ -34,7 +34,7 @@ paths:
             $ref: '#/definitions/Release'
     get:
       summary: List releases
-      operationId: shipit_workflow.api.list_releases
+      operationId: shipit_api.api.list_releases
       parameters:
       - in: query
         name: product
@@ -64,7 +64,7 @@ paths:
   /releases/{name}:
     get:
       summary: Release info
-      operationId: shipit_workflow.api.get_release
+      operationId: shipit_api.api.get_release
       parameters:
       - name: name
         in: path
@@ -78,7 +78,7 @@ paths:
             $ref: '#/definitions/Release'
     delete:
       summary: Release info
-      operationId: shipit_workflow.api.abandon_release
+      operationId: shipit_api.api.abandon_release
       parameters:
       - name: name
         in: path
@@ -94,7 +94,7 @@ paths:
   /releases/{name}/{phase}:
     get:
       summary: Release info
-      operationId: shipit_workflow.api.get_phase
+      operationId: shipit_api.api.get_phase
       parameters:
       - name: name
         in: path
@@ -112,7 +112,7 @@ paths:
             $ref: '#/definitions/Phase'
     put:
       summary: act on phase
-      operationId: shipit_workflow.api.schedule_phase
+      operationId: shipit_api.api.schedule_phase
       parameters:
       - name: name
         in: path

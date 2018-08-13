@@ -3,5 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PROJECT_NAME = 'shipit-workflow'
-APP_NAME = 'shipit_workflow'
+import shipit_api
+
+app = shipit_api.create_app()
