@@ -12,8 +12,9 @@ import taskcluster
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
-from backend_common.auth0 import mozilla_accept_token
+from backend_common.auth import auth
 from cli_common.log import get_logger
+from shipit_api.config import SCOPE_PREFIX
 from shipit_api.models import Phase
 from shipit_api.models import Release
 from shipit_api.tasks import UnsupportedFlavor
@@ -35,31 +36,7 @@ def _queue():
     return queue
 
 
-def validate_user(key, checker):
-    def wrapper(view_func):
-        @functools.wraps(view_func)
-        def decorated(*args, **kwargs):
-            has_permissions = False
-            try:
-                has_permissions = checker(flask.g.userinfo[key])
-            except (AttributeError, KeyError):
-                response_body = {'error': 'missing_userinfo',
-                                 'error_description': 'Userinfo is missing'}
-                return response_body, 401, {'WWW-Authenticate': 'Bearer'}
-
-            if has_permissions:
-                return view_func(*args, **kwargs)
-            else:
-                response_body = {'error': 'invalid_permissions',
-                                 'error_description': 'Check your permissions'}
-                return response_body, 401, {'WWW-Authenticate': 'Bearer'}
-        return decorated
-    return wrapper
-
-
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'releng' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/add_release'])
 def add_release(body):
     session = flask.g.db.session
     r = Release(
@@ -124,9 +101,7 @@ def get_phase(name, phase):
         flask.abort(404)
 
 
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'releng' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/schedule_phase'])
 def schedule_phase(name, phase):
     session = flask.g.db.session
     try:
@@ -150,9 +125,7 @@ def schedule_phase(name, phase):
     return phase.json
 
 
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'releng' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/abandon_release'])
 def abandon_release(name):
     session = flask.g.db.session
     try:
