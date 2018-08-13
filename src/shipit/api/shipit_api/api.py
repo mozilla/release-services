@@ -186,3 +186,28 @@ def abandon_release(name):
         return release.json
     except NoResultFound:
         flask.abort(404)
+
+
+def sync_releases(releases):
+    session = flask.g.db.session
+    for release in releases:
+        try:
+            session.query(Release).filter(Release.name == release['name']).one()
+            # nothing todo
+        except NoResultFound:
+            status = 'shipped'
+            if not release['shippedAt']:
+                status = 'aborted'
+            r = Release(
+                product=release['product'],
+                version=release['version'],
+                branch=release['branch'],
+                revision=release['mozillaRevision'],
+                build_number=release['buildNumber'],
+                release_eta=release.get('release_eta'),
+                partial_updates=release.get('partials'),
+                status=status,
+            )
+            session.add(r)
+            session.commit()
+    return flask.jsonify({'ok': 'ok'})

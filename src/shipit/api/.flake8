@@ -1,2 +1,2 @@
 [flake8]
-exclude = partners.py
+exclude = partners.py, fetch_v1.py
