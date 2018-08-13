@@ -2,11 +2,12 @@
 
 let
   inherit (releng_pkgs.lib) mkRustPlatform ;
-  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub;
+  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
   # Rust 1.28.1-beta6
-  rustChannel = rustChannelOf { date = "2018-06-30"; channel = "beta"; };
+  rustChannel' = rustChannelOf { date = "2018-06-30"; channel = "beta"; };
+  rustChannel = { inherit (rustChannel') cargo; rust = rustChannel'.rust.override { targets=["armv7-linux-androideabi"]; }; };
 
   # Add missing gcc libraries needed by clang (see https://github.com/mozilla/release-services/issues/1256)
   gcc_libs = builtins.concatStringsSep ":" [
@@ -40,6 +41,7 @@ in gecko.overrideDerivation (old: {
     mkdir -p $out/bin
     mkdir -p $out/conf
   '';
+  mozbuild = "/tmp/mozilla-state";
   buildPhase = ''
 
     # Gecko build environment
@@ -60,8 +62,9 @@ in gecko.overrideDerivation (old: {
 
     # Build LDFLAGS and LIBRARY_PATH
     echo "export LDFLAGS=\"$NIX_LDFLAGS\"" >> $geckoenv
-    echo "export LIBRARY_PATH=\"$CMAKE_LIBRARY_PATH\"" >> $geckoenv
-    echo "export LD_LIBRARY_PATH=\"$CMAKE_LIBRARY_PATH\"" >> $geckoenv
+    echo "export SQLITE_LIB=${sqlite.out}/lib/" >> $geckoenv
+    echo "export LIBRARY_PATH=\"$SQLITE_LIB:$CMAKE_LIBRARY_PATH\"" >> $geckoenv
+    echo "export LD_LIBRARY_PATH=\"$SQLITE_LIB:$CMAKE_LIBRARY_PATH\"" >> $geckoenv
 
     # Setup Clang & Autoconf
     echo "export CC=${clang_4}/bin/clang" >> $geckoenv
@@ -78,6 +81,16 @@ in gecko.overrideDerivation (old: {
     ac_add_options --with-clang-path=${clang_4}/bin/clang
     ac_add_options --with-libclang-path=${llvmPackages_4.libclang}/lib
     mk_add_options AUTOCLOBBER=1
+
+    # Build Firefox for Android:
+    ac_add_options --enable-application=mobile/android
+    ac_add_options --target=arm-linux-androideabi
+
+    # With the following Android SDK and NDK:
+    ac_add_options --with-android-sdk="$mozbuild/android-sdk-linux/android-sdk-linux"
+    ac_add_options --with-android-ndk="$mozbuild/android-ndk/android-ndk"
+
+    ac_add_options --with-java-bin-path="${openjdk}/bin"
     "
 
     # Use updated rust version
@@ -98,5 +111,10 @@ in gecko.overrideDerivation (old: {
       rustChannel.rust
       rustChannel.cargo
       rust-cbindgen
+      unzip
+      zip
+      openjdk
+      python2Packages.pyyaml
+      sqlite
     ];
 })

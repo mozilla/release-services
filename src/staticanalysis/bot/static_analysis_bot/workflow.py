@@ -18,6 +18,7 @@ from cli_common.log import get_logger
 from cli_common.phabricator import PhabricatorAPI
 from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import CLANG_TIDY
+from static_analysis_bot import INFER
 from static_analysis_bot import MOZLINT
 from static_analysis_bot import stats
 from static_analysis_bot.clang import setup as setup_clang
@@ -27,6 +28,8 @@ from static_analysis_bot.config import ARTIFACT_URL
 from static_analysis_bot.config import REPO_CENTRAL
 from static_analysis_bot.config import Publication
 from static_analysis_bot.config import settings
+from static_analysis_bot.infer import setup as setup_infer
+from static_analysis_bot.infer.infer import Infer
 from static_analysis_bot.lint import MozLint
 from static_analysis_bot.report.debug import DebugReporter
 from static_analysis_bot.revisions import Revision
@@ -146,8 +149,16 @@ class Workflow(object):
             revision.analyze_patch()
 
         with stats.api.timer('runtime.mach'):
-            # Only run mach if revision has any C/C++ files
-            if revision.has_clang_files:
+            # Only run mach if revision has any C/C++ or Java files
+            if revision.has_clang_files or revision.has_infer_files:
+                if revision.has_infer_files:
+                    if INFER in self.analyzers:
+                        analyzers.append(Infer)
+                        logger.info('Setup Taskcluster infer build...')
+                        setup_infer()
+                    else:
+                        logger.info('Skip infer')
+
                 # Mach pre-setup with mozconfig
                 logger.info('Mach configure...')
                 run_check(['gecko-env', './mach', 'configure'], cwd=settings.repo_dir)
@@ -165,18 +176,19 @@ class Workflow(object):
                 logger.info('Setup Taskcluster clang build...')
                 setup_clang()
 
-                # Use clang-tidy & clang-format
-                if CLANG_TIDY in self.analyzers:
-                    analyzers.append(ClangTidy)
-                else:
-                    logger.info('Skip clang-tidy')
-                if CLANG_FORMAT in self.analyzers:
-                    analyzers.append(ClangFormat)
-                else:
-                    logger.info('Skip clang-format')
+                if revision.has_clang_files:
+                    # Use clang-tidy & clang-format
+                    if CLANG_TIDY in self.analyzers:
+                        analyzers.append(ClangTidy)
+                    else:
+                        logger.info('Skip clang-tidy')
+                    if CLANG_FORMAT in self.analyzers:
+                        analyzers.append(ClangFormat)
+                    else:
+                        logger.info('Skip clang-format')
 
             else:
-                logger.info('No clang files detected, skipping mach and clang-*')
+                logger.info('No clang or java files detected, skipping mach, infer and clang-*')
 
             # Setup python environment
             logger.info('Mach lint setup...')
