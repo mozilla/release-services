@@ -2,13 +2,13 @@ fs = require('fs');
 
 const envs = {
     //XXX once migrate away from using in code configuration we remove CONFIG env
-    CONFIG: process.env.CONFIG || 'staging',
-    SHIPIT_WORKFLOW_URL: process.env.SHIPIT_WORKFLOW_URL,
-    RELEASE_CHANNEL: process.env.RELEASE_CHANNEL,
-    RELEASE_VERSION: process.env.RELEASE_VERSION,
-    SENTRY_DSN: process.env.SENTRY_DSN || null,
-    HOST: process.env.HOST,
-    PORT: process.env.PORT,
+    CONFIG: JSON.stringify(process.env.CONFIG || 'staging'),
+    SHIPIT_API_URL: JSON.stringify(process.env.SHIPIT_API_URL),
+    RELEASE_CHANNEL: JSON.stringify(process.env.RELEASE_CHANNEL),
+    RELEASE_VERSION: JSON.stringify(process.env.RELEASE_VERSION),
+    SENTRY_DSN: JSON.stringify(process.env.SENTRY_DSN || null),
+    HOST: JSON.stringify(process.env.HOST),
+    PORT: JSON.stringify(process.env.PORT),
 };
 
 // Set environment variables to their default values if not defined
@@ -42,6 +42,7 @@ module.exports = {
             'react/prop-types': 'off',
             'react/no-multi-comp': 'off',
             'no-console': 'off',
+            'no-debugger': 'off',
           }
         }
       }
@@ -64,8 +65,8 @@ module.exports = {
           ]
         },
         devServer: {
-          host: envs.HOST,
-          port: envs.PORT,
+          host: JSON.parse(envs.HOST),
+          port: JSON.parse(envs.PORT),
           https: HTTPS,
           disableHostCheck: true,
           historyApiFallback: {

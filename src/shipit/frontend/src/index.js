@@ -9,7 +9,10 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 
 import App from './app';
-import { SENTRY_DSN } from './config';
+import { RELEASE_VERSION
+       , RELEASE_CHANNEL
+       , SENTRY_DSN
+       } from './config';
 
 // import actions from './actions';
 const initialState = {};
