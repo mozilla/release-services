@@ -15,7 +15,7 @@ paths:
   /sync:
     post:
       summary: Sync release data from Ship-it v1
-      operationId: shipit_workflow.api.sync_releases
+      operationId: shipit_api.api.sync_releases
       consumes:
       - "application/json"
       parameters:
