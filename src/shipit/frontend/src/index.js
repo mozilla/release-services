@@ -9,6 +9,7 @@ import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import { BrowserRouter, Route } from 'react-router-dom';
 import createSagaMiddleware from 'redux-saga';
+import { composeWithDevTools } from 'redux-devtools-extension';
 
 import App from './app';
 import {
@@ -18,8 +19,15 @@ import {
 } from './config';
 
 
+// import { AUTH0_KEY, TASKCLUSTER_KEY } from './localstorage';
+const AUTH0_KEY = 'auth-auth0';
+const TASKCLUSTER_KEY = 'auth-taskcluster';
+
 // import actions from './actions';
-const initialState = {};
+const initialState = {
+  auth0: localStorage.getItem(AUTH0_KEY),
+  taskclusterAuth: localStorage.getItem(TASKCLUSTER_KEY),
+};
 function reducer(state = initialState, action) {
   switch (action.type) {
     default:
@@ -33,15 +41,11 @@ function* sagas() {
   yield;
 }
 
-
 const sagaMiddleware = createSagaMiddleware();
 const store = createStore(
   reducer,
   initialState,
-  /* eslint-disable no-underscore-dangle */
-  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
-  /* eslint-enable */
-  applyMiddleware(sagaMiddleware),
+  composeWithDevTools(applyMiddleware(sagaMiddleware)),
 );
 
 sagaMiddleware.run(sagas);
