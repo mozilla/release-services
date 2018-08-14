@@ -7,6 +7,7 @@ import raven from 'raven-js';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
+import { BrowserRouter, Route } from 'react-router-dom'
 
 import App from './app';
 import { RELEASE_VERSION
@@ -16,6 +17,7 @@ import { RELEASE_VERSION
 
 // import actions from './actions';
 const initialState = {};
+
 function reducer(state = initialState, action) {
   switch (action.type) {
     default:
@@ -36,7 +38,9 @@ const root = document.getElementById('root');
 const load = () => {
   render(
     <Provider store={store}>
-      <App />
+      <BrowserRouter>
+        <Route path="/" component={App} />
+      </BrowserRouter>
     </Provider>,
     root,
   );
