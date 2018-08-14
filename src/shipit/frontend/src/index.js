@@ -6,18 +6,20 @@ import React from 'react';
 import raven from 'raven-js';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
-import { BrowserRouter, Route } from 'react-router-dom'
+import { createStore, applyMiddleware } from 'redux';
+import { BrowserRouter, Route } from 'react-router-dom';
+import createSagaMiddleware from 'redux-saga';
 
 import App from './app';
-import { RELEASE_VERSION
-       , RELEASE_CHANNEL
-       , SENTRY_DSN
-       } from './config';
+import {
+  RELEASE_VERSION,
+  RELEASE_CHANNEL,
+  SENTRY_DSN,
+} from './config';
+
 
 // import actions from './actions';
 const initialState = {};
-
 function reducer(state = initialState, action) {
   switch (action.type) {
     default:
@@ -26,14 +28,23 @@ function reducer(state = initialState, action) {
 }
 
 
+// import sagas from './sagas';
+function* sagas() {
+  yield;
+}
+
+
+const sagaMiddleware = createSagaMiddleware();
 const store = createStore(
   reducer,
   initialState,
   /* eslint-disable no-underscore-dangle */
   window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
   /* eslint-enable */
+  applyMiddleware(sagaMiddleware),
 );
-const root = document.getElementById('root');
+
+sagaMiddleware.run(sagas);
 
 const load = () => {
   render(
@@ -42,7 +53,7 @@ const load = () => {
         <Route path="/" component={App} />
       </BrowserRouter>
     </Provider>,
-    root,
+    document.getElementById('root'),
   );
 };
 
@@ -53,8 +64,8 @@ if (SENTRY_DSN !== null) {
       SENTRY_DSN,
       {
         debug: true,
-        // release: RELEASE_VERSION,
-        // environment: RELEASE_CHANNEL,
+        release: RELEASE_VERSION,
+        environment: RELEASE_CHANNEL,
         tags: {
           server_name: 'mozilla/release-services',
           site: 'shipit/frontend',
