@@ -378,13 +378,11 @@ def cmd_HEROKU(ctx,
 @click.option(
     '--docker-registry',
     required=True,
-    default=please_cli.config.DOCKER_REGISTRY,
     help='Docker registry.',
     )
 @click.option(
     '--docker-repo',
     required=True,
-    default=please_cli.config.DOCKER_REPO,
     help='Docker repository.',
     )
 @click.option(
@@ -541,13 +539,11 @@ def cmd_TASKCLUSTER_HOOK(ctx,
 @click.option(
     '--docker-registry',
     required=True,
-    default=please_cli.config.DOCKER_REGISTRY,
     help='Docker registry.',
     )
 @click.option(
     '--docker-repo',
     required=True,
-    default=please_cli.config.DOCKER_REPO,
     help='Docker repository.',
     )
 @click.option(

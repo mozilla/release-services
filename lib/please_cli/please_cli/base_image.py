@@ -47,8 +47,8 @@ log = cli_common.log.get_logger(__name__)
 @click.option(
     '--docker-repo',
     required=True,
-    default=please_cli.config.DOCKER_REPO,
-    help='Docker repository (default: {}).'.format(please_cli.config.DOCKER_REPO),
+    default=please_cli.config.DOCKER_BASE_REPO,
+    help='Docker repository.',
     )
 @click.option(
     '--docker-tag',

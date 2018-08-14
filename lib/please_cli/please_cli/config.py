@@ -40,8 +40,7 @@ TMP_DIR = os.path.join(ROOT_DIR, 'tmp')
 CHANNELS = ['master', 'testing', 'staging', 'production']
 DEPLOY_CHANNELS = ['testing', 'staging', 'production']
 
-DOCKER_REGISTRY = "index.docker.io"
-DOCKER_REPO = 'mozillareleng/services'
+DOCKER_BASE_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-' + VERSION
 
 NIX_BIN_DIR = os.environ.get("NIX_BIN_DIR", "")  # must end with /
@@ -384,14 +383,20 @@ PROJECTS_CONFIG = {
                     'testing': {
                         'nix_path_attribute': 'cron.replicate.testing',
                         'name-suffix': '-replicate',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'cron.replicate.staging',
                         'name-suffix': '-replicate',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'cron.replicate.production',
                         'name-suffix': '-replicate',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -401,14 +406,20 @@ PROJECTS_CONFIG = {
                     'testing': {
                         'nix_path_attribute': 'cron.check_pending_uploads.testing',
                         'name-suffix': '-check_pending_uploads',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'cron.check_pending_uploads.staging',
                         'name-suffix': '-check_pending_uploads',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'cron.check_pending_uploads.production',
                         'name-suffix': '-check_pending_uploads',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -469,12 +480,18 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -491,12 +508,18 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -554,12 +577,18 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -605,12 +634,18 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -736,14 +771,20 @@ PROJECTS_CONFIG = {
                     'testing': {
                         'url': 'https://api.shipit.testing.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
                     },
                     'staging': {
                         'url': 'https://api.shipit.staging.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
                     },
                     'production': {
                         'url': 'https://api.shipit.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
                     },
                 },
             },
