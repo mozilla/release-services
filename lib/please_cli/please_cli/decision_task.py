@@ -188,7 +188,7 @@ def get_deploy_task(index,
         )
         command = [
             './please', '-vv', 'tools', 'deploy:DOCKERHUB', project,
-            f'--taskcluster-secret={taskcluster_secret,}',
+            f'--taskcluster-secret={taskcluster_secret}',
             f'--nix-path-attribute={nix_path_attribute}',
             f'--docker-repo={docker_repo}',
             f'--docker-registry={docker_registry}',
