@@ -36,8 +36,9 @@ module.exports = {
     '@neutrinojs/hot',
     [
       '@neutrinojs/airbnb',
-      {eslint: {
-        rules: {
+      {
+        eslint: {
+          rules: {
             'react/jsx-filename-extension': [1, { 'extensions': ['.js'] }],
             'react/prop-types': 'off',
             'react/no-multi-comp': 'off',
