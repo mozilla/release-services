@@ -3,15 +3,16 @@
  */
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
-import raven from 'raven-js';
-import { render } from 'react-dom';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import { BrowserRouter, Route } from 'react-router-dom';
 import createSagaMiddleware from 'redux-saga';
-import { composeWithDevTools } from 'redux-devtools-extension';
+import raven from 'raven-js';
+import { ConnectedRouter, routerMiddleware, connectRouter } from 'connected-react-router';
+import { Provider } from 'react-redux';
+import { Route, Switch } from 'react-router';
+import { applyMiddleware, compose, createStore } from 'redux';
+import { createBrowserHistory } from 'history';
+import { render } from 'react-dom';
 
-import App from './app';
+import Releases from './pages/releases';
 import {
   RELEASE_VERSION,
   RELEASE_CHANNEL,
@@ -41,21 +42,32 @@ function* sagas() {
   yield;
 }
 
+
+const history = createBrowserHistory();
 const sagaMiddleware = createSagaMiddleware();
+/* eslint-disable no-underscore-dangle */
+const composeEnhancer = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+/* eslint-enable */
 const store = createStore(
-  reducer,
+  connectRouter(history)(reducer),
   initialState,
-  composeWithDevTools(applyMiddleware(sagaMiddleware)),
+  composeEnhancer(applyMiddleware(routerMiddleware(history), sagaMiddleware)),
 );
 
 sagaMiddleware.run(sagas);
 
+// TODO: more routes
+// <Route path="/new" component={NewRelease} />
+// <Route path="/login" component={Login} />
+// <Route component={ErrorPage} />
 const load = () => {
   render(
     <Provider store={store}>
-      <BrowserRouter>
-        <Route path="/" component={App} />
-      </BrowserRouter>
+      <ConnectedRouter history={history}>
+        <Switch>
+          <Route exact path="/" component={Releases} />
+        </Switch>
+      </ConnectedRouter>
     </Provider>,
     document.getElementById('root'),
   );
