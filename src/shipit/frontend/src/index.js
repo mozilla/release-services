@@ -4,15 +4,20 @@
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+import React from 'react';
+import createHistory from 'history/createBrowserHistory';
 import raven from 'raven-js';
+import { program } from 'raj-react';
 import { render } from 'react-dom';
 
+import './index.css';
+import createApp from './app';
 import { RELEASE_VERSION, RELEASE_CHANNEL, SENTRY_DSN } from './config';
 
-import './index.css';
-import ReactApp from './app';
-
 const loadApp = () => {
+  const history = createHistory();
+  const App = createApp({ history });
+  const ReactApp = program(React.Component, () => App);
   render(<ReactApp />, document.getElementById('root'));
 };
 

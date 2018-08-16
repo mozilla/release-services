@@ -44,6 +44,7 @@ module.exports = {
             'react/no-multi-comp': 'off',
             'no-console': 'off',
             'no-debugger': 'off',
+            'babel/new-cap': 'off',
           }
         }
       }
@@ -52,7 +53,7 @@ module.exports = {
       '@neutrinojs/react',
       {
         html: {
-          title: 'Shipit - Mozilla Release Engineering Services',
+          title: 'ShipIt - Mozilla Release Engineering Services',
           mobile: true,
           meta: [
             {
