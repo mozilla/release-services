@@ -67,6 +67,16 @@ footer ul {
     padding: 0;
 }
 
+footer div a {
+    color: #4d4f53;
+    border-bottom: 1px dotted #4d4f53;
+}
+
+footer div a:hover {
+    text-decoration: none;
+    border-bottom: 1px dotted #4d4f53;
+}
+
 
 /* Phones (<768px) */
 @media (max-width: 768px) {

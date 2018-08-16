@@ -16,7 +16,11 @@ import { RELEASE_VERSION, RELEASE_CHANNEL, SENTRY_DSN } from './config';
 
 const loadApp = () => {
   const history = createHistory();
-  const App = createApp({ history });
+  const App = createApp({
+    history,
+    releaseVersion: RELEASE_VERSION,
+    releaseChannel: RELEASE_CHANNEL,
+  });
   const ReactApp = program(React.Component, () => App);
   render(<ReactApp />, document.getElementById('root'));
 };

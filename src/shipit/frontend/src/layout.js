@@ -50,7 +50,7 @@ const view = (model, dispatch) => (
 );
 const navbar = { init, update, view };
 
-export default content => batchPrograms([navbar, content], ([navbarView, contentView]) => (
+export default (flags, content) => batchPrograms([navbar, content], ([navbarView, contentView]) => (
   <div id="wrapper" className={`page-${content.id}`}>
     {navbarView()}
     <Container>
@@ -62,6 +62,7 @@ export default content => batchPrograms([navbar, content], ([navbarView, content
           <li><a href="https://github.com/mozilla/release-services/blob/master/CONTRIBUTING.rst">Contribute</a></li>
           <li><a href="https://github.com/mozilla/release-services/issues/new">Contact</a></li>
         </ul>
+        <div>Version: <a href="https://github.com/mozilla/release-services/releases/tag/v44">{flags.releaseVersion}</a></div>
       </footer>
     </Container>
   </div>
