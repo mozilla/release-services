@@ -151,7 +151,7 @@ def cmd(project, zsh, quiet, command, nix_shell,
 
     click.echo(' => Setting environment variables:')
     for env_name, env_value in envs.items():
-        click.echo(f'    - {env_name}="{env_value}"')
+        click.echo(f'    - {env_name}')
         os.environ[env_name] = env_value
 
     if command:
