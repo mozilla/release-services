@@ -2,18 +2,18 @@
  *
  */
 
-import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 import raven from 'raven-js';
-import { program } from 'raj-react';
 import { render } from 'react-dom';
 
-import App from './app';
 import { RELEASE_VERSION, RELEASE_CHANNEL, SENTRY_DSN } from './config';
 
-const Root = program(React.Component, () => App);
+import './index.css';
+import ReactApp from './app';
 
 const loadApp = () => {
-  render(<Root />, document.getElementById('root'));
+  render(<ReactApp />, document.getElementById('root'));
 };
 
 if (SENTRY_DSN !== null) {
@@ -24,8 +24,8 @@ if (SENTRY_DSN !== null) {
       environment: RELEASE_CHANNEL,
       tags: {
         server_name: 'mozilla/release-services',
-        site: 'shipit/frontend'
-      }
+        site: 'shipit/frontend',
+      },
     })
     .install()
     .context(loadApp);

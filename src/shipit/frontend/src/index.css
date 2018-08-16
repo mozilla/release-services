@@ -1,0 +1,92 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#content > .container,
+.navbar > .container {
+    margin: 0 auto;
+    padding: 0;
+}
+.navbar { 
+    background-color: #4d4f53;
+}
+.navbar .navbar-brand {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.navbar .navbar-toggler {
+    border: 0;
+}
+.navbar .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255, 255, 255)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* .navbar .nav a { */
+/*     color: #ccc; */
+/* } */
+
+/* .navbar .nav a:hover, */
+/* .navbar .nav a:focus{ */
+/*     color: #ccc; */
+/*     background: transparent; */
+/*     border: 0; */
+/*     outline: none; */
+/* } */
+
+/* .navbar .nav .dropdown-menu a { */
+/*     color: #292b2c */
+/* } */
+
+
+/* footer { */
+/*     color: #4d4f53; */
+/*     font-size: 12px; */
+/*     line-height: 1.6em; */
+/*     margin: 2em 0; */
+/*     padding: 0; */
+/*     text-align: center; */
+/* } */
+
+/* footer ul li { */
+/*     display: inline-block; */
+/*     margin: 0 1em; */
+/* } */
+
+/* footer ul { */
+/*     list-style: none; */
+/*     margin: 0; */
+/*     padding: 0; */
+/* } */
+
+
+/* Phones (<768px) */
+@media (max-width: 768px) {
+
+}
+
+/* Tablets (≥768px) */
+@media (max-width: 992px) and (min-width: 768px) {
+    #content .container,
+    .navbar .container {
+        max-width: 733px;
+    }
+}
+
+/* Desktops (≥992px) */
+@media (max-width: 1200px) and (min-width: 992px) {
+    #content .container,
+    .navbar .container {
+        max-width: 957px;
+    }
+}
+
+/* Desktops (≥1200px) */
+@media (min-width: 1200px) {
+    #content .container,
+    .navbar .container {
+        max-width: 1165px;
+    }
+}

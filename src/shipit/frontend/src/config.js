@@ -11,17 +11,17 @@ const getConfigFromBody = (name, _default) => {
 
 export const SHIPIT_API_URL = getConfigFromBody(
   'shipit-api-url',
-  JSON.parse(process.env.SHIPIT_API_URL)
+  JSON.parse(process.env.SHIPIT_API_URL),
 );
 export const RELEASE_CHANNEL = getConfigFromBody(
   'release-channel',
-  JSON.parse(process.env.RELEASE_CHANNEL)
+  JSON.parse(process.env.RELEASE_CHANNEL),
 );
 export const RELEASE_VERSION = getConfigFromBody(
   'release-version',
-  JSON.parse(process.env.RELEASE_VERSION)
+  JSON.parse(process.env.RELEASE_VERSION),
 );
 export const SENTRY_DSN = getConfigFromBody(
   'sentry-dsn',
-  JSON.parse(process.env.SENTRY_DSN) || null
+  JSON.parse(process.env.SENTRY_DSN) || null,
 );

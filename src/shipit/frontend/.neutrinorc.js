@@ -48,7 +48,6 @@ module.exports = {
         }
       }
     ],
-    'neutrino-preset-prettier-eslint',
     [
       '@neutrinojs/react',
       {
@@ -83,9 +82,9 @@ module.exports = {
     ],
     ['@neutrinojs/env', Object.keys(envs)],
     (neutrino) => {
-        neutrino.config.when(process.env.NODE_ENV === 'production', config => {
-            config.devtool('source-map');
-        });
+      neutrino.config.when(process.env.NODE_ENV === 'production', config => {
+        config.devtool('source-map');
+      });
     }
   ]
 };
