@@ -48,11 +48,12 @@ module.exports = {
         }
       }
     ],
+    'neutrino-preset-prettier-eslint',
     [
       '@neutrinojs/react',
       {
         html: {
-          title: 'Ship-it!',
+          title: 'Shipit - Mozilla Release Engineering Services',
           mobile: true,
           meta: [
             {
