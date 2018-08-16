@@ -2,9 +2,19 @@
  *
  */
 
+import React from 'react';
 import raven from 'raven-js';
-import app from './app';
+import { program } from 'raj-react';
+import { render } from 'react-dom';
+
+import App from './app';
 import { RELEASE_VERSION, RELEASE_CHANNEL, SENTRY_DSN } from './config';
+
+const Root = program(React.Component, () => App);
+
+const loadApp = () => {
+  render(<Root />, document.getElementById('root'));
+};
 
 if (SENTRY_DSN !== null) {
   raven
@@ -18,7 +28,7 @@ if (SENTRY_DSN !== null) {
       }
     })
     .install()
-    .context(app);
+    .context(loadApp);
 } else {
-  app();
+  loadApp();
 }
