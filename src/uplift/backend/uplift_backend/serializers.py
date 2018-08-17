@@ -8,12 +8,12 @@ import html
 from flask_login import current_user
 
 from cli_common import log
-from shipit_uplift.config import SCOPES_ADMIN
-from shipit_uplift.models import BugAnalysis
-from shipit_uplift.models import BugContributor
-from shipit_uplift.models import BugResult
-from shipit_uplift.models import Contributor
-from shipit_uplift.models import PatchStatus
+from uplift_backend.config import SCOPES_ADMIN
+from uplift_backend.models import BugAnalysis
+from uplift_backend.models import BugContributor
+from uplift_backend.models import BugResult
+from uplift_backend.models import Contributor
+from uplift_backend.models import PatchStatus
 
 logger = log.get_logger(__name__)
 

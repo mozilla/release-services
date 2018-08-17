@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PROJECT_NAME = 'shipit-uplift'
-APP_NAME = 'shipit_uplift'
+APP_NAME = 'uplift_backend'
 
 # Tasckcluster scopes
 SCOPES_USER = [

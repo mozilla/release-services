@@ -12,19 +12,19 @@ from sqlalchemy.orm.exc import NoResultFound
 from backend_common.auth import auth
 from backend_common.db import db
 from cli_common import log
-from shipit_uplift.config import SCOPES_ADMIN
-from shipit_uplift.config import SCOPES_BOT
-from shipit_uplift.config import SCOPES_USER
-from shipit_uplift.helpers import gravatar
-from shipit_uplift.models import BugAnalysis
-from shipit_uplift.models import BugContributor
-from shipit_uplift.models import BugResult
-from shipit_uplift.models import Contributor
-from shipit_uplift.models import PatchStatus
-from shipit_uplift.serializers import serialize_analysis
-from shipit_uplift.serializers import serialize_bug
-from shipit_uplift.serializers import serialize_contributor
-from shipit_uplift.serializers import serialize_patch_status
+from uplift_backend.config import SCOPES_ADMIN
+from uplift_backend.config import SCOPES_BOT
+from uplift_backend.config import SCOPES_USER
+from uplift_backend.helpers import gravatar
+from uplift_backend.models import BugAnalysis
+from uplift_backend.models import BugContributor
+from uplift_backend.models import BugResult
+from uplift_backend.models import Contributor
+from uplift_backend.models import PatchStatus
+from uplift_backend.serializers import serialize_analysis
+from uplift_backend.serializers import serialize_bug
+from uplift_backend.serializers import serialize_contributor
+from uplift_backend.serializers import serialize_patch_status
 
 logger = log.get_logger(__name__)
 
