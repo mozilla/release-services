@@ -52,7 +52,7 @@ def test_update_user(client, header_user):
     '''
     A user can't update a contributor
     '''
-    from shipit_uplift.models import Contributor
+    from uplift_backend.models import Contributor
     contrib = Contributor.query.filter_by(id=1).one()
     assert contrib.karma == 1
     assert contrib.comment_private == 'hidden comment'
@@ -85,7 +85,7 @@ def test_update_admin(client, header_admin):
     '''
     An admin can update a contributor
     '''
-    from shipit_uplift.models import Contributor
+    from uplift_backend.models import Contributor
     contrib = Contributor.query.filter_by(id=1).one()
     assert contrib.karma == 1
     assert contrib.comment_private == 'hidden comment'

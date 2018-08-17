@@ -717,7 +717,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-uplift': {
+    'uplift/backend': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),

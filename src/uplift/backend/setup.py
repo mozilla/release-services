@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='mozilla-shipit-uplift',
+    name='mozilla-uplift-backend',
     version=VERSION,
     description='The code behind https://uplift.shipit.mozilla-releng.net/',
     author='Mozilla Release Management',

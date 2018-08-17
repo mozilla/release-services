@@ -9,8 +9,8 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-uplift";
-  dirname = "shipit_uplift";
+  name = "mozilla-uplift-backend";
+  dirname = "uplift_backend";
 
   self = mkBackend rec {
     inherit python name dirname;

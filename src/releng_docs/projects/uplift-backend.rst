@@ -1,6 +1,6 @@
-.. _shipit-uplift-project:
+.. _uplift-backend-project:
 
-Project: shipit-uplift
+Project: uplift-backend
 ======================
 
 :production: https://uplift.shipit.mozilla-releng.net
