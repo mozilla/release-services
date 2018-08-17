@@ -1,1 +1,1 @@
-../../nix/requirements_override.nix
+../../../nix/requirements_override.nix
