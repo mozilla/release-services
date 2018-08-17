@@ -8,7 +8,7 @@
 /src/releng_notification_policy       @mozilla/Releng
 /src/releng_tooltool                  @mozilla/Releng
 /src/releng_treestatus                @mozilla/Releng
-/src/shipit_bot_uplift                @mozilla/release-management
+/src/uplift                						@mozilla/release-management
 /src/shipit_code_coverage             @mozilla/release-management
 /src/shipit_code_coverage_backend     @mozilla/release-management
 /src/shipit_code_coverage_crawler     @mozilla/release-management
@@ -18,5 +18,4 @@
 /src/shipit_signoff                   @mozilla/Releng
 /src/shipit_static_analysis           @mozilla/release-management
 /src/shipit_taskcluster               @mozilla/Releng
-/src/shipit_uplift                    @mozilla/release-management
 /src/shipit/api                       @mozilla/Releng

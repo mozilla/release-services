@@ -6,5 +6,5 @@
 import os.path
 import tempfile
 
-PROJECT_NAME = 'shipit-bot-uplift'
+PROJECT_NAME = 'uplift-bot'
 DEFAULT_CACHE = os.path.join(tempfile.gettempdir(), 'shipit_bot_cache')

@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='mozilla-shipit-bot-uplift',
+    name='mozilla-uplift-bot',
     version=VERSION,
     description='Automated bot to sync bug analysis for Shipit Dashboard',
     author='Mozilla Release Management',
@@ -42,7 +42,7 @@ setuptools.setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-bot-uplift = uplift_bot.cli:main',
+            'uplift-bot = uplift_bot.cli:main',
         ]
     },
 )

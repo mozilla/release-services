@@ -476,7 +476,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-bot-uplift': {
+    'uplift/bot': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
