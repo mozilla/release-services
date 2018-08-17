@@ -11,7 +11,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-bot-uplift";
-  dirname = "shipit_bot_uplift";
+  dirname = "uplift_bot";
 
   mkBot = branch:
     let

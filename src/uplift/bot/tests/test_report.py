@@ -12,8 +12,8 @@ def test_mail(mock_taskcluster_credentials):
     '''
     Test uplift merge failures email report
     '''
-    from shipit_bot_uplift.report import Report
-    from shipit_bot_uplift.merge import MergeTest
+    from uplift_bot.report import Report
+    from uplift_bot.merge import MergeTest
 
     def _check_email(request):
         payload = json.loads(request.body)

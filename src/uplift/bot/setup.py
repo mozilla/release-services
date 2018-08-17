@@ -42,7 +42,7 @@ setuptools.setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-bot-uplift = shipit_bot_uplift.cli:main',
+            'shipit-bot-uplift = uplift_bot.cli:main',
         ]
     },
 )
