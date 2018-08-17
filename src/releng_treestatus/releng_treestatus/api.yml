@@ -12,6 +12,11 @@ paths:
   /auth0/login:
     get:
       operationId: "backend_common.auth0.auth0_login"
+      parameters:
+        - name: redirect_to
+          in: query
+          required: false
+          type: string
       responses:
         200:
           description: A login URL to redirect the user to

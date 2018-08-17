@@ -9,4 +9,4 @@ export const Program = ({
   view: model => <h1>{model.text}</h1>,
 });
 
-export default flags => withLayout(flags, Program);
+export default withLayout(Program);

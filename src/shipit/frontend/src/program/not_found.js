@@ -10,4 +10,4 @@ export const Program = ({
   view: model => <p>{model.text}</p>,
 });
 
-export default flags => withLayout(flags, Program);
+export default withLayout(Program);

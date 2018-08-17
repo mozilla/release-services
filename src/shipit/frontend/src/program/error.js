@@ -4,10 +4,10 @@
 
 import withLayout from './../layout';
 
-export default ({
+export const Program = ({
   init: [{ text: 'ERROR' }],
   update: (message, model) => model,
   view: model => <p>{model.text}</p>,
 });
 
-export default flags => withLayout(flags, Program);
+export default withLayout(Program);

@@ -246,16 +246,20 @@ def check_state(state, size=8):
     )
 
 
-def auth0_login():
+def auth0_login(redirect_to=None):
     '''
     API Endpoint: Build Url to login on Auth0 server
     '''
+    redirect_uri = flask.current_app.config.get('AUTH_REDIRECT_URI')
+    if redirect_to:
+        redirect_uri = f'{redirect_uri}?redirect_to={redirect_to}'
+
     params = {
         'audience': 'login.taskcluster.net',
         'scope': 'taskcluster-credentials openid',
         'response_type': 'code',
         'client_id': flask.current_app.config.get('AUTH_CLIENT_ID'),
-        'redirect_uri': flask.current_app.config.get('AUTH_REDIRECT_URI'),
+        'redirect_uri': redirect_uri,
         'state': build_state(),
     }
     return 'https://{}/authorize?{}'.format(
