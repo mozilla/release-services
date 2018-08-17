@@ -56,7 +56,7 @@ TEMPLATES = {
     'backend-json-api': {}
 }
 
-DEV_PROJECTS = ['postgresql']
+DEV_PROJECTS = ['postgresql', 'redis']
 PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
@@ -70,6 +70,13 @@ PROJECTS_CONFIG = {
         'run_options': {
             'port': 9000,
             'data_dir': os.path.join(TMP_DIR, 'postgresql'),
+        },
+    },
+    'redis': {
+        'run': 'REDIS',
+        'run_options': {
+            'port': 6379,
+            'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
     'releng-notification-policy': {
