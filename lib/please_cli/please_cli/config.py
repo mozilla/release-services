@@ -630,7 +630,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-static-analysis': {
+    'staticanalysis/bot': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),

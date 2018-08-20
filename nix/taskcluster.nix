@@ -14,7 +14,7 @@ let
 
   apps = {
     releng-docs = releng_pkgs.apps.releng-docs;
-    shipit-static-analysis = releng_pkgs.apps.shipit-static-analysis;
+    static-analysis-bot = releng_pkgs.apps.static-analysis-bot;
     shipit-code-coverage = releng_pkgs.apps.shipit-code-coverage;
   };
 
