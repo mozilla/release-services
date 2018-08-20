@@ -122,7 +122,7 @@ def cmd_S3(ctx,
             if not os.path.exists(please_cli.config.TMP_DIR):
                 os.makedirs(please_cli.config.TMP_DIR)
             tmp_dir = tempfile.mkdtemp(
-                prefix='copy-of-result-{}-'.format(project),
+                prefix='copy-of-result-{}-'.format(project.replace('/', '-')),
                 dir=please_cli.config.TMP_DIR,
             )
             shutil.rmtree(tmp_dir)
@@ -176,7 +176,7 @@ def cmd_S3(ctx,
             os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
             aws = awscli.clidriver.create_clidriver().main
-            aws([
+            result = aws([
                 's3',
                 'sync',
                 '--quiet',
@@ -186,7 +186,7 @@ def cmd_S3(ctx,
                 's3://' + s3_bucket,
             ])
         please_cli.utils.check_result(
-            0,
+            result,
             'Synced {} to S3 bucket {}'.format(project, s3_bucket),
             ask_for_details=interactive,
         )
@@ -378,13 +378,11 @@ def cmd_HEROKU(ctx,
 @click.option(
     '--docker-registry',
     required=True,
-    default=please_cli.config.DOCKER_REGISTRY,
     help='Docker registry.',
     )
 @click.option(
     '--docker-repo',
     required=True,
-    default=please_cli.config.DOCKER_REPO,
     help='Docker repository.',
     )
 @click.option(
@@ -541,13 +539,11 @@ def cmd_TASKCLUSTER_HOOK(ctx,
 @click.option(
     '--docker-registry',
     required=True,
-    default=please_cli.config.DOCKER_REGISTRY,
     help='Docker registry.',
     )
 @click.option(
     '--docker-repo',
     required=True,
-    default=please_cli.config.DOCKER_REPO,
     help='Docker repository.',
     )
 @click.option(
@@ -621,9 +617,9 @@ def cmd_DOCKERHUB(ctx,
         tag_base = project_basename.replace('docker-image-mozilla-', '').replace('.tar.gz', '')
         # Puth the hash to the end of the tag
         image_tag_versioned = '-'.join(reversed(tag_base.split('-', 1)))
-        # Stable tag, e.g. shipit-workflow-staging
-        image_tag = docker_image_tag_format.format(project=project,
-                                                   nix_path_attribute=nix_path_attribute,
+        # Stable tag, e.g. shipit-api-staging
+        image_tag = docker_image_tag_format.format(project=project.replace('/', '-'),
+                                                   nix_path_attribute=nix_path_attribute.replace('/', '-'),
                                                    channel=channel)
         for tag in (image_tag_versioned, image_tag):
             click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, tag), nl=False)

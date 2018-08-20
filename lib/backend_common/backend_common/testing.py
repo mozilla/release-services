@@ -190,7 +190,7 @@ def configure_app(app):
 
 @pytest.fixture(autouse=True)
 def client(app):
-    '''A Flask test client for shipit_uplift with mockups enabled.
+    '''A Flask test client for uplift/backend with mockups enabled.
     '''
     with app.test_client() as client:
         with requests_mock:

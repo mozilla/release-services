@@ -23,11 +23,13 @@ fi
 if [ "$USE_NIX" = "1" ]; then
   drv=`nix-instantiate nix/default.nix -A please-cli` 2> /dev/null
   nix_store_file=`cat $drv | cut -c17-91`
+  building_please_cli=0
   if [ ! -e $nix_store_file ]; then
-    echo -n "Building please command (this might take a minute or two the first time) ... ";
+    building_please_cli=1
+    echo -n " => Building please command (this might take a minute or two the first time) ... ";
   fi
   silent nix-build nix/default.nix -A please-cli -o result-please-cli;
-  if [ ! -e $nix_store_file ]; then
+  if [ "$building_please_cli" = "1" ]; then
     echo "${GREEN}DONE${NC}";
   fi
   exec ./result-please-cli/bin/please "$@";
@@ -55,6 +57,6 @@ else
    # TODO: stop old docker instances
   else
     # TODO: better error message and point to documentation
-    echo "ERROR: please install nix or docker!"
+    echo "${RED}ERROR: please install nix or docker!${NC}"
   fi
 fi
