@@ -100,6 +100,7 @@ let
     inherit python name dirname;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
+    src_path = "src/staticanalysis/bot";
     buildInputs =
       [ mercurial clang_5 ] ++ 
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
