@@ -18,15 +18,15 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 @pytest.fixture(scope='session')
 def app():
     '''
-    Load shipit_uplift app in test mode
+    Load uplift_backend app in test mode
     '''
-    import shipit_uplift
+    import uplift_backend
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     })
-    app = shipit_uplift.create_app(config)
+    app = uplift_backend.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)
@@ -38,7 +38,7 @@ def bugs(app):
     '''
     Add an analysis and some bugs
     '''
-    from shipit_uplift.models import (
+    from uplift_backend.models import (
         BugAnalysis, BugResult, Contributor, BugContributor
     )
 
@@ -97,7 +97,7 @@ def header_user(app):
     '''
     Build an Hawk header for user role
     '''
-    from shipit_uplift.config import SCOPES_USER
+    from uplift_backend.config import SCOPES_USER
     return hawk_header(SCOPES_USER)
 
 
@@ -106,7 +106,7 @@ def header_admin(app):
     '''
     Build an Hawk header for admin role
     '''
-    from shipit_uplift.config import SCOPES_ADMIN
+    from uplift_backend.config import SCOPES_ADMIN
     return hawk_header(SCOPES_ADMIN)
 
 
@@ -115,5 +115,5 @@ def header_bot(app):
     '''
     Build an Hawk header for bot role
     '''
-    from shipit_uplift.config import SCOPES_BOT
+    from uplift_backend.config import SCOPES_BOT
     return hawk_header(SCOPES_BOT)

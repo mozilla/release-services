@@ -7,12 +7,12 @@
 def create_app(config=None):
     import os
     import backend_common
-    import shipit_uplift.config
-    import shipit_uplift.models  # noqa
+    import uplift_backend.config
+    import uplift_backend.models  # noqa
 
     app = backend_common.create_app(
-        app_name=shipit_uplift.config.APP_NAME,
-        project_name=shipit_uplift.config.PROJECT_NAME,
+        app_name=uplift_backend.config.APP_NAME,
+        project_name=uplift_backend.config.PROJECT_NAME,
         config=config,
         extensions=[
             'log',

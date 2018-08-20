@@ -7,7 +7,7 @@ import base64
 import os
 
 import cli_common.taskcluster
-import shipit_uplift.config
+import uplift_backend.config
 
 DEBUG = bool(os.environ.get('DEBUG', False))
 
@@ -25,7 +25,7 @@ required = [
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
-    shipit_uplift.config.PROJECT_NAME,
+    uplift_backend.config.PROJECT_NAME,
     required=required,
     existing={x: os.environ.get(x) for x in required if x in os.environ},
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),

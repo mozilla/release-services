@@ -9,17 +9,18 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-uplift";
-  dirname = "shipit_uplift";
+  name = "mozilla-uplift-backend";
+  dirname = "uplift_backend";
+  src_path = "src/uplift/backend";
 
   self = mkBackend rec {
-    inherit python name dirname;
+    inherit python name dirname src_path;
     inProduction = true;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
-      (fromRequirementsFile ./../../lib/backend_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages) ++
       [ redis ];
     propagatedBuildInputs =

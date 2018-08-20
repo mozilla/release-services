@@ -3,8 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PROJECT_NAME = 'shipit-uplift'
-APP_NAME = 'shipit_uplift'
+PROJECT_NAME = 'uplift/backend'
+APP_NAME = 'uplift_backend'
 
 # Tasckcluster scopes
 SCOPES_USER = [

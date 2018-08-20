@@ -117,7 +117,7 @@ def test_analysis_query_strings():
     '''
     Check Bugzilla parameters building
     '''
-    from shipit_uplift.models import BugAnalysis
+    from uplift_backend.models import BugAnalysis
 
     assert_query_strings(
         BugAnalysis(name='aurora', version=52).build_parameters(),

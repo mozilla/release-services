@@ -65,7 +65,7 @@ def upgrade():
         op.execute("DELETE FROM shipit_dashboard_analysis")
 
     # Setup initial analysis
-    all_analysis = json.load(open(os.path.join(HERE, 'analysis.json'), 'r'))
+    all_analysis = json.load(open(os.path.join(HERE, '../../uplift_backend/analysis.json'), 'r'))
     op.bulk_insert(analysis_tables, all_analysis)
 
 

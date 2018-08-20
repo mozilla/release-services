@@ -10,7 +10,7 @@ def test_patch_status(client, bugs, header_bot):
     '''
     Fetch detailled analysis, with bugs
     '''
-    from shipit_uplift.models import BugResult, PatchStatus
+    from uplift_backend.models import BugResult, PatchStatus
     url = '/bugs/1139560/patches'
     revision = '80c32af73390'  # existing patch revision
     branch = 'test'
