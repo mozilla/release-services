@@ -11,9 +11,10 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-uplift-backend";
   dirname = "uplift_backend";
+  src_path = "src/uplift/backend";
 
   self = mkBackend rec {
-    inherit python name dirname;
+    inherit python name dirname src_path;
     inProduction = true;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
