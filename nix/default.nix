@@ -51,7 +51,7 @@ let
     "redis" =
       pkgs.stdenv.mkDerivation
         { name = "${pkgs.redis.name}-env";
-          buildInputs = [ pkgs.redis];
+          buildInputs = [ pkgs.redis ];
           passthru.package = pkgs.redis;
         };
 
