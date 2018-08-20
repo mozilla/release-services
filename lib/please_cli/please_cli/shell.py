@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
+import pathlib
 import os
 import subprocess
 
@@ -11,6 +10,7 @@ import cli_common.cli
 import cli_common.log
 import click
 import please_cli.config
+import please_cli.utils
 
 log = cli_common.log.get_logger(__name__)
 
@@ -89,6 +89,19 @@ def cmd(project, zsh, quiet, command, nix_shell,
         taskcluster_access_token,
         ):
 
+    project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
+    run_type = project_config.get('run')
+    run_options = project_config.get('run_options', {})
+
+    TMP_DIR = pathlib.Path(please_cli.config.TMP_DIR)
+    ROOT_DIR = pathlib.Path(please_cli.config.ROOT_DIR)
+    CERTS_DIR = TMP_DIR / 'certs'
+
+    ROOT_NIX_FILE = ROOT_DIR / 'nix' / 'default.nix'
+    CA_CERT_FILE =  CERTS_DIR / 'ca.crt'
+    SERVER_CERT_FILE = CERTS_DIR / 'server.crt'
+    SERVER_KEY_FILE = CERTS_DIR / 'server.key'
+
     run = []
     if zsh or command:
         run.append('--run')
@@ -99,19 +112,47 @@ def cmd(project, zsh, quiet, command, nix_shell,
 
     _command = [
         nix_shell,
-        os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
+        f'{ROOT_NIX_FILE}',
         '-A', project,
         '-j', '1',
     ] + run
 
-    os.environ['SERVICES_ROOT'] = please_cli.config.ROOT_DIR + '/'
-    os.environ['SSL_DEV_CA'] = os.path.join(please_cli.config.TMP_DIR, 'certs')
-    os.environ['PYTHONPATH'] = ""
-    os.environ['TASKCLUSTER_SECRET'] = taskcluster_secret
+    envs = dict(
+        SERVICES_ROOT=f'{ROOT_DIR}/',
+        SSL_DEV_CA=f'{CERTS_DIR}',
+        SSL_CACERT=f'{CA_CERT_FILE}',
+        SSL_CERT=f'{SERVER_CERT_FILE}',
+        SSL_KEY=f'{SERVER_KEY_FILE}',
+        HOST=run_options.get('host', '127.0.0.1'),
+        PORT=str(run_options.get('port', 8000)),
+        RELEASE_VERSION=please_cli.config.VERSION,
+        RELEASE_CHANNEL='development',
+        PYTHONPATH='',
+        TASKCLUSTER_SECRET=taskcluster_secret,
+    )
+
     if taskcluster_client_id:
-        os.environ['TASKCLUSTER_CLIENT_ID'] = taskcluster_client_id
+        envs['TASKCLUSTER_CLIENT_ID'] = taskcluster_client_id
     if taskcluster_access_token:
-        os.environ['TASKCLUSTER_ACCESS_TOKEN'] = taskcluster_access_token
+        envs['TASKCLUSTER_ACCESS_TOKEN'] = taskcluster_access_token
+
+    for require in project_config.get('requires', []):
+        env_name = '{}_URL'.format(please_cli.utils.normalize_name(require).upper())
+        env_value = '{}://{}:{}'.format(
+            please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('schema', 'https'),
+            please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('host', envs['HOST']),
+            please_cli.config.PROJECTS_CONFIG[require]['run_options']['port'],
+        )
+        envs[env_name] = env_value
+
+    for env_name, env_value in run_options.get('envs', {}).items():
+        env_name = please_cli.utils.normalize_name(env_name).upper()
+        envs[env_name] = env_value
+
+    click.echo(' => Setting environment variables:')
+    for env_name, env_value in envs.items():
+        click.echo(f'    - {env_name}="{env_value}"')
+        os.environ[env_name] = env_value
 
     if command:
         handle_stream_line = None

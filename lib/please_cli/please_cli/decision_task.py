@@ -176,55 +176,55 @@ def get_deploy_task(index,
         ]
 
     elif deploy_target == 'DOCKERHUB':
-        docker_repo = please_cli.config.DOCKER_REPO
+        try:
+            docker_registry = deploy_options['docker_registry']
+            docker_repo = deploy_options['docker_repo']
+        except KeyError:
+            raise click.ClickException('Missing `docker_registry` or `docker_repo` in deploy options')
+
         project_name = (
-            '{project} ({nix_path_attribute}) to DOCKERHUB '
-            '({docker_repo}:{project}-{nix_path_attribute}-{channel})'.format(
-                project=project,
-                nix_path_attribute=nix_path_attribute,
-                docker_repo=docker_repo,
-                channel=channel,
-            )
+            f'{project} ({nix_path_attribute}) to DOCKERHUB '
+            f'({docker_registry}/{docker_repo}:{project}-{nix_path_attribute}-{channel})'
         )
         command = [
             './please', '-vv', 'tools', 'deploy:DOCKERHUB', project,
-            '--taskcluster-secret=' + taskcluster_secret,
-            '--nix-path-attribute={}'.format(nix_path_attribute),
-            '--docker-repo={}'.format(docker_repo),
-            '--channel={}'.format(channel),
+            f'--taskcluster-secret={taskcluster_secret}',
+            f'--nix-path-attribute={nix_path_attribute}',
+            f'--docker-repo={docker_repo}',
+            f'--docker-registry={docker_registry}',
+            f'--channel={channel}',
             '--no-interactive',
         ]
 
     elif deploy_target == 'TASKCLUSTER_HOOK':
+        try:
+            docker_registry = deploy_options['docker_registry']
+            docker_repo = deploy_options['docker_repo']
+        except KeyError:
+            raise click.ClickException('Missing `docker_registry` or `docker_repo` in deploy options')
         hook_group_id = 'project-releng'
-        hook_id = 'services-{}-{}{}'.format(
-            channel,
-            project,
-            deploy_options.get('name-suffix', ''),
-        )
-        project_name = '{}{} to TASKCLUSTER HOOK ({}/{})'.format(
-            project,
-            ' ({})'.format(nix_path_attribute),
-            hook_group_id,
-            hook_id,
-        )
+        name_suffix = deploy_options.get('name-suffix', '')
+        hook_id = f'services-{channel}-{project}{name_suffix}'
+        project_name = f'{project} ({nix_path_attribute}) to TASKCLUSTER HOOK ({hook_group_id}/{hook_id})'
         command = [
             './please', '-vv',
             'tools', 'deploy:TASKCLUSTER_HOOK',
             project,
-            '--hook-group-id={}'.format(hook_group_id),
-            '--hook-id={}'.format(hook_id),
-            '--taskcluster-secret=' + taskcluster_secret,
-            '--nix-path-attribute=' + nix_path_attribute,
+            f'--docker-registry={docker_registry}',
+            f'--docker-repo={docker_repo}',
+            f'--hook-group-id={hook_group_id}',
+            f'--hook-id={hook_id}',
+            f'--taskcluster-secret={taskcluster_secret}',
+            f'--nix-path-attribute={nix_path_attribute}',
             '--no-interactive',
         ]
         scopes += [
-          'assume:hook-id:project-releng/services-{}-*'.format(channel),
-          'hooks:modify-hook:project-releng/services-{}-*'.format(channel),
+          f'assume:hook-id:project-releng/services-{channel}-*',
+          f'hooks:modify-hook:project-releng/services-{channel}-*',
         ]
 
     else:
-        raise click.ClickException('Unknown deployment target `{}` for project `{}`'.format(deploy_target, project))
+        raise click.ClickException(f'Unknown deployment target `{deploy_target}` for project `{project}`')
 
     return get_task(
         task_group_id,
@@ -289,7 +289,7 @@ def get_task(task_group_id,
         'priority': priority,
         'payload': {
             'maxRunTime': 60 * 60 * max_run_time_in_hours,
-            'image': '{}:{}'.format(please_cli.config.DOCKER_REPO,
+            'image': '{}:{}'.format(please_cli.config.DOCKER_BASE_REPO,
                                     please_cli.config.DOCKER_BASE_TAG),
             'features': {
                 'taskclusterProxy': True,

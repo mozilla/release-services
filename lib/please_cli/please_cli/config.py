@@ -40,8 +40,7 @@ TMP_DIR = os.path.join(ROOT_DIR, 'tmp')
 CHANNELS = ['master', 'testing', 'staging', 'production']
 DEPLOY_CHANNELS = ['testing', 'staging', 'production']
 
-DOCKER_REGISTRY = "index.docker.io"
-DOCKER_REPO = 'mozillareleng/services'
+DOCKER_BASE_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-' + VERSION
 
 NIX_BIN_DIR = os.environ.get("NIX_BIN_DIR", "")  # must end with /
@@ -57,7 +56,7 @@ TEMPLATES = {
     'backend-json-api': {}
 }
 
-DEV_PROJECTS = ['postgresql']
+DEV_PROJECTS = ['postgresql', 'redis']
 PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
@@ -71,6 +70,13 @@ PROJECTS_CONFIG = {
         'run_options': {
             'port': 9000,
             'data_dir': os.path.join(TMP_DIR, 'postgresql'),
+        },
+    },
+    'redis': {
+        'run': 'REDIS',
+        'run_options': {
+            'port': 6379,
+            'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
     'releng-notification-policy': {
@@ -384,14 +390,20 @@ PROJECTS_CONFIG = {
                     'testing': {
                         'nix_path_attribute': 'cron.replicate.testing',
                         'name-suffix': '-replicate',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'cron.replicate.staging',
                         'name-suffix': '-replicate',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'cron.replicate.production',
                         'name-suffix': '-replicate',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -401,14 +413,20 @@ PROJECTS_CONFIG = {
                     'testing': {
                         'nix_path_attribute': 'cron.check_pending_uploads.testing',
                         'name-suffix': '-check_pending_uploads',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'cron.check_pending_uploads.staging',
                         'name-suffix': '-check_pending_uploads',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'cron.check_pending_uploads.production',
                         'name-suffix': '-check_pending_uploads',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -458,7 +476,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-bot-uplift': {
+    'uplift/bot': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -469,12 +487,18 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -491,12 +515,18 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -554,12 +584,18 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -594,7 +630,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-static-analysis': {
+    'staticanalysis/bot': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -605,12 +641,18 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
                         'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
                         'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
                     },
                 },
             },
@@ -645,6 +687,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                     'staging': {
@@ -657,6 +700,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                     'production': {
@@ -669,13 +713,14 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                 },
             },
         ],
     },
-    'shipit-uplift': {
+    'uplift/backend': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -717,7 +762,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-workflow': {
+    'shipit/api': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -731,43 +776,31 @@ PROJECTS_CONFIG = {
         ],
         'deploys': [
             {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-workflow',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://shipit-workflow.testing.mozilla-releng.net',
-                        # TODO: we need to change this to SSL Endpoint
-                        'dns': 'shipit-workflow.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-workflow',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://shipit-workflow.staging.mozilla-releng.net',
-                        # TODO: we need to change this to SSL Endpoint
-                        'dns': 'shipit-workflow.staging.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-            {
                 'target': 'DOCKERHUB',
                 'options': {
                     'testing': {
+                        'url': 'https://api.shipit.testing.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
                     },
                     'staging': {
+                        'url': 'https://api.shipit.staging.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
                     },
                     'production': {
+                        'url': 'https://api.shipit.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
                     },
                 },
             },
         ],
     },
-    'shipit-frontend': {
+    'shipit/frontend': {
         'run': 'NEUTRINO',
         'run_options': {
             'port': 8010,
@@ -776,7 +809,7 @@ PROJECTS_CONFIG = {
             },
         },
         'requires': [
-            'shipit-workflow',
+            'shipit/api',
         ],
         'checks': [
             ('Checking code quality', 'yarn lint'),
