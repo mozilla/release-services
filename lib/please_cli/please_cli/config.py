@@ -617,8 +617,8 @@ PROJECTS_CONFIG = {
                 'target': 'S3',
                 'options': {
                     'testing': {
-                        's3_bucket': 'shipit-testing-frontend',
-                        'url': 'https://shipit.testing.mozilla-releng.net',
+                        's3_bucket': 'uplift-testing-frontend',
+                        'url': 'https://uplift.testing.moz.tools',
                         'dns': 'd2jpisuzgldax2.cloudfront.net.',
                         'envs': {
                             'bugzilla-url': 'https://bugzilla.mozilla.org',
@@ -630,8 +630,8 @@ PROJECTS_CONFIG = {
                         ],
                     },
                     'staging': {
-                        's3_bucket': 'shipit-staging-frontend',
-                        'url': 'https://shipit.staging.mozilla-releng.net',
+                        's3_bucket': 'uplift-staging-frontend',
+                        'url': 'https://uplift.staging.moz.tools',
                         'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                         'envs': {
                             'bugzilla-url': 'https://bugzilla.mozilla.org',
@@ -644,8 +644,8 @@ PROJECTS_CONFIG = {
                         ],
                     },
                     'production': {
-                        's3_bucket': 'shipit-production-frontend',
-                        'url': 'https://shipit.mozilla-releng.net',
+                        's3_bucket': 'uplift-production-frontend',
+                        'url': 'https://uplift.moz.tools',
                         'dns': 'dve8yd1431ifz.cloudfront.net.',
                         'envs': {
                             'bugzilla-url': 'https://bugzilla.mozilla.org',
