@@ -78,6 +78,15 @@ footer div a:hover {
 }
 
 
+.show-after-1s {
+  animation: show-after-1s 0s 1s forwards;
+  visibility: hidden;
+}
+
+@keyframes show-after-1s {
+  to { visibility: visible; };
+}
+
 /* Phones (<768px) */
 @media (max-width: 768px) {
 

@@ -20,24 +20,12 @@ import {
   SENTRY_DSN,
 } from './config';
 
-const backendApi = authHeader => axios.create({
-  baseURL: SHIPIT_API_URL,
-  transformRequest: (data, headers) => {
-    if (authHeader) {
-      /* eslint-disable no-param-reassign */
-      headers.Authorization = authHeader;
-      /* eslint-enable */
-    }
-    return data;
-  },
-});
-
 const loadApp = () => {
   const history = createHistory();
   const App = createApp({
     history,
-    backendApi,
     backendUrl: SHIPIT_API_URL,
+    backendApi: axios.create({ baseURL: SHIPIT_API_URL }),
     releaseVersion: RELEASE_VERSION,
     releaseChannel: RELEASE_CHANNEL,
   });

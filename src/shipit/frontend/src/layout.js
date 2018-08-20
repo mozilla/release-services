@@ -60,26 +60,31 @@ const view = (model, dispatch) => (
     </Container>
   </Navbar>
 );
-const createNavbar = effects => ({ init, update: update(effects), view });
+const createNavbarProgram = (options, effects) => ({ init, update: update(effects), view });
 
-export default content => (options, effects) => batchPrograms(
-  [createNavbar(effects), content],
-  ([navbarView, contentView]) => (
-    <div id="wrapper" className={`page-${content.id}`}>
-      {navbarView()}
-      <Container>
-        <div id="content"><Container>{contentView()}</Container></div>
-        <footer>
-          <hr />
-          <ul>
-            <li><a href="https://docs.mozilla-releng.net">Documentation</a></li>
-            <li><a href="https://github.com/mozilla/release-services/blob/master/CONTRIBUTING.rst">Contribute</a></li>
-            <li><a href="https://github.com/mozilla/release-services/issues/new">Contact</a></li>
-          </ul>
-          <div>Version: <a href={`https://github.com/mozilla/release-services/releases/tag/v${options.releaseVersion}`}>{options.releaseVersion}</a></div>
-        </footer>
-      </Container>
-    </div>
-  ),
-);
+export default createMainProgram => (options, effects) => {
+  const navbar = createNavbarProgram(options, effects);
+  const main = createMainProgram(options, effects);
+  const mainClassName = main.name === undefined ? 'page-unknown-name' : `page-${main.name}`;
+  return batchPrograms(
+    [navbar, main],
+    ([navbarView, contentView]) => (
+      <div id="wrapper" className={mainClassName}>
+        {navbarView()}
+        <Container>
+          <div id="content"><Container>{contentView()}</Container></div>
+          <footer>
+            <hr />
+            <ul>
+              <li><a href="https://docs.mozilla-releng.net">Documentation</a></li>
+              <li><a href="https://github.com/mozilla/release-services/blob/master/CONTRIBUTING.rst">Contribute</a></li>
+              <li><a href="https://github.com/mozilla/release-services/issues/new">Contact</a></li>
+            </ul>
+            <div>Version: <a href={`https://github.com/mozilla/release-services/releases/tag/v${options.releaseVersion}`}>v{options.releaseVersion}</a></div>
+          </footer>
+        </Container>
+      </div>
+    ),
+  );
+};
 
