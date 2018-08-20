@@ -78,6 +78,9 @@ def cmd(ctx, project, quiet, nix_shell,
     pg_host = please_cli.config.PROJECTS_CONFIG['postgresql']['run_options'].get('host', host)
     pg_port = str(please_cli.config.PROJECTS_CONFIG['postgresql']['run_options']['port'])
 
+    redis_host = please_cli.config.PROJECTS_CONFIG['redis']['run_options'].get('host', host)
+    redis_port = str(please_cli.config.PROJECTS_CONFIG['redis']['run_options']['port'])
+
     if False and 'postgresql' in project_config.get('requires', []):
 
         dbname = 'services'
@@ -136,8 +139,22 @@ def cmd(ctx, project, quiet, nix_shell,
         )
 
     if 'redis' in project_config.get('requires', []):
-        # TODO: Support checking if redis is running and support starting redis using please.
-        os.environ['REDIS_URL'] = 'redis://127.0.0.1:6379'
+
+        # Check redis is running
+        click.echo(' => Checking if redis is running... ', nl=False)
+        with click_spinner.spinner():
+            result, output, error = ctx.invoke(
+                please_cli.shell.cmd,
+                project=project,
+                quiet=True,
+                command='redis-cli -h {} -p {} ping'.format(redis_host, redis_port),
+                nix_shell=nix_shell,
+                )
+
+        please_cli.utils.check_result(result, output)
+
+        # Setup config for client application
+        os.environ['REDIS_URL'] = 'redis://{}:{}'.format(redis_host, redis_port)
 
     if run_type == 'POSTGRESQL':
         data_dir = run_options.get('data_dir', os.path.join(please_cli.config.TMP_DIR, 'postgresql'))
@@ -158,6 +175,18 @@ def cmd(ctx, project, quiet, nix_shell,
             '-D', data_dir,
             '-h', host,
             '-p', port,
+        ]
+
+    elif run_type == 'REDIS':
+        data_dir = run_options.get('data_dir', os.path.join(please_cli.config.TMP_DIR, 'redis'))
+        if not os.path.isdir(data_dir):
+            os.makedirs(data_dir)
+
+        command = [
+            'redis-server',
+            '--dir', data_dir,
+            '--bind', host,
+            '--port', port,
         ]
 
     elif run_type == 'FLASK':

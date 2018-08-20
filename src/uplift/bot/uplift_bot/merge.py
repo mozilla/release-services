@@ -3,7 +3,7 @@ from collections import OrderedDict
 from collections import namedtuple
 
 from cli_common.log import get_logger
-from shipit_bot_uplift.api import api_client
+from uplift_bot.api import api_client
 
 logger = get_logger(__name__)
 

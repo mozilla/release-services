@@ -8,9 +8,9 @@ import click
 from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
-from shipit_bot_uplift import config
-from shipit_bot_uplift.api import api_client
-from shipit_bot_uplift.sync import Bot
+from uplift_bot import config
+from uplift_bot.api import api_client
+from uplift_bot.sync import Bot
 
 
 @click.command()

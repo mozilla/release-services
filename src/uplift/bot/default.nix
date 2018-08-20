@@ -10,8 +10,8 @@ let
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-bot-uplift";
-  dirname = "shipit_bot_uplift";
+  name = "mozilla-uplift-bot";
+  dirname = "uplift_bot";
 
   mkBot = branch:
     let
@@ -42,7 +42,7 @@ let
         };
         taskCapabilities = {};
         taskCommand = [
-          "/bin/shipit-bot-uplift"
+          "/bin/uplift-bot"
           "--taskcluster-secret"
           secretsKey
           "--cache-root"
@@ -58,7 +58,7 @@ let
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);

@@ -1,6 +1,6 @@
 .. _shipit-bot-uplift-project:
 
-Project: shipit-bot-uplift
+Project: uplift/bot
 ==========================
 
 
