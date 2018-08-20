@@ -687,6 +687,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                     'staging': {
@@ -699,6 +700,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                     'production': {
@@ -711,6 +713,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                 },
