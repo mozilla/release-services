@@ -48,6 +48,13 @@ let
           passthru.package = pkgs.postgresql95;
         };
 
+    "redis" =
+      pkgs.stdenv.mkDerivation
+        { name = "${pkgs.redis.name}-env";
+          buildInputs = [ pkgs.redis ];
+          passthru.package = pkgs.redis;
+        };
+
     "please-cli" = import ./../lib/please_cli { inherit releng_pkgs; };
     # TODO: backend_common_example = import ./../lib/backend_common/example { inherit releng_pkgs; };
     "frontend-common-example" = import ./../lib/frontend_common/example { inherit releng_pkgs; };
