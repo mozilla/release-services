@@ -11,10 +11,10 @@ import hglib
 from parsepatch.patch import Patch
 
 from cli_common import log
-from shipit_static_analysis import Issue
-from shipit_static_analysis import stats
-from shipit_static_analysis.config import REPO_REVIEW
-from shipit_static_analysis.config import settings
+from static_analysis_bot import Issue
+from static_analysis_bot import stats
+from static_analysis_bot.config import REPO_REVIEW
+from static_analysis_bot.config import settings
 
 logger = log.get_logger(__name__)
 

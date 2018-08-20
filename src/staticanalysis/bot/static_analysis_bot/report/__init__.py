@@ -4,9 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common.log import get_logger
-from shipit_static_analysis.report.mozreview import MozReviewReporter
-from shipit_static_analysis.report.mail import MailReporter
-from shipit_static_analysis.report.phabricator import PhabricatorReporter
+from static_analysis_bot.report.mozreview import MozReviewReporter
+from static_analysis_bot.report.mail import MailReporter
+from static_analysis_bot.report.phabricator import PhabricatorReporter
 
 logger = get_logger(__name__)
 

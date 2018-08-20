@@ -5,7 +5,7 @@
 
 import datadog
 
-from shipit_static_analysis.config import settings
+from static_analysis_bot.config import settings
 
 
 class Datadog(object):

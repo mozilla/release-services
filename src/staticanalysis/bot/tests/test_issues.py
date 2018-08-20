@@ -5,7 +5,7 @@
 import hashlib
 import os
 
-from shipit_static_analysis import Issue
+from static_analysis_bot import Issue
 
 
 class DummyIssue(Issue):
@@ -109,7 +109,7 @@ def test_lines_hash(mock_config, test_cpp):
     '''
     Test issues line hashing
     '''
-    from shipit_static_analysis import Issue
+    from static_analysis_bot import Issue
 
     class TestIssue(DummyIssue):
         def __init__(self, **kwargs):

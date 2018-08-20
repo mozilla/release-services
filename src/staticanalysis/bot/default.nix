@@ -19,8 +19,8 @@ let
 
   nodejs = nodejs-8_x;
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-static-analysis";
-  dirname = "shipit_static_analysis";
+  name = "mozilla-static-analysis-bot";
+  dirname = "static_analysis_bot";
 
   # Customize gecko environment with Nodejs & Python 3 for linters
   gecko-env = releng_pkgs.gecko-env.overrideDerivation(old : {
@@ -31,7 +31,7 @@ let
 
   mkBot = branch:
     let
-      cacheKey = "services-" + branch + "-shipit-static-analysis";
+      cacheKey = "services-" + branch + "-static-analysis-bot";
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
       hook = mkTaskclusterHook {
         name = "Static analysis automated tests";
@@ -49,7 +49,7 @@ let
           ("docker-worker:cache:" + cacheKey)
 
           # Needed to index the task in the TaskCluster index
-          ("index:insert-task:project.releng.services.project." + branch + ".shipit_static_analysis.*")
+          ("index:insert-task:project.releng.services.project." + branch + ".static_analysis_bot.*")
         ];
         cache = {
           "${cacheKey}" = "/cache";
@@ -64,12 +64,12 @@ let
 
         taskRoutes = [
           # Latest route
-          ("index.project.releng.services.project." + branch + ".shipit_static_analysis.latest")
+          ("index.project.releng.services.project." + branch + ".static_analysis_bot.latest")
         ];
 
         taskCapabilities = {};
         taskCommand = [
-          "/bin/shipit-static-analysis"
+          "/bin/static-analysis-bot"
           "--taskcluster-secret"
           secretsKey
           "--cache-root"
@@ -102,7 +102,7 @@ let
     src = filterSource ./. { inherit name; };
     buildInputs =
       [ mercurial clang_5 ] ++ 
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       [

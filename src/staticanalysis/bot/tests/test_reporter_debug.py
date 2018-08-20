@@ -10,8 +10,8 @@ def test_publication(tmpdir, mock_issues):
     '''
     Test debug publication and report analysis
     '''
-    from shipit_static_analysis.report.debug import DebugReporter
-    from shipit_static_analysis.revisions import MozReviewRevision
+    from static_analysis_bot.report.debug import DebugReporter
+    from static_analysis_bot.revisions import MozReviewRevision
 
     report_dir = str(tmpdir.mkdir('public').realpath())
     report_path = os.path.join(report_dir, 'report.json')

@@ -15,25 +15,25 @@ import hglib
 
 from cli_common.command import run_check
 from cli_common.log import get_logger
-from shipit_static_analysis import CLANG_FORMAT
-from shipit_static_analysis import CLANG_TIDY
-from shipit_static_analysis import MOZLINT
-from shipit_static_analysis import stats
-from shipit_static_analysis.clang import setup as setup_clang
-from shipit_static_analysis.clang.format import ClangFormat
-from shipit_static_analysis.clang.tidy import ClangTidy
-from shipit_static_analysis.config import ARTIFACT_URL
-from shipit_static_analysis.config import REPO_CENTRAL
-from shipit_static_analysis.config import Publication
-from shipit_static_analysis.config import settings
-from shipit_static_analysis.lint import MozLint
-from shipit_static_analysis.report.debug import DebugReporter
-from shipit_static_analysis.revisions import Revision
-from shipit_static_analysis.utils import build_temp_file
+from static_analysis_bot import CLANG_FORMAT
+from static_analysis_bot import CLANG_TIDY
+from static_analysis_bot import MOZLINT
+from static_analysis_bot import stats
+from static_analysis_bot.clang import setup as setup_clang
+from static_analysis_bot.clang.format import ClangFormat
+from static_analysis_bot.clang.tidy import ClangTidy
+from static_analysis_bot.config import ARTIFACT_URL
+from static_analysis_bot.config import REPO_CENTRAL
+from static_analysis_bot.config import Publication
+from static_analysis_bot.config import settings
+from static_analysis_bot.lint import MozLint
+from static_analysis_bot.report.debug import DebugReporter
+from static_analysis_bot.revisions import Revision
+from static_analysis_bot.utils import build_temp_file
 
 logger = get_logger(__name__)
 
-TASKCLUSTER_NAMESPACE = 'project.releng.services.project.{channel}.shipit_static_analysis.{name}'
+TASKCLUSTER_NAMESPACE = 'project.releng.services.project.{channel}.static_analysis_bot.{name}'
 TASKCLUSTER_INDEX_TTL = 7  # in days
 
 

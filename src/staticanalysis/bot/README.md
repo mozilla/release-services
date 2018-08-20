@@ -89,7 +89,7 @@ Example configuration
     "PAPERTRAIL_HOST": "XXXX.papertrail.net",
     "PAPERTRAIL_PORT": 12345
   },
-  "shipit-static-analysis": {
+  "static-analysis-bot": {
     "REPORTERS": [
       {
         "reporter": "mail",

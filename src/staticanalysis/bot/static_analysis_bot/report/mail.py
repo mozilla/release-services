@@ -5,8 +5,8 @@
 
 from cli_common import log
 from cli_common.taskcluster import get_service
-from shipit_static_analysis.config import settings
-from shipit_static_analysis.report.base import Reporter
+from static_analysis_bot.config import settings
+from static_analysis_bot.report.base import Reporter
 
 logger = log.get_logger(__name__)
 

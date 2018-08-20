@@ -8,10 +8,10 @@ from urllib.parse import urlparse
 import requests
 
 from cli_common import log
-from shipit_static_analysis import Issue
-from shipit_static_analysis import stats
-from shipit_static_analysis.report.base import Reporter
-from shipit_static_analysis.revisions import PhabricatorRevision
+from static_analysis_bot import Issue
+from static_analysis_bot import stats
+from static_analysis_bot.report.base import Reporter
+from static_analysis_bot.revisions import PhabricatorRevision
 
 logger = log.get_logger(__name__)
 

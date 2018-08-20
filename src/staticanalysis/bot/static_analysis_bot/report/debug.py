@@ -8,7 +8,7 @@ import os.path
 import time
 
 from cli_common import log
-from shipit_static_analysis.report.base import Reporter
+from static_analysis_bot.report.base import Reporter
 
 logger = log.get_logger(__name__)
 

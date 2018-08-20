@@ -14,7 +14,7 @@ import yaml
 
 from cli_common.log import get_logger
 
-PROJECT_NAME = 'shipit-static-analysis'
+PROJECT_NAME = 'static-analysis-bot'
 CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'

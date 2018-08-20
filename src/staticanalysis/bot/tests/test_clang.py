@@ -42,7 +42,7 @@ def test_expanded_macros(mock_stats, test_cpp, mock_revision):
     '''
     Test expanded macros are detected by clang issue
     '''
-    from shipit_static_analysis.clang.tidy import ClangTidyIssue
+    from static_analysis_bot.clang.tidy import ClangTidyIssue
     parts = ('test.cpp', '42', '51', 'error', 'dummy message', 'dummy-check')
     issue = ClangTidyIssue(parts, mock_revision)
     assert issue.is_problem()
@@ -70,8 +70,8 @@ def test_clang_format(mock_config, mock_repository, mock_stats, mock_clang, mock
     '''
     Test clang-format runner
     '''
-    from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
-    from shipit_static_analysis.config import settings
+    from static_analysis_bot.clang.format import ClangFormat, ClangFormatIssue
+    from static_analysis_bot.config import settings
 
     # Write badly formatted c file
     bad_file = os.path.join(mock_config.repo_dir, 'bad.cpp')
@@ -128,8 +128,8 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
     '''
     Test clang-tidy runner
     '''
-    from shipit_static_analysis.clang.tidy import ClangTidy, ClangTidyIssue
-    from shipit_static_analysis.config import settings
+    from static_analysis_bot.clang.tidy import ClangTidy, ClangTidyIssue
+    from static_analysis_bot.config import settings
 
     # Init clang tidy runner
     ct = ClangTidy()
@@ -179,8 +179,8 @@ def test_clang_tidy_checks(mock_config, mock_repository, mock_clang):
     '''
     Test that all our clang-tidy checks actually exist
     '''
-    from shipit_static_analysis.clang.tidy import ClangTidy
-    from shipit_static_analysis.config import CONFIG_URL, settings
+    from static_analysis_bot.clang.tidy import ClangTidy
+    from static_analysis_bot.config import CONFIG_URL, settings
 
     # Get the set of all available checks that the local clang-tidy offers
     clang_tidy = ClangTidy(validate_checks=False)
@@ -199,7 +199,7 @@ def test_clang_tidy_parser(mock_config, mock_repository, mock_revision, mock_cla
     '''
     Test the clang-tidy (or mach static-analysis) parser
     '''
-    from shipit_static_analysis.clang.tidy import ClangTidy
+    from static_analysis_bot.clang.tidy import ClangTidy
     clang_tidy = ClangTidy()
 
     # Empty Output
@@ -238,7 +238,7 @@ def test_as_text(mock_revision):
     '''
     Test text export for ClangTidyIssue
     '''
-    from shipit_static_analysis.clang.tidy import ClangTidyIssue
+    from static_analysis_bot.clang.tidy import ClangTidyIssue
     parts = ('test.cpp', '42', '51', 'error', 'dummy message withUppercaseChars', 'dummy-check')
     issue = ClangTidyIssue(parts, mock_revision)
     issue.body = 'Dummy body withUppercaseChars'
@@ -250,7 +250,7 @@ def test_as_markdown(mock_revision):
     '''
     Test markdown generation for ClangTidyIssue
     '''
-    from shipit_static_analysis.clang.tidy import ClangTidyIssue
+    from static_analysis_bot.clang.tidy import ClangTidyIssue
     parts = ('test.cpp', '42', '51', 'error', 'dummy message', 'dummy-check')
     issue = ClangTidyIssue(parts, mock_revision)
     issue.body = 'Dummy body'
@@ -281,7 +281,7 @@ def test_repeats(mock_clang_repeats, mock_revision, mock_config):
     Test repeated issues are removed through set usage
     '''
 
-    from shipit_static_analysis.clang.tidy import ClangTidy
+    from static_analysis_bot.clang.tidy import ClangTidy
     clang_tidy = ClangTidy()
 
     issues = clang_tidy.parse_issues(mock_clang_repeats, mock_revision)

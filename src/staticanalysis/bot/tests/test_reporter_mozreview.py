@@ -10,7 +10,7 @@ def test_conf(mock_mozreview):
     '''
     Test mozreview reporter configuration
     '''
-    from shipit_static_analysis.report.mozreview import MozReviewReporter
+    from static_analysis_bot.report.mozreview import MozReviewReporter
 
     # Missing emails conf
     with pytest.raises(AssertionError):
@@ -30,8 +30,8 @@ def test_review_publication(mock_mozreview, mock_issues, mock_phabricator):
     '''
     Test publication of a single review
     '''
-    from shipit_static_analysis.report.mozreview import MozReviewReporter
-    from shipit_static_analysis.revisions import MozReviewRevision
+    from static_analysis_bot.report.mozreview import MozReviewReporter
+    from static_analysis_bot.revisions import MozReviewRevision
 
     # Publish issues on mozreview
     conf = {
@@ -49,7 +49,7 @@ def test_review_api(mock_mozreview):
     '''
     Test low level mozreview api
     '''
-    from shipit_static_analysis.report.mozreview import MozReviewReporter, MozReview
+    from static_analysis_bot.report.mozreview import MozReviewReporter, MozReview
 
     # Publish issues on mozreview
     conf = {
@@ -108,10 +108,10 @@ def test_comment(mock_mozreview, test_cpp, mock_revision):
     '''
     Test comment creation for specific issues
     '''
-    from shipit_static_analysis.clang.tidy import ClangTidyIssue
-    from shipit_static_analysis.clang.format import ClangFormatIssue
-    from shipit_static_analysis.lint import MozLintIssue
-    from shipit_static_analysis.report.base import Reporter
+    from static_analysis_bot.clang.tidy import ClangTidyIssue
+    from static_analysis_bot.clang.format import ClangFormatIssue
+    from static_analysis_bot.lint import MozLintIssue
+    from static_analysis_bot.report.base import Reporter
 
     # Init dummy reporter
     class TestReporter(Reporter):

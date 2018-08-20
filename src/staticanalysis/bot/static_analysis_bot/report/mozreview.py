@@ -9,15 +9,15 @@ from rbtools.api.client import RBClient
 from rbtools.api.errors import APIError
 
 from cli_common import log
-from shipit_static_analysis import CLANG_FORMAT
-from shipit_static_analysis import CLANG_TIDY
-from shipit_static_analysis import MOZLINT
-from shipit_static_analysis import stats
-from shipit_static_analysis.clang.format import ClangFormatIssue
-from shipit_static_analysis.clang.tidy import ClangTidyIssue
-from shipit_static_analysis.lint import MozLintIssue
-from shipit_static_analysis.report.base import Reporter
-from shipit_static_analysis.revisions import MozReviewRevision
+from static_analysis_bot import CLANG_FORMAT
+from static_analysis_bot import CLANG_TIDY
+from static_analysis_bot import MOZLINT
+from static_analysis_bot import stats
+from static_analysis_bot.clang.format import ClangFormatIssue
+from static_analysis_bot.clang.tidy import ClangTidyIssue
+from static_analysis_bot.lint import MozLintIssue
+from static_analysis_bot.report.base import Reporter
+from static_analysis_bot.revisions import MozReviewRevision
 
 logger = log.get_logger(__name__)
 

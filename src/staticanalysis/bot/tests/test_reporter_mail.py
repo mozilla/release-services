@@ -14,7 +14,7 @@ def test_conf(mock_config):
     '''
     Test mail reporter configuration
     '''
-    from shipit_static_analysis.report.mail import MailReporter
+    from static_analysis_bot.report.mail import MailReporter
 
     # Missing emails conf
     with pytest.raises(AssertionError):
@@ -52,9 +52,9 @@ def test_mail(mock_issues, mock_phabricator):
     '''
     Test mail sending through Taskcluster
     '''
-    from shipit_static_analysis.report.mail import MailReporter
-    from shipit_static_analysis.revisions import MozReviewRevision, PhabricatorRevision
-    from shipit_static_analysis.report.phabricator import PhabricatorReporter
+    from static_analysis_bot.report.mail import MailReporter
+    from static_analysis_bot.revisions import MozReviewRevision, PhabricatorRevision
+    from static_analysis_bot.report.phabricator import PhabricatorReporter
 
     phab = PhabricatorReporter({
         'url': 'http://phabricator.test/api/',

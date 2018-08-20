@@ -3,9 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_static_analysis.config import settings
-from shipit_static_analysis.config import Publication
-from shipit_static_analysis.stats import Datadog
+from static_analysis_bot.config import settings
+from static_analysis_bot.config import Publication
+from static_analysis_bot.stats import Datadog
 import itertools
 import hashlib
 import json

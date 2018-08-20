@@ -10,13 +10,13 @@ from cli_common.log import get_logger
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 from cli_common.taskcluster import get_service
-from shipit_static_analysis import config
-from shipit_static_analysis import stats
-from shipit_static_analysis.config import settings
-from shipit_static_analysis.report import get_reporters
-from shipit_static_analysis.revisions import MozReviewRevision
-from shipit_static_analysis.revisions import PhabricatorRevision
-from shipit_static_analysis.workflow import Workflow
+from static_analysis_bot import config
+from static_analysis_bot import stats
+from static_analysis_bot.config import settings
+from static_analysis_bot.report import get_reporters
+from static_analysis_bot.revisions import MozReviewRevision
+from static_analysis_bot.revisions import PhabricatorRevision
+from static_analysis_bot.workflow import Workflow
 
 logger = get_logger(__name__)
 

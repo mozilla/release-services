@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='shipit_static_analysis',
+    name='static_analysis_bot',
     version=VERSION,
     description='Listens to bugzilla entries, executes'
     'some static analysis and reports results.',
@@ -43,7 +43,7 @@ setuptools.setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-static-analysis = shipit_static_analysis.cli:main',
+            'static-analysis-bot = static_analysis_bot.cli:main',
         ]
     },
 )

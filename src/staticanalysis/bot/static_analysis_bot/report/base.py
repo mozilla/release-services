@@ -5,9 +5,9 @@
 
 import itertools
 
-from shipit_static_analysis.clang.format import ClangFormatIssue
-from shipit_static_analysis.clang.tidy import ClangTidyIssue
-from shipit_static_analysis.lint import MozLintIssue
+from static_analysis_bot.clang.format import ClangFormatIssue
+from static_analysis_bot.clang.tidy import ClangTidyIssue
+from static_analysis_bot.lint import MozLintIssue
 
 COMMENT_PARTS = {
     ClangTidyIssue: {

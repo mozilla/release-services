@@ -5,10 +5,10 @@ import os
 
 from cli_common.command import run
 from cli_common.log import get_logger
-from shipit_static_analysis import Issue
-from shipit_static_analysis import stats
-from shipit_static_analysis.config import settings
-from shipit_static_analysis.revisions import Revision
+from static_analysis_bot import Issue
+from static_analysis_bot import stats
+from static_analysis_bot.config import settings
+from static_analysis_bot.revisions import Revision
 
 logger = get_logger(__name__)
 

@@ -12,7 +12,7 @@ def test_mozreview():
     '''
     Test a mozreview revision
     '''
-    from shipit_static_analysis.revisions import MozReviewRevision
+    from static_analysis_bot.revisions import MozReviewRevision
 
     r = MozReviewRevision('164530', '308c22e7899048467002de4ffb126cac0875c994', '7')
     assert r.mercurial == '308c22e7899048467002de4ffb126cac0875c994'
@@ -27,8 +27,8 @@ def test_phabricator(mock_phabricator, mock_repository, mock_config):
     '''
     Test a phabricator revision
     '''
-    from shipit_static_analysis.revisions import PhabricatorRevision
-    from shipit_static_analysis.report.phabricator import PhabricatorReporter
+    from static_analysis_bot.revisions import PhabricatorRevision
+    from static_analysis_bot.report.phabricator import PhabricatorReporter
 
     api = PhabricatorReporter({
         'url': 'http://phabricator.test/api/',
@@ -95,7 +95,7 @@ def test_mercurial_patch(mock_config, mock_repository):
     '''
     Test mercurial patch creation
     '''
-    from shipit_static_analysis.revisions import MozReviewRevision
+    from static_analysis_bot.revisions import MozReviewRevision
 
     def _commit(name, public=True):
         path = os.path.join(mock_config.repo_dir, 'review_{}.txt'.format(name))

@@ -43,7 +43,7 @@ def mock_config():
         content_type='text/plain',
     )
 
-    from shipit_static_analysis.config import settings
+    from static_analysis_bot.config import settings
     tempdir = tempfile.mkdtemp()
     settings.setup('test', tempdir, 'IN_PATCH')
 
@@ -297,7 +297,7 @@ def mock_stats(mock_config):
     '''
     Mock Datadog authentication and stats management
     '''
-    from shipit_static_analysis import stats
+    from static_analysis_bot import stats
 
     # Configure Datadog with a dummy token
     # and an ultra fast flushing cycle
@@ -348,7 +348,7 @@ def mock_revision():
     '''
     Mock a mercurial revision
     '''
-    from shipit_static_analysis.revisions import Revision
+    from static_analysis_bot.revisions import Revision
     rev = Revision()
     rev.mercurial = 'a6ce14f59749c3388ffae2459327a323b6179ef0'
     return rev
@@ -391,7 +391,7 @@ def mock_workflow(tmpdir, mock_repository, mock_config):
     '''
     Mock the full workflow, without cloning
     '''
-    from shipit_static_analysis.workflow import Workflow
+    from static_analysis_bot.workflow import Workflow
 
     class MockWorkflow(Workflow):
         def clone(self):
