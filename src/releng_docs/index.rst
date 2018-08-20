@@ -35,6 +35,7 @@ Projects
     releng-tooltool <projects/releng-tooltool>
     releng-treestatus <projects/releng-treestatus>
     shipit-code-coverage <projects/shipit-code-coverage>
+    shipit-code-coverage-backend <projects/shipit-code-coverage-backend>
     shipit/frontend <projects/shipit-frontend>
     uplift-backend <projects/uplift-backend>
     shipit-static-analysis <projects/shipit-static-analysis>
