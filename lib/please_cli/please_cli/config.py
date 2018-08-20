@@ -617,9 +617,9 @@ PROJECTS_CONFIG = {
                 'target': 'S3',
                 'options': {
                     'testing': {
-                        's3_bucket': 'uplift-testing-frontend',
+                        's3_bucket': 'release-services-uplift-frontend-testing',
                         'url': 'https://uplift.testing.moz.tools',
-                        'dns': 'd2jpisuzgldax2.cloudfront.net.',
+                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                         'envs': {
                             'bugzilla-url': 'https://bugzilla.mozilla.org',
                         },
@@ -630,7 +630,7 @@ PROJECTS_CONFIG = {
                         ],
                     },
                     'staging': {
-                        's3_bucket': 'uplift-staging-frontend',
+                        's3_bucket': 'release-services-uplift-frontend-staging',
                         'url': 'https://uplift.staging.moz.tools',
                         'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                         'envs': {
@@ -644,9 +644,9 @@ PROJECTS_CONFIG = {
                         ],
                     },
                     'production': {
-                        's3_bucket': 'uplift-production-frontend',
+                        's3_bucket': 'release-services-uplift-frontend-production',
                         'url': 'https://uplift.moz.tools',
-                        'dns': 'dve8yd1431ifz.cloudfront.net.',
+                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                         'envs': {
                             'bugzilla-url': 'https://bugzilla.mozilla.org',
                         },
