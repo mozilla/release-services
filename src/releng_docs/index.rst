@@ -39,6 +39,7 @@ Projects
     shipit/frontend <projects/shipit-frontend>
     uplift-backend <projects/uplift-backend>
     shipit-static-analysis <projects/shipit-static-analysis>
+    shipit-pulse-listener <projects/shipit-pulse-listener>
     uplift/bot <projects/uplift-bot>
 
 
