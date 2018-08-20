@@ -12,12 +12,12 @@ from libmozdata.patchanalysis import bug_analysis
 from libmozdata.patchanalysis import parse_uplift_comment
 
 from cli_common.log import get_logger
-from shipit_bot_uplift.api import NotFound
-from shipit_bot_uplift.api import api_client
-from shipit_bot_uplift.helpers import compute_dict_hash
-from shipit_bot_uplift.mercurial import Repository
-from shipit_bot_uplift.merge import MergeTest
-from shipit_bot_uplift.report import Report
+from uplift_bot.api import NotFound
+from uplift_bot.api import api_client
+from uplift_bot.helpers import compute_dict_hash
+from uplift_bot.mercurial import Repository
+from uplift_bot.merge import MergeTest
+from uplift_bot.report import Report
 
 logger = get_logger(__name__)
 

@@ -6,7 +6,7 @@ import mohawk
 import requests
 
 from cli_common.log import get_logger
-from shipit_bot_uplift.helpers import ShipitJSONEncoder
+from uplift_bot.helpers import ShipitJSONEncoder
 
 logger = get_logger(__name__)
 
