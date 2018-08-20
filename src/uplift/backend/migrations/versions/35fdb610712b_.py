@@ -29,7 +29,7 @@ def upgrade():
     # There is a bug in alembic/postgres: the enum type is not created at first
     # So we need to trigger it
     # see https://bitbucket.org/zzzeek/alembic/issues/89/opadd_column-and-opdrop_column-should
-    from shipit_uplift.models import PatchStatus
+    from uplift_backend.models import PatchStatus
     bind = op.get_bind()
     typ = PatchStatus.__table__.c.status.type
     impl = typ.dialect_impl(bind.dialect)
