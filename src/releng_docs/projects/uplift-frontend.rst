@@ -5,8 +5,8 @@ Project: uplift/frontend
 
 .. todo:: need to rewrite this section
 
-:production: https://shipit.mozilla-releng.net
-:staging: https://shipit.staging.mozilla-releng.net
+:production: https://uplift.moz.tools
+:staging: https://uplift.staging.moz.tools
 :contact: `Rok Garbas`_, `Bastien Abadie`_, (backup `Release Engineering`_)
 
 Uplift frontend is a web interface, written in Elm, displaying to Mozilla
