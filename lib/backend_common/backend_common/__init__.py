@@ -56,7 +56,9 @@ def create_app(
         app.config.update(**config)
 
     for extension_name in EXTENSIONS:
-        if app.config.get('TESTING') and extension_name in ['security', 'cors']:
+        # Disable HTTPS and friends when in testing mode or in Dockerflow.
+        if (app.config.get('TESTING') or os.environ.get('DOCKERFLOW')) \
+                and extension_name in ['security', 'cors']:
             continue
 
         if extension_name not in extensions:

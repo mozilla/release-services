@@ -841,6 +841,7 @@ in rec {
         fromImage = self_docker;
         config = self_docker_config // {
             User = dockerUser;
+            Env = self_docker_config.Env ++ [ "DOCKERFLOW=1" ];
         };
         runAsRoot = (if dockerUser == null then "" else ''
           #!${stdenv.shell}
