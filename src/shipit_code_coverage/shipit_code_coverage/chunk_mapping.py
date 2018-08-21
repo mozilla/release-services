@@ -16,6 +16,7 @@ logger = get_logger(__name__)
 
 
 PLATFORMS = ['linux', 'windows']
+IGNORED_SUITE_PREFIXES = ['awsy', 'talos', 'test-coverage', 'test-coverage-wpt']
 # TODO: Calculate this dinamically when https://github.com/klahnakoski/ActiveData-ETL/issues/40 is fixed.
 TEST_COVERAGE_SUITES = ['reftest', 'web-platform', 'mochitest', 'xpcshell', 'jsreftest', 'crashtest']
 
@@ -125,6 +126,16 @@ def get_test_coverage_files(tests):
     return r.json()['data']
 
 
+def is_chunk_only_suite(suite):
+    # Ignore test-coverage, test-coverage-wpt, awsy and talos.
+    if any(suite.startswith(prefix) for prefix in IGNORED_SUITE_PREFIXES):
+        return False
+    # Ignore suites supported by test-coverage.
+    if any(test_coverage_suite in suite for test_coverage_suite in TEST_COVERAGE_SUITES):
+        return False
+    return True
+
+
 def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
     sqlite_file = os.path.join(out_dir, 'chunk_mapping.sqlite')
     tarxz_file = os.path.join(out_dir, 'chunk_mapping.tar.xz')
@@ -152,22 +163,14 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
             for platform in PLATFORMS:
                 for chunk in artifactsHandler.get_chunks():
                     suite = taskcluster.get_suite(chunk)
-                    # Ignore test-coverage, test-coverage-wpt, awsy and talos
-                    if suite in ['awsy', 'talos', 'test-coverage', 'test-coverage-wpt']:
-                        continue
-                    # Ignore suites supported by test-coverage.
-                    if any(test_coverage_suite in suite for test_coverage_suite in TEST_COVERAGE_SUITES):
+                    if not is_chunk_only_suite(suite):
                         continue
 
                     future = executor.submit(grcov.files_list, artifactsHandler.get(platform=platform, chunk=chunk), source_dir=repo_dir)
                     futures[future] = (platform, chunk)
 
                 for suite in get_suites(revision):
-                    # Ignore test-coverage, test-coverage-wpt, awsy and talos
-                    if suite in ['awsy', 'talos', 'test-coverage', 'test-coverage-wpt']:
-                        continue
-                    # Ignore suites supported by test-coverage.
-                    if any(test_coverage_suite in suite for test_coverage_suite in TEST_COVERAGE_SUITES):
+                    if not is_chunk_only_suite(suite):
                         continue
 
                     tests_data = get_tests_chunks(revision, platform, suite)
