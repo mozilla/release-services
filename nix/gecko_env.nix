@@ -1,9 +1,8 @@
 { releng_pkgs }:
 
 let
-  pkgs = import <nixpkgs> {};
-  inherit (releng_pkgs.lib) mkRustPlatform;
-  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc;
+  inherit (releng_pkgs.lib) mkRustPlatform ;
+  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
   # Rust 1.28.1-beta6
@@ -24,7 +23,7 @@ let
     name = "rust-cbindgen-${version}";
     version = "0.6.2";
 
-    src = pkgs.fetchFromGitHub {
+    src = fetchFromGitHub {
       owner = "eqrion";
       repo = "cbindgen";
       rev = "v${version}";
