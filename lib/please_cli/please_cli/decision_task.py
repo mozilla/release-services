@@ -13,6 +13,7 @@ import cli_common.taskcluster
 import click
 import click_spinner
 import please_cli.config
+import please_cli.utils
 
 
 PROJECTS = list(set(please_cli.config.PROJECTS) - set(please_cli.config.DEV_PROJECTS))
@@ -131,7 +132,8 @@ def get_deploy_task(index,
                 for i in require_config.get('deploys', [])
             ]
             require_urls = filter(lambda x: x[0] is not None, require_urls)
-            require_urls = map(lambda x: '--env="{}{}-url: {}"'.format(require, x[1], x[0]), require_urls)
+            normalized_require = please_cli.utils.normalize_name(require, normalizer='-')
+            require_urls = map(lambda x: '--env="{}{}-url: {}"'.format(normalized_require, x[1], x[0]), require_urls)
 
             project_envs += require_urls
 
