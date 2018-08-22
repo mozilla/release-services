@@ -1,0 +1,337 @@
+---
+swagger: "2.0"
+info:
+  version: "0.1.0"
+  title: "Shipit Dashboard"
+consumes:
+ - application/json
+produces:
+ - application/json
+paths:
+
+  /ping:
+    get:
+      operationId: "uplift_backend.api.ping"
+      responses:
+        200:
+          description: a pong
+          schema:
+            type: string
+
+  /auth0/login:
+    get:
+      operationId: "backend_common.auth0.auth0_login"
+      responses:
+        200:
+          description: A login URL to redirect the user to
+          schema:
+            type: string
+
+  /auth0/check:
+    post:
+      operationId: "backend_common.auth0.auth0_check"
+      responses:
+        200:
+          description: Auth0 tokens
+          schema:
+            $ref: '#/definitions/Auth0Tokens'
+
+  /analysis:
+    get:
+      operationId: "uplift_backend.api.list_analysis"
+      responses:
+        200:
+          description: An array of Analysis
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Analysis'
+
+  /analysis/{analysis_id}:
+    get:
+      operationId: "uplift_backend.api.get_analysis"
+      parameters:
+      - name: analysis_id
+        in: path
+        description: ID of the Analysis to retrieve
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific analysis
+          schema:
+            $ref: '#/definitions/Analysis'
+
+    put:
+      operationId: "uplift_backend.api.update_analysis"
+      parameters:
+      - name: analysis_id
+        in: path
+        description: ID of the Analysis to update
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific analysis
+          schema:
+            $ref: '#/definitions/Analysis'
+
+  /bugs:
+    post:
+      operationId: "uplift_backend.api.create_bug"
+      responses:
+        200:
+          description: A specific Bug
+          schema:
+            $ref: '#/definitions/Bug'
+
+
+  /bugs/{bugzilla_id}:
+    put:
+      operationId: "uplift_backend.api.update_bug"
+      parameters:
+      - name: bugzilla_id
+        in: path
+        description: Bugzilla ID of the Bug to delete
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific Bug
+          schema:
+            $ref: '#/definitions/Bug'
+
+    delete:
+      operationId: "uplift_backend.api.delete_bug"
+      parameters:
+      - name: bugzilla_id
+        in: path
+        description: Bugzilla ID of the Bug to delete
+        required: true
+        type: integer
+      responses:
+        200:
+          description: Empty
+
+  /bugs/{bugzilla_id}/patches:
+    get:
+      operationId: "uplift_backend.api.list_patch_status"
+      parameters:
+      - name: bugzilla_id
+        in: path
+        description: Bugzilla ID of the Bug to use
+        required: true
+        type: integer
+      responses:
+        200:
+          description: An array of Patch status
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PatchStatus'
+    
+    post:
+      operationId: "uplift_backend.api.create_patch_status"
+      parameters:
+      - name: bugzilla_id
+        in: path
+        description: Bugzilla ID of the Bug to use
+        required: true
+        type: integer
+      responses:
+        200:
+          description: The newly created Patch status
+          schema:
+            $ref: '#/definitions/PatchStatus'
+    
+  /contributor/{contributor_id}:
+    put:
+      operationId: "uplift_backend.api.update_contributor"
+      parameters:
+      - name: contributor_id
+        in: path
+        description: Contributor ID of the contributor to update
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific Contributor
+          schema:
+            $ref: '#/definitions/Contributor'
+
+definitions:
+
+  Success:
+    type: string 
+
+  Error:
+    type: object
+    required:
+      - error_title
+    properties:
+      error_title:
+        type: string
+      error_message:
+        type: string
+
+  Analysis:
+    type: object
+    required:
+      - id
+      - name
+      - version
+      - count
+      - parameters
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      version:
+        type: integer
+      count:
+        type: integer
+      parameters:
+        type: string
+      bugs:
+        type: array
+        items:
+          $ref: '#/definitions/Bug'
+
+  Bug:
+    type: object
+    required:
+      - id
+      - bugzilla_id
+      - url
+      - summary
+      - keywords
+      - flags_status
+      - flags_tracking
+      - changes_size
+      - contributors
+      - patches
+    properties:
+      id:
+        type: integer
+      bugzilla_id:
+        type: integer 
+      url:
+        type: string
+      summary:
+        type: string
+      keywords:
+        type: array 
+        items:
+          type: string
+      flags_status:
+        type: object
+        additionalProperties:
+          type: string
+      flags_tracking:
+        type: object
+        additionalProperties:
+          type: string
+      changes_size:
+        type: integer
+      contributors:
+        type: array
+        items:
+          $ref: '#/definitions/Contributor'
+      uplift:
+        $ref: '#/definitions/UpliftRequest'
+      patches:
+        type: object
+        properties:
+          default:
+            $ref: '#/definitions/Patch'
+        additionalProperties:
+          $ref: '#/definitions/Patch'
+
+  Contributor:
+    type: object
+    required:
+      - email
+      - name
+      - avatar
+      - karma
+      - comment_public
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      avatar:
+        type: string
+      karma:
+        type: integer
+      comment_private:
+        type: string
+      comment_public:
+        type: string
+      roles:
+        type: array
+        items:
+          type: string
+
+  UpliftRequest:
+    type: object
+    required:
+      - id
+      - comment
+    properties:
+      id: 
+        type: integer
+      comment:
+        type: string
+
+  Patch:
+    type: object
+    required:
+      - source
+      - url
+      - changes_size
+    properties:
+      source:
+        type: string
+      url:
+        type: string
+      changes_size:
+        type: integer
+
+  PatchStatus:
+    type: object
+    required:
+      - group
+      - revision
+      - revision_parent
+      - branch
+      - status
+      - created
+    properties:
+      group:
+        type: integer
+      revision:
+        type: string
+      revision_parent:
+        type: string
+      branch:
+        type: string
+      status:
+        type: string
+      created:
+        type: string
+
+  Auth0Tokens:
+    type: object
+    required:
+      - expires
+      - access_token
+      - id_token
+    properties:
+      expires:
+        type: integer
+      access_token:
+        type: string
+      id_token:
+        type: string
