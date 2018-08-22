@@ -1,6 +1,8 @@
 { releng_pkgs }:
 
 let
+  pkgs = import <nixpkgs> {};
+  inherit (releng_pkgs.lib) mkRustPlatform;
   inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
@@ -14,6 +16,23 @@ let
     "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}/x86_64-unknown-linux-gnu"
     "${glibc.dev}/include"
   ];
+
+  # Mach needs 0.6.2 at least
+  # From https://github.com/NixOS/nixpkgs/blob/cdf90258e6bf911db2b56280301014a88c91be65/pkgs/development/tools/rust/cbindgen/default.nix
+  rustPlatform = mkRustPlatform {};
+  rust-cbindgen =  rustPlatform.buildRustPackage rec {
+    name = "rust-cbindgen-${version}";
+    version = "0.6.2";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "eqrion";
+      repo = "cbindgen";
+      rev = "v${version}";
+      sha256 = "0hifmn9578cf1r5m4ajazg3rhld2ybd2v48xz04vfhappkarv4w2";
+    };
+
+    cargoSha256 = "0c3xpzff8jldqbn5a25yy6c2hlz5xy636ml6sj5d24wzcgwg5a2i";
+  };
 
 in gecko.overrideDerivation (old: {
   # Dummy src, cannot be null
@@ -80,5 +99,6 @@ in gecko.overrideDerivation (old: {
       # Update rust to latest stable
       rustChannel.rust
       rustChannel.cargo
+      rust-cbindgen
     ];
 })
