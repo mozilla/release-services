@@ -108,7 +108,13 @@ let
   self = mkPython {
     inherit python name dirname;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
+      src = filterSource ./. { inherit name; exclude = [
+        "/${name}.egg-info"
+        "/build"
+        "/cache"
+        "/ccov-artifacts"
+        "/code-coverage-reports"
+      ]; };
     buildInputs =
       [ mercurial ] ++
       (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
