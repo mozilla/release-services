@@ -56,7 +56,7 @@ TEMPLATES = {
     'backend-json-api': {}
 }
 
-DEV_PROJECTS = ['postgresql']
+DEV_PROJECTS = ['postgresql', 'redis']
 PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
@@ -70,6 +70,13 @@ PROJECTS_CONFIG = {
         'run_options': {
             'port': 9000,
             'data_dir': os.path.join(TMP_DIR, 'postgresql'),
+        },
+    },
+    'redis': {
+        'run': 'REDIS',
+        'run_options': {
+            'port': 6379,
+            'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
     'releng-notification-policy': {
@@ -469,7 +476,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-bot-uplift': {
+    'uplift/bot': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -594,6 +601,66 @@ PROJECTS_CONFIG = {
             },
         ],
     },
+    'uplift/frontend': {
+        'run': 'ELM',
+        'run_options': {
+            'port': 8010,
+            'envs': {
+                'bugzilla-url': 'https://bugzilla-dev.allizom.org',
+            }
+        },
+        'requires': [
+            'uplift/backend',
+        ],
+        'deploys': [
+            {
+                'target': 'S3',
+                'options': {
+                    'testing': {
+                        's3_bucket': 'release-services-uplift-frontend-testing',
+                        'url': 'https://uplift.testing.moz.tools',
+                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                        ],
+                    },
+                    'staging': {
+                        's3_bucket': 'release-services-uplift-frontend-staging',
+                        'url': 'https://uplift.staging.moz.tools',
+                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                            'https://uplift.shipit.staging.mozilla-releng.net',
+                        ],
+                    },
+                    'production': {
+                        's3_bucket': 'release-services-uplift-frontend-production',
+                        'url': 'https://uplift.moz.tools',
+                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                            'https://uplift.shipit.mozilla-releng.net',
+                        ],
+                    },
+                },
+            },
+        ],
+    },
     'shipit-pulse-listener': {
         'checks': [
             ('Checking code quality', 'flake8'),
@@ -623,7 +690,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-static-analysis': {
+    'staticanalysis/bot': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -680,6 +747,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                     'staging': {
@@ -692,6 +760,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                     'production': {
@@ -704,13 +773,14 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://index.taskcluster.net',
                             'https://queue.taskcluster.net',
+                            'https://taskcluster-artifacts.net',
                         ],
                     },
                 },
             },
         ],
     },
-    'shipit-uplift': {
+    'uplift/backend': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -775,7 +845,7 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozilla/shipitbackend',
                     },
                     'staging': {
-                        'url': 'https://api.shipit.staging.mozilla-releng.net',
+                        'url': 'https://shipitbackend-default.dev.mozaws.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',

@@ -34,11 +34,14 @@ Projects
     releng-notification-policy <projects/releng-notification-policy>
     releng-tooltool <projects/releng-tooltool>
     releng-treestatus <projects/releng-treestatus>
-    shipit-bot-uplift <projects/shipit-bot-uplift>
     shipit-code-coverage <projects/shipit-code-coverage>
+    shipit-code-coverage-backend <projects/shipit-code-coverage-backend>
     shipit/frontend <projects/shipit-frontend>
-    shipit-uplift <projects/shipit-uplift>
     shipit-static-analysis <projects/shipit-static-analysis>
+    shipit-pulse-listener <projects/shipit-pulse-listener>
+    uplift/backend <projects/uplift-backend>
+    uplift/frontend <projects/uplift-frontend>
+    uplift/bot <projects/uplift-bot>
 
 
 Develop
