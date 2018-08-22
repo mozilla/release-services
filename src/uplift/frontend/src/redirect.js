@@ -1,0 +1,1 @@
+../../../../lib/frontend_common/redirect.js
