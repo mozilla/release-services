@@ -14,6 +14,8 @@ from shipit_code_coverage import taskcluster
 
 logger = get_logger(__name__)
 
+# TODO: Change the IP to a domain name when bug 1429482 is fixed.
+ACTIVEDATA_QUERY_URL = 'http://54.149.21.8/query'
 
 PLATFORMS = ['linux', 'windows']
 IGNORED_SUITE_PREFIXES = ['awsy', 'talos', 'test-coverage', 'test-coverage-wpt']
@@ -22,7 +24,7 @@ TEST_COVERAGE_SUITES = ['reftest', 'web-platform', 'mochitest', 'xpcshell', 'jsr
 
 
 def get_suites(revision):
-    r = requests.post('https://activedata.allizom.org/query', json={
+    r = requests.post(ACTIVEDATA_QUERY_URL, json={
         'from': 'unittest',
         'where': {'and': [
             {'eq': {'repo.branch.name': 'mozilla-central'}},
@@ -33,7 +35,7 @@ def get_suites(revision):
             ]}
         ]},
         'limit': 500000,
-        'groupby': ['run.suite']
+        'groupby': ['run.suite.fullname']
     })
 
     suites_data = r.json()['data']
@@ -48,12 +50,12 @@ def get_tests_chunks(revision, platform, suite):
     elif platform == 'windows':
         run_key_prefix = 'test-windows10-64-ccov'
 
-    r = requests.post('https://activedata.allizom.org/query', json={
+    r = requests.post(ACTIVEDATA_QUERY_URL, json={
         'from': 'unittest',
         'where': {'and': [
             {'eq': {'repo.branch.name': 'mozilla-central'}},
             {'eq': {'repo.changeset.id12': revision[:12]}},
-            {'eq': {'run.suite': suite}},
+            {'eq': {'run.suite.fullname': suite}},
             {'prefix': {'run.key': run_key_prefix}},
         ]},
         'limit': 50000,
@@ -75,7 +77,7 @@ def group_by_20k(data):
 
 
 def get_test_coverage_suites():
-    r = requests.post('https://activedata.allizom.org/query', json={
+    r = requests.post(ACTIVEDATA_QUERY_URL, json={
         'from': 'coverage',
         'where': {'and': [
             {'eq': {'repo.branch.name': 'mozilla-central'}},
@@ -92,7 +94,7 @@ def get_test_coverage_suites():
 
 
 def get_test_coverage_tests(suites):
-    r = requests.post('https://activedata.allizom.org/query', json={
+    r = requests.post(ACTIVEDATA_QUERY_URL, json={
         'from': 'coverage',
         'where': {'and': [
             {'eq': {'repo.branch.name': 'mozilla-central'}},
@@ -110,7 +112,7 @@ def get_test_coverage_tests(suites):
 
 
 def get_test_coverage_files(tests):
-    r = requests.post('https://activedata.allizom.org/query', json={
+    r = requests.post(ACTIVEDATA_QUERY_URL, json={
         'from': 'coverage',
         'where': {'and': [
             {'eq': {'repo.branch.name': 'mozilla-central'}},
