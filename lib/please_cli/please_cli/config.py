@@ -601,6 +601,66 @@ PROJECTS_CONFIG = {
             },
         ],
     },
+    'uplift/frontend': {
+        'run': 'ELM',
+        'run_options': {
+            'port': 8010,
+            'envs': {
+                'bugzilla-url': 'https://bugzilla-dev.allizom.org',
+            }
+        },
+        'requires': [
+            'uplift/backend',
+        ],
+        'deploys': [
+            {
+                'target': 'S3',
+                'options': {
+                    'testing': {
+                        's3_bucket': 'release-services-uplift-frontend-testing',
+                        'url': 'https://uplift.testing.moz.tools',
+                        'dns': 'd1swet7sulei5z.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                        ],
+                    },
+                    'staging': {
+                        's3_bucket': 'release-services-uplift-frontend-staging',
+                        'url': 'https://uplift.staging.moz.tools',
+                        'dns': 'd3voyguhnvtgyb.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                            'https://uplift.shipit.staging.mozilla-releng.net',
+                        ],
+                    },
+                    'production': {
+                        's3_bucket': 'release-services-uplift-frontend-production',
+                        'url': 'https://uplift.moz.tools',
+                        'dns': 'd2j55he28msyhx.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                            'https://uplift.shipit.mozilla-releng.net',
+                        ],
+                    },
+                },
+            },
+        ],
+    },
     'shipit-pulse-listener': {
         'checks': [
             ('Checking code quality', 'flake8'),
@@ -785,7 +845,7 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozilla/shipitbackend',
                     },
                     'staging': {
-                        'url': 'https://api.shipit.staging.mozilla-releng.net',
+                        'url': 'https://shipitbackend-default.dev.mozaws.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
@@ -819,7 +879,8 @@ PROJECTS_CONFIG = {
             {
                 'target': 'S3',
                 'options': {
-                    'testing': {
+                    # FIXME: temporarily disable staging, production, point testing to staging
+                    'staging': {
                         's3_bucket': 'shipit-testing-frontend',
                         'url': 'https://shipit.testing.mozilla-releng.net',
                         'dns': 'd2jpisuzgldax2.cloudfront.net.',
@@ -832,30 +893,30 @@ PROJECTS_CONFIG = {
                             'https://queue.taskcluster.net',
                         ],
                     },
-                    'staging': {
-                        's3_bucket': 'shipit-staging-frontend',
-                        'url': 'https://shipit.staging.mozilla-releng.net',
-                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
-                        'envs': {
-                            'CONFIG': 'staging',
-                        },
-                        'csp': [
-                            'https://hg.mozilla.org',
-                            'https://queue.taskcluster.net',
-                        ],
-                    },
-                    'production': {
-                        's3_bucket': 'shipit-production-frontend',
-                        'url': 'https://shipit.mozilla-releng.net',
-                        'dns': 'dve8yd1431ifz.cloudfront.net.',
-                        'envs': {
-                            'CONFIG': 'production',
-                        },
-                        'csp': [
-                            'https://hg.mozilla.org',
-                            'https://queue.taskcluster.net',
-                        ],
-                    },
+                    # 'staging': {
+                    #     's3_bucket': 'shipit-staging-frontend',
+                    #     'url': 'https://shipit.staging.mozilla-releng.net',
+                    #     'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                    #     'envs': {
+                    #         'CONFIG': 'staging',
+                    #     },
+                    #     'csp': [
+                    #         'https://hg.mozilla.org',
+                    #         'https://queue.taskcluster.net',
+                    #     ],
+                    # },
+                    # 'production': {
+                    #     's3_bucket': 'shipit-production-frontend',
+                    #     'url': 'https://shipit.mozilla-releng.net',
+                    #     'dns': 'dve8yd1431ifz.cloudfront.net.',
+                    #     'envs': {
+                    #         'CONFIG': 'production',
+                    #     },
+                    #     'csp': [
+                    #         'https://hg.mozilla.org',
+                    #         'https://queue.taskcluster.net',
+                    #     ],
+                    # },
                 },
             },
         ],
