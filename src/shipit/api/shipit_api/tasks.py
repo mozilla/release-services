@@ -118,3 +118,21 @@ def generate_action_task(decision_task_id, action_name, action_task_input, actio
 def render_action_task(task, context, action_task_id):
     action_task = jsone.render(task, context)
     return action_task
+
+
+def generate_action_hook(decision_task_id, action_name, actions):
+    target_action = find_action(action_name, actions)
+    context = copy.deepcopy(actions['variables'])  # parameters
+    context.update({
+        'input': {},
+        'taskGroupId': decision_task_id,
+        'taskId': None,
+        'task': None,
+    })
+    hook_payload = jsone.render(target_action['hookPayload'], context)
+    return dict(
+        hook_group_id=target_action['hookGroupId'],
+        hook_id=target_action['hookId'],
+        hook_payload=hook_payload,
+        context=context,
+    )
