@@ -27,8 +27,7 @@ let
           ("secrets:get:" + secretsKey)
 
           # Email notifications
-          "notify:email:babadie@mozilla.com"
-          "notify:email:sledru@mozilla.com"
+          "notify:email:*"
 
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
@@ -57,6 +56,7 @@ let
     inProduction = true;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
+    src_path = "src/uplift/bot";
     buildInputs =
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
