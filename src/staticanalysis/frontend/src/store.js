@@ -132,7 +132,7 @@ export default new Vuex.Store({
 
     // Load indexed tasks summary from Taskcluster
     load_index (state, namespace) {
-      let url = TASKCLUSTER_INDEX + '/tasks/project.releng.services.project.' + this.state.channel + '.shipit_static_analysis.' + namespace
+      let url = TASKCLUSTER_INDEX + '/tasks/project.releng.services.project.' + this.state.channel + '.static_analysis_bot.' + namespace
       return axios.get(url).then(resp => {
         state.commit('use_tasks', resp.data.tasks)
       })
