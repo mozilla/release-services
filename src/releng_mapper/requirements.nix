@@ -298,8 +298,8 @@ let
     };
 
     "SQLAlchemy" = python.mkDerivation {
-      name = "SQLAlchemy-1.2.10";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/8a/c2/29491103fd971f3988e90ee3a77bb58bad2ae2acd6e8ea30a6d1432c33a3/SQLAlchemy-1.2.10.tar.gz"; sha256 = "72325e67fb85f6e9ad304c603d83626d1df684fdf0c7ab1f0352e71feeab69d8"; };
+      name = "SQLAlchemy-1.2.11";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/aa/cc/348eec885d81f7260b07d961b3ececfc0aa82f7d4a8f45ff997e0d3f44ba/SQLAlchemy-1.2.11.tar.gz"; sha256 = "ef6569ad403520ee13e180e1bfd6ed71a0254192a934ec1dbd3dbf48f4aa9524"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -348,8 +348,8 @@ let
     };
 
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-3.3.2";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/72/6a/5bbf3544fe8de525f4521506b372dc9c3b13070fe34e911c976aa95631d7/aiohttp-3.3.2.tar.gz"; sha256 = "f20deec7a3fbaec7b5eb7ad99878427ad2ee4cc16a46732b705e8121cbb3cc12"; };
+      name = "aiohttp-3.4.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/09/01/22c9b713b195d071b73fdc2f977f8717497b0d30c41c0b4a9cd908b925ec/aiohttp-3.4.0.tar.gz"; sha256 = "9b15efa7411dcf3b59c1f4766eb16ba1aba4531a33e54d469ee22106eabce460"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -422,8 +422,8 @@ let
     };
 
     "atomicwrites" = python.mkDerivation {
-      name = "atomicwrites-1.1.5";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/a1/e1/2d9bc76838e6e6667fde5814aa25d7feb93d6fa471bf6816daac2596e8b2/atomicwrites-1.1.5.tar.gz"; sha256 = "240831ea22da9ab882b551b31d4225591e5e447a68c5e188db5b89ca1d487585"; };
+      name = "atomicwrites-1.2.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/69/96/becfc14dcd4c216ef01205848dea19a42b7b5b9c16cc4997e8df075a583e/atomicwrites-1.2.0.tar.gz"; sha256 = "e16334d50fe0f90919ef7339c24b9b62e6abaa78cd2d226f3d94eb067eb89043"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -501,8 +501,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.7.72";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/5b/a7/e5ec7129c77d4fa5ae41394521907302fdffe454952b04eb0a3eb9521fa7/boto3-1.7.72.tar.gz"; sha256 = "126451821f990dea356d3bf53788f50d869f6cdfb258c0f402f20c36eb64e179"; };
+      name = "boto3-1.8.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/14/35/d68b766055c077af78c06784bc0a5942ba0c9ec7b0a1ee551a9fddf27069/boto3-1.8.1.tar.gz"; sha256 = "6f011ea4fa100cf3952f86312fde278e58fb2cb9732076a8bad5924608e2f332"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -520,8 +520,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.10.72";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/45/50/fea7f3ee1fa02f2f5b4ffa0cb46f7191d332529207f5a6b13e15b815bef2/botocore-1.10.72.tar.gz"; sha256 = "5c282b9a6f694ce62e5fc9f0d5aa019c2d977509058f588416f1c8cc1ad78a0b"; };
+      name = "botocore-1.11.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/60/72/35cfe368693360fe3594b50294c33c751ce252980b264ceec5be8ca8f4f4/botocore-1.11.1.tar.gz"; sha256 = "5b2d2393c02a082d605dac13c1322c3c553a4d4cf23de7b48268ae7f4a105eb3"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -530,6 +530,7 @@ let
       self."docutils"
       self."jmespath"
       self."python-dateutil"
+      self."urllib3"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/boto/botocore";
@@ -539,8 +540,8 @@ let
     };
 
     "certifi" = python.mkDerivation {
-      name = "certifi-2018.4.16";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/4d/9c/46e950a6f4d6b4be571ddcae21e7bc846fcbb88f1de3eff0f6dd0a6be55d/certifi-2018.4.16.tar.gz"; sha256 = "13e698f54293db9f89122b0581843a782ad0934a4fe0172d2a980ba77fc61bb7"; };
+      name = "certifi-2018.8.24";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e1/0f/f8d5e939184547b3bdc6128551b831a62832713aa98c2ccdf8c47ecc7f17/certifi-2018.8.24.tar.gz"; sha256 = "376690d6f16d32f9d1fe8932551d80b23e9d393a8578c5633a2ed39a64861638"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -680,8 +681,8 @@ let
     };
 
     "coveralls" = python.mkDerivation {
-      name = "coveralls-1.3.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/3e/dd/61b1365f2d1d3fc459f9e3d36d9c8824fb3c9cd6bf5ee721ca6c8f68c164/coveralls-1.3.0.tar.gz"; sha256 = "664794748d2e5673e347ec476159a9d87f43e0d2d44950e98ed0e27b98da8346"; };
+      name = "coveralls-1.4.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/85/21/e3cb67e59b6e06ce8b2a948efa8feae762f29c0058662fe14b448f36bf21/coveralls-1.4.0.tar.gz"; sha256 = "7ddb2e3114db9604a7cb1fcc68a7dcca32dce346f5ba568c99979b38e166f5a6"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -952,6 +953,42 @@ let
       };
     };
 
+    "gevent" = python.mkDerivation {
+      name = "gevent-1.3.6";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/49/13/aa4bb3640b5167fe58875d3d7e65390cdb14f9682a41a741a566bb560842/gevent-1.3.6.tar.gz"; sha256 = "7b413c391e8ad6607b7f7540d698a94349abd64e4935184c595f7cdcc69904c6"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."coverage"
+      self."coveralls"
+      self."greenlet"
+      self."idna"
+      self."requests"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://www.gevent.org/";
+        license = licenses.mit;
+        description = "Coroutine-based network library";
+      };
+    };
+
+    "greenlet" = python.mkDerivation {
+      name = "greenlet-0.4.14";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/5d/82/2e53a8def6f99db51992ca3a0a2448c3bbec1a9db3a7cbf7d5dad011e138/greenlet-0.4.14.tar.gz"; sha256 = "f1cc268a15ade58d9a0c04569fe6613e19b8b0345b64453064e2c3c6d79051af"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/python-greenlet/greenlet";
+        license = licenses.mit;
+        description = "Lightweight in-process concurrent programming";
+      };
+    };
+
     "gunicorn" = python.mkDerivation {
       name = "gunicorn-19.9.0";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/47/52/68ba8e5e8ba251e54006a49441f7ccabca83b6bef5aedacb4890596c7911/gunicorn-19.9.0.tar.gz"; sha256 = "fa2662097c66f920f53f70621c6c58ca4a3c4d3434205e608e121b5b3b71f4f3"; };
@@ -959,7 +996,9 @@ let
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+      self."gevent"
+    ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://gunicorn.org";
         license = licenses.mit;
@@ -1633,8 +1672,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.7.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1c/b5/336b6b600eb9d2a9b7c99b16be7913dfd1f68d23c82f5a78d774a239183f/pytest-3.7.1.tar.gz"; sha256 = "86a8dbf407e437351cef4dba46736e9c5a6e3c3ac71b2e942209748e76ff2086"; };
+      name = "pytest-3.7.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/34/73/3ad0ffb79c312022fb6d81694aff5a32d83f55ae6d2174a0437c0298cf07/pytest-3.7.2.tar.gz"; sha256 = "3459a123ad5532852d36f6f4501dfe1acf4af1dd9541834a164666aa40395b02"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
