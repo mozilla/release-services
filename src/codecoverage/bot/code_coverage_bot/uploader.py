@@ -39,7 +39,8 @@ def codecov(data, commit_sha, flags=None):
         params['flags'] = ','.join(flags)
 
     r = requests.post('https://codecov.io/upload/v4', params=params, headers={
-        'Accept': 'text/plain',
+        'X-Reduced-Redundancy': 'false',
+        'X-Content-Type': 'application/x-gzip',
     })
 
     if r.status_code != requests.codes.ok:
@@ -51,10 +52,10 @@ def codecov(data, commit_sha, flags=None):
 
     data += b'\n<<<<<< EOF'
 
-    r = requests.put(lines[1], data=data, headers={
-        'Content-Type': 'text/plain',
+    r = requests.put(lines[1], data=gzip.compress(data), headers={
+        'Content-Type': 'application/x-gzip',
+        'Content-Encoding': 'gzip',
         'x-amz-acl': 'public-read',
-        'x-amz-storage-class': 'REDUCED_REDUNDANCY',
     })
 
     if r.status_code != requests.codes.ok:
