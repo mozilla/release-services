@@ -21,9 +21,9 @@ class PhabricatorReporter(Reporter):
     '''
     API connector to report on Phabricator
     '''
-    def __init__(self, configuration, *args):
-        url, api_key = self.requires(configuration, 'url', 'api_key')
-        self.api = PhabricatorAPI(api_key, url)
+    def setup_api(self, api):
+        assert isinstance(api, PhabricatorAPI)
+        self.api = api
 
     @property
     def hostname(self):

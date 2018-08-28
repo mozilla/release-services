@@ -11,6 +11,7 @@ import hglib
 from parsepatch.patch import Patch
 
 from cli_common import log
+from cli_common.phabricator import PhabricatorAPI
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import REPO_REVIEW
@@ -91,6 +92,7 @@ class PhabricatorRevision(Revision):
     regex = re.compile(r'^(PHID-DIFF-(?:\w+))$')
 
     def __init__(self, description, api):
+        assert isinstance(api, PhabricatorAPI)
         self.api = api
 
         # Parse Diff description
