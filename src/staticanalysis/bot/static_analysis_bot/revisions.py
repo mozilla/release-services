@@ -109,7 +109,7 @@ class PhabricatorRevision(Revision):
 
         self.diff_id = diff['id']
         self.phid = diff['revisionPHID']
-        self.hg_base = diff.get('baseRevision')
+        self.hg_base = diff['baseRevision']
         revision = self.api.load_revision(self.phid)
         self.id = revision['id']
 
@@ -147,17 +147,14 @@ class PhabricatorRevision(Revision):
         '''
         assert isinstance(repo, hglib.client.hgclient)
 
-        # When we have a base revision, try to update the repo
-        if self.hg_base:
-            try:
-                repo.update(
-                    rev=self.hg_base,
-                    clean=True,
-                )
-            except hglib.error.CommandError as e:
-                logger.warning('Failed to update to base revision', revision=self.hg_base, error=e)
-        else:
-            logger.info('No base revision found.')
+        # Update the repo to base revision
+        try:
+            repo.update(
+                rev=self.hg_base,
+                clean=True,
+            )
+        except hglib.error.CommandError as e:
+            logger.warning('Failed to update to base revision', revision=self.hg_base, error=e)
 
         # Apply the patch on top of repository
         repo.import_(
