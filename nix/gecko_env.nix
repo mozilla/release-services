@@ -74,7 +74,6 @@ in gecko.overrideDerivation (old: {
     # Build custom mozconfig
     mozconfig=$out/conf/mozconfig
     echo > $mozconfig "
-    ac_add_options --enable-clang-plugin
     ac_add_options --enable-debug
     ac_add_options --with-clang-path=${clang_4}/bin/clang
     ac_add_options --with-libclang-path=${llvmPackages_4.libclang}/lib
