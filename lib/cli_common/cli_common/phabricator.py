@@ -19,11 +19,9 @@ logger = logging.getLogger(__name__)
 @functools.lru_cache(maxsize=2048)
 def revision_exists_on_central(revision):
     url = HGMO_JSON_REV_URL_TEMPLATE.format(revision)
-    try:
-        return requests.get(url).ok
-    except Exception as e:
-        logger.warning('Failed to check on hgweb: {}'.format(e))
-        return False
+    resp = requests.get(url)
+    resp.raise_for_status()
+    return resp.ok
 
 
 class ConduitError(Exception):
@@ -94,14 +92,11 @@ class PhabricatorAPI(object):
                 del diff['fields']
 
             # Lookup base revision in refs
-            try:
-                diff['refs'] = {
-                    ref['type']: ref
-                    for ref in diff['refs']
-                }
-                diff['baseRevision'] = diff['refs']['base']['identifier']
-            except KeyError:
-                pass
+            diff['refs'] = {
+                ref['type']: ref
+                for ref in diff['refs']
+            }
+            diff['baseRevision'] = diff['refs']['base']['identifier']
 
             return diff
 

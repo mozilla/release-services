@@ -78,7 +78,7 @@ def phabricator_base_revision_from_phid(revision_phid):
     try:
         phabricator = PhabricatorAPI(secrets.PHABRICATOR_TOKEN)
         for diff in phabricator.search_diffs(revision_phid=revision_phid):
-            revision = diff.get('baseRevision')
+            revision = diff['baseRevision']
             if revision and revision_exists_on_central(revision):
                 return {'revision': revision}, 200
         return {'error': 'Base revision not found.'}, 404
