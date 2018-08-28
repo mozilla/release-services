@@ -101,22 +101,12 @@ class PhabricatorRevision(Revision):
         self.diff_phid = groups[0]
 
         # Load diff details to get the diff revision
-        diff = self.api.load_diff(self.diff_phid)
+        diff = self.api.load_diff(diff_phid=self.diff_phid)
         self.diff_id = diff['id']
-        self.phid = diff['fields']['revisionPHID']
+        self.phid = diff['revisionPHID']
+        self.hg_base = diff.get('baseRevision')
         revision = self.api.load_revision(self.phid)
         self.id = revision['id']
-
-        # Lookup base revision in refs
-        try:
-            refs = {
-                ref['type']: ref
-                for ref in diff['fields']['refs']
-            }
-            self.hg_base = refs['base']['identifier']
-        except KeyError:
-            self.hg_base = None
-            logger.info('Missing base mercurial revision')
 
     @property
     def namespaces(self):
@@ -161,6 +151,8 @@ class PhabricatorRevision(Revision):
                 )
             except hglib.error.CommandError as e:
                 logger.warning('Failed to update to base revision', revision=self.hg_base, error=e)
+        else:
+            logger.info('No base revision found.')
 
         # Apply the patch on top of repository
         repo.import_(
