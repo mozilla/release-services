@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from urllib.parse import urlparse
-
 from cli_common import log
 from cli_common.phabricator import PhabricatorAPI
 from static_analysis_bot import Issue
@@ -21,14 +19,13 @@ class PhabricatorReporter(Reporter):
     '''
     API connector to report on Phabricator
     '''
+    def __init__(self, api=None, *args, **kwargs):
+        if api is not None:
+            self.setup_api(api)
+
     def setup_api(self, api):
         assert isinstance(api, PhabricatorAPI)
         self.api = api
-
-    @property
-    def hostname(self):
-        parts = urlparse(self.url)
-        return parts.netloc
 
     def publish(self, issues, revision):
         '''

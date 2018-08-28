@@ -103,6 +103,7 @@ class PhabricatorRevision(Revision):
         self.diff_phid = groups[0]
 
         # Load diff details to get the diff revision
+        print('OOOOOK', self.diff_phid)
         diff = self.api.load_diff(diff_phid=self.diff_phid)
         self.diff_id = diff['id']
         self.phid = diff['revisionPHID']

@@ -5,6 +5,7 @@
 
 import functools
 import logging
+from urllib.parse import urlparse
 
 import requests
 
@@ -64,6 +65,11 @@ class PhabricatorAPI(object):
         # Test authentication
         self.user = self.request('user.whoami')
         logger.info('Authenticated on {} as {}'.format(self.url, self.user['realName']))
+
+    @property
+    def hostname(self):
+        parts = urlparse(self.url)
+        return parts.netloc
 
     def load_diff(self, diff_phid=None, revision_phid=None):
         '''
