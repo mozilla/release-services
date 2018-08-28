@@ -5,9 +5,10 @@
 
 import asyncio
 
+from rq import Queue
+
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.phabricator import revision_exists_on_central
-from rq import Queue
 from shipit_code_coverage_backend import coverage
 from shipit_code_coverage_backend import coverage_by_changeset_impl
 from shipit_code_coverage_backend import coverage_for_file_impl
