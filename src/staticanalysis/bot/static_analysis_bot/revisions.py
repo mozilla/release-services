@@ -103,8 +103,10 @@ class PhabricatorRevision(Revision):
         self.diff_phid = groups[0]
 
         # Load diff details to get the diff revision
-        print('OOOOOK', self.diff_phid)
-        diff = self.api.load_diff(diff_phid=self.diff_phid)
+        diffs = self.api.search_diffs(diff_phid=self.diff_phid)
+        assert len(diffs) == 1, 'No diff available for {}'.format(self.diff_phid)
+        diff = diffs[0]
+
         self.diff_id = diff['id']
         self.phid = diff['revisionPHID']
         self.hg_base = diff.get('baseRevision')

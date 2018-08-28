@@ -71,9 +71,10 @@ class PhabricatorAPI(object):
         parts = urlparse(self.url)
         return parts.netloc
 
-    def load_diff(self, diff_phid=None, revision_phid=None):
+    def search_diffs(self, diff_phid=None, revision_phid=None):
         '''
-        Find details of a differential diff from a Differential diff or revision
+        Find details of differential diffs from a Differential diff or revision
+        Multiple diffs can be returned (when using revision_phid)
         '''
         assert (diff_phid is not None) ^ (revision_phid is not None), \
             'Provide a diff_phid XOR revision_phid'
@@ -85,27 +86,26 @@ class PhabricatorAPI(object):
             constraints['revisionPHIDs'] = [revision_phid, ]
         out = self.request('differential.diff.search', constraints=constraints)
 
-        data = out['data']
-        assert len(data) == 1, \
-            'Diff not found'
-        diff = data[0]
+        def _clean(diff):
 
-        # Make all fields easily accessible
-        if 'fields' in diff and isinstance(diff['fields'], dict):
-            diff.update(diff['fields'])
-            del diff['fields']
+            # Make all fields easily accessible
+            if 'fields' in diff and isinstance(diff['fields'], dict):
+                diff.update(diff['fields'])
+                del diff['fields']
 
-        # Lookup base revision in refs
-        try:
-            diff['refs'] = {
-                ref['type']: ref
-                for ref in diff['refs']
-            }
-            diff['baseRevision'] = diff['refs']['base']['identifier']
-        except KeyError:
-            pass
+            # Lookup base revision in refs
+            try:
+                diff['refs'] = {
+                    ref['type']: ref
+                    for ref in diff['refs']
+                }
+                diff['baseRevision'] = diff['refs']['base']['identifier']
+            except KeyError:
+                pass
 
-        return diff
+            return diff
+
+        return list(map(_clean, out['data']))
 
     def load_raw_diff(self, diff_id):
         '''

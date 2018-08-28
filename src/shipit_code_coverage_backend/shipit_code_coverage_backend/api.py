@@ -77,12 +77,13 @@ def coverage_latest():
 def phabricator_base_revision_from_phid(revision_phid):
     try:
         phabricator = PhabricatorAPI(secrets.PHABRICATOR_TOKEN)
-        diff = phabricator.load_diff(revision_phid=revision_phid)
-        revision = diff.get('baseRevision')
-        if revision and revision_exists_on_central(revision):
-            return {'revision': revision}, 200
+        for diff in phabricator.search_diffs(revision_phid=revision_phid):
+            revision = diff.get('baseRevision')
+            if revision and revision_exists_on_central(revision):
+                return {'revision': revision}, 200
         return {'error': 'Base revision not found.'}, 404
     except Exception as e:
         return {
-            'error': str(e)
+            'error': str(e),
+            'error_code': getattr(e, 'error_code', 'unknown')
         }, 500
