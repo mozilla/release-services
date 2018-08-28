@@ -107,6 +107,17 @@ class PhabricatorRevision(Revision):
         revision = self.api.load_revision(self.phid)
         self.id = revision['id']
 
+        # Lookup base revision in refs
+        try:
+            refs = {
+                ref['type']: ref
+                for ref in diff['fields']['refs']
+            }
+            self.hg_base = refs['base']['identifier']
+        except KeyError:
+            self.hg_base = None
+            logger.info('Missing base mercurial revision')
+
     @property
     def namespaces(self):
         return [
@@ -140,6 +151,16 @@ class PhabricatorRevision(Revision):
         Apply patch from Phabricator to Mercurial local repository
         '''
         assert isinstance(repo, hglib.client.hgclient)
+
+        # When we have a base revision, try to update the repo
+        if self.hg_base:
+            try:
+                repo.update(
+                    rev=self.hg_base,
+                    clean=True,
+                )
+            except hglib.error.CommandError as e:
+                logger.warning('Failed to update to base revision', revision=self.hg_base, error=e)
 
         # Apply the patch on top of repository
         repo.import_(
