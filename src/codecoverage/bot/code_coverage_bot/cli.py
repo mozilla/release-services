@@ -7,9 +7,9 @@ import click
 
 from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
-from shipit_code_coverage import config
-from shipit_code_coverage.codecov import CodeCov
-from shipit_code_coverage.secrets import secrets
+from code_coverage_bot import config
+from code_coverage_bot.codecov import CodeCov
+from code_coverage_bot.secrets import secrets
 
 
 @click.command()

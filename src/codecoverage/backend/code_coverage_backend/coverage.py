@@ -7,8 +7,8 @@ import aiohttp
 from cachetools import LRUCache
 
 from cli_common import log
-from shipit_code_coverage_backend.services import coverage_service
-from shipit_code_coverage_backend.services.base import CoverageException
+from code_coverage_backend.services import coverage_service
+from code_coverage_backend.services.base import CoverageException
 
 logger = log.get_logger(__name__)
 

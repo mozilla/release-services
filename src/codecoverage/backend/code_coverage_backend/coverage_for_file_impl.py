@@ -3,10 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_code_coverage_backend.coverage import coverage_supported
-from shipit_code_coverage_backend.coverage import get_coverage_build
-from shipit_code_coverage_backend.services import coverage_service
-from shipit_code_coverage_backend.services.base import get_github_commit
+from code_coverage_backend.coverage import coverage_supported
+from code_coverage_backend.coverage import get_coverage_build
+from code_coverage_backend.services import coverage_service
+from code_coverage_backend.services.base import get_github_commit
 
 
 async def generate(changeset, path):

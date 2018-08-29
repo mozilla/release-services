@@ -3,7 +3,7 @@ import os
 
 from cli_common.log import get_logger
 from cli_common.utils import ThreadPoolExecutorResult
-from shipit_code_coverage import taskcluster
+from code_coverage_bot import taskcluster
 
 logger = get_logger(__name__)
 

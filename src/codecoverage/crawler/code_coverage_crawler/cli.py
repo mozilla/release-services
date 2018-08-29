@@ -7,8 +7,8 @@ import click
 
 from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
-from shipit_code_coverage_crawler import config
-from shipit_code_coverage_crawler.secrets import secrets
+from code_coverage_crawler import config
+from code_coverage_crawler.secrets import secrets
 
 
 @click.command()
