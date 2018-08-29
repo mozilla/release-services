@@ -10,7 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-code-coverage-crawler";
-  dirname = "shipit_code_coverage_crawler";
+  dirname = "code_coverage_crawler";
 
   mkBot = branch:
     let

@@ -8,7 +8,7 @@ import pytest
 import requests
 import responses
 
-from shipit_code_coverage import taskcluster
+from code_coverage_bot import taskcluster
 
 
 @responses.activate

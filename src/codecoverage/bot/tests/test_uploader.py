@@ -4,7 +4,7 @@ import pytest
 import requests
 import responses
 
-from shipit_code_coverage import uploader
+from code_coverage_bot import uploader
 
 
 @responses.activate

@@ -39,7 +39,7 @@ def mock_secrets():
 
 @pytest.fixture(scope='function')
 def mock_secrets_bad_phabricator_token(mock_secrets):
-    import shipit_code_coverage_backend.secrets as s
+    import code_coverage_backend.secrets as s
     old = s.PHABRICATOR_TOKEN
     s.PHABRICATOR_TOKEN = 'api-bad-token'
     yield
@@ -49,13 +49,13 @@ def mock_secrets_bad_phabricator_token(mock_secrets):
 @pytest.fixture()
 def app(mock_secrets):
     '''
-    Load shipit_code_coverage_backend app in test mode
+    Load code_coverage_backend app in test mode
     '''
-    import shipit_code_coverage_backend
+    import code_coverage_backend
 
     config = backend_common.testing.get_app_config({
     })
-    app = shipit_code_coverage_backend.create_app(config)
+    app = code_coverage_backend.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)

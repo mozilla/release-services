@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 import responses
 
-from shipit_code_coverage.artifacts import ArtifactsHandler
+from code_coverage_bot.artifacts import ArtifactsHandler
 
 FILES = [
     'windows_mochitest-1_code-coverage-jsvm.info',
@@ -65,8 +65,8 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
         a.get(chunk='xpcshell-7', suite='mochitest')
 
 
-@mock.patch('shipit_code_coverage.taskcluster.get_task_artifacts')
-@mock.patch('shipit_code_coverage.taskcluster.download_artifact')
+@mock.patch('code_coverage_bot.taskcluster.get_task_artifacts')
+@mock.patch('code_coverage_bot.taskcluster.download_artifact')
 def test_download(mocked_download_artifact, mocked_get_task_artifact, TEST_TASK_FROM_GROUP, LINUX_TEST_TASK_ARTIFACTS):
     a = ArtifactsHandler([], [])
     mocked_get_task_artifact.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts']

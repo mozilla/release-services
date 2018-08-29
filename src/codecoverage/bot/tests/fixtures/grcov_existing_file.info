@@ -1,4 +1,4 @@
-SF:shipit_code_coverage/cli.py
+SF:code_coverage_bot/cli.py
 FN:1,main
 FNDA:1,main
 FNF:1

@@ -5,7 +5,7 @@ import os
 import click
 import pytest
 
-from shipit_code_coverage import grcov
+from code_coverage_bot import grcov
 
 
 def test_report_invalid_output_format(grcov_artifact):
@@ -85,7 +85,7 @@ def test_report_source_dir(grcov_artifact, grcov_existing_file_artifact):
     report = json.loads(output.decode('utf-8'))
     # When we pass the source directory to the report function, grcov ignores not-existing files.
     assert len(report['source_files']) == 1
-    assert report['source_files'][0]['name'] == 'shipit_code_coverage/cli.py'
+    assert report['source_files'][0]['name'] == 'code_coverage_bot/cli.py'
     # When we pass the source directory to grcov and the file exists, grcov can calculate its hash.
     assert report['source_files'][0]['source_digest'] == '8972cbe76ff3dffe12cc04e1e0ad10a7'
 
@@ -122,4 +122,4 @@ def test_files_list(grcov_artifact, grcov_uncovered_artifact):
 
 def test_files_list_source_dir(grcov_artifact, grcov_existing_file_artifact):
     files = grcov.files_list([grcov_artifact, grcov_existing_file_artifact], source_dir=os.getcwd())
-    assert set(files) == set(['shipit_code_coverage/cli.py'])
+    assert set(files) == set(['code_coverage_bot/cli.py'])

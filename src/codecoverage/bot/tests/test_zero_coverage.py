@@ -5,7 +5,7 @@ from datetime import datetime
 
 import pytz
 
-from shipit_code_coverage.zero_coverage import ZeroCov
+from code_coverage_bot.zero_coverage import ZeroCov
 
 
 def test_zero_coverage(tmpdir,

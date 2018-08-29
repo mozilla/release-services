@@ -2,7 +2,7 @@
 
 import responses
 
-from shipit_code_coverage.github import GitHubUtils
+from code_coverage_bot.github import GitHubUtils
 
 
 @responses.activate

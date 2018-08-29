@@ -166,7 +166,7 @@ def jsvm_uncovered_function_artifact():
 
 @pytest.fixture(scope='session')
 def mock_secrets():
-    from shipit_code_coverage.secrets import secrets
+    from code_coverage_bot.secrets import secrets
     secrets.update({
         'CODECOV_REPO': 'marco-c/gecko-dev',
         'CODECOV_ACCESS_TOKEN': 'XXX',
@@ -219,7 +219,7 @@ def fake_hg_repo(tmpdir):
          'size': 4},
         {'name': 'js/src/jit/BitSet.cpp',
          'size': 5},
-        {'name': 'shipit_code_coverage/cli.py',
+        {'name': 'code_coverage_bot/cli.py',
          'size': 6},
     ]
 

@@ -3,8 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from cli_common import log
-from shipit_code_coverage_backend import secrets
-from shipit_code_coverage_backend.services import coveralls, codecov, active_data
+from code_coverage_backend import secrets
+from code_coverage_backend.services import coveralls, codecov, active_data
 
 logger = log.get_logger(__name__)
 

@@ -10,7 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-code-coverage-backend";
-  dirname = "shipit_code_coverage_backend";
+  dirname = "code_coverage_backend";
 
   self = mkBackend rec {
     inherit python name dirname;
@@ -28,7 +28,7 @@ let
       mkdir -p $out/bin
       cp ${src}/launch.sh $out/bin
       chmod +x $out/bin/launch.sh
-      cp ${src}/shipit_code_coverage_backend/worker.py $out/bin/shipit_code_coverage_backend_worker
+      cp ${src}/code_coverage_backend/worker.py $out/bin/code_coverage_backend_worker
     '';
     passthru = {
       update = writeScript "update-${name}" ''

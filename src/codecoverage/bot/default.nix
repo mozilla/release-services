@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   rustPlatform = mkRustPlatform {};
   name = "mozilla-shipit-code-coverage";
-  dirname = "shipit_code_coverage";
+  dirname = "code_coverage_bot";
 
   # Marco grcov
   grcov = rustPlatform.buildRustPackage rec {
@@ -66,7 +66,7 @@ let
           ("docker-worker:cache:" + cacheKey)
 
           # Needed to index the task in the TaskCluster index
-          ("index:insert-task:project.releng.services.project." + branch + ".shipit_code_coverage.*")
+          ("index:insert-task:project.releng.services.project." + branch + ".code_coverage_bot.*")
         ] ++ (
           # Needed to post build status to GitHub
           if (branch == "staging") then ["github:create-status:marco-c/gecko-dev"] else []

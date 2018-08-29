@@ -7,11 +7,11 @@ import aiohttp
 from async_lru import alru_cache
 
 from cli_common import log
-from shipit_code_coverage_backend.services import secrets
-from shipit_code_coverage_backend.services.base import Coverage
-from shipit_code_coverage_backend.services.base import CoverageException
-from shipit_code_coverage_backend.services.base import get_github_commit
-from shipit_code_coverage_backend.services.base import get_mercurial_commit
+from code_coverage_backend.services import secrets
+from code_coverage_backend.services.base import Coverage
+from code_coverage_backend.services.base import CoverageException
+from code_coverage_backend.services.base import get_github_commit
+from code_coverage_backend.services.base import get_mercurial_commit
 
 logger = log.get_logger(__name__)
 
