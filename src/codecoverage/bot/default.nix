@@ -10,7 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   rustPlatform = mkRustPlatform {};
-  name = "mozilla-shipit-code-coverage";
+  name = "mozilla-code-coverage-bot";
   dirname = "code_coverage_bot";
 
   # Marco grcov
@@ -48,10 +48,10 @@ let
 
   mkBot = branch:
     let
-      cacheKey = "services-" + branch + "-shipit-code-coverage";
+      cacheKey = "services-" + branch + "-code-coverage-bot";
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
       hook = mkTaskclusterHook {
-        name = "Shipit task aggregating code coverage data";
+        name = "Task aggregating code coverage data";
         owner = "mcastelluccio@mozilla.com";
         schedule = [ "0 0 0 * * *" ]; # every day
         taskImage = self.docker;
@@ -82,7 +82,7 @@ let
         };
         taskCapabilities = {};
         taskCommand = [
-          "/bin/shipit-code-coverage"
+          "/bin/code-coverage-bot"
           "--taskcluster-secret"
           secretsKey
           "--cache-root"

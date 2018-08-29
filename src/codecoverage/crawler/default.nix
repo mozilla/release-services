@@ -9,15 +9,15 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-code-coverage-crawler";
+  name = "mozilla-code-coverage-crawler";
   dirname = "code_coverage_crawler";
 
   mkBot = branch:
     let
-      cacheKey = "services-" + branch + "-shipit-code-coverage-crawler";
+      cacheKey = "services-" + branch + "-code-coverage-crawler";
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
       hook = mkTaskclusterHook {
-        name = "Shipit bot for coverage crawler project";
+        name = "Bot for coverage crawler project";
         owner = "mcastelluccio@mozilla.com";
         schedule = [ "0 0 0 * * 0" ]; # every week
         taskImage = self.docker;
@@ -41,7 +41,7 @@ let
         };
         taskCapabilities = {};
         taskCommand = [
-          "/bin/shipit-code-coverage-crawler"
+          "/bin/code-coverage-crawler"
           "--taskcluster-secret"
           secretsKey
           "--cache-root"

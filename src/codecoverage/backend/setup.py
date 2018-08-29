@@ -32,10 +32,10 @@ def read_requirements(file_):
 setup(
     name='code_coverage_backend',
     version=version,
-    description='The code behind code-coverage.shipit.mozilla-releng.net',
+    description='The code behind https://coverage.moz.tools',
     author='Mozilla Release Management',
     author_email='release-mgmt-analysis@mozilla.com',
-    url='code-coverage.shipit.mozilla-releng.net',
+    url='https://coverage.moz.tools',
     tests_require=read_requirements('requirements-dev.txt'),
     install_requires=read_requirements('requirements.txt'),
     packages=find_packages(),

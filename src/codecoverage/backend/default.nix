@@ -9,7 +9,7 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-code-coverage-backend";
+  name = "mozilla-code-coverage-backend";
   dirname = "code_coverage_backend";
 
   self = mkBackend rec {
