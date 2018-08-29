@@ -6,5 +6,4 @@
 from __future__ import absolute_import
 
 
-PROJECT_NAME = 'shipit-code-coverage-crawler'
-PROJECT_PATH = 'code_coverage_crawler'
+PROJECT_NAME = 'code-coverage-crawler'
