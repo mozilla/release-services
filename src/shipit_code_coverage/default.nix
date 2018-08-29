@@ -53,7 +53,7 @@ let
       hook = mkTaskclusterHook {
         name = "Shipit task aggregating code coverage data";
         owner = "mcastelluccio@mozilla.com";
-        schedule = [ "0 0 0 * * 0" ]; # every week
+        schedule = [ "0 0 0 * * *" ]; # every day
         taskImage = self.docker;
         scopes = [
           # Used by taskclusterProxy
