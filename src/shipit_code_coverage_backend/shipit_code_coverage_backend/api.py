@@ -7,7 +7,8 @@ import asyncio
 
 from rq import Queue
 
-from cli_common import phabricator
+from cli_common.phabricator import PhabricatorAPI
+from cli_common.phabricator import revision_exists_on_central
 from shipit_code_coverage_backend import coverage
 from shipit_code_coverage_backend import coverage_by_changeset_impl
 from shipit_code_coverage_backend import coverage_for_file_impl
@@ -75,11 +76,15 @@ def coverage_latest():
 
 def phabricator_base_revision_from_phid(revision_phid):
     try:
-        revision = phabricator.get_base_revision(secrets.PHABRICATOR_TOKEN, revision_phid)
-        if revision:
-            return {'revision': revision}, 200
+        phabricator = PhabricatorAPI(secrets.PHABRICATOR_TOKEN)
+        diffs = phabricator.search_diffs(revision_phid=revision_phid)
+        if len(diffs) > 0:
+            revision = diffs[-1]['baseRevision']
+            if revision and revision_exists_on_central(revision):
+                return {'revision': revision}, 200
         return {'error': 'Base revision not found.'}, 404
     except Exception as e:
         return {
-            'error': str(e)
+            'error': str(e),
+            'error_code': getattr(e, 'error_code', 'unknown')
         }, 500

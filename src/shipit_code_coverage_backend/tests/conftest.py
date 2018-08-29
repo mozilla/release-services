@@ -169,6 +169,22 @@ def phabricator_responses():
         content_type='application/json',
     )
 
+    responses.add(
+        responses.POST,
+        'https://phabricator.services.mozilla.com/api/user.whoami',
+        body=json.dumps({
+            'result': {
+                'phid': 'PHID-USER-test1234',
+                'userName': 'Tester',
+                'primaryEmail': 'test@mozilla.com',
+                'realName': 'Mr. Tester',
+            },
+            'error_code': None,
+            'error_info': None
+        }),
+        content_type='application/json',
+    )
+
 
 @pytest.fixture(scope='session')
 def coverage_changeset_by_file():
