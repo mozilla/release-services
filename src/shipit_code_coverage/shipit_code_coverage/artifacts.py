@@ -84,6 +84,10 @@ class ArtifactsHandler(object):
         for test_task in test_tasks:
             status = test_task['status']['state']
             assert status in ALL_STATUSES, "State '{}' not recognized".format(status)
+            # Skip tasks that will not have artifacts ready, like the ones that
+            # are running, unscheduled or pending.
+            if status not in STATUS_VALUE:
+                continue
 
             chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
             platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
