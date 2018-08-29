@@ -6,10 +6,10 @@
 import io
 import os
 import re
+from collections import OrderedDict
 
 import hglib
 from parsepatch.patch import Patch
-from collections import OrderedDict
 
 from cli_common import log
 from cli_common.phabricator import PhabricatorAPI
