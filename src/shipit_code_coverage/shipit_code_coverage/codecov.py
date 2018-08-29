@@ -161,13 +161,15 @@ class CodeCov(object):
             else:
                 logger.error('codecov.io took too much time to ingest data.')
         else:
+            logger.info('Generating suite reports')
             os.makedirs('code-coverage-reports', exist_ok=True)
-
             self.generate_suite_reports()
 
+            logger.info('Generating zero coverage reports')
             zc = ZeroCov(self.repo_dir)
             zc.generate(self.artifactsHandler.get(), self.revision, self.github_revision)
 
+            logger.info('Generating chunk mapping')
             chunk_mapping.generate(self.repo_dir, self.revision, self.artifactsHandler)
 
             # Index the task in the TaskCluster index at the given revision and as "latest".
