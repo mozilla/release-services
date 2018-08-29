@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='shipit_code_coverage',
+    name='code_coverage_bot',
     version=VERSION,
     description='Listens to bugzilla entries, executes'
     'some static analysis and reports results.',
@@ -43,7 +43,7 @@ setuptools.setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-code-coverage = shipit_code_coverage.cli:main',
+            'code-coverage-bot = code_coverage_bot.cli:main',
         ]
     },
 )

@@ -28,7 +28,7 @@ def read_requirements(file_):
 
 
 setup(
-    name='mozilla-shipit-code-coverage-crawler',
+    name='code_coverage_crawler',
     version=version,
     description='A crawler to find websites that exercise code in Firefox that is not covered by unit tests',
     author='Mozilla Release Services Team',
@@ -42,7 +42,7 @@ setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-code-coverage-crawler = shipit_code_coverage_crawler.cli:main',
+            'code-coverage-crawler = code_coverage_crawler.cli:main',
         ]
     },
 )

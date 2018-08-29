@@ -30,7 +30,7 @@ def read_requirements(file_):
 
 
 setup(
-    name='mozilla-shipit-code-coverage-backend',
+    name='code_coverage_backend',
     version=version,
     description='The code behind code-coverage.shipit.mozilla-releng.net',
     author='Mozilla Release Management',
