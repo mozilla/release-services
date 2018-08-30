@@ -32,4 +32,4 @@ def test_phabricator_get_revision_from_phid_api_bad_token(client, phabricator_re
     REVISION_PHID = 'PHID-DREV-esv6jbcptwuju667eiyx'
     resp = client.get(URL_TEMPLATE.format(REVISION_PHID))
     assert resp.status_code == 500
-    assert 'INVALID-AUTH' in resp.json['error']
+    assert 'ERR-INVALID-AUTH' == resp.json['error_code']
