@@ -6,7 +6,6 @@
 import itertools
 import os
 
-from libmozdata import bugzilla
 from libmozdata import versions
 from libmozdata.patchanalysis import bug_analysis
 from libmozdata.patchanalysis import parse_uplift_comment
@@ -14,6 +13,9 @@ from libmozdata.patchanalysis import parse_uplift_comment
 from cli_common.log import get_logger
 from uplift_bot.api import NotFound
 from uplift_bot.api import api_client
+from uplift_bot.bugzilla import list_bugs
+from uplift_bot.bugzilla import load_users
+from uplift_bot.bugzilla import use_bugzilla
 from uplift_bot.helpers import compute_dict_hash
 from uplift_bot.mercurial import Repository
 from uplift_bot.merge import MergeTest
@@ -127,60 +129,11 @@ class BugSync(object):
                 'url': '{}/{}'.format(bugzilla_url, self.bugzilla_id),
                 'bug': self.bug_data,
                 'analysis': self.analysis,
-                'users': self.load_users(),
+                'users': load_users(self.analysis),
                 'versions': self.list_versions(),
             },
             'payload_hash': bug_hash,
         }
-
-    def load_users(self):
-        '''
-        Load users linked through roles to an analysis
-        '''
-        assert self.analysis is not None, \
-            'Missing bug analysis'
-
-        roles = {}
-
-        def _extract_user(user_data, role):
-            # Support multiple input structures
-            if user_data is None:
-                return
-            elif isinstance(user_data, dict):
-                if 'id' in user_data:
-                    key = user_data['id']
-                elif 'email' in user_data:
-                    key = user_data['email']
-                else:
-                    raise Exception('Invalid user data : no id or email')
-
-            elif isinstance(user_data, str):
-                key = user_data
-            else:
-                raise Exception('Invalid user data : unsupported format')
-
-            if key not in roles:
-                roles[key] = []
-            roles[key].append(role)
-
-        # Extract users keys & roles
-        _extract_user(self.analysis['users'].get('creator'), 'creator')
-        _extract_user(self.analysis['users'].get('assignee'), 'assignee')
-        for r in self.analysis['users']['reviewers']:
-            _extract_user(r, 'reviewer')
-        _extract_user(self.analysis['uplift_author'], 'uplift_author')
-
-        def _handler(user, data):
-            # Store users with their roles
-            user['roles'] = roles.get(user['id'], roles.get(user['email'], []))
-            data.append(user)
-
-        # Finally fetch clean users data through Bugzilla
-        out = []
-        bugzilla.BugzillaUser(user_names=roles.keys(),
-                              user_handler=_handler,
-                              user_data=out).wait()
-        return out
 
     def list_versions(self):
         '''
@@ -224,18 +177,7 @@ class Bot(object):
         self.repository = None
         self.bugzilla_url = bugzilla_url
 
-        # Patch libmozdata configuration
-        # TODO: Fix config calls in libmozdata
-        # os.environ['LIBMOZDATA_CFG_BUGZILLA_URL'] = self.bugzilla_url
-        # set_config(ConfigEnv())
-        bugzilla.Bugzilla.URL = self.bugzilla_url
-        bugzilla.Bugzilla.API_URL = self.bugzilla_url + '/rest/bug'
-        bugzilla.BugzillaUser.URL = self.bugzilla_url
-        bugzilla.BugzillaUser.API_URL = self.bugzilla_url + '/rest/user'
-        if bugzilla_token is not None:
-            bugzilla.Bugzilla.TOKEN = bugzilla_token
-            bugzilla.BugzillaUser.TOKEN = bugzilla_token
-
+        use_bugzilla(bugzilla_url, bugzilla_token)
         logger.info('Use bugzilla server', url=self.bugzilla_url)
 
     def use_cache(self, cache_root):
@@ -256,34 +198,6 @@ class Bot(object):
             'https://hg.mozilla.org/mozilla-unified',
             cache_root,
         )
-
-    def list_bugs(self, query):
-        '''
-        List all the bugs from a Bugzilla query
-        '''
-        def _bughandler(bug, data):
-            bugid = bug['id']
-            data[bugid] = bug
-
-        def _attachmenthandler(attachments, bugid, data):
-            data[int(bugid)] = attachments
-
-        bugs, attachments = {}, {}
-
-        bz = bugzilla.Bugzilla(query,
-                               bughandler=_bughandler,
-                               attachmenthandler=_attachmenthandler,
-                               bugdata=bugs,
-                               attachmentdata=attachments)
-        bz.get_data().wait()
-
-        # Map attachments on bugs
-        for bugid, _attachments in attachments.items():
-            if bugid not in bugs:
-                continue
-            bugs[bugid]['attachments'] = _attachments
-
-        return bugs
 
     def get_bug_sync(self, bugzilla_id):
         if bugzilla_id not in self.sync:
@@ -330,7 +244,7 @@ class Bot(object):
 
             # Get bugs from bugzilla for this analysis
             logger.info('List bugzilla bugs', name=analysis['name'])
-            raw_bugs = self.list_bugs(analysis['parameters'])
+            raw_bugs = list_bugs(analysis['parameters'])
             for bugzilla_id, bug_data in raw_bugs.items():
                 sync = self.get_bug_sync(bugzilla_id)
                 sync.setup_bugzilla(analysis, bug_data)
