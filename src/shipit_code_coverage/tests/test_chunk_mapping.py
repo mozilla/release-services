@@ -96,7 +96,7 @@ def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo):
                 assert False, 'Unexpected payload'
         elif payload['from'] == 'unittest':
             if 'groupby' in payload:
-                if payload['groupby'] == ['run.suite']:
+                if payload['groupby'] == ['run.suite.fullname']:
                     data = [
                         ['marionette', 3590],
                         ['gtest', 2078],
@@ -106,7 +106,7 @@ def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo):
                     assert False, 'Unexpected groupby'
             elif 'select' in payload:
                 if payload['select'] == ['result.test', 'run.key']:
-                    requested_suite = payload['where']['and'][2]['eq']['run.suite']
+                    requested_suite = payload['where']['and'][2]['eq']['run.suite.fullname']
                     if requested_suite == 'gtest':
                         data = {}
                     elif requested_suite == 'marionette':
@@ -143,7 +143,7 @@ def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo):
         return (200, {}, json.dumps({'data': data}))
 
     responses.add_callback(
-        responses.POST, 'https://activedata.allizom.org/query',
+        responses.POST, chunk_mapping.ACTIVEDATA_QUERY_URL,
         callback=request_callback,
         content_type='application/json',
     )
