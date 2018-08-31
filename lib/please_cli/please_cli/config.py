@@ -504,7 +504,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-code-coverage': {
+    'codecoverage/bot': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -532,7 +532,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-code-coverage-backend': {
+    'codecoverage/backend': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -573,7 +573,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-code-coverage-crawler': {
+    'codecoverage/crawler': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
