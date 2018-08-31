@@ -1,5 +1,5 @@
--e ./../../lib/cli_common[taskcluster,log,phabricator] #egg=mozilla-cli-common
--e ./../../lib/backend_common[log,security,cors,api,cache] #egg=mozilla-backend-common
+-e ./../../../lib/cli_common[taskcluster,log,phabricator] #egg=mozilla-cli-common
+-e ./../../../lib/backend_common[log,security,cors,api,cache] #egg=mozilla-backend-common
 
 aiohttp
 async-lru
