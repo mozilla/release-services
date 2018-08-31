@@ -163,6 +163,28 @@ class PhabricatorAPI(object):
             attach_inlines=1,
         )
 
+    def load_parents(self, revision_phid):
+        '''
+        Recursively load parents from a stack of revision
+        '''
+        parents, phids = [], [revision_phid, ]
+        while phids:
+            phid = phids.pop()
+            out = self.request(
+                'edge.search',
+                types=['revision.parent', ],
+                sourcePHIDs=[phid, ]
+            )
+            for element in out['data']:
+                rev = element['destinationPHID']
+                if rev in parents:
+                    break
+
+                parents.append(rev)
+                phids.append(rev)
+
+        return parents
+
     def request(self, path, **payload):
         '''
         Send a request to Phabricator API
