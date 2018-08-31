@@ -1381,7 +1381,7 @@ let
 
     "mozilla-backend-common" = python.mkDerivation {
       name = "mozilla-backend-common-1.0.0";
-      src = pkgs.lib.cleanSource ./../../lib/backend_common;
+      src = pkgs.lib.cleanSource ./../../../lib/backend_common;
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1420,7 +1420,7 @@ let
 
     "mozilla-cli-common" = python.mkDerivation {
       name = "mozilla-cli-common-1.0.0";
-      src = pkgs.lib.cleanSource ./../../lib/cli_common;
+      src = pkgs.lib.cleanSource ./../../../lib/cli_common;
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";

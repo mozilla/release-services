@@ -111,7 +111,7 @@ let
     src = filterSource ./. { inherit name; };
     buildInputs =
       [ mercurial ] ++
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages) ++
