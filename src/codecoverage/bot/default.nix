@@ -109,6 +109,7 @@ let
     inherit python name dirname;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
+    src_path = "src/codecoverage/bot";
     buildInputs =
       [ mercurial ] ++
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++

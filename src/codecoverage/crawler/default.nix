@@ -55,6 +55,7 @@ let
     inherit python name dirname;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
+    src_path = "src/codecoverage/crawler";
     buildInputs =
       fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
