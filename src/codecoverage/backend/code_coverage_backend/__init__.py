@@ -14,7 +14,7 @@ def create_app(config=None):
 
     app = backend_common.create_app(
         project_name=code_coverage_backend.config.PROJECT_NAME,
-        app_name=code_coverage_backend.config.PROJECT_PATH,
+        app_name=code_coverage_backend.config.APP_NAME,
         config=config,
         extensions=[
             'log',

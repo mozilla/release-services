@@ -6,3 +6,4 @@
 from __future__ import absolute_import
 
 PROJECT_NAME = 'code-coverage-backend'
+APP_NAME = 'code_coverage_backend'
