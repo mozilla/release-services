@@ -108,7 +108,6 @@ class PhabricatorRevision(Revision):
         assert isinstance(api, PhabricatorAPI)
         self.api = api
 
-        print(description)
         # Parse Diff description
         match = self.regex.match(description)
         if match is None:

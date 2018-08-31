@@ -10,6 +10,18 @@ import os
 import cli_common.utils
 
 
+ANDROID_MOZCONFIG = '''# Build Firefox for Android:
+ac_add_options --enable-application=mobile/android
+ac_add_options --target=arm-linux-androideabi
+
+# With the following Android SDK and NDK:
+ac_add_options --with-android-sdk="{mozbuild}/android-sdk-linux/android-sdk-linux"
+ac_add_options --with-android-ndk="{mozbuild}/android-ndk/android-ndk"
+
+ac_add_options --with-java-bin-path="{openjdk}/bin"
+'''
+
+
 def setup(job_name='linux64-infer', revision='latest',
           artifact='public/build/infer.tar.xz'):
     '''
@@ -30,16 +42,17 @@ def setup(job_name='linux64-infer', revision='latest',
         artifacts = ['public/build/infer.tar.xz',
                      'project/gecko/android-sdk/android-sdk-linux.tar.xz',
                      'project/gecko/android-ndk/android-ndk.tar.xz']
-        for i in range(len(job_names)):
-            namespace = NAMESPACE.format(job_names[i], revision)
+        for job, artifact in zip(job_names, artifacts):
+            namespace = NAMESPACE.format(job, revision)
             artifact_url = index.buildSignedUrl('findArtifactFromTask',
                                                 indexPath=namespace,
-                                                name=artifacts[i])
+                                                name=artifact)
             target = os.path.join(
                 os.environ['MOZBUILD_STATE_PATH'],
-                os.path.basename(artifacts[i]).split('.')[0],
+                os.path.basename(artifact).split('.')[0],
             )
             cli_common.utils.retry(lambda: download(artifact_url, target))
+            assert os.path.exists(target)
 
 
 def download(artifact_url, target):

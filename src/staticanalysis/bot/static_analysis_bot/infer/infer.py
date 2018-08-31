@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
 import os
 import subprocess
 
@@ -15,15 +16,12 @@ from static_analysis_bot.revisions import Revision
 logger = get_logger(__name__)
 
 ISSUE_MARKDOWN = '''
-## infer {type}
+## infer error
 
 - **Message**: {message}
 - **Location**: {location}
 - **In patch**: {in_patch}
-- **Clang check**: {check}
-- **Publishable check**: {publishable_check}
-- **Third Party**: {third_party}
-- **Expanded Macro**: {expanded_macro}
+- **Infer check**: {check}
 - **Publishable **: {publishable}
 - **Is new**: {is_new}
 
@@ -76,10 +74,10 @@ class Infer(object):
             logger.error('Mach static analysis failed: {}'.format(e.output))
             raise
 
-        import json
         report_file = os.path.join(settings.repo_dir, 'infer-out', 'report.json')
         infer_output = json.load(open(report_file))
-        # Dump raw clang-tidy output as a Taskcluster artifact (for debugging)
+
+        # Dump raw infer output as a Taskcluster artifact (for debugging)
         infer_output_path = os.path.join(
             settings.taskcluster_results_dir,
             '{}-infer.txt'.format(repr(revision)),
@@ -87,6 +85,7 @@ class Infer(object):
         with open(infer_output_path, 'w') as f:
             f.write(json.dumps(infer_output, indent=2))
         issues = self.parse_issues(infer_output, revision)
+
         # Report stats for these issues
         stats.report_issues('infer', issues)
         return issues
@@ -98,10 +97,11 @@ class Infer(object):
         if not infer_output:
             logger.info('Infer could not generate any output.')
             return []
+
         # check if json is empty
         nb_warnings = len(infer_output)
         if not nb_warnings:
-            logger.info('Mach static analysis did not find any issue')
+            logger.info('Mach static analysis check-java did not find any issue')
             return []
         logger.info('Mach static analysis found some issues', nb=nb_warnings)
         return [InferIssue(issue, revision) for issue in infer_output]

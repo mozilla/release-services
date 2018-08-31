@@ -10,6 +10,7 @@ import os
 import subprocess
 from datetime import datetime
 from datetime import timedelta
+from shutil import copy
 
 import hglib
 
@@ -28,6 +29,7 @@ from static_analysis_bot.config import ARTIFACT_URL
 from static_analysis_bot.config import REPO_CENTRAL
 from static_analysis_bot.config import Publication
 from static_analysis_bot.config import settings
+from static_analysis_bot.infer import ANDROID_MOZCONFIG
 from static_analysis_bot.infer import setup as setup_infer
 from static_analysis_bot.infer.infer import Infer
 from static_analysis_bot.lint import MozLint
@@ -150,14 +152,7 @@ class Workflow(object):
 
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ or Java files
-            if revision.has_clang_files or revision.has_infer_files:
-                if revision.has_infer_files:
-                    if INFER in self.analyzers:
-                        analyzers.append(Infer)
-                        logger.info('Setup Taskcluster infer build...')
-                        setup_infer()
-                    else:
-                        logger.info('Skip infer')
+            if revision.has_clang_files:
 
                 # Mach pre-setup with mozconfig
                 logger.info('Mach configure...')
@@ -176,18 +171,37 @@ class Workflow(object):
                 logger.info('Setup Taskcluster clang build...')
                 setup_clang()
 
-                if revision.has_clang_files:
-                    # Use clang-tidy & clang-format
-                    if CLANG_TIDY in self.analyzers:
-                        analyzers.append(ClangTidy)
-                    else:
-                        logger.info('Skip clang-tidy')
-                    if CLANG_FORMAT in self.analyzers:
-                        analyzers.append(ClangFormat)
-                    else:
-                        logger.info('Skip clang-format')
+                # Use clang-tidy & clang-format
+                if CLANG_TIDY in self.analyzers:
+                    analyzers.append(ClangTidy)
+                else:
+                    logger.info('Skip clang-tidy')
+                if CLANG_FORMAT in self.analyzers:
+                    analyzers.append(ClangFormat)
+                else:
+                    logger.info('Skip clang-format')
+            if revision.has_infer_files:
+                # we copy the old mozconfig into the repository, so that we can
+                # enable the android build
+                android_mozconfig = os.path.join(settings.repo_dir, 'mozconfig')
+                copy(os.getenv('MOZCONFIG'), android_mozconfig)
+                os.environ['MOZCONFIG'] = android_mozconfig
+                subprocess.run(['chmod', 'u+w', android_mozconfig])
+                with open(android_mozconfig, 'a') as f:
+                    f.write(ANDROID_MOZCONFIG.format(
+                        mozbuild='/tmp/mozilla-state',
+                        openjdk=os.getenv('JAVA_HOME')))
+                if INFER in self.analyzers:
+                    analyzers.append(Infer)
+                    logger.info('Setup Taskcluster infer build...')
+                    setup_infer()
 
-            else:
+                    # Mach pre-setup with mozconfig
+                    logger.info('Mach configure for infer...')
+                    run_check(['gecko-env', './mach', 'configure'], cwd=settings.repo_dir)
+                else:
+                    logger.info('Skip infer')
+            if not (revision.has_clang_files or revision.has_clang_files):
                 logger.info('No clang or java files detected, skipping mach, infer and clang-*')
 
             # Setup python environment

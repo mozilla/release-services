@@ -26,4 +26,6 @@
 /src/**/yarn-error.log
 /tmp
 /w
+
+# ignore emacs generated files
 *~

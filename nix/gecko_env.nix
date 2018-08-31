@@ -41,7 +41,6 @@ in gecko.overrideDerivation (old: {
     mkdir -p $out/bin
     mkdir -p $out/conf
   '';
-  mozbuild = "/tmp/mozilla-state";
   buildPhase = ''
 
     # Gecko build environment
@@ -62,9 +61,8 @@ in gecko.overrideDerivation (old: {
 
     # Build LDFLAGS and LIBRARY_PATH
     echo "export LDFLAGS=\"$NIX_LDFLAGS\"" >> $geckoenv
-    echo "export SQLITE_LIB=${sqlite.out}/lib/" >> $geckoenv
-    echo "export LIBRARY_PATH=\"$SQLITE_LIB:$CMAKE_LIBRARY_PATH\"" >> $geckoenv
-    echo "export LD_LIBRARY_PATH=\"$SQLITE_LIB:$CMAKE_LIBRARY_PATH\"" >> $geckoenv
+    echo "export LIBRARY_PATH=${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
+    echo "export LD_LIBRARY_PATH=${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
 
     # Setup Clang & Autoconf
     echo "export CC=${clang_4}/bin/clang" >> $geckoenv
@@ -81,16 +79,6 @@ in gecko.overrideDerivation (old: {
     ac_add_options --with-clang-path=${clang_4}/bin/clang
     ac_add_options --with-libclang-path=${llvmPackages_4.libclang}/lib
     mk_add_options AUTOCLOBBER=1
-
-    # Build Firefox for Android:
-    ac_add_options --enable-application=mobile/android
-    ac_add_options --target=arm-linux-androideabi
-
-    # With the following Android SDK and NDK:
-    ac_add_options --with-android-sdk="$mozbuild/android-sdk-linux/android-sdk-linux"
-    ac_add_options --with-android-ndk="$mozbuild/android-ndk/android-ndk"
-
-    ac_add_options --with-java-bin-path="${openjdk}/bin"
     "
 
     # Use updated rust version
