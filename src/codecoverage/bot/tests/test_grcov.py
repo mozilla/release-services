@@ -87,7 +87,7 @@ def test_report_source_dir(grcov_artifact, grcov_existing_file_artifact):
     assert len(report['source_files']) == 1
     assert report['source_files'][0]['name'] == 'code_coverage_bot/cli.py'
     # When we pass the source directory to grcov and the file exists, grcov can calculate its hash.
-    assert report['source_files'][0]['source_digest'] == '8972cbe76ff3dffe12cc04e1e0ad10a7'
+    assert report['source_files'][0]['source_digest'] == 'b53ea39de2095ba8dd0a6e4e6e52173d'
 
 
 def test_report_service_number(grcov_artifact):
