@@ -150,10 +150,13 @@ class PhabricatorRevision(Revision):
             # Load all parent diffs
             for parent in parents:
                 logger.info('Loading parent diff', phid=parent)
-                parent_diffs = self.api.search_diffs(revision_phid=parent)
 
-                # Use only the first (last in time) diff for each revision
-                last_diff = parent_diffs[0]
+                # Sort parent diffs by their id to load the most recent patch
+                parent_diffs = sorted(
+                    self.api.search_diffs(revision_phid=parent),
+                    key=lambda x: x['id'],
+                )
+                last_diff = parent_diffs[-1]
                 patches[last_diff['phid']] = last_diff['id']
 
                 # Use base revision of last parent
