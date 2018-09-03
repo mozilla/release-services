@@ -7,8 +7,14 @@ import tarfile
 import requests
 import io
 import os
+import shutil
+import subprocess
 import cli_common.utils
 
+from cli_common.log import get_logger
+
+
+logger = get_logger(__name__)
 
 ANDROID_MOZCONFIG = '''# Build Firefox for Android:
 ac_add_options --enable-application=mobile/android
@@ -22,7 +28,7 @@ ac_add_options --with-java-bin-path="{openjdk}/bin"
 '''
 
 
-def setup(job_name='linux64-infer', revision='latest',
+def setup(index, job_name='linux64-infer', revision='latest',
           artifact='public/build/infer.tar.xz'):
     '''
     Setup Taskcluster infer build for static-analysis
@@ -31,11 +37,6 @@ def setup(job_name='linux64-infer', revision='latest',
     - Extracts it into the MOZBUILD_STATE_PATH as expected by mach
     '''
     NAMESPACE = 'gecko.cache.level-1.toolchains.v2.{}.{}'
-    import taskcluster
-    index = taskcluster.Index(
-        {'credentials': {'clientId': os.getenv('TASKCLUSTER_CLIENT_ID'),
-                         'accessToken': os.getenv('TASKCLUSTER_ACCESS_TOKEN')}}
-    )
     if job_name == 'linux64-infer':
         job_names = ['linux64-infer', 'linux64-android-sdk-linux-repack',
                      'linux64-android-ndk-linux-repack']
@@ -51,6 +52,7 @@ def setup(job_name='linux64-infer', revision='latest',
                 os.environ['MOZBUILD_STATE_PATH'],
                 os.path.basename(artifact).split('.')[0],
             )
+            logger.info('Downloading {}.'.format(artifact))
             cli_common.utils.retry(lambda: download(artifact_url, target))
             assert os.path.exists(target)
 
@@ -63,3 +65,25 @@ def download(artifact_url, target):
     # Extract archive into destination
     with tarfile.open(fileobj=io.BytesIO(resp.content)) as tar:
         tar.extractall(target)
+
+
+class AndroidConfig():
+    def __init__(self, settings):
+        self.__settings = settings
+
+    def __enter__(self):
+        # we copy the old mozconfig into the repository, so that we can
+        # enable the android build
+        self.__android_mozconfig = os.path.join(self.__settings.repo_dir, 'mozconfig')
+        self.__old_config = os.getenv('MOZCONFIG')
+        shutil.copy(self.__old_config, self.__android_mozconfig)
+        os.environ['MOZCONFIG'] = self.__android_mozconfig
+        subprocess.run(['chmod', 'u+w', self.__android_mozconfig])
+        with open(self.__android_mozconfig, 'a') as f:
+            f.write(ANDROID_MOZCONFIG.format(
+                mozbuild='/tmp/mozilla-state',
+                openjdk=os.getenv('JAVA_HOME')))
+
+    def __exit__(self, type, value, traceback):
+        os.environ['MOZCONFIG'] = self.__old_config
+        os.remove(self.__android_mozconfig)
