@@ -28,7 +28,6 @@ from static_analysis_bot.config import ARTIFACT_URL
 from static_analysis_bot.config import REPO_CENTRAL
 from static_analysis_bot.config import Publication
 from static_analysis_bot.config import settings
-from static_analysis_bot.infer import AndroidConfig
 from static_analysis_bot.infer import setup as setup_infer
 from static_analysis_bot.infer.infer import Infer
 from static_analysis_bot.lint import MozLint
@@ -181,15 +180,9 @@ class Workflow(object):
                     logger.info('Skip clang-format')
             if revision.has_infer_files:
                 if INFER in self.analyzers:
-                    with AndroidConfig(settings):
-                        analyzers.append(Infer)
-                        logger.info('Setup Taskcluster infer build...')
-                        setup_infer(self.index_service)
-
-                        # Mach pre-setup with mozconfig
-                        logger.info('Mach configure for infer...')
-                        run_check(['gecko-env', './mach', 'configure'],
-                                  cwd=settings.repo_dir)
+                    analyzers.append(Infer)
+                    logger.info('Setup Taskcluster infer build...')
+                    setup_infer(self.index_service)
                 else:
                     logger.info('Skip infer')
             if not (revision.has_clang_files or revision.has_clang_files):

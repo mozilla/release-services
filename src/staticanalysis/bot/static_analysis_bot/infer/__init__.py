@@ -12,6 +12,7 @@ import subprocess
 import cli_common.utils
 
 from cli_common.log import get_logger
+from static_analysis_bot.config import settings
 
 
 logger = get_logger(__name__)
@@ -68,13 +69,10 @@ def download(artifact_url, target):
 
 
 class AndroidConfig():
-    def __init__(self, settings):
-        self.__settings = settings
-
     def __enter__(self):
         # we copy the old mozconfig into the repository, so that we can
         # enable the android build
-        self.__android_mozconfig = os.path.join(self.__settings.repo_dir, 'mozconfig')
+        self.__android_mozconfig = os.path.join(settings.repo_dir, 'mozconfig')
         self.__old_config = os.getenv('MOZCONFIG')
         shutil.copy(self.__old_config, self.__android_mozconfig)
         os.environ['MOZCONFIG'] = self.__android_mozconfig

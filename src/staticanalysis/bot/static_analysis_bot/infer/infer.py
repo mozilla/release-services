@@ -7,10 +7,12 @@ import json
 import os
 import subprocess
 
+from cli_common.command import run_check
 from cli_common.log import get_logger
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import settings
+from static_analysis_bot.infer import AndroidConfig
 from static_analysis_bot.revisions import Revision
 
 logger = get_logger(__name__)
@@ -59,21 +61,26 @@ class Infer(object):
         assert isinstance(revision, Revision)
         self.revision = revision
 
-        # Run all files in a single command
-        # through mach static-analysis
-        cmd = [
-            'gecko-env',
-            './mach', '--log-no-times', 'static-analysis', 'check-java'
-        ] + list(revision.files)
-        logger.info('Running static-analysis', cmd=' '.join(cmd))
+        with AndroidConfig():
+            # Mach pre-setup with mozconfig
+            logger.info('Mach configure for infer...')
+            run_check(['gecko-env', './mach', 'configure'],
+                      cwd=settings.repo_dir)
 
-        # Run command
-        try:
-            infer_output = subprocess.check_output(cmd, cwd=settings.repo_dir)
-        except subprocess.CalledProcessError as e:
-            logger.error('Mach static analysis failed: {}'.format(e.output))
-            raise
+            # Run all files in a single command
+            # through mach static-analysis
+            cmd = [
+                'gecko-env',
+                './mach', '--log-no-times', 'static-analysis', 'check-java'
+            ] + list(revision.files)
+            logger.info('Running static-analysis', cmd=' '.join(cmd))
 
+            # Run command
+            try:
+                infer_output = subprocess.check_output(cmd, cwd=settings.repo_dir)
+            except subprocess.CalledProcessError as e:
+                logger.error('Mach static analysis failed: {}'.format(e.output))
+                raise
         report_file = os.path.join(settings.repo_dir, 'infer-out', 'report.json')
         infer_output = json.load(open(report_file))
 
