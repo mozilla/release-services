@@ -2,11 +2,12 @@
 
 let
   inherit (releng_pkgs.lib) mkRustPlatform ;
-  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub;
+  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
   # Rust 1.28.1-beta6
-  rustChannel = rustChannelOf { date = "2018-06-30"; channel = "beta"; };
+  rustChannel' = rustChannelOf { date = "2018-06-30"; channel = "beta"; };
+  rustChannel = { inherit (rustChannel') cargo; rust = rustChannel'.rust.override { targets=["armv7-linux-androideabi"]; }; };
 
   # Add missing gcc libraries needed by clang (see https://github.com/mozilla/release-services/issues/1256)
   gcc_libs = builtins.concatStringsSep ":" [
@@ -60,8 +61,8 @@ in gecko.overrideDerivation (old: {
 
     # Build LDFLAGS and LIBRARY_PATH
     echo "export LDFLAGS=\"$NIX_LDFLAGS\"" >> $geckoenv
-    echo "export LIBRARY_PATH=\"$CMAKE_LIBRARY_PATH\"" >> $geckoenv
-    echo "export LD_LIBRARY_PATH=\"$CMAKE_LIBRARY_PATH\"" >> $geckoenv
+    echo "export LIBRARY_PATH=${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
+    echo "export LD_LIBRARY_PATH=${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
 
     # Setup Clang & Autoconf
     echo "export CC=${clang_4}/bin/clang" >> $geckoenv
@@ -98,5 +99,10 @@ in gecko.overrideDerivation (old: {
       rustChannel.rust
       rustChannel.cargo
       rust-cbindgen
+      unzip
+      zip
+      openjdk
+      python2Packages.pyyaml
+      sqlite
     ];
 })
