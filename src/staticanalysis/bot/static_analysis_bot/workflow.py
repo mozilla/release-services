@@ -180,8 +180,8 @@ class Workflow(object):
                 else:
                     logger.info('Skip clang-format')
             if revision.has_infer_files:
-                with AndroidConfig(settings):
-                    if INFER in self.analyzers:
+                if INFER in self.analyzers:
+                    with AndroidConfig(settings):
                         analyzers.append(Infer)
                         logger.info('Setup Taskcluster infer build...')
                         setup_infer(self.index_service)
@@ -190,8 +190,8 @@ class Workflow(object):
                         logger.info('Mach configure for infer...')
                         run_check(['gecko-env', './mach', 'configure'],
                                   cwd=settings.repo_dir)
-                    else:
-                        logger.info('Skip infer')
+                else:
+                    logger.info('Skip infer')
             if not (revision.has_clang_files or revision.has_clang_files):
                 logger.info('No clang or java files detected, skipping mach, infer and clang-*')
 
