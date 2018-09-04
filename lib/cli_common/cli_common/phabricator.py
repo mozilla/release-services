@@ -243,7 +243,7 @@ class PhabricatorAPI(object):
             ]
         )
 
-    def upload_lint_results(self, object_phid, lint_data):
+    def upload_lint_results(self, object_phid, type, lint_data):
         '''
         Upload linting/static analysis results to a Phabricator object
 
@@ -269,7 +269,7 @@ class PhabricatorAPI(object):
 
         self.update_build_target(
             build_target_phid,
-            'pass',
+            type,
             lint=lint_data,
         )
 
