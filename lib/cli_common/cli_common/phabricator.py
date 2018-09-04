@@ -188,6 +188,89 @@ class PhabricatorAPI(object):
 
         return parents
 
+    def load_or_create_build_autotarget(self, object_phid, target_keys):
+        res = self.request(
+            'harbormaster.queryautotargets',
+            objectPHID=object_phid,
+            targetKeys=target_keys
+        )
+        return res['targetMap']
+
+    def update_build_target(self, build_target_phid, type, unit=[], lint=[]):
+        self.request(
+            'harbormaster.sendmessage',
+            buildTargetPHID=build_target_phid,
+            type=type,
+            unit=unit,
+            lint=lint,
+        )
+
+    def upload_coverage_results(self, object_phid, coverage_data):
+        '''
+        Upload code coverage results to a Phabricator object
+
+        coverage_data is an object in the format:
+        {
+            "this/is/a/path1": "UNCXUNCXUNCX",
+            "this/is/a/path2": "UUU",
+        }
+
+        The keys of the object are paths to the source files in the mozilla-central
+        repository.
+        The values are strings defining the coverage for each line
+        of the source file (one character per line), where:
+        - U means "not covered";
+        - N means "not executable";
+        - C means "covered";
+        - X means that no data is available about that line.
+        '''
+        # TODO: We are temporarily using arcanist.unit, but we should switch to something
+        # different after https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
+        res = self.load_or_create_build_autotarget(object_phid, ['arcanist.unit'])
+        build_target_phid = res['arcanist.unit']
+
+        self.update_build_target(
+            build_target_phid,
+            'pass',
+            unit=[
+                {
+                    'name': 'Aggregate coverage information',
+                    'result': 'pass',
+                    'coverage': coverage_data,
+                }
+            ]
+        )
+
+    def upload_lint_results(self, object_phid, lint_data):
+        '''
+        Upload linting/static analysis results to a Phabricator object
+
+        lint_data is an array of objects in the format:
+        {
+            "name": "Error name",
+            "code": "CODE1",
+            "severity": "error",
+            "path": "this/is/a/path.cpp",
+            "line": 42,
+            "char": 7,
+            "description": "A long description of the error."
+        }
+
+        Description of the fields are available at
+        https://phabricator.services.mozilla.com/conduit/method/harbormaster.sendmessage/,
+        in the "Lint Results" paragraph.
+        '''
+        # TODO: We are temporarily using arcanist.unit, but we should switch to something
+        # different after https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
+        res = self.load_or_create_build_autotarget(object_phid, ['arcanist.lint'])
+        build_target_phid = res['arcanist.lint']
+
+        self.update_build_target(
+            build_target_phid,
+            'pass',
+            lint=lint_data,
+        )
+
     def request(self, path, **payload):
         '''
         Send a request to Phabricator API
