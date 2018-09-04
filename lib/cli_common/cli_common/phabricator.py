@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import functools
+import json
 import logging
+from urllib.parse import urlencode
 from urllib.parse import urlparse
 
 import requests
@@ -275,40 +277,18 @@ class PhabricatorAPI(object):
         '''
         Send a request to Phabricator API
         '''
-
-        def flatten_params(params):
-            '''
-            Flatten nested objects and lists.
-            Phabricator requires query data in a application/x-www-form-urlencoded
-            format, so we need to flatten our params dictionary.
-            '''
-            assert isinstance(params, dict)
-            flat = {}
-            remaining = list(params.items())
-
-            # Run a depth-ish first search building the parameter name
-            # as we traverse the tree.
-            while remaining:
-                key, o = remaining.pop()
-                if isinstance(o, dict):
-                    gen = o.items()
-                elif isinstance(o, list):
-                    gen = enumerate(o)
-                else:
-                    flat[key] = o
-                    continue
-
-                remaining.extend(('{}[{}]'.format(key, k), v) for k, v in gen)
-
-            return flat
-
         # Add api token to payload
-        payload['api.token'] = self.api_key
+        payload['__conduit__'] = {
+            'token': self.api_key,
+        }
 
         # Run POST request on api
         response = requests.post(
             self.url + path,
-            data=flatten_params(payload),
+            data=urlencode({
+                'params': json.dumps(payload),
+                'output': 'json'
+            }),
         )
 
         # Check response
