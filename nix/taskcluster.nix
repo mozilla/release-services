@@ -15,7 +15,7 @@ let
   apps = {
     releng-docs = releng_pkgs.apps.releng-docs;
     static-analysis-bot = releng_pkgs.apps.static-analysis-bot;
-    shipit-code-coverage = releng_pkgs.apps.shipit-code-coverage;
+    code-coverage-bot = releng_pkgs.apps.code-coverage-bot;
   };
 
 in pkgs.stdenv.mkDerivation {
