@@ -191,6 +191,9 @@ class PhabricatorAPI(object):
         return parents
 
     def load_or_create_build_autotarget(self, object_phid, target_keys):
+        '''
+        Retrieve or create a build autotarget.
+        '''
         res = self.request(
             'harbormaster.queryautotargets',
             objectPHID=object_phid,
@@ -199,6 +202,9 @@ class PhabricatorAPI(object):
         return res['targetMap']
 
     def update_build_target(self, build_target_phid, type, unit=[], lint=[]):
+        '''
+        Update unit test / linting data for a given build target.
+        '''
         self.request(
             'harbormaster.sendmessage',
             buildTargetPHID=build_target_phid,
@@ -209,9 +215,9 @@ class PhabricatorAPI(object):
 
     def upload_coverage_results(self, object_phid, coverage_data):
         '''
-        Upload code coverage results to a Phabricator object
+        Upload code coverage results to a Phabricator object.
 
-        coverage_data is an object in the format:
+        `coverage_data` is an object in the format:
         {
             "this/is/a/path1": "UNCXUNCXUNCX",
             "this/is/a/path2": "UUU",
@@ -219,8 +225,8 @@ class PhabricatorAPI(object):
 
         The keys of the object are paths to the source files in the mozilla-central
         repository.
-        The values are strings defining the coverage for each line
-        of the source file (one character per line), where:
+        The values are strings defining the coverage for each line of the source file
+        (one character per line), where:
         - U means "not covered";
         - N means "not executable";
         - C means "covered";
@@ -245,9 +251,11 @@ class PhabricatorAPI(object):
 
     def upload_lint_results(self, object_phid, type, lint_data):
         '''
-        Upload linting/static analysis results to a Phabricator object
+        Upload linting/static analysis results to a Phabricator object.
 
-        lint_data is an array of objects in the format:
+        `type` is either "pass" if no errors were found, "fail" otherwise.
+
+        `lint_data` is an array of objects in the format:
         {
             "name": "Error name",
             "code": "CODE1",
