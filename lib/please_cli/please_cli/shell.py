@@ -169,5 +169,10 @@ def cmd(project, zsh, quiet, command, nix_shell,
         return os.system(' '.join(_command)) / 256, '', ''
 
 
+@click.command()
+def cmd_docker_shell():
+    os.execl('/bin/bash', '/bin/bash')
+
+
 if __name__ == "__main__":
     cmd()
