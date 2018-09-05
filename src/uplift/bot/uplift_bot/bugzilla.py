@@ -6,8 +6,22 @@
 from libmozdata.bugzilla import Bugzilla
 from libmozdata.bugzilla import BugzillaUser
 
+from cli_common.log import get_logger
 
-def use_bugzilla(bugzilla_url, bugzilla_token=None):
+logger = get_logger(__name__)
+
+
+READ_ONLY = True
+CANCELLED_UPLIFT = '''
+Sorry, Uplift Bot failed to merge these patches onto mozilla-{}:
+
+{}
+
+Please ensure your patches apply cleanly, then request uplift again.
+'''
+
+
+def use_bugzilla(bugzilla_url, bugzilla_token=None, read_only=True):
     '''
     Configure Bugzilla access (URL + token)
     '''
@@ -23,6 +37,8 @@ def use_bugzilla(bugzilla_url, bugzilla_token=None):
     if bugzilla_token is not None:
         Bugzilla.TOKEN = bugzilla_token
         BugzillaUser.TOKEN = bugzilla_token
+    global READ_ONLY
+    READ_ONLY = read_only
 
 
 def list_bugs(query):
@@ -102,3 +118,70 @@ def load_users(analysis):
                  user_handler=_handler,
                  user_data=out).wait()
     return out
+
+
+def cancel_uplift_request(merge_test):
+    '''
+    Cancel a patch uplift request
+    '''
+    bugid = str(merge_test.bugzilla_id)
+    branch = merge_test.branch.decode('utf-8')
+    flag_name = 'approval-mozilla-' + branch
+    flag_reset_payload = {
+        'flags': [
+            {
+                'name': flag_name,
+                'status': 'X'
+            },
+        ],
+    }
+
+    def _attachmenthandler(attachments, bugid, needinfos):
+        for attachment in attachments:
+            flags = [f for f in attachment['flags'] if f['name'] == flag_name]
+            if len(flags) > 0:
+                # Remember who requested this uplift, in order to needinfo them
+                # later.
+                needinfos.add(flags[0]['setter'])
+                attachment_id = str(attachment['id'])
+                logger.info('Resetting attachment flag:', bz_id=bugid, attachment_id=attachment_id, flag_name=flag_name)
+                if not READ_ONLY:
+                    Bugzilla([attachment_id]).put(flag_reset_payload, attachment=True)
+                else:
+                    logger.info('...skipped resetting attachment flag: READ_ONLY')
+
+    # Reset all uplift request flags in this bug's attachments.
+    needinfos = set()
+    Bugzilla(bugids=[bugid],
+             attachmenthandler=_attachmenthandler,
+             attachmentdata=needinfos).wait()
+
+    merge_results = []
+    for revision, result in merge_test.results.items():
+        merge_result = '* Merge {} for commit {} (parent {})'.format(result.status, revision, result.parent)
+        if (result.message):
+            merge_result += ':\n{}'.format(result.message)
+        merge_results.append(merge_result)
+
+    comment_body = CANCELLED_UPLIFT.format(branch, '\n\n'.join(merge_results))
+    comment_payload = {
+        'comment': {
+            'body': comment_body,
+        },
+        'flags': [
+             {
+                 'name': 'needinfo',
+                 'requestee': needinfo,
+                 'status': '?',
+                 'new': 'true',  # don't remove pre-existing needinfos
+             }
+             for needinfo in needinfos
+        ],
+    }
+
+    # Post comment and needinfos.
+    logger.info('Posting comment and needinfos:', bz_id=bugid, comment_body=comment_body, needinfos=needinfos)
+    if not READ_ONLY:
+        Bugzilla(bugids=[bugid]).put(comment_payload)
+    else:
+        logger.info('...skipped posting comment and needinfos: READ_ONLY')

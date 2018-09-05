@@ -13,6 +13,7 @@ from libmozdata.patchanalysis import parse_uplift_comment
 from cli_common.log import get_logger
 from uplift_bot.api import NotFound
 from uplift_bot.api import api_client
+from uplift_bot.bugzilla import cancel_uplift_request
 from uplift_bot.bugzilla import list_bugs
 from uplift_bot.bugzilla import load_users
 from uplift_bot.bugzilla import use_bugzilla
@@ -169,7 +170,7 @@ class Bot(object):
         # Init report
         self.report = Report(notification_emails)
 
-    def use_bugzilla(self, bugzilla_url, bugzilla_token=None):
+    def use_bugzilla(self, bugzilla_url, bugzilla_token=None, read_only=True):
         '''
         Setup bugzilla usage (url + token)
         '''
@@ -177,7 +178,7 @@ class Bot(object):
         self.repository = None
         self.bugzilla_url = bugzilla_url
 
-        use_bugzilla(bugzilla_url, bugzilla_token)
+        use_bugzilla(bugzilla_url, bugzilla_token, read_only)
         logger.info('Use bugzilla server', url=self.bugzilla_url)
 
     def use_cache(self, cache_root):
@@ -320,9 +321,10 @@ class Bot(object):
         # Always cleanup
         self.repository.cleanup()
 
-        # Save invalid merge in report
+        # Save invalid merge in report, and cancel the uplift request
         if not merge_test.is_valid():
             self.report.add_invalid_merge(merge_test)
+            cancel_uplift_request(merge_test)
 
     def delete_bug(self, sync):
         '''
