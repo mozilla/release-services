@@ -14,7 +14,8 @@ export default new Vuex.Store({
     channel: 'production',
     tasks: [],
     report: null,
-    stats: null
+    stats: null,
+    states: null
   },
   mutations: {
     load_preferences (state) {
@@ -58,14 +59,42 @@ export default new Vuex.Store({
     },
     use_tasks (state, tasks) {
       // Filter tasks without extra data
-      state.tasks = state.tasks.concat(
+      let currentTasks = state.tasks.concat(
         tasks.filter(task => task.data.indexed !== undefined)
       )
 
       // Sort by indexation date
-      state.tasks.sort((x, y) => {
+      currentTasks.sort((x, y) => {
         return new Date(y.data.indexed) - new Date(x.data.indexed)
       })
+
+      // Crunch stats about status
+      let states = {}
+      states = currentTasks.reduce((states, task) => {
+        let state = task.data.state
+        if (state === 'error' && task.data.error_code) {
+          state += '.' + task.data.error_code
+        }
+        if (states[state] === undefined) {
+          states[state] = 0
+        }
+        states[state] += 1
+        return states
+      }, states)
+
+      // Save tasks
+      state.tasks = currentTasks
+
+      // Order states by their nb, and calc percents
+      state.states = Object.keys(states).map(state => {
+        let nb = states[state]
+        return {
+          'key': state,
+          'name': state.startsWith('error.') ? 'error: ' + state.substring(6) : state,
+          'nb': nb,
+          'percent': currentTasks && currentTasks.length > 0 ? Math.round(nb * 100 / currentTasks.length) : 0
+        }
+      }).sort((x, y) => { return y.nb - x.nb })
     },
     use_report (state, report) {
       state.report = report
