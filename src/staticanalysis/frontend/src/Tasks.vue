@@ -3,7 +3,7 @@ import mixins from './mixins.js'
 
 export default {
   mounted () {
-    this.$store.dispatch('load_all_indexes')
+    this.$store.dispatch('load_index')
   },
   mixins: [
     mixins.date
