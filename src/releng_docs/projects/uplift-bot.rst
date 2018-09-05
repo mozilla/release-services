@@ -97,6 +97,15 @@ Run the following commands (where ``XXX`` is the Taskcluster access token) in se
 Once the initial build finishes and all the dependencies are started, you should get a green Nix shell, running in ``/app/src/uplift/bot``.
 
 
+4. Run the bot
+""""""""""""""
+
+You can run the bot with this command (in the Nix Shell):
+
+.. code-block:: shell
+
+  uplift-bot
+
 .. _libmozdata: https://github.com/mozilla/libmozdata/
 
 
