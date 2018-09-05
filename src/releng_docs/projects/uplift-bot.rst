@@ -49,7 +49,7 @@ This secret holds the configuration for all the services, you can look at the ``
 2. Taskcluster client
 """""""""""""""""""""
 
-You need to create a `Taskcluster client`_ to run the static analysis task on your computer.
+You need to create a `Taskcluster client`_ to run the uplift bot task on your computer.
 
 Use the form to create a new client in your own namespace (the ``ClientId`` should be pre-filled with ``mozilla-auth0/ad|Mozilla-LDAP|login/``, simply add an explicit suffix, like ``uplift-bot-dev``)
 
@@ -63,7 +63,7 @@ To summarize, you need to setup your client (if your login is ``bastien``), like
 Key           Value
 ============= ====================================================================
 ClientId      ``mozilla-auth0/ad|Mozilla-LDAP|bastien/uplift-bot-dev``
-Description   My own static analysis dev. client
+Description   My own uplift bot development client
 Client Scopes ``secrets:get:repo:github.com/mozilla-releng/services:branch:master``
 ============= ====================================================================
 
