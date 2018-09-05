@@ -26,6 +26,20 @@ def revision_exists_on_central(revision):
     return resp.ok
 
 
+# Descriptions of the fields are available at
+# https://phabricator.services.mozilla.com/conduit/method/harbormaster.sendmessage/,
+# in the "Lint Results" paragraph.
+class LintResult(dict):
+    def __init__(self, name, code, severity, path, line, char, description):
+        self['name'] = name
+        self['code'] = code
+        self['severity'] = severity
+        self['path'] = path
+        self['line'] = line
+        self['char'] = char
+        self['description'] = description
+
+
 class ConduitError(Exception):
     '''
     Exception to be raised when Phabricator returns an error response.
@@ -255,20 +269,7 @@ class PhabricatorAPI(object):
 
         `type` is either "pass" if no errors were found, "fail" otherwise.
 
-        `lint_data` is an array of objects in the format:
-        {
-            "name": "Error name",
-            "code": "CODE1",
-            "severity": "error",
-            "path": "this/is/a/path.cpp",
-            "line": 42,
-            "char": 7,
-            "description": "A long description of the error."
-        }
-
-        Description of the fields are available at
-        https://phabricator.services.mozilla.com/conduit/method/harbormaster.sendmessage/,
-        in the "Lint Results" paragraph.
+        `lint_data` is an array of LintResult objects.
         '''
         # TODO: We are temporarily using arcanist.unit, but we should switch to something
         # different after https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
