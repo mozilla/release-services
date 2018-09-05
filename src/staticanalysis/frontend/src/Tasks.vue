@@ -35,19 +35,10 @@ export default {
           <a class="mono" :href="'https://tools.taskcluster.net/task-inspector/#' + task.taskId" target="_blank">{{ task.taskId }}</a>
         </td>
 
-        <td v-if="task.data.source == 'mozreview'">
-
-          <span class="tag is-success">MozReview</span> #{{ task.data.review_request }}
-
-          <br />
-          <small class="mono has-dark-text">{{ task.data.rev}}</small>
-        </td>
-        <td v-else-if="task.data.source == 'phabricator'">
-
-          <span class="tag is-dark">Phabricator</span> #{{ task.data.id }}
-
-          <br />
-          <small class="mono has-dark-text">{{ task.data.diff_phid}}</small>
+        <td v-if="task.data.source == 'phabricator'">
+          <p v-if="task.data.title">{{ task.data.title }}</p>
+          <p class="has-text-danger" v-else>No title</p>
+          <small class="mono has-text-grey-light">{{ task.data.diff_phid}}</small>
         </td>
         <td v-else>
           <p class="notification is-danger">Unknown data source: {{ task.data.source }}</p>
@@ -58,7 +49,9 @@ export default {
           <span class="tag is-info" v-else-if="task.data.state == 'cloned'">Cloned</span>
           <span class="tag is-info" v-else-if="task.data.state == 'analyzing'">Analyzing</span>
           <span class="tag is-primary" v-else-if="task.data.state == 'analyzed'">Analyzed</span>
-          <span class="tag is-danger" v-else-if="task.data.state == 'error'">Error</span>
+          <span class="tag is-danger" v-else-if="task.data.state == 'error'" :title="task.data.error_message">
+            Error: {{ task.data.error_code || 'unknown' }}
+          </span>
           <span class="tag is-success" v-else-if="task.data.state == 'done'">Done</span>
           <span class="tag is-black" v-else>Unknown</span>
         </td>
@@ -75,8 +68,9 @@ export default {
           <span :title="task.data.indexed">{{ task.data.indexed|since }} ago</span>
         </td>
         <td>
-          <a class="button is-link" :href="task.data.url" target="_blank">Review</a>
-          <router-link :to="{ name: 'task', params: { taskId : task.taskId }}" class="button is-primary">Details</router-link>
+          <a class="button is-link" :href="task.data.url" target="_blank">Phabricator</a>
+          <a v-if="task.data.bugzilla_id" class="button is-dark" :href="'https://bugzil.la/' + task.data.bugzilla_id" target="_blank">Bugzilla</a>
+          <router-link v-if="task.data.issues > 0" :to="{ name: 'task', params: { taskId : task.taskId }}" class="button is-primary">Issues</router-link>
         </td>
       </tr>
     </tbody>
@@ -84,7 +78,7 @@ export default {
 </template>
 
 <style>
-a.mono{
+.mono{
   font-family: monospace;
 }
 </style>
