@@ -96,7 +96,10 @@ class PhabricatorAPI(object):
                 ref['type']: ref
                 for ref in diff['refs']
             }
-            diff['baseRevision'] = diff['refs']['base']['identifier']
+            try:
+                diff['baseRevision'] = diff['refs']['base']['identifier']
+            except KeyError:
+                diff['baseRevision'] = None
 
             return diff
 
