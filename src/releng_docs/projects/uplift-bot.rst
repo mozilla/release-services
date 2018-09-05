@@ -104,6 +104,8 @@ You can run the bot with this command (in the Nix Shell):
 
 .. code-block:: shell
 
+  export PYTHONPATH="/app/src/uplift/bot:$PYTHONPATH"
+  mkdir /tmp/shipit_bot_cache
   uplift-bot
 
 .. _libmozdata: https://github.com/mozilla/libmozdata/
