@@ -77,7 +77,7 @@ Client Scopes ``secrets:get:repo:github.com/mozilla-releng/services:branch:maste
 
 To work, uplift bot needs ``postgresql``, ``uplift/backend`` and ``uplift/bot``.
 
-Run the following (where ``XXX`` is the Taskcluster access token):
+Run the following commands (where ``XXX`` is the Taskcluster access token) in separate terminals:
 
 .. code-block:: shell
 
