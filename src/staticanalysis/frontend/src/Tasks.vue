@@ -25,7 +25,7 @@ export default {
     <div class="states" v-if="tasks.length > 0">
       <div class="state columns" v-for="state in states">
         <div class="column is-one-third">
-          <progress class="progress" :class="{'is-danger': state.key.startsWith('error'), 'is-success': state.key == 'done', 'is-info': state.key != 'done' && !state.key.startsWith('error')}" :value="state.nb" max="100">{{ state.percent }}%</progress>
+          <progress class="progress" :class="{'is-danger': state.key.startsWith('error'), 'is-success': state.key == 'done', 'is-info': state.key != 'done' && !state.key.startsWith('error')}" :value="state.percent" max="100">{{ state.percent }}%</progress>
         </div>
         <div class="column is-one-third">
           <strong>{{ state.name }}</strong> - <span class="has-text-grey-light">{{ state.nb }}/{{ tasks.length }} tasks or {{ state.percent }}%</span>
