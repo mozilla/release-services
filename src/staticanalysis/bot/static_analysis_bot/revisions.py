@@ -123,8 +123,8 @@ class PhabricatorRevision(Revision):
         self.diff_id = self.diff['id']
         self.phid = self.diff['revisionPHID']
 
-        revision = self.api.load_revision(self.phid)
-        self.id = revision['id']
+        self.revision = self.api.load_revision(self.phid)
+        self.id = self.revision['id']
 
     @property
     def namespaces(self):
@@ -239,6 +239,10 @@ class PhabricatorRevision(Revision):
             'id': self.id,
             'url': self.url,
             'has_clang_files': self.has_clang_files,
+
+            # Extra infos for frontend
+            'title': self.revision['fields'].get('title'),
+            'bugzilla_id': self.revision['fields'].get('bugzilla.bug-id'),
         }
 
 
