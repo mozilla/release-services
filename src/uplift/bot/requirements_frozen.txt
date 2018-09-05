@@ -42,7 +42,7 @@ ipython-genutils==0.2.0
 isort==4.3.4
 jedi==0.12.1
 jmespath==0.9.3
-libmozdata==0.1.40
+libmozdata==0.1.43
 Logbook==1.4.0
 mccabe==0.6.1
 mohawk==0.3.4
