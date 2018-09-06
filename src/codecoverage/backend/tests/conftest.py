@@ -155,9 +155,10 @@ def phabricator_responses():
     def callback(request):
         headers = {'Content-Type': 'application/json'}
         query = urllib.parse.parse_qs(request.body)
-        if query['api.token'] != ['api-correct']:
+        params = json.loads(query['params'][0])
+        if params['__conduit__']['token'] != 'api-correct':
             return 200, headers, resp['wrong-api-key']
-        elif query['constraints[revisionPHIDs][0]'] == ['PHID-DREV-esv6jbcptwuju667eiyx']:
+        elif params['constraints']['revisionPHIDs'][0] == 'PHID-DREV-esv6jbcptwuju667eiyx':
             return 200, headers, resp['hit']
         else:
             return 200, headers, resp['miss']
