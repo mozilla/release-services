@@ -271,7 +271,7 @@ class PhabricatorAPI(object):
 
         `lint_data` is an array of LintResult objects.
         '''
-        # TODO: We are temporarily using arcanist.unit, but we should switch to something
+        # TODO: We are temporarily using arcanist.lint, but we should switch to something
         # different after https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
         res = self.load_or_create_build_autotarget(object_phid, ['arcanist.lint'])
         build_target_phid = res['arcanist.lint']
