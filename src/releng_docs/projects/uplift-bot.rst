@@ -62,7 +62,7 @@ To summarize, you need to setup your client (if your login is ``bastien``), like
 ============= ====================================================================
 Key           Value
 ============= ====================================================================
-ClientId      ``mozilla-auth0/ad|Mozilla-LDAP|bastien/uplift-bot-dev``
+ClientId      ``mozilla-auth0/ad|Mozilla-LDAP|XXX``
 Description   My own uplift bot development client
 Client Scopes ``secrets:get:repo:github.com/mozilla-releng/services:branch:master``
 ============= ====================================================================
@@ -81,17 +81,13 @@ Run the following commands (where ``XXX`` is the Taskcluster access token) in se
 
 .. code-block:: shell
 
-  ./please run postgresql \
-    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|bastien/uplift-bot-dev" \
-    --taskcluster-access-token=XXX
-  ./please run redis \
-    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|bastien/uplift-bot-dev" \
-    --taskcluster-access-token=XXX
+  ./please run postgresql
+  ./please run redis
   ./please run uplift/backend \
-    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|bastien/uplift-bot-dev" \
+    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|XXX" \
     --taskcluster-access-token=XXX
   ./please shell uplift/bot \
-    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|bastien/uplift-bot-dev" \
+    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|XXX" \
     --taskcluster-access-token=XXX
 
 Once the initial build finishes and all the dependencies are started, you should get a green Nix shell, running in ``/app/src/uplift/bot``.
@@ -104,13 +100,14 @@ You can run the bot with this command (in the Nix Shell):
 
 .. code-block:: shell
 
-  export PYTHONPATH="/app/src/uplift/bot:$PYTHONPATH"
   mkdir -p /tmp/shipit_bot_cache
+  uplift-bot
+
+  # If you have issues with permissions or python setup in nix
+  export PYTHONPATH="/app/src/uplift/bot:$PYTHONPATH"
   python uplift_bot/cli.py
 
 .. _libmozdata: https://github.com/mozilla/libmozdata/
-
-
 .. _`Bastien Abadie`: https://github.com/La0
 .. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
 .. _`Taskcluster`: https://tools.taskcluster.net/
