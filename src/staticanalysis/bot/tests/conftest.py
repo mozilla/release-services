@@ -10,6 +10,7 @@ import re
 import subprocess
 import tempfile
 import time
+from contextlib import contextmanager
 from distutils.spawn import find_executable
 from unittest.mock import Mock
 
@@ -17,6 +18,8 @@ import hglib
 import httpretty
 import pytest
 import responses
+
+from cli_common.phabricator import PhabricatorAPI
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
@@ -246,6 +249,7 @@ def mock_mozreview():
     httpretty.disable()
 
 
+@contextmanager
 @pytest.fixture
 def mock_phabricator():
     '''
@@ -289,6 +293,18 @@ def mock_phabricator():
         'http://phabricator.test/api/differential.getrawdiff',
         body=_response('diff_raw'),
         content_type='application/json',
+    )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/edge.search',
+        body=_response('edge_search'),
+        content_type='application/json',
+    )
+
+    yield PhabricatorAPI(
+        url='http://phabricator.test/api/',
+        api_key='deadbeef',
     )
 
 
@@ -386,8 +402,9 @@ def mock_clang(tmpdir, monkeypatch):
     monkeypatch.setattr(subprocess, 'check_output', mock_mach)
 
 
+@responses.activate
 @pytest.fixture
-def mock_workflow(tmpdir, mock_repository, mock_config):
+def mock_workflow(tmpdir, mock_repository, mock_config, mock_phabricator):
     '''
     Mock the full workflow, without cloning
     '''
@@ -401,11 +418,13 @@ def mock_workflow(tmpdir, mock_repository, mock_config):
     if 'MOZCONFIG' not in os.environ:
         os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
 
-    workflow = MockWorkflow(
-        reporters={},
-        analyzers=['clang-tidy', 'clang-format', 'mozlint'],
-        index_service=None,
-    )
+    with mock_phabricator as api:
+        workflow = MockWorkflow(
+            reporters={},
+            analyzers=['clang-tidy', 'clang-format', 'mozlint'],
+            index_service=None,
+            phabricator_api=api,
+        )
     workflow.hg = workflow.clone()
     return workflow
 
@@ -453,5 +472,51 @@ def mock_clang_repeats(mock_config):
             f.write('line {}\n'.format(i))
 
     path = os.path.join(MOCK_DIR, 'clang-repeats.txt')
+    with open(path) as f:
+        return f.read().replace('{REPO}', mock_config.repo_dir)
+
+
+@pytest.fixture
+def mock_infer(tmpdir, monkeypatch):
+    # Create a temp mozbuild path
+    infer_dir = tmpdir.mkdir('infer').mkdir('infer').mkdir('bin')
+    os.environ['MOZBUILD_STATE_PATH'] = str(tmpdir.realpath())
+
+    open(str(infer_dir.join('infer').realpath()), 'w+')
+
+
+@pytest.fixture
+def mock_infer_output():
+    '''
+    Load a real case clang output
+    '''
+    path = os.path.join(MOCK_DIR, 'infer-output.txt')
+    with open(path) as f:
+        return f.read()
+
+
+@pytest.fixture
+def mock_infer_issues():
+    '''
+    Load parsed issues from a real case (above)
+    '''
+    path = os.path.join(MOCK_DIR, 'infer-issues.txt')
+    with open(path) as f:
+        return f.read()
+
+
+@pytest.fixture
+def mock_infer_repeats(mock_config):
+    '''
+    Load parsed issues with repeated issues
+    '''
+    # Write dummy test_repeat.cpp file in repo
+    # Needed to build line hash
+    test_java = os.path.join(mock_config.repo_dir, 'test_repeats.java')
+    with open(test_java, 'w') as f:
+        for i in range(5):
+            f.write('line {}\n'.format(i))
+
+    path = os.path.join(MOCK_DIR, 'infer-repeats.txt')
     with open(path) as f:
         return f.read().replace('{REPO}', mock_config.repo_dir)

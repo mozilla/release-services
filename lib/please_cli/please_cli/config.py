@@ -504,7 +504,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-code-coverage': {
+    'codecoverage/bot': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -532,7 +532,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-code-coverage-backend': {
+    'codecoverage/backend': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -573,7 +573,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-code-coverage-crawler': {
+    'codecoverage/crawler': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -619,7 +619,7 @@ PROJECTS_CONFIG = {
                     'testing': {
                         's3_bucket': 'release-services-uplift-frontend-testing',
                         'url': 'https://uplift.testing.moz.tools',
-                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'dns': 'd1swet7sulei5z.cloudfront.net.',
                         'envs': {
                             'bugzilla-url': 'https://bugzilla.mozilla.org',
                         },
@@ -632,7 +632,7 @@ PROJECTS_CONFIG = {
                     'staging': {
                         's3_bucket': 'release-services-uplift-frontend-staging',
                         'url': 'https://uplift.staging.moz.tools',
-                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'dns': 'd3voyguhnvtgyb.cloudfront.net.',
                         'envs': {
                             'bugzilla-url': 'https://bugzilla.mozilla.org',
                         },
@@ -646,7 +646,7 @@ PROJECTS_CONFIG = {
                     'production': {
                         's3_bucket': 'release-services-uplift-frontend-production',
                         'url': 'https://uplift.moz.tools',
-                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'dns': 'd2j55he28msyhx.cloudfront.net.',
                         'envs': {
                             'bugzilla-url': 'https://bugzilla.mozilla.org',
                         },
@@ -851,7 +851,8 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozilla/shipitbackend',
                     },
                     'production': {
-                        'url': 'https://api.shipit.mozilla-releng.net',
+                        'url': 'https://shipit-api.mozilla-releng.net',
+                        'dns': 'shipitbackend-default.prod.mozaws.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
@@ -879,7 +880,8 @@ PROJECTS_CONFIG = {
             {
                 'target': 'S3',
                 'options': {
-                    'testing': {
+                    # FIXME: temporarily disable staging, production, point testing to staging
+                    'staging': {
                         's3_bucket': 'shipit-testing-frontend',
                         'url': 'https://shipit.testing.mozilla-releng.net',
                         'dns': 'd2jpisuzgldax2.cloudfront.net.',
@@ -892,30 +894,30 @@ PROJECTS_CONFIG = {
                             'https://queue.taskcluster.net',
                         ],
                     },
-                    'staging': {
-                        's3_bucket': 'shipit-staging-frontend',
-                        'url': 'https://shipit.staging.mozilla-releng.net',
-                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
-                        'envs': {
-                            'CONFIG': 'staging',
-                        },
-                        'csp': [
-                            'https://hg.mozilla.org',
-                            'https://queue.taskcluster.net',
-                        ],
-                    },
-                    'production': {
-                        's3_bucket': 'shipit-production-frontend',
-                        'url': 'https://shipit.mozilla-releng.net',
-                        'dns': 'dve8yd1431ifz.cloudfront.net.',
-                        'envs': {
-                            'CONFIG': 'production',
-                        },
-                        'csp': [
-                            'https://hg.mozilla.org',
-                            'https://queue.taskcluster.net',
-                        ],
-                    },
+                    # 'staging': {
+                    #     's3_bucket': 'shipit-staging-frontend',
+                    #     'url': 'https://shipit.staging.mozilla-releng.net',
+                    #     'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                    #     'envs': {
+                    #         'CONFIG': 'staging',
+                    #     },
+                    #     'csp': [
+                    #         'https://hg.mozilla.org',
+                    #         'https://queue.taskcluster.net',
+                    #     ],
+                    # },
+                    # 'production': {
+                    #     's3_bucket': 'shipit-production-frontend',
+                    #     'url': 'https://shipit.mozilla-releng.net',
+                    #     'dns': 'dve8yd1431ifz.cloudfront.net.',
+                    #     'envs': {
+                    #         'CONFIG': 'production',
+                    #     },
+                    #     'csp': [
+                    #         'https://hg.mozilla.org',
+                    #         'https://queue.taskcluster.net',
+                    #     ],
+                    # },
                 },
             },
         ],

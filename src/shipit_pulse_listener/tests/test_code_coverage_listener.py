@@ -11,7 +11,7 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 def test_is_coverage_task():
     hook = HookCodeCoverage({
-      'hookId': 'shipit-staging-code-coverage'
+      'hookId': 'services-staging-codecoverage/bot'
     })
 
     cov_task = {
@@ -62,7 +62,7 @@ def test_is_coverage_task():
 
 def test_get_build_task_in_group():
     hook = HookCodeCoverage({
-      'hookId': 'shipit-staging-code-coverage'
+      'hookId': 'services-staging-codecoverage/bot'
     })
 
     hook.triggered_groups.add('already-triggered-group')
@@ -72,7 +72,7 @@ def test_get_build_task_in_group():
 
 def test_parse():
     hook = HookCodeCoverage({
-      'hookId': 'shipit-staging-code-coverage'
+      'hookId': 'services-staging-codecoverage/bot'
     })
 
     hook.triggered_groups.add('already-triggered-group')
@@ -84,7 +84,7 @@ def test_parse():
 
 def test_is_mozilla_central_task():
     hook = HookCodeCoverage({
-      'hookId': 'shipit-staging-code-coverage'
+      'hookId': 'services-staging-codecoverage/bot'
     })
 
     inbound_task = {
@@ -127,7 +127,7 @@ def test_wrong_branch():
         responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/bNq-VIT-Q12o6nXcaUmYNQ/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
 
     hook = HookCodeCoverage({
-      'hookId': 'shipit-staging-code-coverage'
+      'hookId': 'services-staging-codecoverage/bot'
     })
 
     assert hook.parse({
@@ -141,7 +141,7 @@ def test_success():
         responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/RS0UwZahQ_qAcdZzEb_Y9g/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
 
     hook = HookCodeCoverage({
-      'hookId': 'shipit-staging-code-coverage'
+      'hookId': 'services-staging-codecoverage/bot'
     })
 
     assert hook.parse({
@@ -155,7 +155,7 @@ def test_success_windows():
         responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/MibGDsa4Q7uFNzDf7EV6nw/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
 
     hook = HookCodeCoverage({
-      'hookId': 'shipit-staging-code-coverage'
+      'hookId': 'services-staging-codecoverage/bot'
     })
 
     assert hook.parse({
