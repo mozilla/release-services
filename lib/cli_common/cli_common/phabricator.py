@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import functools
+import json
 import logging
+from urllib.parse import urlencode
 from urllib.parse import urlparse
 
 import requests
@@ -22,6 +24,20 @@ def revision_exists_on_central(revision):
     resp = requests.get(url)
     resp.raise_for_status()
     return resp.ok
+
+
+# Descriptions of the fields are available at
+# https://phabricator.services.mozilla.com/conduit/method/harbormaster.sendmessage/,
+# in the "Lint Results" paragraph.
+class LintResult(dict):
+    def __init__(self, name, code, severity, path, line, char, description):
+        self['name'] = name
+        self['code'] = code
+        self['severity'] = severity
+        self['path'] = path
+        self['line'] = line
+        self['char'] = char
+        self['description'] = description
 
 
 class ConduitError(Exception):
@@ -96,7 +112,10 @@ class PhabricatorAPI(object):
                 ref['type']: ref
                 for ref in diff['refs']
             }
-            diff['baseRevision'] = diff['refs']['base']['identifier']
+            try:
+                diff['baseRevision'] = diff['refs']['base']['identifier']
+            except KeyError:
+                diff['baseRevision'] = None
 
             return diff
 
@@ -185,44 +204,100 @@ class PhabricatorAPI(object):
 
         return parents
 
+    def load_or_create_build_autotarget(self, object_phid, target_keys):
+        '''
+        Retrieve or create a build autotarget.
+        '''
+        res = self.request(
+            'harbormaster.queryautotargets',
+            objectPHID=object_phid,
+            targetKeys=target_keys
+        )
+        return res['targetMap']
+
+    def update_build_target(self, build_target_phid, type, unit=[], lint=[]):
+        '''
+        Update unit test / linting data for a given build target.
+        '''
+        self.request(
+            'harbormaster.sendmessage',
+            buildTargetPHID=build_target_phid,
+            type=type,
+            unit=unit,
+            lint=lint,
+        )
+
+    def upload_coverage_results(self, object_phid, coverage_data):
+        '''
+        Upload code coverage results to a Phabricator object.
+
+        `coverage_data` is an object in the format:
+        {
+            "this/is/a/path1": "UNCXUNCXUNCX",
+            "this/is/a/path2": "UUU",
+        }
+
+        The keys of the object are paths to the source files in the mozilla-central
+        repository.
+        The values are strings defining the coverage for each line of the source file
+        (one character per line), where:
+        - U means "not covered";
+        - N means "not executable";
+        - C means "covered";
+        - X means that no data is available about that line.
+        '''
+        # TODO: We are temporarily using arcanist.unit, but we should switch to something
+        # different after https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
+        res = self.load_or_create_build_autotarget(object_phid, ['arcanist.unit'])
+        build_target_phid = res['arcanist.unit']
+
+        self.update_build_target(
+            build_target_phid,
+            'pass',
+            unit=[
+                {
+                    'name': 'Aggregate coverage information',
+                    'result': 'pass',
+                    'coverage': coverage_data,
+                }
+            ]
+        )
+
+    def upload_lint_results(self, object_phid, type, lint_data):
+        '''
+        Upload linting/static analysis results to a Phabricator object.
+
+        `type` is either "pass" if no errors were found, "fail" otherwise.
+
+        `lint_data` is an array of LintResult objects.
+        '''
+        # TODO: We are temporarily using arcanist.lint, but we should switch to something
+        # different after https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
+        res = self.load_or_create_build_autotarget(object_phid, ['arcanist.lint'])
+        build_target_phid = res['arcanist.lint']
+
+        self.update_build_target(
+            build_target_phid,
+            type,
+            lint=lint_data,
+        )
+
     def request(self, path, **payload):
         '''
         Send a request to Phabricator API
         '''
-
-        def flatten_params(params):
-            '''
-            Flatten nested objects and lists.
-            Phabricator requires query data in a application/x-www-form-urlencoded
-            format, so we need to flatten our params dictionary.
-            '''
-            assert isinstance(params, dict)
-            flat = {}
-            remaining = list(params.items())
-
-            # Run a depth-ish first search building the parameter name
-            # as we traverse the tree.
-            while remaining:
-                key, o = remaining.pop()
-                if isinstance(o, dict):
-                    gen = o.items()
-                elif isinstance(o, list):
-                    gen = enumerate(o)
-                else:
-                    flat[key] = o
-                    continue
-
-                remaining.extend(('{}[{}]'.format(key, k), v) for k, v in gen)
-
-            return flat
-
         # Add api token to payload
-        payload['api.token'] = self.api_key
+        payload['__conduit__'] = {
+            'token': self.api_key,
+        }
 
         # Run POST request on api
         response = requests.post(
             self.url + path,
-            data=flatten_params(payload),
+            data=urlencode({
+                'params': json.dumps(payload),
+                'output': 'json'
+            }),
         )
 
         # Check response

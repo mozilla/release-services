@@ -2,6 +2,7 @@
 import os
 import shutil
 import tarfile
+import tempfile
 from datetime import datetime
 from datetime import timedelta
 
@@ -38,6 +39,9 @@ class CodeCov(object):
 
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
+        temp_dir = tempfile.mkdtemp()
+        self.artifacts_dir = os.path.join(temp_dir, 'ccov-artifacts')
+        self.ccov_reports_dir = os.path.join(temp_dir, 'code-coverage-reports')
 
         self.client_id = client_id
         self.access_token = access_token
@@ -66,7 +70,7 @@ class CodeCov(object):
             'windows': taskcluster.get_task('mozilla-central', self.revision, 'win'),
         }
 
-        self.artifactsHandler = ArtifactsHandler(task_ids, suites_to_ignore)
+        self.artifactsHandler = ArtifactsHandler(task_ids, suites_to_ignore, self.artifacts_dir)
 
     def clone_mozilla_central(self, revision):
         shared_dir = self.repo_dir + '-shared'
@@ -91,24 +95,25 @@ class CodeCov(object):
         for suite in self.suites:
             output = grcov.report(self.artifactsHandler.get(suite=suite), out_format='lcov')
 
-            info_file = '%s.info' % suite
+            info_file = os.path.join(self.ccov_reports_dir, '%s.info' % suite)
 
             with open(info_file, 'wb') as f:
                 f.write(output)
 
+            suite_dir = os.path.join(self.ccov_reports_dir, suite)
             run_check([
                 'genhtml',
-                '-o', os.path.join(os.getcwd(), suite),
+                '-o', suite_dir,
                 '--show-details', '--highlight', '--ignore-errors', 'source',
-                '--legend', os.path.join(os.getcwd(), info_file),
+                '--legend', info_file,
                 '--prefix', self.repo_dir
             ], cwd=self.repo_dir)
 
-            os.remove('%s.info' % suite)
+            os.remove(info_file)
 
-            with tarfile.open('code-coverage-reports/%s.tar.xz' % suite, 'w:xz') as tar:
-                tar.add(suite)
-            shutil.rmtree(os.path.join(os.getcwd(), suite))
+            with tarfile.open(os.path.join(self.ccov_reports_dir, '%s.tar.xz' % suite), 'w:xz') as tar:
+                tar.add(suite_dir, arcname=suite)
+            shutil.rmtree(suite_dir)
 
             logger.info('Suite report generated', suite=suite)
 
@@ -162,7 +167,7 @@ class CodeCov(object):
                 logger.error('codecov.io took too much time to ingest data.')
         else:
             logger.info('Generating suite reports')
-            os.makedirs('code-coverage-reports', exist_ok=True)
+            os.makedirs(self.ccov_reports_dir, exist_ok=True)
             self.generate_suite_reports()
 
             logger.info('Generating zero coverage reports')
@@ -191,5 +196,5 @@ class CodeCov(object):
                     }
                 )
 
-            os.chdir('code-coverage-reports')
+            os.chdir(self.ccov_reports_dir)
             self.githubUtils.update_codecoveragereports_repo()

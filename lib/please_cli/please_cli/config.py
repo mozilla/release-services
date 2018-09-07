@@ -851,7 +851,8 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozilla/shipitbackend',
                     },
                     'production': {
-                        'url': 'https://api.shipit.mozilla-releng.net',
+                        'url': 'https://shipit-api.mozilla-releng.net',
+                        'dns': 'shipitbackend-default.prod.mozaws.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
