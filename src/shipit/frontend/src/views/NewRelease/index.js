@@ -126,7 +126,10 @@ export default class NewRelease extends React.Component {
     this.setState({
       revision: event.target.value,
     });
-    this.version = await getVersion(this.state.selectedBranch.repo, event.target.value);
+    this.version = await getVersion(
+      this.state.selectedBranch.repo, event.target.value,
+      this.state.selectedProduct.appName,
+    );
     await this.guessBuildId();
   };
 
