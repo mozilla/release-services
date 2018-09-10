@@ -43,8 +43,13 @@ def test_phabricator(mock_phabricator, mock_repository, mock_config):
     assert open(test_txt).read() == 'Hello World\n'
 
     # Load full patch
+    # Mock the mercurial repo update as we use a dummy revision
     assert r.patch is None
+    __update, __ident = mock_repository.update, mock_repository.identify
+    mock_repository.update = MagicMock(return_value=True)
+    mock_repository.identify = MagicMock(return_value=True)
     r.load(mock_repository)
+    mock_repository.update, mock_repository.identify = __update, __ident
     assert r.patch is not None
     assert isinstance(r.patch, str)
     assert len(r.patch.split('\n')) == 7

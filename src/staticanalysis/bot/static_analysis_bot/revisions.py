@@ -156,27 +156,42 @@ class PhabricatorRevision(Revision):
         patches = OrderedDict()
         patches[self.diff_phid] = self.diff_id
 
+        # Lookup mercurial revisions for target Phabricator rev
+        hg_revisions = [
+            diff['baseRevision']
+            for diff in self.api.search_diffs(revision_phid=self.phid)
+        ]
+
+        # Load all parent diffs
         parents = self.api.load_parents(self.phid)
-        if parents:
+        for parent in parents:
+            logger.info('Loading parent diff', phid=parent)
 
-            # Load all parent diffs
-            for parent in parents:
-                logger.info('Loading parent diff', phid=parent)
+            # Sort parent diffs by their id to load the most recent patch first
+            parent_diffs = sorted(
+                self.api.search_diffs(revision_phid=parent),
+                key=lambda x: x['id'],
+            )
+            last_diff = parent_diffs[-1]
+            patches[last_diff['phid']] = last_diff['id']
 
-                # Sort parent diffs by their id to load the most recent patch
-                parent_diffs = sorted(
-                    self.api.search_diffs(revision_phid=parent),
-                    key=lambda x: x['id'],
-                )
-                last_diff = parent_diffs[-1]
-                patches[last_diff['phid']] = last_diff['id']
+            # List all possible revisions
+            hg_revisions += [
+                diff['baseRevision']
+                for diff in parent_diffs
+            ]
 
-                # Use base revision of last parent
-                hg_base = last_diff['baseRevision']
-
-        else:
-            # Use base revision from top diff
-            hg_base = self.diff['baseRevision']
+        # Use only available revisions
+        def repo_has_revision(rev):
+            try:
+                repo.identify(rev)
+            except hglib.error.CommandError as e:
+                logger.info('Mssing potential base revision', rev=rev)
+                return False
+            return True
+        hg_revisions = list(filter(repo_has_revision, hg_revisions))
+        if not hg_revisions:
+            raise Exception('No available mercurial base revision')
 
         # Load all patches from their numerical ID
         for diff_phid, diff_id in patches.items():
@@ -187,6 +202,7 @@ class PhabricatorRevision(Revision):
 
         # Update the repo to base revision
         try:
+            hg_base = hg_revisions[0]
             logger.info('Updating repo to base revision', rev=hg_base)
             repo.update(
                 rev=hg_base,
