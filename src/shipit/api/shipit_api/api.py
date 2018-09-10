@@ -16,6 +16,7 @@ from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
 from shipit_api.models import Phase
 from shipit_api.models import Release
+from shipit_api.tasks import ActionsJsonNotFound
 from shipit_api.tasks import UnsupportedFlavor
 from shipit_api.tasks import fetch_actions_json
 from shipit_api.tasks import generate_action_hook
@@ -162,7 +163,12 @@ def abandon_release(name):
         release = session.query(Release).filter(Release.name == name).one()
         # Cancel all submitted task groups first
         for phase in filter(lambda x: x.submitted, release.phases):
-            actions = fetch_actions_json(phase.task_id)
+            try:
+                actions = fetch_actions_json(phase.task_id)
+            except ActionsJsonNotFound:
+                log.info('Ignoring not completed action task %s', phase.task_id)
+                continue
+
             hook = generate_action_hook(
                 decision_task_id=phase.task_id,
                 action_name='cancel-all',
