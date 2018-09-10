@@ -55,6 +55,10 @@ class UnsupportedFlavor(Exception):
         self.description = description
 
 
+class ActionsJsonNotFound(Exception):
+    pass
+
+
 def get_trust_domain(project):
     if 'comm' in project:
         return 'comm'
@@ -70,11 +74,16 @@ def find_decision_task_id(project, revision):
 
 
 def fetch_actions_json(task_id):
-    queue = taskcluster.Queue()
-    actions_url = queue.buildUrl('getLatestArtifact', task_id, 'public/actions.json')
-    q = requests.get(actions_url)
-    q.raise_for_status()
-    return q.json()
+    try:
+        queue = taskcluster.Queue()
+        actions_url = queue.buildUrl('getLatestArtifact', task_id, 'public/actions.json')
+        q = requests.get(actions_url)
+        q.raise_for_status()
+        return q.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            raise ActionsJsonNotFound
+        raise
 
 
 def find_action(name, actions):
