@@ -14,6 +14,7 @@ import taskcluster
 
 from cli_common.log import get_logger
 from static_analysis_bot.config import settings
+from static_analysis_bot import AnalysisException
 
 
 logger = get_logger(__name__)
@@ -63,7 +64,8 @@ def setup(index, job_name='linux64-infer', revision='latest',
             )
             logger.info('Downloading {}.'.format(artifact))
             cli_common.utils.retry(lambda: download(artifact_url, target))
-            assert os.path.exists(target)
+            if not os.path.exists(target):
+                raise AnalysisException('artifact', 'Setup failed for {}'.format(target))
 
 
 def download(artifact_url, target):
