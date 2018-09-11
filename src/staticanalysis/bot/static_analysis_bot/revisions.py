@@ -179,8 +179,10 @@ class PhabricatorRevision(Revision):
             # Use base revision from top diff
             hg_base = self.diff['baseRevision']
 
+        # When base revision is missing, update to top of Central
         if hg_base is None:
-            raise AnalysisException('phabricator', 'Missing base revision')
+            logger.warning('Missing base revision from Phabricator')
+            hg_base = 'central'
 
         # Load all patches from their numerical ID
         for diff_phid, diff_id in patches.items():
@@ -191,13 +193,13 @@ class PhabricatorRevision(Revision):
 
         # Update the repo to base revision
         try:
-            logger.info('Updating repo to base revision', rev=hg_base)
+            logger.info('Updating repo to revision', rev=hg_base)
             repo.update(
                 rev=hg_base,
                 clean=True,
             )
         except hglib.error.CommandError as e:
-            raise AnalysisException('mercurial', 'Failed to update to base revision {}'.format(hg_base))
+            raise AnalysisException('mercurial', 'Failed to update to revision {}'.format(hg_base))
 
         # Apply all patches from base to top
         # except our current (top) patch
