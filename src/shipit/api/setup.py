@@ -42,6 +42,11 @@ setuptools.setup(
     tests_require=read_requirements('requirements-dev.txt'),
     install_requires=read_requirements('requirements.txt'),
     packages=setuptools.find_packages(),
+    entry_points=dict(
+        console_scripts=[
+            "shipit-v1-sync = shipit_api.cli:shipit_v1_sync",
+        ],
+    ),
     include_package_data=True,
     zip_safe=False,
     license='MPL2',

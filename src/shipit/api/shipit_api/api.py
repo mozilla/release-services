@@ -12,8 +12,10 @@ import taskcluster
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
+from backend_common.auth import auth
 from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
+from shipit_api.config import SCOPE_PREFIX
 from shipit_api.models import Phase
 from shipit_api.models import Release
 from shipit_api.tasks import ActionsJsonNotFound
@@ -190,6 +192,7 @@ def abandon_release(name):
         flask.abort(404)
 
 
+@auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
 def sync_releases(releases):
     session = flask.g.db.session
     for release in releases:
