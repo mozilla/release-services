@@ -4,13 +4,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
+
 import click
 import mohawk
-
 import requests
 
 
-def get_taskcluster_headers(requests_url, method, content, taskcluster_client_id, taskcluster_access_token):
+def get_taskcluster_headers(request_url,
+                            method,
+                            content,
+                            taskcluster_client_id,
+                            taskcluster_access_token,
+                            ):
     hawk = mohawk.Sender(
         {
             'id': taskcluster_client_id,
@@ -69,7 +74,7 @@ def shipit_v1_sync(ldap_username,
                    taskcluster_access_token,
                    api_from,
                    api_to,
-                  ):
+                   ):
 
     s = requests.Session()
     s.auth = (ldap_username, ldap_password)

@@ -44,7 +44,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points=dict(
         console_scripts=[
-            "shipit-v1-sync = shipit_api.cli:shipit_v1_sync",
+            'shipit-v1-sync = shipit_api.cli:shipit_v1_sync',
         ],
     ),
     include_package_data=True,
