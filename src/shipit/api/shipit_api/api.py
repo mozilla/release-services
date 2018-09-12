@@ -65,7 +65,7 @@ def validate_user(key, checker):
 
 @mozilla_accept_token()
 @validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'releng' in xs)
+               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
 def add_release(body):
     session = flask.g.db.session
     r = Release(
@@ -132,7 +132,7 @@ def get_phase(name, phase):
 
 @mozilla_accept_token()
 @validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'releng' in xs)
+               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
 def schedule_phase(name, phase):
     session = flask.g.db.session
     try:
@@ -158,7 +158,7 @@ def schedule_phase(name, phase):
 
 @mozilla_accept_token()
 @validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'releng' in xs)
+               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
 def abandon_release(name):
     session = flask.g.db.session
     try:
