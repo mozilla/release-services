@@ -33,6 +33,13 @@ let
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);
+    dockerCmd = [
+      "gunicorn"
+      "${dirname}.flask:app"
+      "--worker-class" "gevent"
+      "--log-file"
+      "-"
+    ];
     passthru = {
       migrate = mysql2postgresql {
         inherit name beforeSQL afterSQL;
