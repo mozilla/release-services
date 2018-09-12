@@ -64,7 +64,8 @@ in gecko.overrideDerivation (old: {
     echo "export LIBRARY_PATH=${zlib}/lib/:${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
     echo "export LD_LIBRARY_PATH=${zlib}/lib/:${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
 
-    echo "export JAVA_HOME=${openjdk}" # queried by the static-analysis bot
+    # queried by the static-analysis bot
+    echo "export JAVA_HOME=${openjdk}" >> $geckoenv
 
     # Setup Clang & Autoconf
     echo "export CC=${clang_4}/bin/clang" >> $geckoenv
