@@ -177,8 +177,9 @@ class Bot(object):
         self.bugs = {}
         self.repository = None
         self.bugzilla_url = bugzilla_url
+        self.bugzilla_read_only = read_only
 
-        use_bugzilla(bugzilla_url, bugzilla_token, read_only)
+        use_bugzilla(bugzilla_url, bugzilla_token)
         logger.info('Use bugzilla server', url=self.bugzilla_url)
 
     def use_cache(self, cache_root):
@@ -324,7 +325,7 @@ class Bot(object):
         # Save invalid merge in report, and cancel the uplift request
         if not merge_test.is_valid():
             self.report.add_invalid_merge(merge_test)
-            cancel_uplift_request(merge_test)
+            cancel_uplift_request(merge_test, self.bugzilla_read_only)
 
     def delete_bug(self, sync):
         '''

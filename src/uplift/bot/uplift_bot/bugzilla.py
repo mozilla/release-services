@@ -11,7 +11,6 @@ from cli_common.log import get_logger
 logger = get_logger(__name__)
 
 
-READ_ONLY = True
 CANCELLED_UPLIFT = '''
 Sorry, Uplift Bot failed to merge these patches onto mozilla-{}:
 
@@ -21,7 +20,7 @@ Please ensure your patches apply cleanly, then request uplift again.
 '''
 
 
-def use_bugzilla(bugzilla_url, bugzilla_token=None, read_only=True):
+def use_bugzilla(bugzilla_url, bugzilla_token=None):
     '''
     Configure Bugzilla access (URL + token)
     '''
@@ -37,8 +36,6 @@ def use_bugzilla(bugzilla_url, bugzilla_token=None, read_only=True):
     if bugzilla_token is not None:
         Bugzilla.TOKEN = bugzilla_token
         BugzillaUser.TOKEN = bugzilla_token
-    global READ_ONLY
-    READ_ONLY = read_only
 
 
 def list_bugs(query):
@@ -120,7 +117,7 @@ def load_users(analysis):
     return out
 
 
-def cancel_uplift_request(merge_test):
+def cancel_uplift_request(merge_test, read_only=True):
     '''
     Cancel a patch uplift request
     '''
@@ -145,10 +142,10 @@ def cancel_uplift_request(merge_test):
                 needinfos.add(flags[0]['setter'])
                 attachment_id = str(attachment['id'])
                 logger.info('Resetting attachment flag:', bz_id=bugid, attachment_id=attachment_id, flag_name=flag_name)
-                if not READ_ONLY:
-                    Bugzilla([attachment_id]).put(flag_reset_payload, attachment=True)
-                else:
+                if read_only:
                     logger.info('...skipped resetting attachment flag: READ_ONLY')
+                else:
+                    Bugzilla([attachment_id]).put(flag_reset_payload, attachment=True)
 
     # Reset all uplift request flags in this bug's attachments.
     needinfos = set()
@@ -181,7 +178,7 @@ def cancel_uplift_request(merge_test):
 
     # Post comment and needinfos.
     logger.info('Posting comment and needinfos:', bz_id=bugid, comment_body=comment_body, needinfos=needinfos)
-    if not READ_ONLY:
-        Bugzilla(bugids=[bugid]).put(comment_payload)
-    else:
+    if read_only:
         logger.info('...skipped posting comment and needinfos: READ_ONLY')
+    else:
+        Bugzilla(bugids=[bugid]).put(comment_payload)
