@@ -7,4 +7,4 @@ import os.path
 import tempfile
 
 PROJECT_NAME = 'uplift/bot'
-DEFAULT_CACHE = os.path.join(tempfile.gettempdir(), 'shipit_bot_cache')
+DEFAULT_CACHE = '/app/tmp' if os.path.exists('/app/tmp') else os.path.join(tempfile.gettempdir(), 'shipit_bot_cache')
