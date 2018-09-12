@@ -93,7 +93,7 @@ def shipit_v1_sync(ldap_username,
 
     click.echo('Syncing release list...', nl=False)
     headers = get_taskcluster_headers(
-        api_to,
+        f'{api_to}/sync',
         'post',
         json.dumps(releases_json),
         taskcluster_client_id,
