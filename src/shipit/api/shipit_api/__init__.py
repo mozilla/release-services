@@ -19,6 +19,7 @@ def create_app(config=None):
             'security',
             'cors',
             'api',
+            'auth',
             'auth0',
             'db',
         ],
