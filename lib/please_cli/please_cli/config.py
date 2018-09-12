@@ -791,7 +791,6 @@ PROJECTS_CONFIG = {
         },
         'requires': [
             'postgresql',
-            'redis',
         ],
         'deploys': [
             {
