@@ -129,6 +129,13 @@ def get_projects() -> dict:
     return dict(projects=[project.name for project in all_projects])
 
 
+Mapfile = sa.orm.Bundle(
+    'mapfile',
+    releng_mapper.models.Hash.hg_changeset,
+    releng_mapper.models.Hash.git_commit,
+)
+
+
 def get_mapfile_since(projects: str,
                       since: str,
                       ) -> typing.Tuple[str, int, dict]:
@@ -142,8 +149,8 @@ def get_mapfile_since(projects: str,
 
     since_epoch = calendar.timegm(since_dt.utctimetuple())
 
-    q = releng_mapper.models.Hash.query
-    q = q.join(releng_mapper.models.Project)
+    session = flask.current_app.db.session
+    q = session.query(Mapfile)
     q = q.filter(_project_filter(projects))
     q = q.order_by(releng_mapper.models.Hash.hg_changeset)
     q = q.filter(releng_mapper.models.Hash.date_added > since_epoch)
@@ -151,8 +158,8 @@ def get_mapfile_since(projects: str,
 
 
 def get_full_mapfile(projects: str) -> typing.Tuple[str, int, dict]:
-    q = releng_mapper.models.Hash.query
-    q = q.join(releng_mapper.models.Project)
+    session = flask.current_app.db.session
+    q = session.query(Mapfile)
     q = q.filter(_project_filter(projects))
     q = q.order_by(releng_mapper.models.Hash.hg_changeset)
     return _stream_mapfile(q)
@@ -238,17 +245,15 @@ def _stream_mapfile(query) -> typing.Tuple[str, int, dict]:
           40 characters hg changeset SHA, a newline (streamed); or
         * HTTP 404: if the query returns no results
     '''
-    # this helps keep memory use down a little, but the DBAPI still loads
-    # the entire result set into memory..
-    # http://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.query.Query.yield_per
-    query = query.yield_per(100)
+    session = flask.current_app.db.session
+    results = session.execute(query.statement.execution_options(stream_results=True))
 
-    if query.count() == 0:
+    if results.rowcount == 0:
         raise werkzeug.exceptions.NotFound('No mappings found.')
 
     def contents():
-        for r in query:
-            yield '{} {}'.format(r.git_commit, r.hg_changeset) + '\n'
+        for r in results:
+            yield '{} {}'.format(r['git_commit'], r['hg_changeset']) + '\n'
 
     if contents:
         return flask.Response(contents(), mimetype='text/plain')
