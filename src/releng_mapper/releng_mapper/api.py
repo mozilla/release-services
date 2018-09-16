@@ -58,8 +58,7 @@ def post_hg_git_mapping(project: str,
         q = releng_mapper.models.Hash.query
         q = q.join(releng_mapper.models.Project)
         q = q.filter(_project_filter(project))
-        q = q.filter(sa.text('git_commit == :commit'))
-        q = q.params(commit=git_commit)
+        q = q.filter(releng_mapper.models.Hash.git_commit == git_commit)
         return q.one().as_json()
 
     except sa.exc.IntegrityError:
@@ -151,6 +150,7 @@ def get_mapfile_since(projects: str,
 
     session = flask.current_app.db.session
     q = session.query(Mapfile)
+    q = q.join(releng_mapper.models.Project)
     q = q.filter(_project_filter(projects))
     q = q.order_by(releng_mapper.models.Hash.hg_changeset)
     q = q.filter(releng_mapper.models.Hash.date_added > since_epoch)
@@ -160,6 +160,7 @@ def get_mapfile_since(projects: str,
 def get_full_mapfile(projects: str) -> typing.Tuple[str, int, dict]:
     session = flask.current_app.db.session
     q = session.query(Mapfile)
+    q = q.join(releng_mapper.models.Project)
     q = q.filter(_project_filter(projects))
     q = q.order_by(releng_mapper.models.Hash.hg_changeset)
     return _stream_mapfile(q)
@@ -245,15 +246,17 @@ def _stream_mapfile(query) -> typing.Tuple[str, int, dict]:
           40 characters hg changeset SHA, a newline (streamed); or
         * HTTP 404: if the query returns no results
     '''
-    session = flask.current_app.db.session
-    results = session.execute(query.statement.execution_options(stream_results=True))
+    # this helps keep memory use down a little, but the DBAPI still loads
+    # the entire result set into memory..
+    # http://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.query.Query.yield_per
+    query = query.yield_per(100)
 
-    if results.rowcount == 0:
+    if query.count() == 0:
         raise werkzeug.exceptions.NotFound('No mappings found.')
 
     def contents():
-        for r in results:
-            yield '{} {}'.format(r['git_commit'], r['hg_changeset']) + '\n'
+        for r in query:
+            yield '{} {}'.format(r.git_commit, r.hg_changeset) + '\n'
 
     if contents:
         return flask.Response(contents(), mimetype='text/plain')

@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from datetime import datetime
+
 import sqlalchemy as sa
 
 import backend_common.db
@@ -36,10 +38,12 @@ class Hash(backend_common.db.db.Model):
     project_name = property(lambda self: self.project.name)
 
     def as_json(self):
-        return {
+        result = {
             n: getattr(self, n)
-            for n in ('git_commit', 'hg_changeset', 'date_added', 'project_name',)
+            for n in ('git_commit', 'hg_changeset', 'project_name',)
         }
+        result['date_added'] = datetime.utcfromtimestamp(self.date_added).isoformat()
+        return result
 
     __table_args__ = (
         # TODO: (needs verification) all queries specifying a hash are for
