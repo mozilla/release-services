@@ -246,17 +246,15 @@ def _stream_mapfile(query) -> typing.Tuple[str, int, dict]:
           40 characters hg changeset SHA, a newline (streamed); or
         * HTTP 404: if the query returns no results
     '''
-    # this helps keep memory use down a little, but the DBAPI still loads
-    # the entire result set into memory..
-    # http://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.query.Query.yield_per
-    query = query.yield_per(100)
+    session = flask.current_app.db.session
+    results = session.execute(query.statement.execution_options(stream_results=True))
 
-    if query.count() == 0:
+    if results.rowcount == 0:
         raise werkzeug.exceptions.NotFound('No mappings found.')
 
     def contents():
-        for r in query:
-            yield '{} {}'.format(r.git_commit, r.hg_changeset) + '\n'
+        for r in results:
+            yield '{} {}'.format(r['git_commit'], r['hg_changeset']) + '\n'
 
     if contents:
         return flask.Response(contents(), mimetype='text/plain')
