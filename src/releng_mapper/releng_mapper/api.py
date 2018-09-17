@@ -246,6 +246,9 @@ def _stream_mapfile(query) -> typing.Tuple[str, int, dict]:
           40 characters hg changeset SHA, a newline (streamed); or
         * HTTP 404: if the query returns no results
     '''
+    # We want different behavior for 0 results vs some. The SQLAlchemy ORM
+    # doesn't provide a way to check that without running a separate query, so
+    # we drop to SQLAlchemy core here.
     session = flask.current_app.db.session
     results = session.execute(query.statement.execution_options(stream_results=True))
 
