@@ -26,3 +26,7 @@ def init_app(app):
         MOZDEF=app.config.get('MOZDEF'),
         flask_app=app,
     )
+
+
+def app_heartbeat():
+    pass

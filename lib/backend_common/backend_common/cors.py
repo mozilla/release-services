@@ -19,3 +19,7 @@ def init_app(app):
     else:
         cors.init_app(app, origins=origins)
     return cors
+
+
+def app_heartbeat():
+    pass

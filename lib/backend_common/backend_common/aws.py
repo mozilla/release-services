@@ -143,3 +143,7 @@ def init_app(app):
     # disable boto debug logging unless DEBUG = True
     if not app.debug:
         logging.getLogger('boto').setLevel(logging.INFO)
+
+
+def app_heartbeat():
+    pass
