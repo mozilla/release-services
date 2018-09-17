@@ -211,3 +211,7 @@ def client(app):
                 )
 
             yield client
+
+
+def app_heartbeat():
+    pass

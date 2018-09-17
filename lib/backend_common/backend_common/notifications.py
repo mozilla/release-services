@@ -92,3 +92,7 @@ def schedule_nagbot_message(message: str, short_message: str, deadline: datetime
     response.raise_for_status()
 
     return uid
+
+
+def app_heartbeat():
+    pass
