@@ -1,0 +1,258 @@
+.. _deploy-regular:
+
+Regular deployment
+==================
+
+Regular production deployment of all projects happens once every two weeks.
+
+.. _deploy-coordinator:
+
+Deployment coordinators are:
+
+- `Rok Garbas`_
+- `Bastien Abadie`_
+- `Rail Aliiev`_
+- `Jan Keromnes`_
+
+Release schedule is published in `Release Services calendar`_.
+
+.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
+.. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
+.. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
+.. _`Jan Keromnes`: https://phonebook.mozilla.org/?search/Jan%20Keromnes
+.. _`Release Services calendar`: https://calendar.google.com/calendar/embed?src=mozilla.com_sq62ki4vs3cgpclvkdbhe3rgic%40group.calendar.google.com
+
+
+Protocol we follow is:
+
+1. Push to staging channel
+--------------------------
+
+A day before pushing to production, on Wednesday morning, we push to projects
+to **staging channel**.
+
+To trigger automatic deployment to staging channel you need to **force push** from
+``master`` to ``staging`` branch.
+
+.. code-block:: console
+
+    git clone git@github.com:mozilla/release-services.git
+    cd release-services
+    git push -f origin origin/master:staging
+
+
+2. Close staging branch
+-----------------------
+
+Now you need to close staging branch by checking **Protect this branch** via
+`staging settings page`_.
+
+.. image:: staging_settings_page.png
+
+.. _`staging settings page`: https://github.com/mozilla/release-services/settings/branches/staging
+
+
+3. Create version bump Pull Request
+-----------------------------------
+
+In a branch we create new Pull Request which will bump the version.
+
+.. code-block:: console
+
+    git clone git@github.com:mozilla/release-services.git
+    cd release-services
+    git checkout -b version-bump origin/staging
+    echo "$((($(cat VERSION)) + 1))" | tee VERSION2
+    sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
+    mv VERSION2 VERSION
+    git commit VERSION .taskcluster.yml -m "bumping version to v$(cat ./VERSION)"
+
+Then push create a PR from ``version-bump`` branch.
+
+This PR will also be used to collect QA for projects on staging and production.
+
+The title of PR should be:::
+
+    Deploying v<VERSION>
+
+For this adjust the description of PR to:::
+
+    This Pull Request contains the version bump and should be merged once
+    deployment is successful.
+
+    Deployment coordinator for this release is: @<YOUR_GITHUB_HANDLE>
+
+    Deployment to staging: `<LINK_TO_TASKCLUSTER>'.
+    Deployment to production: `<LINK_TO_TASKCLUSTER>'.
+   
+
+4. Notify about running staging deployment
+------------------------------------------
+
+Once pushed to staging branch a deployment will start via taskcluster github
+integration. You can find a link to taskcluster deployment group at the
+`page listing commits of staging branch`_.
+
+.. image:: page_listing_commits_of_staging_branch.png
+
+To make everybody aware that this is happening announce staging deployment on
+`#release-services` IRC channel.::
+
+    I've pushed to staging branch. Until tomorrow, when we deploy to
+    production, staging branch is closed. You can follow the progress
+    at <LINK_TO_PR>.
+
+.. _`page listing commits of staging branch`: https://github.com/mozilla/release-services/commits/staging
+
+
+4. Testing projects on staging channel
+--------------------------------------
+
+When deployment succeeds send email to ``release-services@mozilla.com``
+announcing that staging channel was successful deployed and that maintainers
+need to test their projects.
+
+Email subject: ``Deployment to staging was successful, please start QA.``
+Email body:::
+
+    Hi,
+
+    `<SHORT_SHA_OF_COMMIT>' was just deployed to staging[1].
+
+    Please QA your projects and reply to this email which project you tested and
+    if everything still works. If something is not working, please contact me.
+
+    Please also let me know, if any manual steps are needed when pushing to
+    production.
+
+    See you later today at Wednesday release-services meeting.
+
+    [1] <LINK_TO_TASKCLUSTER>
+
+
+Make sure QA was performed on all projects in production.
+
+.. todo:: how to list maintainers of projects? should we write some command to do this.
+
+
+5. Announce deployment to production
+------------------------------------
+
+.. todo:: why are we announcing to #ci and #moc
+
+On the following channels announce that new deployment is about to happen:
+
+- ``#ci`` irc channel and direct message to the ci person on duty
+- ``#moc`` irc channel and direct message to the sysadmin on duty
+
+Example message::
+
+    nickname: I am about to release a new version of
+    mozilla/release-services (*.mozilla-releng.net, *.moz.tools). Any
+    alerts coming up soon will be best directed to me. I'll let you know
+    when it's all done. Thank you!
+
+
+6. Deploy to production
+-----------------------
+
+On Thursday morning (or when you agree at Wednesday meeting) a deployment to production starts by pushing from ``staging`` to ``production`` branch.
+
+   .. code-block:: console
+
+       git clone git@github.com/mozilla/release-services.git
+       cd release-services
+       git tag v$(cat ./VERSION) origin/production
+       git push origin origin/staging:origin/production
+       git push origin v$(cat ./VERSION)
+
+TODO: release is in flight + link to taskcluster
+
+#. Verify that all production projects are now deployed and working properly in
+   production environment. Use the same checks as we did before when we were
+   checking if projects are working on staging, but now use production URLs.
+
+   Example: :ref:`verify releng-tooltool project <verify-releng-treestatus>`
+
+   .. todo:: need to explain how to revert when a deployment goes bad.
+
+TODO: we can already do this while waiting for the release to happen
+
+#. Fill in the release notes on GitHub
+
+   `New GitHub Release`_
+
+   If the previous release was done on 2017/05/04 then a good starting point might be
+
+   .. code-block:: console
+
+       git log --oneline v$((($(cat VERSION)) - 1)).. HEAD \
+           | cut -d' ' -f2- \
+           | sort \
+           | grep -v 'setup: bumping to'
+
+.. _`New GitHub Release`: https://github.com/mozilla/release-services/releases/new
+
+
+#. Bump version, but **DO NOT** push upstream
+
+   .. code-block:: console
+
+       git clone git@github.com/mozilla/release-services.git
+       cd release-services
+       echo "$((($(cat VERSION)) + 1))" | tee VERSION2
+       sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
+       mv VERSION2 VERSION
+
+#. Push new base image for new version
+
+   .. code-block:: console
+
+       ./please -vv tools base-image \
+            --taskcluster-client-id="..." \
+            --taskcluster-access-token="..."
+
+   Docker username and password you get in `staging secrets`_ or `production
+   secrets`_ secrets.
+
+   It might happen that push to docker hub will fail since the resulting docker
+   image is quite big (~1.5GB). When it fails you can only retrigger the
+   ``docker push`` command.
+
+   .. code-block:: console
+
+       docker push mozillareleng/services:base-$(cat ./VERSION)
+
+.. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
+.. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction
+
+#. Once base image is pushed to docker hub, commit the version bump and push it
+   to upstream repository.
+
+   .. code-block:: console
+
+       git commit VERSION .taskcluster.yml -m "setup: bumping to v$(cat ./VERSION)"
+       git push origin master
+
+   Make sure that commit gets properly build before proceeding. This will
+   ensure that docker base image created in previous steps is working.
+
+#. Announce that deployment to production is done.
+
+   - announce in ``#ci`` channel that a push to production is complete.
+
+     Example message::
+
+         Previously annonced release of mozilla/release-services
+         (*.mozilla-releng.net, *.moz.tools) to productions is now complete. If
+         you see anything behaving weird please let me know. Changes ->
+         <link-to-release-notes>.
+
+   - inform MOC person on duty (in ``#moc`` channel) that deployment of
+     ``mozilla/release-services`` is complete.
+
+     Example message::
+
+         nickname: Previously annonced release of mozilla/release-services
+         (*.mozilla-releng.net, *.moz.tools) to productions is now complete.
+         Changes -> <link-to-release-notes>.

@@ -42,6 +42,8 @@ Is the code coverage project working correctly?
 **To test and verify** that ``shipit-code-coverage`` is running correctly please
 follow the following steps:
 
+TODO: how to trigger a hook manually
+
 #. Trigger the shipit-code-coverage hook manually;
 
 #. Check that there are no errors with the triggered tasks;

@@ -16,5 +16,7 @@ Taskcluster deployment hook<deploy-taskcluster>` to S3 bucket (
 `staging <https://console.aws.amazon.com/s3/buckets/releng-staging-docs>`_).
 
 
+TODO: verification steps
+
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
 .. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering

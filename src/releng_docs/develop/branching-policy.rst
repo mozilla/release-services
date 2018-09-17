@@ -47,5 +47,5 @@ we must fix it as soon as possible.
 -------------------
 
 Once everything is tested on staging, we use this branch to perform automatic
-deployment. More about regular *weekly* deployments you can find :ref:`here
-<deploy-weekly-releases>`.
+deployment. More about *regular deployments* you can find :ref:`here
+<deploy-regular>`.

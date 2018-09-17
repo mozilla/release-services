@@ -31,5 +31,7 @@ The other clients of mapper are:
  *  ``b2g_build.py`` - the build script for b2g - since this needs to lookup SHAs in order to reference frozen commit versions in manifests
 
 
+TODO: verification steps
+
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
 .. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
