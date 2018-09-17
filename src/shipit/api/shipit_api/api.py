@@ -12,10 +12,8 @@ import taskcluster
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
-from backend_common.auth import auth
 from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
-from shipit_api.config import SCOPE_PREFIX
 from shipit_api.models import Phase
 from shipit_api.models import Release
 from shipit_api.tasks import ActionsJsonNotFound
@@ -190,29 +188,3 @@ def abandon_release(name):
         return release.json
     except NoResultFound:
         flask.abort(404)
-
-
-@auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
-def sync_releases(releases):
-    session = flask.g.db.session
-    for release in releases:
-        try:
-            session.query(Release).filter(Release.name == release['name']).one()
-            # nothing todo
-        except NoResultFound:
-            status = 'shipped'
-            if not release['shippedAt']:
-                status = 'aborted'
-            r = Release(
-                product=release['product'],
-                version=release['version'],
-                branch=release['branch'],
-                revision=release['mozillaRevision'],
-                build_number=release['buildNumber'],
-                release_eta=release.get('release_eta'),
-                partial_updates=release.get('partials'),
-                status=status,
-            )
-            session.add(r)
-            session.commit()
-    return flask.jsonify({'ok': 'ok'})

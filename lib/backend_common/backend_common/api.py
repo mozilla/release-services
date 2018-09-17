@@ -155,3 +155,7 @@ def handle_default_exceptions(e):
 
 def init_app(app):
     return Api(app)
+
+
+def app_heartbeat():
+    pass

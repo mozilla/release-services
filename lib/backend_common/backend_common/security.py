@@ -40,3 +40,7 @@ def init_app(app):
     config = app.config.get('SECURITY', DEFAULT_CONFIG)
     security.init_app(app, **config)
     return security
+
+
+def app_heartbeat():
+    pass
