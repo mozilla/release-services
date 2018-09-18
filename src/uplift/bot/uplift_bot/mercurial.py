@@ -31,8 +31,8 @@ class Repository(object):
         assert isinstance(branch, bytes)
 
         # Build command line
-        repo_dir = os.path.join(self.directory, 'repo')
-        shared_dir = os.path.join(self.directory, 'shared')
+        repo_dir = os.path.join(self.directory, 'uplift-bot')
+        shared_dir = os.path.join(self.directory, 'uplift-bot-shared')
         logger.info('Updating repo', dir=repo_dir, branch=branch)
         cmd = hglib.util.cmdbuilder('robustcheckout',
                                     self.url,
