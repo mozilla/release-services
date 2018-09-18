@@ -75,14 +75,13 @@ Client Scopes ``secrets:get:repo:github.com/mozilla-releng/services:branch:maste
 3. Project shell
 """"""""""""""""
 
-To work, uplift bot needs ``postgresql``, ``redis``, ``uplift/backend`` and ``uplift/bot``.
+To work, uplift bot needs ``postgresql``, ``uplift/backend`` and ``uplift/bot``.
 
 Run the following commands (where ``XXX`` is the Taskcluster access token) in separate terminals:
 
 .. code-block:: shell
 
   ./please run postgresql
-  ./please run redis
   ./please run uplift/backend \
     --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|XXX" \
     --taskcluster-access-token=XXX
