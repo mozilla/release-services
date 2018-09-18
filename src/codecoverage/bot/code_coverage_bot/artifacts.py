@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import time
 
 from cli_common.log import get_logger
 from cli_common.utils import ThreadPoolExecutorResult
@@ -8,7 +9,8 @@ from code_coverage_bot import taskcluster
 logger = get_logger(__name__)
 
 
-ALL_STATUSES = ['completed', 'failed', 'exception', 'unscheduled', 'pending', 'running']
+FINISHED_STATUSES = ['completed', 'failed', 'exception']
+ALL_STATUSES = FINISHED_STATUSES + ['unscheduled', 'pending', 'running']
 STATUS_VALUE = {
     'exception': 1,
     'failed': 2,
@@ -79,11 +81,19 @@ class ArtifactsHandler(object):
             if taskcluster.is_coverage_task(task)
         ]
 
+        for test_task in test_tasks:
+            status = test_task['status']['state']
+            while status not in FINISHED_STATUSES:
+                assert status in ALL_STATUSES, "State '{}' not recognized".format(status)
+                logger.info('Waiting for task {} to finish...'.format(test_task['status']['taskId']))
+                time.sleep(60)
+                status = taskcluster.get_task_status(test_task['status']['taskId'])
+
         # Choose best tasks to download (e.g. 'completed' is better than 'failed')
         download_tasks = {}
         for test_task in test_tasks:
             status = test_task['status']['state']
-            assert status in ALL_STATUSES, "State '{}' not recognized".format(status)
+            assert status in FINISHED_STATUSES, "State '{}' not recognized".format(status)
 
             chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
             platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
