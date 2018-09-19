@@ -625,13 +625,12 @@ atob@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.1.tgz#ae2d5a729477f289d60dd7f96a6314a22dd6c22a"
 
-auth0-js@^9.3.0:
-  version "9.7.3"
-  resolved "https://registry.yarnpkg.com/auth0-js/-/auth0-js-9.7.3.tgz#5d09a703e3758d50ee95d57d05b7f31271c1c821"
+auth0-js@9.2.3:
+  version "9.2.3"
+  resolved "https://registry.yarnpkg.com/auth0-js/-/auth0-js-9.2.3.tgz#f98650a742c83567e887703c5972d0c7275e403d"
   dependencies:
     base64-js "^1.2.0"
-    idtoken-verifier "^1.2.0"
-    js-cookie "^2.2.0"
+    idtoken-verifier "^1.1.1"
     qs "^6.4.0"
     superagent "^3.8.2"
     url-join "^1.1.0"
@@ -4564,7 +4563,7 @@ icss-utils@^2.1.0:
   dependencies:
     postcss "^6.0.1"
 
-idtoken-verifier@^1.2.0:
+idtoken-verifier@^1.1.1:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/idtoken-verifier/-/idtoken-verifier-1.2.0.tgz#4654f1f07ab7a803fc9b1b8b36057e2a87ad8b09"
   dependencies:
@@ -5416,10 +5415,6 @@ jest-validate@^21.2.1:
 js-base64@^2.1.9:
   version "2.4.8"
   resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-2.4.8.tgz#57a9b130888f956834aa40c5b165ba59c758f033"
-
-js-cookie@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/js-cookie/-/js-cookie-2.2.0.tgz#1b2c279a6eece380a12168b92485265b35b1effb"
 
 js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"

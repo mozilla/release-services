@@ -20,7 +20,7 @@
     "test": "neutrino test"
   },
   "dependencies": {
-    "auth0-js": "^9.3.0",
+    "auth0-js": "9.2.3",
     "bootstrap": "^3.3.7",
     "font-awesome": "^4.7.0",
     "history": "^4.7.2",
