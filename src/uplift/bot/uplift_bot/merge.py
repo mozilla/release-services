@@ -137,12 +137,13 @@ class MergeTest(object):
         Store a new patch status on backend
         '''
         assert isinstance(result, MergeResult)
+        parent = result.parent.decode('utf-8') if isinstance(result.parent, bytes) else result.parent
 
         # Publish as a new patch status
         data = {
             'group': self.group,
             'revision': revision.decode('utf-8'),
-            'revision_parent': result.parent,
+            'revision_parent': parent,
             'status': result.status,
             'branch': self.branch.decode('utf-8'),
             'message': result.message,
