@@ -106,6 +106,12 @@ You can run the bot with this command (in the Nix Shell):
   export PYTHONPATH="/app/src/uplift/bot:$PYTHONPATH"
   python uplift_bot/cli.py
 
+You can also run the bot on a particular bug (e.g. Bug 123456) like so:
+
+.. code-block:: shell
+
+  uplift-bot 123456
+
 .. _libmozdata: https://github.com/mozilla/libmozdata/
 .. _`Bastien Abadie`: https://github.com/La0
 .. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
