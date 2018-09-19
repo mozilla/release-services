@@ -31,6 +31,18 @@ _tc_params = {
 }
 
 
+def notify_via_irc(message):
+    owners = flask.current_app.config.get('IRC_NOTIFICATIONS_OWNERS')
+    channel = flask.current_app.config.get('IRC_NOTIFICATIONS_CHANNEL')
+
+    if owners and channel:
+        owners = ': '.join(owners)
+        flask.current_app.notify.irc({
+            'channel': channel,
+            'message': f'{owners}: {message}',
+        })
+
+
 def _queue():
     return taskcluster.Queue(_tc_params)
 
@@ -87,17 +99,7 @@ def add_release(body):
     except UnsupportedFlavor as e:
         raise BadRequest(description=e.description)
 
-    releng_owners = flask.current_app.config.get('IRC_NOTIFICATIONS_OWNERS', 'garbas')
-    releng_owners = releng_owners.split(',')
-    releng_owners = ': '.join(releng_owners)
-
-    flask.current_app.notify.irc({
-        'channel': flask.current_app.config.get('IRC_NOTIFICATIONS_CHANNEL', '#releaseduty'),
-        'message': f'{releng_owners}: New release ({r.product} {r.version}) was just created. '
-                   f'Please make sure to update releasewarrior with: '
-                   f'release track {r.product} {r.version} && '
-                   f'release newbuild {r.product} {r.version}',
-    })
+    notify_via_irc(f'New release ({r.product} {r.version} {r.build_number}) was just created.')
 
     return release, 201
 
@@ -166,16 +168,10 @@ def schedule_phase(name, phase):
         phase.release.status = 'shipped'
     session.commit()
 
-    releng_owners = flask.current_app.config.get('IRC_NOTIFICATIONS_OWNERS', 'garbas')
-    releng_owners = releng_owners.split(',')
-    releng_owners = ': '.join(releng_owners)
-
-    flask.current_app.notify.irc({
-        'channel': flask.current_app.config.get('IRC_NOTIFICATIONS_CHANNEL', '#releaseduty'),
-        'message': f'{releng_owners}: Phase {phase.name} was just scheduled '
+    notify_via_irc(f'Phase {phase.name} was just scheduled '
                    f'for release {phase.release.product} {phase.release.version} '
-                   f'(https://tools.taskcluster.net/groups/{phase.task_id})'
-    })
+                   f'build{phase.release.build_number} - '
+                   f'(https://tools.taskcluster.net/groups/{phase.task_id})')
 
     return phase.json
 
@@ -215,13 +211,6 @@ def abandon_release(name):
     except NoResultFound:
         flask.abort(404)
 
-    releng_owners = flask.current_app.config.get('IRC_NOTIFICATIONS_OWNERS', 'garbas')
-    releng_owners = releng_owners.split(',')
-    releng_owners = ': '.join(releng_owners)
-
-    flask.current_app.notify.irc({
-        'channel': flask.current_app.config.get('IRC_NOTIFICATIONS_CHANNEL', '#releaseduty'),
-        'message': f'{releng_owners}: Release {r.product} {r.version} was just canceled. '
-    })
+    notify_via_irc(f'Release {r.product} {r.version} {r.build_number} was just canceled.')
 
     return release
