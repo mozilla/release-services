@@ -99,7 +99,7 @@ def add_release(body):
     except UnsupportedFlavor as e:
         raise BadRequest(description=e.description)
 
-    notify_via_irc(f'New release ({r.product} {r.version} {r.build_number}) was just created.')
+    notify_via_irc(f'New release ({r.product} {r.version} build{r.build_number}) was just created.')
 
     return release, 201
 
@@ -211,6 +211,6 @@ def abandon_release(name):
     except NoResultFound:
         flask.abort(404)
 
-    notify_via_irc(f'Release {r.product} {r.version} {r.build_number} was just canceled.')
+    notify_via_irc(f'Release {r.product} {r.version} build{r.build_number} was just canceled.')
 
     return release
