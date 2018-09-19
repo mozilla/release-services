@@ -5,6 +5,7 @@
 
 import os
 import backend_common
+import cli_common.taskcluster
 import shipit_api.config
 import shipit_api.models  # noqa
 
