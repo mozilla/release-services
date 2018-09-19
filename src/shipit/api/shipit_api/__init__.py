@@ -23,5 +23,13 @@ def create_app(config=None):
             'db',
         ],
     )
+
+    app.notify = cli_common.taskcluster.get_service(
+        'notify',
+        app.config.get('TASKCLUSTER_CLIENT_ID'),
+        app.config.get('TASKCLUSTER_ACCESS_TOKEN')
+    )
+
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
+
     return app

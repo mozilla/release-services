@@ -83,9 +83,23 @@ def add_release(body):
         )
         session.add(r)
         session.commit()
-        return r.json, 201
+        release = r.json
     except UnsupportedFlavor as e:
         raise BadRequest(description=e.description)
+
+    releng_owners = current_app.config.get('IRC_NOTIFICATIONS_OWNERS', 'garbas')
+    releng_owners = releng_owners.split(',')
+    releng_owners = ': '.join(releng_owners)
+
+    current_app.notify.irc({
+        'channel': current_app.config.get('IRC_NOTIFICATIONS_CHANNEL', '#releaseduty'),
+        'message': f'{releng_owners}: New release ({r.product} {r.version}) was just created. '
+                   f'Please make sure to update releasewarrior with: '
+                   f'release track {r.product} {r.version} && '
+                   f'release newbuild {r.product} {r.version}',
+    })
+
+    return release, 201
 
 
 def list_releases(product=None, branch=None, version=None, build_number=None,
@@ -151,6 +165,16 @@ def schedule_phase(name, phase):
     if all([ph.submitted for ph in phase.release.phases]):
         phase.release.status = 'shipped'
     session.commit()
+
+    releng_owners = current_app.config.get('IRC_NOTIFICATIONS_OWNERS', 'garbas')
+    releng_owners = releng_owners.split(',')
+    releng_owners = ': '.join(releng_owners)
+
+    current_app.notify.irc({
+        'channel': current_app.config.get('IRC_NOTIFICATIONS_CHANNEL', '#releaseduty'),
+        'message': f'{releng_owners}: Phase {phase.name} was just scheduled for release {r.product} {r.version} (https://tools.taskcluster.net/groups/{phase.task_id})'
+    })
+
     return phase.json
 
 
@@ -160,7 +184,7 @@ def schedule_phase(name, phase):
 def abandon_release(name):
     session = flask.g.db.session
     try:
-        release = session.query(Release).filter(Release.name == name).one()
+        r= session.query(Release).filter(Release.name == name).one()
         # Cancel all submitted task groups first
         for phase in filter(lambda x: x.submitted, release.phases):
             try:
@@ -183,8 +207,19 @@ def abandon_release(name):
             res = _hooks().triggerHook(hook['hook_group_id'], hook['hook_id'], hook['hook_payload'])
             log.debug('Done: %s', res)
 
-        release.status = 'aborted'
+        r.status = 'aborted'
         session.commit()
-        return release.json
+        release = r.json
     except NoResultFound:
         flask.abort(404)
+
+    releng_owners = current_app.config.get('IRC_NOTIFICATIONS_OWNERS', 'garbas')
+    releng_owners = releng_owners.split(',')
+    releng_owners = ': '.join(releng_owners)
+
+    current_app.notify.irc({
+        'channel': current_app.config.get('IRC_NOTIFICATIONS_CHANNEL', '#releaseduty'),
+        'message': f'{releng_owners}: Release {r.product} {r.version} was just canceled. '
+    })
+
+    return release
