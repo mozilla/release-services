@@ -890,6 +890,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://hg.mozilla.org',
                             'https://queue.taskcluster.net',
+                            'https://auth.mozilla.auth0.com',
                         ],
                     },
                     'staging': {
@@ -902,6 +903,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://hg.mozilla.org',
                             'https://queue.taskcluster.net',
+                            'https://auth.mozilla.auth0.com',
                         ],
                     },
                     'production': {
@@ -914,6 +916,7 @@ PROJECTS_CONFIG = {
                         'csp': [
                             'https://hg.mozilla.org',
                             'https://queue.taskcluster.net',
+                            'https://auth.mozilla.auth0.com',
                         ],
                     },
                 },
