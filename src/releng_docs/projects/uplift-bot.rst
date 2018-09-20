@@ -106,6 +106,29 @@ You can run the bot with this command (in the Nix Shell):
   export PYTHONPATH="/app/src/uplift/bot:$PYTHONPATH"
   python uplift_bot/cli.py
 
+You can also run the bot on a particular bug (e.g. Bug 123456) like so:
+
+.. code-block:: shell
+
+  uplift-bot 123456
+
+
+5. Delete previous analysis data
+""""""""""""""""""""""""""""""""
+
+If you wish the bot to forget previous analysis runs (e.g. in order to re-run a particular analysis from scratch), you can start `psql` like so:
+
+.. code-block:: shell
+
+  psql -h 127.0.0.1 -p 9000 -U app services
+
+and then delete all previous analysis results like so:
+
+.. code-block:: sql
+
+  delete from uplift_backend_patch_status \g
+
+
 .. _libmozdata: https://github.com/mozilla/libmozdata/
 .. _`Bastien Abadie`: https://github.com/La0
 .. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
