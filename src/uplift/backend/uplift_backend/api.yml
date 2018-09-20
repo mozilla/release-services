@@ -92,7 +92,7 @@ paths:
       parameters:
       - name: bugzilla_id
         in: path
-        description: Bugzilla ID of the Bug to delete
+        description: Bugzilla ID of the Bug to update
         required: true
         type: integer
       responses:

@@ -877,8 +877,8 @@ let
     };
 
     "libmozdata" = python.mkDerivation {
-      name = "libmozdata-0.1.40";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/db/6a/4ac82bfd34d6146916adee37736c97d199312d5c626a3835440ff6003069/libmozdata-0.1.40.tar.gz"; sha256 = "abc47ce6797ffe7764fb416f55f8da2c2a9d570140472934d0c6b9af6d84e2f8"; };
+      name = "libmozdata-0.1.43";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b2/6e/9910883d2f964cbdedcee9ae6cc0fd07c93911c75073595d97f1b865ee90/libmozdata-0.1.43.tar.gz"; sha256 = "2010fcb61de7f9c82a261100b2575f4045d2592a227d0bf4f1d051d2e96077ab"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -897,7 +897,7 @@ let
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/mozilla/libmozdata";
-        license = "MPL2";
+        license = licenses.mpl20;
         description = "Library to access and aggregate several Mozilla data sources.";
       };
     };
