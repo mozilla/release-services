@@ -85,20 +85,17 @@ class PhabricatorAPI(object):
         parts = urlparse(self.url)
         return parts.netloc
 
-    def search_diffs(self, diff_phid=None, revision_phid=None):
+    def search_diffs(self, diff_phid=None, revision_phid=None, output_cursor=False, **params):
         '''
         Find details of differential diffs from a Differential diff or revision
         Multiple diffs can be returned (when using revision_phid)
         '''
-        assert (diff_phid is not None) ^ (revision_phid is not None), \
-            'Provide a diff_phid XOR revision_phid'
-
         constraints = {}
         if diff_phid is not None:
             constraints['phids'] = [diff_phid, ]
         if revision_phid is not None:
             constraints['revisionPHIDs'] = [revision_phid, ]
-        out = self.request('differential.diff.search', constraints=constraints)
+        out = self.request('differential.diff.search', constraints=constraints, **params)
 
         def _clean(diff):
 
@@ -119,7 +116,10 @@ class PhabricatorAPI(object):
 
             return diff
 
-        return list(map(_clean, out['data']))
+        diffs = list(map(_clean, out['data']))
+        if output_cursor is True:
+            return diffs, out['cursor']
+        return diffs
 
     def load_raw_diff(self, diff_id):
         '''
@@ -146,6 +146,13 @@ class PhabricatorAPI(object):
             'Revision not found'
         return data[0]
 
+    def list_repositories(self):
+        '''
+        List available repositories
+        '''
+        out = self.request('diffusion.repository.search')
+        return out['data']
+
     def list_comments(self, revision_phid):
         '''
         List and format existing inline comments for a revision
@@ -156,13 +163,11 @@ class PhabricatorAPI(object):
         )
         return [
             {
-
                 'diffID': transaction['fields']['diff']['id'],
                 'filePath': transaction['fields']['path'],
                 'lineNumber': transaction['fields']['line'],
                 'lineLength': transaction['fields']['length'],
                 'content': comment['content']['raw'],
-
             }
             for transaction in transactions['data']
             for comment in transaction['comments']
