@@ -101,6 +101,9 @@ def get_deploy_task(index,
         nix_path_attribute = project
 
     if deploy_target == 'S3':
+        subfolder = []
+        if 'subfolder' in deploy_options:
+            subfolder = [deploy_options['subfolder']]
         project_csp = []
         for url in deploy_options.get('csp', []):
             project_csp.append('--csp="{}"'.format(url))
@@ -150,7 +153,7 @@ def get_deploy_task(index,
             '--taskcluster-secret=' + taskcluster_secret,
             '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
-        ] + project_csp + project_envs
+        ] + subfolder + project_csp + project_envs
 
     elif deploy_target == 'HEROKU':
         project_name = '{}{} to HEROKU ({}/{})'.format(

@@ -38,6 +38,12 @@ log = cli_common.log.get_logger(__name__)
     type=str,
     )
 @click.option(
+    '--subfolder',
+    required=False,
+    type=str,
+    default=None,
+    )
+@click.option(
     '--nix-path-attribute',
     type=str,
     required=True,
@@ -74,6 +80,7 @@ log = cli_common.log.get_logger(__name__)
 def cmd_S3(ctx,
            project,
            s3_bucket,
+           subfolder,
            nix_path_attribute,
            csp,
            env,
@@ -176,6 +183,8 @@ def cmd_S3(ctx,
             os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
             aws = awscli.clidriver.create_clidriver().main
+            if subfolder:
+                subfolder = '/' + subfolder
             result = aws([
                 's3',
                 'sync',
@@ -183,7 +192,7 @@ def cmd_S3(ctx,
                 '--delete',
                 '--acl', 'public-read',
                 tmp_dir,
-                's3://' + s3_bucket,
+                's3://{}' + s3_bucket + subfolder,
             ])
         please_cli.utils.check_result(
             result,
