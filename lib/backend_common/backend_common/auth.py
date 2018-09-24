@@ -223,7 +223,7 @@ EMPTY = object()
 RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'tooltool/': 'releng_tooltool/',
-    'base/tokens/': 'releng_tokens/',
+    'base/tokens/': 'tokens/api/',
     'mapper/': 'releng_mapper/',
 }
 RELENGAPI_PERMISSIONS = {

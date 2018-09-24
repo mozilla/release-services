@@ -198,7 +198,7 @@ PROJECTS_CONFIG = {
         'requires': [
             'docs',
             'releng-tooltool',
-            'releng-tokens',
+            'tokens/api',
             'treestatus/api',
             'releng-mapper',
             'releng-notification-policy',
@@ -281,7 +281,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'releng-tokens': {
+    'tokens/api': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),

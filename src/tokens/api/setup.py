@@ -30,9 +30,9 @@ with open('VERSION') as f:
     VERSION = f.read().strip()
 
 setup(
-    name='mozilla-releng-tokens',
+    name='mozilla-tokens-api',
     version=VERSION,
-    description='The code behind TODO',
+    description='The code behind https://tokens.mozilla-releng.net',
     author='Mozilla Release Services Team',
     author_email='release-services@mozilla.com',
     url='TODO',

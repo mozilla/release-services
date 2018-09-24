@@ -7,13 +7,13 @@ from __future__ import absolute_import
 
 import os
 import backend_common
-import releng_tokens.config
+import tokens_api.config
 
 
 def create_app(config=None):
     app = backend_common.create_app(
-        project_name=releng_tokens.config.PROJECT_NAME,
-        app_name=releng_tokens.config.PROJECT_PATH,
+        project_name=tokens_api.config.PROJECT_NAME,
+        app_name=tokens_api.config.APP_NAME,
         config=config,
         extensions=[
             'log',
