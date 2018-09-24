@@ -3,5 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PROJECT_NAME = 'releng-notification-identity'
-APP_NAME = 'releng_notification_identity'
+PROJECT_NAME = 'notification/identity'
+APP_NAME = 'notification_identity'
+SCOPE_PREFIX = 'project:releng:services/{}'.format(PROJECT_NAME)

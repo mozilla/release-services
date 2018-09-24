@@ -7,14 +7,14 @@ import os
 
 from backend_common.notifications import CHANNELS, URGENCY_LEVELS
 import backend_common
-import releng_notification_identity.config
-import releng_notification_identity.models  # noqa
+import notification_identity.config
+import notification_identity.models  # noqa
 
 
 def create_app(config=None):
     app = backend_common.create_app(
-        project_name=releng_notification_identity.config.PROJECT_NAME,
-        app_name=releng_notification_identity.config.APP_NAME,
+        project_name=notification_identity.config.PROJECT_NAME,
+        app_name=notification_identity.config.APP_NAME,
         config=config,
         extensions=[
             'log',

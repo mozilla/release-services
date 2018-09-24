@@ -120,7 +120,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'releng-notification-identity': {
+    'notification/identity': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -202,7 +202,7 @@ PROJECTS_CONFIG = {
             'treestatus/api',
             'mapper/api',
             'notification/policy',
-            'releng-notification-identity',
+            'notification/identity',
         ],
         'deploys': [
             {

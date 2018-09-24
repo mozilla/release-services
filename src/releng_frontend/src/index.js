@@ -34,7 +34,7 @@ var init = function() {
       treestatusUrl: getData('treestatus-api-url', process.env.RELENG_TREESTATUS_URL),
       docsUrl: getData('docs-url', process.env.DOCS_URL),
       version: release_version,
-      identityUrl: getData('releng-notification-identity-url', process.env.RELENG_NOTIFICATION_IDENTITY_URL),
+      identityUrl: getData('notification-identity-url', process.env.NOTIFICATION_IDENTITY_URL),
       policyUrl: getData('notification-policy-url', process.env.RELENG_NOTIFICATION_POLICY_URL)
     });
 
