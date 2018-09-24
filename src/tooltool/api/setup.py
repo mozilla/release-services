@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='mozilla-releng-tooltool',
+    name='mozilla-tooltool-api',
     version=VERSION,
     description='The code behind https://tooltool.mozilla-releng.net/',
     author='Mozilla Release Services Team',

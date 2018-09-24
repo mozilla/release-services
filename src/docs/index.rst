@@ -32,7 +32,7 @@ Projects
     releng-mapper <projects/releng-mapper>
     releng-notification-identity <projects/releng-notification-identity>
     releng-notification-policy <projects/releng-notification-policy>
-    releng-tooltool <projects/releng-tooltool>
+    tooltool <projects/tooltool>
     treestatus <projects/treestatus>
     shipit-code-coverage <projects/shipit-code-coverage>
     shipit-code-coverage-backend <projects/shipit-code-coverage-backend>

@@ -7,24 +7,24 @@ import hashlib
 
 
 def test_now():
-    import releng_tooltool.utils
+    import tooltool_api.utils
 
-    assert releng_tooltool.utils.now().tzname() == 'UTC'
+    assert tooltool_api.utils.now().tzname() == 'UTC'
 
 
 def test_keyname():
-    import releng_tooltool.utils
+    import tooltool_api.utils
 
     ONE = '1\n'
     ONE_DIGEST = hashlib.sha512(ONE.encode('utf-8')).hexdigest()
 
-    assert releng_tooltool.utils.keyname(ONE_DIGEST) == 'sha512/' + ONE_DIGEST
+    assert tooltool_api.utils.keyname(ONE_DIGEST) == 'sha512/' + ONE_DIGEST
 
 
 def test_is_valid_sha512():
-    import releng_tooltool.utils
+    import tooltool_api.utils
 
     VALID_SHA512 = '1' * 128
 
-    assert releng_tooltool.utils.is_valid_sha512('123') is None
-    assert releng_tooltool.utils.is_valid_sha512(VALID_SHA512).string == VALID_SHA512
+    assert tooltool_api.utils.is_valid_sha512('123') is None
+    assert tooltool_api.utils.is_valid_sha512(VALID_SHA512).string == VALID_SHA512
