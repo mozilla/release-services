@@ -12,15 +12,15 @@ import backend_common
 
 @pytest.fixture(scope='session')
 def app():
-    '''Load releng_tokens in test mode
+    '''Load tokens_api in test mode
     '''
-    import releng_tokens
+    import tokens_api
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     })
-    app = releng_tokens.create_app(config)
+    app = tokens_api.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)

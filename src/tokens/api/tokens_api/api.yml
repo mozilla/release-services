@@ -12,7 +12,7 @@ paths:
   /init:
 
     get:
-      operationId: "releng_tokens.api.initial_data"
+      operationId: "tokens_api.api.initial_data"
       description: Initial data for frontend
       responses:
         200:
@@ -53,7 +53,7 @@ paths:
   /tokens:
 
     get:
-      operationId: "releng_tokens.api.list_tokens"
+      operationId: "tokens_api.api.list_tokens"
       description: |
         Get a list of all unlimited-duration tokens the user has permisison to
         see.
@@ -80,7 +80,7 @@ paths:
                   $ref: '#/definitions/Token'
 
     post:
-      operationId: "releng_tokens.api.issue_token"
+      operationId: "tokens_api.api.issue_token"
       description: |
         Issue a new token.
 
@@ -109,7 +109,7 @@ paths:
   /tokens/{id}:
 
     get:
-      operationId: "releng_tokens.api.get_token"
+      operationId: "tokens_api.api.get_token"
       description: |
         Get a token, identified by its ``id``.
       parameters:
@@ -125,7 +125,7 @@ paths:
             $ref: '#/definitions/Token'
 
     delete:
-      operationId: "releng_tokens.api.revoke_token"
+      operationId: "tokens_api.api.revoke_token"
       description: |
         Revoke an authentication token, identified by its ID.
 
@@ -149,7 +149,7 @@ paths:
   /tokens/query:
 
     post:
-      operationId: "releng_tokens.api.query_token"
+      operationId: "tokens_api.api.query_token"
       description: |
         Get a token, specified by the token key given in the request body (this
         avoids embedding a token in a URL, where it might be logged).
