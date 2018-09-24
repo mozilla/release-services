@@ -35,7 +35,7 @@ var init = function() {
       docsUrl: getData('docs-url', process.env.DOCS_URL),
       version: release_version,
       identityUrl: getData('releng-notification-identity-url', process.env.RELENG_NOTIFICATION_IDENTITY_URL),
-      policyUrl: getData('releng-notification-policy-url', process.env.RELENG_NOTIFICATION_POLICY_URL)
+      policyUrl: getData('notification-policy-url', process.env.RELENG_NOTIFICATION_POLICY_URL)
     });
 
     // Setup ports

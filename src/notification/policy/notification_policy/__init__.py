@@ -7,14 +7,14 @@ import os
 import backend_common
 import cli_common.taskcluster
 from backend_common.notifications import CHANNELS, URGENCY_LEVELS
-import releng_notification_policy.config
-import releng_notification_policy.models  # noqa
+import notification_policy.config
+import notification_policy.models  # noqa
 
 
 def create_app(config=None):
     app = backend_common.create_app(
-        project_name=releng_notification_policy.config.PROJECT_NAME,
-        app_name=releng_notification_policy.config.APP_NAME,
+        project_name=notification_policy.config.PROJECT_NAME,
+        app_name=notification_policy.config.APP_NAME,
         config=config,
         extensions=[
             'log',

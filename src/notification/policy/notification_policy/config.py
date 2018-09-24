@@ -3,6 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import releng_notification_policy
-
-app = releng_notification_policy.create_app()
+PROJECT_NAME = 'notification/policy'
+APP_NAME = 'notification_policy'
+SCOPE_PREFIX = 'project:releng:services/{}'.format(PROJECT_NAME)

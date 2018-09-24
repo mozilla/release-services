@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='mozilla-releng-notification-policy',
+    name='mozilla-notification-policy',
     version=VERSION,
     description='The code behind https://policy.notification.mozilla-releng.net/',
     author='Mozilla Release Services Team',

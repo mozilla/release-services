@@ -1,10 +1,10 @@
-.. _releng-notification-policy-project:
+.. _notification-project:
 
-Project: releng-notification-policy
+Project: notification/policy
 ===================================
 
-:production: https://notification-policy.mozilla-releng.net
-:staging: https://notification-policy.staging.mozilla-releng.net
+:production: https://policy.notification.mozilla-releng.net
+:staging: https://policy.notification.staging.mozilla-releng.net
 :contact: `Rok Garbas`_, (backup `Release Engineering`_)
 
 RelEng Notification Policy is a tool to schedule notifications requiring an "escalation path". Message requests are

@@ -9,12 +9,12 @@ from operator import itemgetter
 
 import pytest
 
-from releng_notification_policy.api import create_identity_preference_url
-from releng_notification_policy.api import determine_message_action
-from releng_notification_policy.api import get_identity_url_for_actionable_policies
-from releng_notification_policy.api import get_policies_in_json_serializable_form
-from releng_notification_policy.models import Message
-from releng_notification_policy.models import Policy
+from notification_policy.api import create_identity_preference_url
+from notification_policy.api import determine_message_action
+from notification_policy.api import get_identity_url_for_actionable_policies
+from notification_policy.api import get_policies_in_json_serializable_form
+from notification_policy.models import Message
+from notification_policy.models import Policy
 
 
 @pytest.fixture

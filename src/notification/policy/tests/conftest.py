@@ -10,7 +10,7 @@ import backend_common
 
 @pytest.fixture(scope='session')
 def app():
-    import releng_notification_policy
+    import notification_policy
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
@@ -19,7 +19,7 @@ def app():
         'TASKCLUSTER_CLIENT_ID': 'something',
         'TASKCLUSTER_ACCESS_TOKEN': 'something',
     })
-    app = releng_notification_policy.create_app(config)
+    app = notification_policy.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)
