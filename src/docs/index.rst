@@ -33,7 +33,7 @@ Projects
     releng-notification-identity <projects/releng-notification-identity>
     releng-notification-policy <projects/releng-notification-policy>
     releng-tooltool <projects/releng-tooltool>
-    releng-treestatus <projects/releng-treestatus>
+    treestatus <projects/treestatus>
     shipit-code-coverage <projects/shipit-code-coverage>
     shipit-code-coverage-backend <projects/shipit-code-coverage-backend>
     shipit-code-coverage-crawler <projects/shipit-code-coverage-crawler>

@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='mozilla-releng-treestatus',
+    name='mozilla-treestatus-api',
     version=VERSION,
     description='The code behind https://treestatus.mozilla-releng.net',
     author='Mozilla Release Services Team',

@@ -10,15 +10,15 @@ import backend_common
 
 @pytest.fixture(scope='session')
 def app():
-    '''Load releng_treestatus in test mode
+    '''Load treestatus_api in test mode
     '''
-    import releng_treestatus
+    import treestatus_api
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     })
-    app = releng_treestatus.create_app(config)
+    app = treestatus_api.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)
