@@ -6,7 +6,6 @@
 import sqlalchemy as sa
 
 import backend_common.db
-import releng_mapper.config
 
 
 class Project(backend_common.db.db.Model):
@@ -14,7 +13,7 @@ class Project(backend_common.db.db.Model):
     Object-relational mapping between python class Project
     and database table "projects"
     '''
-    __tablename__ = releng_mapper.config.APP_NAME + '_projects'
+    __tablename__ = 'releng_mapper_projects'
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(255), nullable=False, unique=True)
@@ -25,7 +24,7 @@ class Hash(backend_common.db.db.Model):
     Object-relational mapping between python class Hash
     and database table "hashes"
     '''
-    __tablename__ = releng_mapper.config.APP_NAME + '_hashes'
+    __tablename__ = 'releng_mapper_hashes'
 
     hg_changeset = sa.Column(sa.String(40), nullable=False)
     git_commit = sa.Column(sa.String(40), nullable=False)

@@ -15,17 +15,17 @@ import werkzeug.exceptions
 
 import backend_common.auth
 import cli_common
-import releng_mapper.config
-import releng_mapper.models
+import mapper_api.config
+import mapper_api.models
 
 logger = cli_common.log.get_logger(__name__)
 
 
-@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/project/insert'])
+@backend_common.auth.auth.require_scopes([mapper_api.config.SCOPE_PREFIX + '/project/insert'])
 def post_project(project: str) -> dict:
     session = flask.current_app.db.session
 
-    p = releng_mapper.models.Project(name=project)
+    p = mapper_api.models.Project(name=project)
 
     session.add(p)
     try:
@@ -39,7 +39,7 @@ def post_project(project: str) -> dict:
     return {}
 
 
-@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/mapping/insert'])
+@backend_common.auth.auth.require_scopes([mapper_api.config.SCOPE_PREFIX + '/mapping/insert'])
 def post_hg_git_mapping(project: str,
                         git_commit: str,
                         hg_changeset: str,
@@ -55,8 +55,8 @@ def post_hg_git_mapping(project: str,
 
     try:
         session.commit()
-        q = releng_mapper.models.Hash.query
-        q = q.join(releng_mapper.models.Project)
+        q = mapper_api.models.Hash.query
+        q = q.join(mapper_api.models.Project)
         q = q.filter(_project_filter(project))
         q = q.filter(sa.text('git_commit == :commit'))
         q = q.params(commit=git_commit)
@@ -94,7 +94,7 @@ def post_hg_git_mapping(project: str,
         )
 
 
-@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/mapping/insert'])
+@backend_common.auth.auth.require_scopes([mapper_api.config.SCOPE_PREFIX + '/mapping/insert'])
 def post_insert_many_ignoredups(project: str,
                                 body: typing.Union[bytes, str],
                                 ) -> dict:
@@ -106,7 +106,7 @@ def post_insert_many_ignoredups(project: str,
     )
 
 
-@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/mapping/insert'])
+@backend_common.auth.auth.require_scopes([mapper_api.config.SCOPE_PREFIX + '/mapping/insert'])
 def post_insert_many(project: str,
                      body: typing.Union[bytes, str],
                      ) -> dict:
@@ -121,7 +121,7 @@ def post_insert_many(project: str,
 def get_projects() -> dict:
     session = flask.current_app.db.session
 
-    all_projects = session.query(releng_mapper.models.Project).all()
+    all_projects = session.query(mapper_api.models.Project).all()
     if not all_projects:
         raise werkzeug.exceptions.NotFound(
             'Could not find any projects in the database.')
@@ -142,19 +142,19 @@ def get_mapfile_since(projects: str,
 
     since_epoch = calendar.timegm(since_dt.utctimetuple())
 
-    q = releng_mapper.models.Hash.query
-    q = q.join(releng_mapper.models.Project)
+    q = mapper_api.models.Hash.query
+    q = q.join(mapper_api.models.Project)
     q = q.filter(_project_filter(projects))
-    q = q.order_by(releng_mapper.models.Hash.hg_changeset)
-    q = q.filter(releng_mapper.models.Hash.date_added > since_epoch)
+    q = q.order_by(mapper_api.models.Hash.hg_changeset)
+    q = q.filter(mapper_api.models.Hash.date_added > since_epoch)
     return _stream_mapfile(q)
 
 
 def get_full_mapfile(projects: str) -> typing.Tuple[str, int, dict]:
-    q = releng_mapper.models.Hash.query
-    q = q.join(releng_mapper.models.Project)
+    q = mapper_api.models.Hash.query
+    q = q.join(mapper_api.models.Project)
     q = q.filter(_project_filter(projects))
-    q = q.order_by(releng_mapper.models.Hash.hg_changeset)
+    q = q.order_by(mapper_api.models.Hash.hg_changeset)
     return _stream_mapfile(q)
 
 
@@ -163,8 +163,8 @@ def get_revision(projects: str,
                  commit: str,
                  ) -> str:
     _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can raise http 400
-    q = releng_mapper.models.Hash.query
-    q = q.join(releng_mapper.models.Project)
+    q = mapper_api.models.Hash.query
+    q = q.join(mapper_api.models.Project)
     q = q.filter(_project_filter(projects))
 
     if vcs_type == 'git':
@@ -224,9 +224,9 @@ def _project_filter(projects_arg):
         A SQLAlchemy filter expression
     '''
     if ',' in projects_arg:
-        return releng_mapper.models.Project.name.in_(projects_arg.split(','))
+        return mapper_api.models.Project.name.in_(projects_arg.split(','))
     else:
-        return releng_mapper.models.Project.name == projects_arg
+        return mapper_api.models.Project.name == projects_arg
 
 
 def _stream_mapfile(query) -> typing.Tuple[str, int, dict]:
@@ -300,7 +300,7 @@ def _check_well_formed_sha(vcs: str,
 
 def _get_project(session,
                  project: str,
-                 ) -> releng_mapper.models.Project:
+                 ) -> mapper_api.models.Project:
     '''Helper method to return Project class for a project with the given name.
     Args:
         session: SQLAlchemy ORM Session object
@@ -312,8 +312,8 @@ def _get_project(session,
         HTTP 500: Multiple projects with same name found
     '''
     try:
-        q = session.query(releng_mapper.models.Project)
-        q = q.filter(releng_mapper.models.Project.name == project)
+        q = session.query(mapper_api.models.Project)
+        q = q.filter(mapper_api.models.Project.name == project)
         return q.one()
 
     except sa.orm.exc.MultipleResultsFound:
@@ -338,11 +338,11 @@ def _add_hash(session, git_commit: str, hg_changeset: str, project: str) -> None
     _check_well_formed_sha('git', git_commit)  # can raise http 400
     _check_well_formed_sha('hg', hg_changeset)  # can raise http 400
 
-    h = releng_mapper.models.Hash(git_commit=git_commit,
-                                  hg_changeset=hg_changeset,
-                                  project=project,
-                                  date_added=time.time(),
-                                  )
+    h = mapper_api.models.Hash(git_commit=git_commit,
+                               hg_changeset=hg_changeset,
+                               project=project,
+                               date_added=time.time(),
+                               )
     session.add(h)
 
 

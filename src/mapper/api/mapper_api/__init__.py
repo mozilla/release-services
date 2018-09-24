@@ -5,14 +5,14 @@
 
 import os
 import backend_common
-import releng_mapper.config
-import releng_mapper.models  # noqa
+import mapper_api.config
+import mapper_api.models  # noqa
 
 
 def create_app(config=None):
     app = backend_common.create_app(
-        project_name=releng_mapper.config.PROJECT_NAME,
-        app_name=releng_mapper.config.APP_NAME,
+        project_name=mapper_api.config.PROJECT_NAME,
+        app_name=mapper_api.config.APP_NAME,
         config=config,
         extensions=[
             'log',

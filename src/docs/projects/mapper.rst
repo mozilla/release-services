@@ -1,7 +1,7 @@
-.. _releng-mapper-project:
+.. _mapper-project:
 
-Project: releng-mapper
-======================
+Project: mapper/api
+===================
 
 :production: https://mapper.mozilla-releng.net
 :staging: https://mapper.staging.mozilla-releng.net

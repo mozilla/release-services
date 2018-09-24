@@ -224,7 +224,7 @@ RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'tooltool/': 'tooltool/api/',
     'base/tokens/': 'tokens/api/',
-    'mapper/': 'releng_mapper/',
+    'mapper/': 'mapper/api/',
 }
 RELENGAPI_PERMISSIONS = {
     'base.tokens.prm.issue': 'Issue permanent tokens',

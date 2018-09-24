@@ -25,7 +25,7 @@ paths:
 
     post:
       summary: Post a new project to the mapper.
-      operationId: 'releng_mapper.api.post_project'
+      operationId: 'mapper_api.api.post_project'
       parameters:
         - name: project
           in: path
@@ -47,7 +47,7 @@ paths:
 
     post:
       summary: Insert a single Git-Hg mapping.
-      operationId: 'releng_mapper.api.post_hg_git_mapping'
+      operationId: 'mapper_api.api.post_hg_git_mapping'
       parameters:
         - name: project
           description: Project name.
@@ -105,7 +105,7 @@ paths:
 
     post:
       summary: Insert many Git-Hg mapping entries and ignore duplicate entries silently.
-      operationId: releng_mapper.api.post_insert_many_ignoredups
+      operationId: mapper_api.api.post_insert_many_ignoredups
       consumes:
         - text/plain
       parameters:
@@ -147,7 +147,7 @@ paths:
 
     post:
       summary: Insert many Git-Hg mapping entries and return an error on duplicate SHAs.
-      operationId: releng_mapper.api.post_insert_many
+      operationId: mapper_api.api.post_insert_many
       consumes:
         - text/plain
       parameters:
@@ -193,7 +193,7 @@ paths:
 
     get:
       summary: Return the list of defined project names, which are valid for the {project} parameter in other API calls.
-      operationId: releng_mapper.api.get_projects
+      operationId: mapper_api.api.get_projects
       responses:
         200:
           description: List of defined project names successfully retrieved.
@@ -215,7 +215,7 @@ paths:
 
     get:
       summary: Get a map file of insertions since the given date
-      operationId: releng_mapper.api.get_mapfile_since
+      operationId: mapper_api.api.get_mapfile_since
       parameters:
         - name: projects
           in: path
@@ -249,7 +249,7 @@ paths:
 
     get:
       summary: Get a map file containing mappings for one or more projects.
-      operationId: releng_mapper.api.get_full_mapfile
+      operationId: mapper_api.api.get_full_mapfile
       parameters:
         - name: projects
           in: path
@@ -273,7 +273,7 @@ paths:
 
     get:
       summary: Return the Hg changeset SHA for a Git commit ID, or vice-versa.
-      operationId: releng_mapper.api.get_revision
+      operationId: mapper_api.api.get_revision
       parameters:
         - name: projects
           in: path

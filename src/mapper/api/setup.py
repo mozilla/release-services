@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='mozilla-releng-mapper',
+    name='mozilla-mapper-api',
     version=VERSION,
     description='The code behind https://mapper.mozilla-releng.net/',
     author='Mozilla Release Services Team',
