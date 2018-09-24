@@ -8,7 +8,7 @@ angular.module('tooltool').controller('TTSearchController',
                                     function($scope, restapi) {
     $scope.search_query = ''
     $scope.show_help = true;
-    $scope.backend_url = $('body').attr('data-releng-tooltool-url') || 'https://localhost:8002';
+    $scope.backend_url = $('body').attr('data-tooltool-api-url') || 'https://localhost:8002';
     $scope.file_results = []
     $scope.batch_results = []
 
@@ -54,7 +54,7 @@ angular.module('tooltool').directive('ttResultFile', function() {
             res: '=',
         },  
         link: function(scope, element, attrs) {
-            scope.backend_url = $('body').attr('data-releng-tooltool-url') || 'https://localhost:8002';
+            scope.backend_url = $('body').attr('data-tooltool-api-url') || 'https://localhost:8002';
         },
     };  
 });
@@ -70,7 +70,7 @@ angular.module('tooltool').directive('ttResultBatch', function() {
         },  
         link: function(scope, element, attrs) {
             scope.details = false;
-            scope.backend_url = $('body').attr('data-releng-tooltool-url') || 'https://localhost:8002';
+            scope.backend_url = $('body').attr('data-tooltool-api-url') || 'https://localhost:8002';
         },
     };  
 });

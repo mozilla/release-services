@@ -16,10 +16,10 @@ import werkzeug.exceptions
 
 import backend_common.auth
 import cli_common.log
-import releng_tooltool.aws
-import releng_tooltool.config
-import releng_tooltool.models
-import releng_tooltool.utils
+import tooltool_api.aws
+import tooltool_api.config
+import tooltool_api.models
+import tooltool_api.utils
 
 logger = cli_common.log.get_logger(__name__)
 
@@ -37,10 +37,10 @@ def search_batches(q: str) -> dict:
     return dict(
         result=[
             row.to_dict()
-            for row in releng_tooltool.models.Batch.query.filter(
+            for row in tooltool_api.models.Batch.query.filter(
                 sa.or_(
-                    releng_tooltool.models.Batch.author.contains(q),
-                    releng_tooltool.models.Batch.message.contains(q)
+                    tooltool_api.models.Batch.author.contains(q),
+                    tooltool_api.models.Batch.message.contains(q)
                 )
             ).all()
         ]
@@ -48,7 +48,7 @@ def search_batches(q: str) -> dict:
 
 
 def get_batch(id: int) -> dict:
-    row = releng_tooltool.models.Batch.query.filter(releng_tooltool.models.Batch.id == id).first()
+    row = tooltool_api.models.Batch.query.filter(tooltool_api.models.Batch.id == id).first()
     if not row:
         raise werkzeug.exceptions.NotFound
     return row.to_dict()
@@ -79,7 +79,7 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
     visibilities = set(f['visibility'] for f in body['files'].values())
     for visibility in visibilities:
         permission = '{}/upload/{}'.format(
-            releng_tooltool.config.SCOPE_PREFIX,
+            tooltool_api.config.SCOPE_PREFIX,
             visibility,
         )
         if not flask_login.current_user.has_permissions(permission):
@@ -87,8 +87,8 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
 
     session = flask.g.db.session
 
-    batch = releng_tooltool.models.Batch(
-        uploaded=releng_tooltool.utils.now(),
+    batch = tooltool_api.models.Batch(
+        uploaded=tooltool_api.utils.now(),
         author=body['author'],
         message=body['message'],
     )
@@ -105,11 +105,11 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
         if info['algorithm'] != 'sha512':
             raise werkzeug.exceptions.BadRequest('`sha512` is the only allowed digest algorithm')
 
-        if not releng_tooltool.utils.is_valid_sha512(info['digest']):
+        if not tooltool_api.utils.is_valid_sha512(info['digest']):
             raise werkzeug.exceptions.BadRequest('Invalid sha512 digest'
                                                  )
         digest = info['digest']
-        file = releng_tooltool.models.File.query.filter(releng_tooltool.models.File.sha512 == digest).first()
+        file = tooltool_api.models.File.query.filter(tooltool_api.models.File.sha512 == digest).first()
         if file and file.visibility != info['visibility']:
             raise werkzeug.exceptions.BadRequest('Cannot change a file\'s visibility level')
 
@@ -118,9 +118,9 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
                 raise werkzeug.exceptions.BadRequest('Size mismatch for {}'.format(filename))
         else:
             if not file:
-                file = releng_tooltool.models.File(sha512=digest,
-                                                   visibility=info['visibility'],
-                                                   size=info['size'])
+                file = tooltool_api.models.File(sha512=digest,
+                                                visibility=info['visibility'],
+                                                size=info['size'])
                 session.add(file)
 
             logger2.info('Generating signed S3 PUT URL to {} for {}; expiring in {}s'.format(info['digest'][:10],
@@ -131,7 +131,7 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
                 method='PUT',
                 expires_in=UPLOAD_EXPIRES_IN,
                 bucket=bucket,
-                key=releng_tooltool.utils.keyname(info['digest']),
+                key=tooltool_api.utils.keyname(info['digest']),
                 headers={'Content-Type': 'application/octet-stream'},
             )
 
@@ -142,13 +142,13 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
             # rather than just a reference to the file object; and for that, we
             # need to flush the inserted file.
             session.flush()
-            expires = releng_tooltool.utils.now() + datetime.timedelta(seconds=UPLOAD_EXPIRES_IN)
-            pu = releng_tooltool.models.PendingUpload(file_id=file.id,
-                                                      region=region,
-                                                      expires=expires)
+            expires = tooltool_api.utils.now() + datetime.timedelta(seconds=UPLOAD_EXPIRES_IN)
+            pu = tooltool_api.models.PendingUpload(file_id=file.id,
+                                                   region=region,
+                                                   expires=expires)
             session.merge(pu)
 
-        session.add(releng_tooltool.models.BatchFile(filename=filename, file=file, batch=batch))
+        session.add(tooltool_api.models.BatchFile(filename=filename, file=file, batch=batch))
 
     session.add(batch)
     session.commit()
@@ -160,16 +160,16 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
 def upload_complete(digest: str) -> typing.Union[werkzeug.Response,
                                                  typing.Tuple[str, int]]:
 
-    if not releng_tooltool.utils.is_valid_sha512(digest):
+    if not tooltool_api.utils.is_valid_sha512(digest):
         raise werkzeug.exceptions.BadRequest('Invalid sha512 digest')
 
     # if the pending upload is still valid, then we can't check this file
     # yet, so return 409 Conflict.  If there is no PU, or it's expired,
     # then we can proceed.
-    file = releng_tooltool.models.File.query.filter(releng_tooltool.models.File.sha512 == digest).first()
+    file = tooltool_api.models.File.query.filter(tooltool_api.models.File.sha512 == digest).first()
     if file:
         for pending_upload in file.pending_uploads:
-            until = pending_upload.expires.replace(tzinfo=pytz.UTC) - releng_tooltool.utils.now()
+            until = pending_upload.expires.replace(tzinfo=pytz.UTC) - tooltool_api.utils.now()
             if until > datetime.timedelta(0):
                 # add 1 second to avoid rounding / skew errors
                 headers = {'X-Retry-After': str(1 + int(until.total_seconds()))}
@@ -177,17 +177,17 @@ def upload_complete(digest: str) -> typing.Union[werkzeug.Response,
 
     exchange = 'exchange/{}/{}'.format(
         flask.current_app.config['PULSE_USER'],
-        releng_tooltool.config.PROJECT_NAME,
+        tooltool_api.config.PROJECT_NAME,
     )
     logger.info('Sending digest `{}` to queue `{}` exfor route `{}`.'.format(
         digest,
         exchange,
-        releng_tooltool.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
+        tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
     ))
     try:
         flask.current_app.pulse.publish(
             exchange,
-            releng_tooltool.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
+            tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
             dict(digest=digest),
         )
     except Exception as e:
@@ -201,25 +201,25 @@ def upload_complete(digest: str) -> typing.Union[werkzeug.Response,
 
 def search_files(q: str) -> dict:
     session = flask.g.db.session
-    query = session.query(releng_tooltool.models.File).join(releng_tooltool.models.BatchFile)
-    query = query.filter(sa.or_(releng_tooltool.models.BatchFile.filename.contains(q),
-                                releng_tooltool.models.File.sha512.startswith(q)))
+    query = session.query(tooltool_api.models.File).join(tooltool_api.models.BatchFile)
+    query = query.filter(sa.or_(tooltool_api.models.BatchFile.filename.contains(q),
+                                tooltool_api.models.File.sha512.startswith(q)))
     return dict(result=[row.to_dict() for row in query.all()])
 
 
 def get_file(digest: str) -> dict:
 
-    if not releng_tooltool.utils.is_valid_sha512(digest):
+    if not tooltool_api.utils.is_valid_sha512(digest):
         raise werkzeug.exceptions.BadRequest('Invalid sha512 digest')
 
-    row = releng_tooltool.models.File.query.filter(releng_tooltool.models.File.sha512 == digest).first()
+    row = tooltool_api.models.File.query.filter(tooltool_api.models.File.sha512 == digest).first()
     if not row:
         raise werkzeug.exceptions.NotFound
 
     return row.to_dict(include_instances=True)
 
 
-@backend_common.auth.auth.require_scopes([releng_tooltool.config.SCOPE_PREFIX + '/manage'])
+@backend_common.auth.auth.require_scopes([tooltool_api.config.SCOPE_PREFIX + '/manage'])
 def patch_file(digest: str, body: dict) -> dict:
     S3_REGIONS = flask.current_app.config['S3_REGIONS']  # type: typing.Dict[str, str]
     if type(S3_REGIONS) is not dict:
@@ -227,7 +227,7 @@ def patch_file(digest: str, body: dict) -> dict:
 
     session = flask.current_app.db.session
 
-    file = session.query(releng_tooltool.models.File).filter(releng_tooltool.models.File.sha512 == digest).first()
+    file = session.query(tooltool_api.models.File).filter(tooltool_api.models.File.sha512 == digest).first()
     if not file:
         raise werkzeug.exceptions.NotFound
 
@@ -237,7 +237,7 @@ def patch_file(digest: str, body: dict) -> dict:
             raise werkzeug.exceptions.BadRequest('No op.')
 
         if change['op'] == 'delete_instances':
-            key_name = releng_tooltool.utils.keyname(digest)
+            key_name = tooltool_api.utils.keyname(digest)
 
             for instance in file.instances:
                 conn = flask.current_app.aws.connect_to('s3', instance.region)
@@ -282,19 +282,19 @@ def download_file(digest: str, region: typing.Optional[str]=None) -> werkzeug.Re
 
     logger2.debug('Looking for file in following regions: {}'.format(', '.join(S3_REGIONS.keys())))
 
-    if not releng_tooltool.utils.is_valid_sha512(digest):
+    if not tooltool_api.utils.is_valid_sha512(digest):
         raise werkzeug.exceptions.BadRequest('Invalid sha512 digest')
 
     # see where the file is.
-    file_row = releng_tooltool.models.File.query.filter(
-        releng_tooltool.models.File.sha512 == digest).first()
+    file_row = tooltool_api.models.File.query.filter(
+        tooltool_api.models.File.sha512 == digest).first()
     if not file_row or not file_row.instances:
         raise werkzeug.exceptions.NotFound
 
     # check visibility
     if file_row.visibility != 'public' or not ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD:
         permission = '{}/download/{}'.format(
-            releng_tooltool.config.SCOPE_PREFIX,
+            tooltool_api.config.SCOPE_PREFIX,
             file_row.visibility,
         )
         if not flask_login.current_user.has_permissions(permission):
@@ -315,7 +315,7 @@ def download_file(digest: str, region: typing.Optional[str]=None) -> werkzeug.Re
         raise werkzeug.exceptions.InternalServerError(
             'Region `{}` can not be found in S3_REGIONS.'.format(selected_region))
 
-    key = releng_tooltool.utils.keyname(digest)
+    key = tooltool_api.utils.keyname(digest)
 
     s3 = flask.current_app.aws.connect_to('s3', selected_region)
     logger2.info('Generating signed S3 GET URL for {}, expiring in {}s'.format(digest[:10], DOWLOAD_EXPIRES_IN))

@@ -54,7 +54,7 @@ paths:
   /upload:
 
     get:
-      operationId: "releng_tooltool.api.search_batches"
+      operationId: "tooltool_api.api.search_batches"
       description: Search upload batches.
       parameters:
         - name: q
@@ -78,7 +78,7 @@ paths:
                   $ref: '#/definitions/UploadBatch'
 
     post:
-      operationId: "releng_tooltool.api.upload_batch"
+      operationId: "tooltool_api.api.upload_batch"
       description: |
         Create a new upload batch.  The response object will contain
         a ``put_url`` for each file which needs to be uploaded -- which may not
@@ -125,7 +125,7 @@ paths:
   /upload/{id}:
 
     get:
-      operationId: "releng_tooltool.api.get_batch"
+      operationId: "tooltool_api.api.get_batch"
       description: Get a specific upload batch by id.
       parameters:
         - name: id
@@ -145,7 +145,7 @@ paths:
 
   /upload/complete/sha512/{digest}:
     get:
-      operationId: "releng_tooltool.api.upload_complete"
+      operationId: "tooltool_api.api.upload_complete"
       description: |
         Signal that a file has been uploaded and the server should begin
         validating it.  This is merely an optimization: the server also polls
@@ -185,7 +185,7 @@ paths:
   /file:
 
     get:
-      operationId: "releng_tooltool.api.search_files"
+      operationId: "tooltool_api.api.search_files"
       description: Search for files matching the query.
       parameters:
         - name: q
@@ -213,7 +213,7 @@ paths:
   /file/sha512/{digest}:
 
     get:
-      operationId: "releng_tooltool.api.get_file"
+      operationId: "tooltool_api.api.get_file"
       description: |
         Get a single file, by its digest.  Filenames are associated with upload
         batches, not directly with files, so use ``GET /uploads`` to find files
@@ -245,7 +245,7 @@ paths:
             $ref: '#/definitions/Problem'
 
     patch:
-      operationId: "releng_tooltool.api.patch_file"
+      operationId: "tooltool_api.api.patch_file"
       description: |
         Make administrative changes to an existing file.  The body is a list of
         changes to apply, each represented by a JSON object.
@@ -315,7 +315,7 @@ paths:
 
   /sha512/{digest}:
     get:
-      operationId: "releng_tooltool.api.download_file"
+      operationId: "tooltool_api.api.download_file"
       description: Fetch a link to the file with the given sha512 digest.
       parameters:
         - name: digest

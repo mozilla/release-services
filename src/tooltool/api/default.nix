@@ -9,8 +9,9 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-releng-tooltool";
-  dirname = "releng_tooltool";
+  name = "mozilla-tooltool-api";
+  dirname = "tooltool_api";
+  src_path = "tooltool/api";
   version = fileContents ./VERSION;
 
   mkCronJob = { schedule, command }:
@@ -46,13 +47,13 @@ let
         }) ["testing" "staging" "production"]);
 
   self = mkBackend {
-    inherit python name version dirname;
+    inherit python name version dirname src_path;
     inStaging = true;
     inProduction = true;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
-      (fromRequirementsFile ./../../lib/backend_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);
