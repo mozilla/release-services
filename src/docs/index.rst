@@ -27,7 +27,7 @@ Projects
 .. toctree::
     :maxdepth: 1
 
-    releng-docs <projects/releng-docs>
+    docs <projects/docs>
     releng-frontend <projects/releng-frontend>
     releng-mapper <projects/releng-mapper>
     releng-notification-identity <projects/releng-notification-identity>

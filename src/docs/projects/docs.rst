@@ -1,7 +1,7 @@
-.. _releng-docs-project:
+.. _docs-project:
  
-Project: releng-docs
-====================
+Project: docs
+=============
 
 :production: https://docs.mozilla-releng.net
 :staging: https://docs.staging.mozilla-releng.net
@@ -10,7 +10,7 @@ Project: releng-docs
 A documentation for ``mozilla/release-services`` and projects within. You are
 currently reading it.
 
-``releng-docs`` (which is a static html page) is deployed :ref:`using
+``docs`` (which is a static html page) is deployed :ref:`using
 Taskcluster deployment hook<deploy-taskcluster>` to S3 bucket (
 `production <https://console.aws.amazon.com/s3/buckets/releng-production-docs>`_,
 `staging <https://console.aws.amazon.com/s3/buckets/releng-staging-docs>`_).

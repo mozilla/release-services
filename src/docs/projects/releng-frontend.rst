@@ -9,7 +9,7 @@ Project: releng-frontend
 
 A common frontend for all of the ``releng-*`` projects.
 
-``releng-docs`` (which is a static html page) is deployed :ref:`using
+``docs`` (which is a static html page) is deployed :ref:`using
 Taskcluster deployment hook<deploy-taskcluster>` to S3 bucket (
 `production <https://console.aws.amazon.com/s3/buckets/releng-production-docs>`_,
 `staging <https://console.aws.amazon.com/s3/buckets/releng-staging-docs>`_).
