@@ -7,7 +7,7 @@ import base64
 import os
 
 import cli_common.taskcluster
-import releng_treestatus.config
+import treestatus_api.config
 
 DEBUG = bool(os.environ.get('DEBUG', False))
 
@@ -39,7 +39,7 @@ if not DEBUG:
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
-    releng_treestatus.config.PROJECT_NAME,
+    treestatus_api.config.PROJECT_NAME,
     required=required,
     existing={x: os.environ.get(x) for x in required if x in os.environ},
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
@@ -71,7 +71,7 @@ else:
     CACHE['CACHE_DEFAULT_TIMEOUT'] = float(CACHE['CACHE_DEFAULT_TIMEOUT'])
 
 if 'CACHE_KEY_PREFIX' not in CACHE:
-    CACHE['CACHE_KEY_PREFIX'] = releng_treestatus.config.PROJECT_NAME + '-'
+    CACHE['CACHE_KEY_PREFIX'] = treestatus_api.config.PROJECT_NAME + '-'
 
 if not DEBUG:
     CACHE['CACHE_TYPE'] = 'redis'

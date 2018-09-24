@@ -16,10 +16,10 @@ from werkzeug.exceptions import NotFound
 import cli_common.log
 from backend_common.auth import auth
 from backend_common.cache import cache
-from releng_treestatus.models import Log
-from releng_treestatus.models import StatusChange
-from releng_treestatus.models import StatusChangeTree
-from releng_treestatus.models import Tree
+from treestatus_api.models import Log
+from treestatus_api.models import StatusChange
+from treestatus_api.models import StatusChangeTree
+from treestatus_api.models import Tree
 
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5

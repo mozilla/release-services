@@ -5,14 +5,14 @@
 
 import os
 import backend_common
-import releng_treestatus.config
-import releng_treestatus.models  # noqa
+import treestatus_api.config
+import treestatus_api.models  # noqa
 
 
 def create_app(config=None):
     app = backend_common.create_app(
-        project_name=releng_treestatus.config.PROJECT_NAME,
-        app_name=releng_treestatus.config.APP_NAME,
+        project_name=treestatus_api.config.PROJECT_NAME,
+        app_name=treestatus_api.config.APP_NAME,
         config=config,
         extensions=[
             'log',

@@ -33,7 +33,7 @@ Projects
     releng-notification-identity <projects/releng-notification-identity>
     releng-notification-policy <projects/releng-notification-policy>
     releng-tooltool <projects/releng-tooltool>
-    releng-treestatus <projects/releng-treestatus>
+    treestatus <projects/treestatus>
     codecoverage/bot <projects/codecoverage-bot>
     codecoverage/backend <projects/codecoverage-backend>
     codecoverage/crawler <projects/codecoverage-crawler>

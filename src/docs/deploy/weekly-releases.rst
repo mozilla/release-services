@@ -79,7 +79,7 @@ Protocal that we follow is:
    production environment. Use the same checks as we did before when we were
    checking if projects are working on staging, but now use production URLs.
 
-   Example: :ref:`verify releng-tooltool project <verify-releng-treestatus>`
+   Example: :ref:`verify releng-tooltool project <verify-releng-tooltool>`
 
    .. todo:: need to explain how to revert when a deployment goes bad.
 

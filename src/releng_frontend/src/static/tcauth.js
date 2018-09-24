@@ -48,7 +48,7 @@ window.tcauth.setup = function(service, default_service_url) {
     var $loggedin = $('#loggedin');
     var $logout= $('#logout');
     var $email = $('#email');
-    var service_url = $('body').attr('data-releng-' + service + '-url') || default_service_url;
+    var service_url = $('body').attr('data-' + service + '-url') || default_service_url;
 
     var auth = window.localStorage.getItem('auth');
 
@@ -90,7 +90,7 @@ window.tcauth.setup = function(service, default_service_url) {
     $login.on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        var url = $('body').attr('data-releng-treestatus-url') || 'https://localhost:8000';
+        var url = $('body').attr('data-treestatus-api-url') || 'https://localhost:8000';
         $.ajax({
             url: url + '/auth0/login',
             error: function(xhr, status, error) {
