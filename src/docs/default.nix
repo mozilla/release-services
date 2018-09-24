@@ -11,7 +11,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
 
-  name = "mozilla-releng-docs";
+  name = "mozilla-docs";
   version = fileContents ./VERSION;
   src_path =
     "src/" +
