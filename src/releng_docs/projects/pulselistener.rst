@@ -52,8 +52,8 @@ Manager.
 .. _Release Management: https://wiki.mozilla.org/Release_Management
 .. _Pulse: https://wiki.mozilla.org/Auto-tools/Projects/Pulse
 .. _Heroku: https://www.heroku.com/
-.. _shipit code coverage production hook: https://tools.taskcluster.net/hooks/project-releng/services-production-codecoverage
-.. _shipit static analysis production hook: https://tools.taskcluster.net/hooks/project-releng/services-production-shipit-static-analysis
+.. _shipit code coverage production hook: https://tools.taskcluster.net/hooks/project-releng/services-production-codecoverage%2Fbot
+.. _shipit static analysis production hook: https://tools.taskcluster.net/hooks/project-releng/services-production-staticanalysis%2Fbot
 .. _mozilla-central build: https://treeherder.mozilla.org/#/jobs?repo=mozilla-central
 .. _Phabricator: https://phabricator.services.mozilla.com/
 .. _MozReview: https://reviewboard.mozilla.org/
