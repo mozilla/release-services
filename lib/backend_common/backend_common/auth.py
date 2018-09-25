@@ -222,7 +222,7 @@ def jti2id(jti):
 EMPTY = object()
 RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 RELENGAPI_PROJECT_PERMISSION_MAPPING = {
-    'tooltool/': 'releng_tooltool/',
+    'tooltool/': 'tooltool/api/',
     'base/tokens/': 'tokens/api/',
     'mapper/': 'releng_mapper/',
 }

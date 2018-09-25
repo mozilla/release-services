@@ -7,7 +7,7 @@ import base64
 import os
 
 import cli_common.taskcluster
-import releng_tooltool.config
+import tooltool_api.config
 
 DEBUG = bool(os.environ.get('DEBUG', False))
 
@@ -38,7 +38,7 @@ existing['DOWLOAD_EXPIRES_IN'] = 60
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
-    releng_tooltool.config.PROJECT_NAME,
+    tooltool_api.config.PROJECT_NAME,
     required=required,
     existing=existing,
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),

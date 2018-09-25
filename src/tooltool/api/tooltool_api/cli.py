@@ -14,9 +14,9 @@ import sqlalchemy as sa
 
 import cli_common.log
 import cli_common.pulse
-import releng_tooltool.config
-import releng_tooltool.models
-import releng_tooltool.utils
+import tooltool_api.config
+import tooltool_api.models
+import tooltool_api.utils
 
 logger = cli_common.log.get_logger(__name__)
 
@@ -43,7 +43,7 @@ def replicate_file(session, file, regions_config, aws):
     logger2.info('replicating {} from {} to {}'.format(
         file.sha512, source_region, ', '.join(target_regions)))
 
-    key_name = releng_tooltool.utils.keyname(file.sha512)
+    key_name = tooltool_api.utils.keyname(file.sha512)
     for target_region in target_regions:
         target_bucket = regions_config[target_region]
         conn = aws.connect_to('s3', target_region)
@@ -60,7 +60,7 @@ def replicate_file(session, file, regions_config, aws):
             preserve_acl=False,
         )
         try:
-            session.add(releng_tooltool.models.FileInstance(file=file, region=target_region))
+            session.add(tooltool_api.models.FileInstance(file=file, region=target_region))
             session.commit()
         except sa.exc.IntegrityError:
             session.rollback()
@@ -110,10 +110,10 @@ def check_pending_upload(session, pending_upload):
 
     logger2 = logger.bind(tooltool_sha512=sha512)
 
-    if releng_tooltool.utils.now() < pending_upload.expires.replace(tzinfo=pytz.UTC):
+    if tooltool_api.utils.now() < pending_upload.expires.replace(tzinfo=pytz.UTC):
         # URL is not expired yet
         return
-    elif releng_tooltool.utils.now() > (pending_upload.expires + datetime.timedelta(days=1)).replace(tzinfo=pytz.UTC):
+    elif tooltool_api.utils.now() > (pending_upload.expires + datetime.timedelta(days=1)).replace(tzinfo=pytz.UTC):
         # Upload will probably never complete
         logger2.info('Deleting abandoned pending upload for {}'.format(sha512))
         session.delete(pending_upload)
@@ -128,7 +128,7 @@ def check_pending_upload(session, pending_upload):
         return
 
     bucket = s3.get_bucket(s3_regions[pending_upload.region], validate=False)
-    key = bucket.get_key(releng_tooltool.utils.keyname(sha512))
+    key = bucket.get_key(tooltool_api.utils.keyname(sha512))
     if not key:
         # not uploaded yet
         return
@@ -148,7 +148,7 @@ def check_pending_upload(session, pending_upload):
 
     # add a file instance, but it's OK if it already exists
     try:
-        releng_tooltool.models.FileInstance(
+        tooltool_api.models.FileInstance(
             file=pending_upload.file,
             region=pending_upload.region,
         )
@@ -171,8 +171,8 @@ async def check_file_pending_uploads(channel, body, envelope, properties):
     body = json.loads(body.decode('utf-8'))
     digest = body['payload']['digest']
     session = flask.current_app.db.session
-    file = releng_tooltool.models.File.query.filter(
-        releng_tooltool.models.File.sha512 == digest).first()
+    file = tooltool_api.models.File.query.filter(
+        tooltool_api.models.File.sha512 == digest).first()
     if file:
         for pending_upload in file.pending_uploads:
             check_pending_upload(session, pending_upload)
@@ -183,7 +183,7 @@ def cmd_check_pending_uploads(app):
     '''Check for any pending uploads and verify them if found.
     '''
     session = app.db.session
-    pending_uploads = releng_tooltool.models.PendingUpload.query.all()
+    pending_uploads = tooltool_api.models.PendingUpload.query.all()
     for pending_upload in pending_uploads:
         check_pending_upload(session, pending_upload)
     session.commit()
@@ -197,14 +197,14 @@ def cmd_replicate(app):
     regions = app.config['S3_REGIONS']
     session = app.db.session
     subq = session.query(
-        releng_tooltool.models.FileInstance.file_id,
+        tooltool_api.models.FileInstance.file_id,
         sa.func.count('*').label('instance_count'),
     )
-    subq = subq.group_by(releng_tooltool.models.FileInstance.file_id)
+    subq = subq.group_by(tooltool_api.models.FileInstance.file_id)
     subq = subq.subquery()
 
-    q = session.query(releng_tooltool.models.File)
-    q = q.join(subq, releng_tooltool.models.File.id == subq.c.file_id)
+    q = session.query(tooltool_api.models.File)
+    q = q.join(subq, tooltool_api.models.File.id == subq.c.file_id)
     q = q.filter(subq.c.instance_count < len(regions))
     q = q.all()
 
@@ -218,20 +218,20 @@ def cmd_worker(app):
     '''
     queue = 'exchange/{}/{}'.format(
         flask.current_app.config['PULSE_USER'],
-        releng_tooltool.config.PROJECT_NAME,
+        tooltool_api.config.PROJECT_NAME,
     )
     consumer = cli_common.pulse.create_consumer(
         app.config['PULSE_USER'],
         app.config['PULSE_PASSWORD'],
         queue,
-        releng_tooltool.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
+        tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
         check_file_pending_uploads,
     )
 
     logger.info(
         'Listening for new messages on',
         queue=queue,
-        route=releng_tooltool.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
+        route=tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
     )
 
     cli_common.pulse.run_consumer(asyncio.gather(consumer))
