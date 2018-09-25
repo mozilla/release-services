@@ -1,11 +1,11 @@
-.. _shipit-static-analysis-project:
+.. _staticanalysis/bot-project:
 
-Project: shipit-static-analysis
+Project: staticanalysis/bot
 ===============================
 
 :contact: `Bastien Abadie`_, (backup `Release Management`_)
 
-ShipIt static analysis is a Taskcluster task, triggered by *Shipit Pulse Listener* on every new Mozreview or Phabricator patch.
+Static analysis bot is a Taskcluster task, triggered by *Pulse Listener* on every new Mozreview or Phabricator patch.
 The task applies several code analyzers on each patch:
 
  * clang-tidy through ./mach static-analysis
@@ -34,7 +34,7 @@ You'll need:
 
 Once logged on Taskcluster, please check that you can view the contents of the Taskcluster secret : `repo:github.com/mozilla-releng/services:branch:master <https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Amaster>`_.
 
-This secret holds the configuration for all the services, you can look at the ``shipit-static-analysis`` section for more details.
+This secret holds the configuration for all the services, you can look at the ``staticanalysis/bot`` section for more details.
 
 If you need to make some changes to this secret, create a copy of this secret in your own namespace; and use its name everywhere the ``master`` secret is mentioned in this documentation.
 
@@ -71,11 +71,11 @@ Run the following (where ``XXX`` is the Taskcluster access token):
 
 .. code-block:: shell
 
-  ./please shell shipit-static-analysis \
+  ./please shell staticanalysis/bot \
     --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|bastien/static-analysis-dev" \
     --taskcluster-access-token=XXX
 
-Once the initial build finishes, you should get a green Nix shell, running in ``/app/src/shipit_static_analysis``.
+Once the initial build finishes, you should get a green Nix shell, running in ``/app/src/staticanalysis/bot``.
 
 4. Setup a Mozreview test
 """""""""""""""""""""""""
@@ -85,7 +85,7 @@ Once the initial build finishes, you should get a green Nix shell, running in ``
 
   .. code-block:: yaml
 
-    shipit-static-analysis:
+    staticanalysis/bot:
       ...
       REPORTERS:
         - reporter: mozreview
@@ -129,7 +129,7 @@ So the command would be:
 
   .. code-block:: yaml
 
-    shipit-static-analysis:
+    staticanalysis/bot:
       ...
       REPORTERS:
         - reporter: phabricator
@@ -170,7 +170,7 @@ Finally, you can run the bot with this command (in the Nix Shell):
 .. code-block:: shell
 
   mkdir -p /app/tmp
-  shipit-static-analysis \
+  staticanalysis/bot \
     --taskcluster-secret=repo:github.com/mozilla-releng/services:branch:master \
     --cache-root=/app/tmp
 

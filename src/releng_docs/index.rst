@@ -38,7 +38,7 @@ Projects
     codecoverage/backend <projects/codecoverage-backend>
     codecoverage/crawler <projects/codecoverage-crawler>
     shipit/frontend <projects/shipit-frontend>
-    shipit-static-analysis <projects/shipit-static-analysis>
+    staticanalysis/bot <projects/staticanalysis-bot>
     pulselistener <projects/pulselistener>
     uplift/backend <projects/uplift-backend>
     uplift/frontend <projects/uplift-frontend>
