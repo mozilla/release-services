@@ -39,7 +39,7 @@ Projects
     shipit-code-coverage-crawler <projects/shipit-code-coverage-crawler>
     shipit/frontend <projects/shipit-frontend>
     shipit-static-analysis <projects/shipit-static-analysis>
-    shipit-pulse-listener <projects/shipit-pulse-listener>
+    pulselistener <projects/pulselistener>
     uplift/backend <projects/uplift-backend>
     uplift/frontend <projects/uplift-frontend>
     uplift/bot <projects/uplift-bot>

@@ -52,4 +52,4 @@ follow the following steps:
 
 Most of the features of the task can be checked with the steps above.
 
-The last feature, upload to coveralls.io and codecov.io, can only be verified after waiting for a new push on mozilla-central. After that happens, ``shipit-pulse-listener`` should trigger a ``shipit-code-coverage`` task which should result in a new report being uploaded to coveralls.io and codecov.io.
+The last feature, upload to coveralls.io and codecov.io, can only be verified after waiting for a new push on mozilla-central. After that happens, ``pulselistener`` should trigger a ``shipit-code-coverage`` task which should result in a new report being uploaded to coveralls.io and codecov.io.

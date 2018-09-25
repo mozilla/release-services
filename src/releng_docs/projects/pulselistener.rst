@@ -1,6 +1,6 @@
-.. shipit-pulse-listener-project:
+.. pulselistener-project:
 
-Project: shipit-pulse-listener
+Project: pulselistener
 ==============================
 
 :contact: `Bastien Abadie`_, (backup `Release Management`_)
