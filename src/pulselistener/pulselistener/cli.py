@@ -8,9 +8,9 @@ import click
 from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
-from shipit_pulse_listener import config
-from shipit_pulse_listener import task_monitoring
-from shipit_pulse_listener.listener import PulseListener
+from pulselistener import config
+from pulselistener import task_monitoring
+from pulselistener.listener import PulseListener
 
 
 @click.command()

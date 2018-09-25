@@ -62,7 +62,7 @@ in gecko.overrideDerivation (old: {
     # Build LDFLAGS and LIBRARY_PATH
     echo "export LDFLAGS=\"$NIX_LDFLAGS\"" >> $geckoenv
     echo "export LIBRARY_PATH=${zlib}/lib/:${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
-    echo "export LD_LIBRARY_PATH=${zlib}/lib/:${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
+    echo "export LD_LIBRARY_PATH=${gcc-unwrapped.lib}/lib:${zlib}/lib/:${sqlite.out}/lib/:\$CMAKE_LIBRARY_PATH" >> $geckoenv
 
     # queried by the static-analysis bot
     echo "export JAVA_HOME=${openjdk}" >> $geckoenv

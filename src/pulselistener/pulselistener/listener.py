@@ -7,9 +7,9 @@ from cli_common.log import get_logger
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.pulse import run_consumer
 from cli_common.utils import retry
-from shipit_pulse_listener import task_monitoring
-from shipit_pulse_listener.hook import Hook
-from shipit_pulse_listener.hook import PulseHook
+from pulselistener import task_monitoring
+from pulselistener.hook import Hook
+from pulselistener.hook import PulseHook
 
 logger = get_logger(__name__)
 
@@ -103,51 +103,6 @@ class HookPhabricator(Hook):
 
             # Sleep a bit before trying new diffs
             await asyncio.sleep(60)
-
-
-class HookStaticAnalysis(PulseHook):
-    '''
-    Taskcluster hook handling the static analysis
-    for MozReview
-    '''
-    def __init__(self, configuration):
-        assert 'hookId' in configuration
-        super().__init__(
-            'project-releng',
-            configuration['hookId'],
-            'exchange/mozreview/',
-            'mozreview.commits.published',
-        )
-
-    def parse(self, body):
-        '''
-        Extract revisions from payload
-        '''
-        if 'payload' not in body:
-            raise Exception('Missing payload in body')
-        payload = body['payload']
-
-        # Filter on repo url
-        repository_url = payload.get('repository_url')
-        if not repository_url:
-            raise Exception('Missing repository url in payload')
-        if repository_url != 'https://reviewboard-hg.mozilla.org/gecko':
-            logger.info('Skipping this message, invalid repository url', url=repository_url)  # noqa
-            return
-
-        # Extract commits
-        envs = [
-            {
-                'ANALYSIS_SOURCE': 'mozreview',
-                'ANALYSIS_ID': c['review_request_id'],
-                'MOZREVIEW_REVISION': c['rev'],
-                'MOZREVIEW_DIFFSET': c['diffset_revision'],
-            }
-
-            for c in payload.get('commits', [])
-        ]
-        logger.info('Received new commits', revs=[e['MOZREVIEW_REVISION'] for e in envs])
-        return envs
 
 
 class HookCodeCoverage(PulseHook):
@@ -296,7 +251,6 @@ class PulseListener(object):
         assert isinstance(conf, dict)
         assert 'type' in conf
         classes = {
-            'static-analysis-mozreview': HookStaticAnalysis,
             'static-analysis-phabricator': HookPhabricator,
             'code-coverage': HookCodeCoverage,
         }
