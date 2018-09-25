@@ -32,7 +32,7 @@ Projects
     releng-mapper <projects/releng-mapper>
     releng-notification-identity <projects/releng-notification-identity>
     releng-notification-policy <projects/releng-notification-policy>
-    releng-tooltool <projects/releng-tooltool>
+    tooltool <projects/tooltool>
     treestatus <projects/treestatus>
     codecoverage/bot <projects/codecoverage-bot>
     codecoverage/backend <projects/codecoverage-backend>

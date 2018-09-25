@@ -10,10 +10,10 @@ import typing
 
 import backend_common
 import backend_common.api
-import releng_tooltool.aws
-import releng_tooltool.cli
-import releng_tooltool.config
-import releng_tooltool.models  # noqa
+import tooltool_api.aws
+import tooltool_api.cli
+import tooltool_api.config
+import tooltool_api.models  # noqa
 
 
 def custom_handle_default_exceptions(e: Exception) -> typing.Tuple[int, str]:
@@ -28,8 +28,8 @@ def custom_handle_default_exceptions(e: Exception) -> typing.Tuple[int, str]:
 
 def create_app(config: dict=None) -> flask.Flask:
     app = backend_common.create_app(
-        project_name=releng_tooltool.config.PROJECT_NAME,
-        app_name=releng_tooltool.config.APP_NAME,
+        project_name=tooltool_api.config.PROJECT_NAME,
+        app_name=tooltool_api.config.APP_NAME,
         config=config,
         extensions=[
             'log',
@@ -42,22 +42,22 @@ def create_app(config: dict=None) -> flask.Flask:
         ],
     )
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
-    app.aws = releng_tooltool.aws.AWS(app.config['S3_REGIONS_ACCESS_KEY_ID'],
-                                      app.config['S3_REGIONS_SECRET_ACCESS_KEY'])
+    app.aws = tooltool_api.aws.AWS(app.config['S3_REGIONS_ACCESS_KEY_ID'],
+                                   app.config['S3_REGIONS_SECRET_ACCESS_KEY'])
 
     for code, exception in werkzeug.exceptions.default_exceptions.items():
         app.register_error_handler(exception, custom_handle_default_exceptions)
 
     @app.cli.command()
     def worker():
-        releng_tooltool.cli.cmd_worker(app)
+        tooltool_api.cli.cmd_worker(app)
 
     @app.cli.command()
     def replicate():
-        releng_tooltool.cli.cmd_replicate(app)
+        tooltool_api.cli.cmd_replicate(app)
 
     @app.cli.command()
     def check_pending_uploads():
-        releng_tooltool.cli.cmd_check_pending_uploads(app)
+        tooltool_api.cli.cmd_check_pending_uploads(app)
 
     return app

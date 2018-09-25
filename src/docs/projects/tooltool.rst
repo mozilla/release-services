@@ -1,7 +1,7 @@
-.. _releng-tooltool-project:
+.. _tooltool-api-project:
 
-Project: releng-tooltool
-========================
+Project: tooltool/api
+=====================
 
 :Url:
   `production <https://tooltool.mozilla-releng.net>`_,
@@ -23,7 +23,7 @@ Project: releng-tooltool
 
 Some of the jobs in the RelEng infrastructure make use of generic binary
 artifacts, which are stored in dedicated artifacts repositories (S3 buckets).
-``releng-tooltool`` application provides an interface to those artifacts
+``tooltool/api`` application provides an interface to those artifacts
 repositories.
 
 
@@ -48,13 +48,13 @@ problem.
 
 #. Sometimes restarting an application might solve the issue (at least
    temporary). Once you restart the application also verify that it is working
-   correctly (follow :ref:`instructions below <verify-releng-tooltool>`).
+   correctly (follow :ref:`instructions below <verify-tooltool-api>`).
 
 
 Deploying
 ---------
 
-``releng-tooltool`` is a Flask application deployed to Heroku. Please follow
+``tooltool/api`` is a Flask application deployed to Heroku. Please follow
 the :ref:`Heroku deployment guide <deploy-heroku-target>` how to manually
 deploy hotfixes.
 
@@ -65,7 +65,7 @@ The architecture
 
     orientation = portrait
 
-    B [ label = "https://tooltool.mozilla-releng.net/\nreleng-tooltool on Heroku"
+    B [ label = "https://tooltool.mozilla-releng.net/\ntooltool/api on Heroku"
       , width = 280
       , height = 60
       ];
@@ -81,9 +81,9 @@ The architecture
 Is ToolTool working correctly?
 ------------------------------
 
-.. _verify-releng-tooltool:
+.. _verify-tooltool-api:
 
-**To test and verify** that ``releng-tooltool`` is running correctly please
+**To test and verify** that ``tooltool/api`` is running correctly please
 follow the following steps:
 
 #. Select which environement (production or staging).
@@ -140,7 +140,7 @@ follow the following steps:
 Develop
 -------
 
-To start developing ``releng-tooltool`` you would need to:
+To start developing ``tooltool/api`` you would need to:
 
 #. Install all :ref:`requirements <develop-requirements>` and read through
    general :ref:`guide how to contribute <develop-contribute>`.
@@ -152,7 +152,7 @@ To start developing ``releng-tooltool`` you would need to:
 #. And last you will have to read about conventions we use to :ref:`write REST
    endpoints using Flask <develop-flask-project>`.
 
-   It is important to know that ``releng-tooltool`` uses the following
+   It is important to know that ``tooltool/api`` uses the following
    Flask extensions:
 
    - :ref:`log <develop-flask-log-extension>` (centralize logging),
