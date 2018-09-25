@@ -1,6 +1,6 @@
-.. shipit-pulse-listener-project:
+.. pulselistener-project:
 
-Project: shipit-pulse-listener
+Project: pulselistener
 ==============================
 
 :contact: `Bastien Abadie`_, (backup `Release Management`_)
@@ -16,9 +16,9 @@ It also polls for new things to do:
 
 When it has captured a new event, it triggers tasks:
 
-- ``shipit_code_coverage``: triggered after builds finished, to gather and
+- ``codecoverage/bot``: triggered after builds finished, to gather and
   upload coverage data;
-- ``shipit_static_analysis``: triggered on review requests, to provide linting
+- ``staticanalysis/bot``: triggered on review requests, to provide linting
   and static analysis reports through a comment made by a bot.
 
 This project is hosted on Heroku_, as a worker dyno. We use several instances
@@ -28,7 +28,7 @@ The hooks
 ---------
 
 The functionality described above is implemented in a few classes defined in
-``shipit_code_coverage/listener.py``:
+``pulselistener/listener.py``:
 
 - ``HookPhabricator``: Taskcluster hook handling the static analysis for
   Phabricator differentials. This polls the Phabricator API (the
@@ -43,8 +43,8 @@ The functionality described above is implemented in a few classes defined in
   hg.mozilla.org revision hash to trigger a code coverage upload task.
 
 When these listeners run successfully, they will call back to Taskcluster to
-create new tasks. As an example, see the `shipit code coverage production
-hook`_ and `shipit static analysis production hook`_ on the Taskcluster Hooks
+create new tasks. As an example, see the `code coverage production
+hook`_ and `static analysis production hook`_ on the Taskcluster Hooks
 Manager.
 
 
@@ -52,8 +52,8 @@ Manager.
 .. _Release Management: https://wiki.mozilla.org/Release_Management
 .. _Pulse: https://wiki.mozilla.org/Auto-tools/Projects/Pulse
 .. _Heroku: https://www.heroku.com/
-.. _shipit code coverage production hook: https://tools.taskcluster.net/hooks/project-releng/services-production-shipit-code-coverage
-.. _shipit static analysis production hook: https://tools.taskcluster.net/hooks/project-releng/services-production-shipit-static-analysis
+.. _code coverage production hook: https://tools.taskcluster.net/hooks/project-releng/services-production-codecoverage%2Fbot
+.. _static analysis production hook: https://tools.taskcluster.net/hooks/project-releng/services-production-staticanalysis%2Fbot
 .. _mozilla-central build: https://treeherder.mozilla.org/#/jobs?repo=mozilla-central
 .. _Phabricator: https://phabricator.services.mozilla.com/
 .. _MozReview: https://reviewboard.mozilla.org/

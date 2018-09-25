@@ -4,7 +4,7 @@ import json
 from cli_common.log import get_logger
 from cli_common.pulse import create_consumer
 from cli_common.taskcluster import get_service
-from shipit_pulse_listener import task_monitoring
+from pulselistener import task_monitoring
 
 logger = get_logger(__name__)
 

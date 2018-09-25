@@ -9,8 +9,8 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-pulse-listener";
-  dirname = "shipit_pulse_listener";
+  name = "mozilla-pulselistener";
+  dirname = "pulselistener";
 
   mercurial' = mercurial.overrideDerivation (old: {
     postInstall = old.postInstall + ''
@@ -39,7 +39,7 @@ let
       ln -s ${mercurial'}/bin/hg $out/bin
     '';
     dockerCmd = [
-      "/bin/shipit-pulse-listener"
+      "/bin/pulselistener"
     ];
     passthru = {
       update = writeScript "update-${name}" ''

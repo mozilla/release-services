@@ -1,7 +1,7 @@
-.. shipit-code-coverage-backend-project:
+.. codecoverage-backend:
 
-Project: shipit-code-coverage-backend
-=====================================
+Project: codecoverage/backend
+=============================
 
 :production: https://coverage.moz.tools/docs/
 :staging: https://coverage.staging.moz.tools/docs/

@@ -661,7 +661,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-pulse-listener': {
+    'pulselistener': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
