@@ -95,7 +95,6 @@ Once the initial build finishes, you should get a green Nix shell, running in ``
           api_key: api-XXXX
 
 
-
 The bot needs an environment variable ``PHABRICATOR`` containing the PHID of the diff to be reviewed.
 
 So you'll need to do the following in the nix shell:
@@ -128,7 +127,9 @@ Finally, you can run the bot with this command (in the Nix Shell):
 .. code-block:: shell
 
   mkdir -p /app/tmp
-  shipit-static-analysis \
+  static-analysis-bot \
+    --source=phabricator \
+    --id=$PHABRICATOR \
     --taskcluster-secret=repo:github.com/mozilla-releng/services:branch:master \
     --cache-root=/app/tmp
 
