@@ -27,14 +27,14 @@ EXAMPLES:
   1. for Flask / Connexion project:
 
   \b
-  ~/d/m/services % ./please shell releng-treestatus
-  [nix-shell] ~/d/m/s/s/releng_treestatus % flask run
-  [nix-shell] ~/d/m/s/s/releng_treestatus % connexion run connexion run releng_treestatus/api.yml
-  [nix-shell] ~/d/m/s/s/releng_treestatus % ipython
+  ~/d/m/services % ./please shell treestatus/api
+  [nix-shell] ~/d/m/s/s/treestatus/api % flask run
+  [nix-shell] ~/d/m/s/s/treestatus/api % connexion run connexion run treestatus_api/api.yml
+  [nix-shell] ~/d/m/s/s/treestatus/api % ipython
   Python 3.5.3 (default, Jan 17 2017, 07:57:56)
-  In [1]: import releng_treestatus
+  In [1]: import treestatus_api
   In [2]: exit
-  [nix-shell] ~/d/m/s/s/releng_treestatus % exit
+  [nix-shell] ~/d/m/s/s/treestatus/api % exit
 
   2. for Elm project:
 

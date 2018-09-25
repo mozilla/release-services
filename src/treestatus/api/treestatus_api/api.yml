@@ -1,0 +1,454 @@
+---
+swagger: "2.0"
+# TODO: version and title in api.yml should be provided from python code
+# dynamicaly. also additional fields should be picked up from setup.py somehow:
+# - contact (maintainer)
+# - license
+info:
+  version: "1.0"
+  title: "TreeStatus"
+paths:
+
+  /auth0/login:
+    get:
+      operationId: "backend_common.auth0.auth0_login"
+      responses:
+        200:
+          description: A login URL to redirect the user to
+          schema:
+            type: string
+
+  /auth0/check:
+    post:
+      operationId: "backend_common.auth0.auth0_check"
+      responses:
+        200:
+          description: Auth0 tokens
+          schema:
+            $ref: '#/definitions/Auth0Tokens'
+
+  /stack:
+    get:
+      operationId: "treestatus_api.api.get_stack"
+      description: |
+        Get the `undo stack` of changes to trees, most recent first.
+      responses:
+        200:
+          description: List of state changes.
+          schema:
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/StateChange'
+
+  /stack/{id}:
+    delete:
+      operationId: "treestatus_api.api.revert_change"
+      description: |
+        Remove the given change from the undo stack.
+
+        With ``?revert=1`` This applies the settings that were
+        present before the change to the affected trees.
+
+        With ``?revert=0`` or omitting the revert keyword, it merely removes
+        the change from the stack without changing the settings on the tree.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+        - name: revert
+          in: query
+          required: true
+          default: 0
+          type: integer
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
+  /stack2/discard/{id}:
+    delete:
+      operationId: "treestatus_api.api.discard_change"
+      description: |
+        Removes the change from the stack without changing the settings on the
+        tree.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
+  /stack2/restore/{id}:
+    delete:
+      operationId: "treestatus_api.api.restore_change"
+      description: |
+        Remove the given change from the undo stack that were present before
+        the change to the affected trees.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
+  /trees:
+    get:
+      operationId: "treestatus_api.api.get_trees"
+      description: Get the status of all trees.
+      responses:
+        200:
+          description: Trees
+          schema:
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: object
+                additionalProperties:
+                  $ref: '#/definitions/Tree'
+    patch:
+      operationId: "treestatus_api.api.update_trees"
+      description: |
+        Update trees status.
+
+        If the update indicates that the previous state should be saved, then
+        a new change will be added to the stack containing the previous status
+        and reason.  In this case, both reason and status must be supplied.
+
+        The `tags` property must not be empty if `status` is `closed`.
+      parameters:
+        - name: body
+          in: body
+          description: Tree update
+          required: true
+          schema:
+            $ref: '#/definitions/TreeUpdate'
+      responses:
+        200:
+          description: Tree
+          schema:
+            type: string
+
+  /trees/{tree}:
+    get:
+      operationId: "treestatus_api.api.get_tree"
+      description: |
+        Get the status of a single tree.
+
+        This endpoint is cached heavily and is safe to call frequently to verify
+        the status of a tree.
+      parameters:
+        - name: tree
+          in: path
+          description: Tree name
+          required: true
+          type: string
+      responses:
+        200:
+          description: Tree
+          schema:
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                $ref: '#/definitions/Tree'
+    put:
+      operationId: "treestatus_api.api.make_tree"
+      description: Make a new tree.
+      parameters:
+        - name: tree
+          in: path
+          description: Tree
+          required: true
+          type: string
+        - name: body
+          in: body
+          description: Tree 
+          required: true
+          schema:
+            $ref: '#/definitions/Tree'
+      responses:
+        200:
+          description: Tree
+          schema:
+            type: string
+    delete:
+      operationId: "treestatus_api.api.kill_tree"
+      description: Delete a tree.
+      parameters:
+        - name: tree
+          in: path
+          description: Tree
+          required: true
+          type: string
+      responses:
+        200:
+          description: Tree
+          schema:
+            type: string
+
+  /trees/{tree}/logs:
+    get:
+      operationId: "treestatus_api.api.get_logs"
+      description: |
+        Get a log of changes for the given tree.  This is limited to the most
+        recent 5 entries by default.  Use `?all=1` to get all log entries.
+      parameters:
+        - name: tree
+          in: path
+          description: Tree
+          required: true
+          type: string
+        - name: all
+          in: query
+          required: true
+          default: 0
+          type: integer
+      responses:
+        200:
+          description: Tree
+          schema:
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/TreeLog'
+
+  /trees2:
+    get:
+      operationId: "treestatus_api.api.get_trees2"
+      description: Get the status of all trees.
+      responses:
+        200:
+          description: Trees
+          schema:
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/Tree'
+    delete:
+      operationId: "treestatus_api.api.kill_trees"
+      description: Delete trees.
+      parameters:
+        - name: trees
+          in: body
+          description: Trees to delete
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: None
+          schema:
+            type: string
+
+  /v0/trees:
+    get:
+      operationId: "treestatus_api.api.v0_get_trees"
+      description: |
+        Get the status of all trees in a format compatible with the old
+        treestatus.
+      parameters:
+        - name: format
+          in: query
+          description: Format type (dummy to keep backwards compatibility)
+          type: string
+      responses:
+        200:
+          description: Status
+          schema:
+            type: object
+            additionalProperties:
+              $ref: '#/definitions/Tree'
+
+  /v0/trees/{tree}:
+    get:
+      operationId: "treestatus_api.api.v0_get_tree"
+      description: |
+        Get the status of a single tree in a format compatible with the old
+        treestatus.
+      parameters:
+        - name: tree
+          in: path
+          description: Tree name
+          required: true
+          type: string
+        - name: format
+          in: query
+          description: Format type (dummy to keep backwards compatibility)
+          type: string
+      responses:
+        200:
+          description: Tree
+          schema:
+            $ref: '#/definitions/Tree'
+
+definitions:
+
+  Tree:
+    type: object
+    description: A representation of a single tree.
+    required:
+      - tree
+      - status
+      - reason
+      - message_of_the_day
+    properties:
+      tree:
+        type: string
+        description: the name of the tree
+      status:
+        type: string
+        description: the current status
+      reason:
+        type: string
+        description: the reason for the status
+      message_of_the_day:
+        type: string
+        description: even more information about the status
+
+  TreeLog:
+    type: object
+    description: |
+      A recorded change to a trees status or reason, along with a set of tags
+      assigned at the time.  This is useful for analysis of tree closures and
+      their causes.
+    required:
+      - tree
+      - when
+      - who
+      - status
+      - reason
+      - tags
+    properties:
+      tree:
+        type: string
+        description: the name of the tree
+      when:
+        type: string  # dateTime
+        description: the time the change occurred
+      who:
+        type: string
+        description: the user making the change
+      status:
+        type: string
+        description: the new status
+      reason:
+        type: string
+        description: the reason for the status
+      tags:
+        type: array
+        description: tags for the change
+        items:
+          type: string
+
+  StateChange:
+    type: object
+    description: |
+      A change to one or more trees status, suitable for reverting the change.
+      Some of the information here is redundant to TreeLog, but is present to
+      help users determine which change to revert.  The previous state of the
+      tree is not exposed in this data type. 
+    required:
+      - id
+      - trees
+      - when
+      - who
+      - status
+      - reason
+    properties:
+      id:
+        type: integer
+        description: id of this change
+      trees:
+        type: array
+        description: the names of the affected trees
+        items:
+          type: string
+      when:
+        type: string # TODO: datetime
+        description: the time the change occurred
+      who:
+        type: string
+        description: the user who made the change
+      status:
+        type: string
+        description: the updated (new) status
+      reason:
+        type: string
+        description: the reason for the status change
+
+  TreeUpdate:
+    type: object
+    description: |
+      A requested update to one or more trees.  See the corresponding method
+      for information on which fields must be supplied and when.
+    required:
+      - trees
+    properties:
+      trees:
+        type: array
+        description: the trees to update
+        items:
+          type: string
+      status:
+        type: string
+        description: the new tree status (for all affected trees)
+      reason:
+        type: string
+        description: the reason for the status
+      message_of_the_day:
+        type: string
+        description: the message of the day for the tree
+      tags:
+        type: array
+        description: |
+          tags associated with the status update; this is required (including
+          at least one tag) if status = 'closed',
+        items:
+          type: string
+      remember:
+        type: boolean
+        description: |
+          if true, add the change to the status and reason to the undo stack.
+          Note that updates to the message of the day are not recorded.
+
+  Auth0Tokens:
+    type: object
+    required:
+      - expires
+      - access_token
+      - id_token
+    properties:
+      expires:
+        type: integer
+      access_token:
+        type: string
+      id_token:
+        type: string

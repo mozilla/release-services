@@ -78,7 +78,7 @@ angular.module('tokens').controller('TokenController',
     };
 
     $scope.refreshTokens = function() {
-        var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
+        var url = $('body').attr('data-tokens-api-url') || 'https://localhost:8003';
         return restapi.get(url + '/tokens', {while: 'refreshing tokens'})
         .then(function (response) {
             $scope.tokens = response.data.result;
@@ -91,7 +91,7 @@ angular.module('tokens').controller('TokenListController', function($scope, rest
         $scope.revoke_enabled = true;
     };
     $scope.revokeToken = function(id) {
-        var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
+        var url = $('body').attr('data-tokens-api-url') || 'https://localhost:8003';
         restapi.delete(url + '/tokens/' + id, {while: 'revoking token'})
         .then(function() {
             alertify.success("token revoked");
@@ -119,7 +119,7 @@ angular.module('tokens').controller('NewTokenController', function($scope, resta
         var permissions = $scope.newtoken.permissions;
         var description = $scope.newtoken.description;
 
-        var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
+        var url = $('body').attr('data-tokens-api-url') || 'https://localhost:8003';
         restapi.post(url + '/tokens', {
                 typ: typ,
                 permissions: permissions,
