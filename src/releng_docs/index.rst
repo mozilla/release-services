@@ -34,9 +34,9 @@ Projects
     releng-notification-policy <projects/releng-notification-policy>
     releng-tooltool <projects/releng-tooltool>
     releng-treestatus <projects/releng-treestatus>
-    shipit-code-coverage <projects/shipit-code-coverage>
-    shipit-code-coverage-backend <projects/shipit-code-coverage-backend>
-    shipit-code-coverage-crawler <projects/shipit-code-coverage-crawler>
+    codecoverage/bot <projects/codecoverage-bot>
+    codecoverage/backend <projects/codecoverage-backend>
+    codecoverage/crawler <projects/codecoverage-crawler>
     shipit/frontend <projects/shipit-frontend>
     shipit-static-analysis <projects/shipit-static-analysis>
     pulselistener <projects/pulselistener>

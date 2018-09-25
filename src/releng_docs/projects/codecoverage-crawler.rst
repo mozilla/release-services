@@ -1,7 +1,7 @@
-.. shipit-code-coverage-crawler-project:
+.. codecoverage-crawler:
 
-Project: shipit-code-coverage-crawler
-=====================================
+Project: codecoverage/crawler
+=============================
 
 :contact: `Marco Castelluccio`_, (backup `Release Management`_)
 
