@@ -161,7 +161,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'releng-docs': {
+    'docs': {
         'run': 'SPHINX',
         'run_options': {
             'schema': 'http',
@@ -196,7 +196,7 @@ PROJECTS_CONFIG = {
             'port': 8010,
         },
         'requires': [
-            'releng-docs',
+            'docs',
             'releng-tooltool',
             'releng-tokens',
             'releng-treestatus',
