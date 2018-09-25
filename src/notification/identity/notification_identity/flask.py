@@ -3,6 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import releng_notification_identity
+import notification_identity
 
-app = releng_notification_identity.create_app()
+app = notification_identity.create_app()

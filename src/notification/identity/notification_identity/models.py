@@ -10,18 +10,16 @@ from backend_common.db import db
 from backend_common.notifications import CHANNELS
 from backend_common.notifications import URGENCY_LEVELS
 
-from .config import APP_NAME
-
 
 class Identity(db.Model):
-    __tablename__ = APP_NAME + '_identities'
+    __tablename__ = 'releng_notification_identity_identities'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32), unique=True)
 
 
 class Preference(db.Model):
-    __tablename__ = APP_NAME + '_preferences'
+    __tablename__ = 'releng_notification_identity_preferences'
     __table_args__ = (UniqueConstraint('identity', 'urgency', name='_one_urgency_per_id'),)
 
     id = Column(Integer, primary_key=True)

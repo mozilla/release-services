@@ -9,16 +9,17 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-releng-notification-identity";
-  dirname = "releng_notification_identity";
+  name = "mozilla-notification-identity";
+  dirname = "notification_identity";
+  src_path = "notification/identity";
 
   self = mkBackend {
-    inherit python name dirname;
+    inherit python name dirname src_path;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
-      (fromRequirementsFile ./../../lib/backend_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);

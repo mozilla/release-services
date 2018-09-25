@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='mozilla-releng-notification-identity',
+    name='mozilla-notification-identity',
     version=VERSION,
     description='The code behind https://identity.notification.mozilla-releng.net/',
     author='Mozilla Release Services Team',

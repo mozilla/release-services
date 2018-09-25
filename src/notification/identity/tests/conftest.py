@@ -10,13 +10,13 @@ import backend_common
 
 @pytest.fixture(scope='session')
 def app():
-    import releng_notification_identity
+    import notification_identity
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     })
-    app = releng_notification_identity.create_app(config)
+    app = notification_identity.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)
