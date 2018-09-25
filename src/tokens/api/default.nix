@@ -9,18 +9,19 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-releng-tokens";
-  dirname = "releng_tokens";
+  name = "mozilla-tokens-api";
+  dirname = "tokens_api";
+  src_path = "tokens/api";
 
   self = mkBackend {
-    inherit python name dirname;
+    inherit python name dirname src_path;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     inStaging = true;
     inProduction = true;
     buildInputs =
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
-      (fromRequirementsFile ./../../lib/backend_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);
