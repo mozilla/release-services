@@ -10,15 +10,15 @@ import backend_common
 
 @pytest.fixture(scope='session')
 def app():
-    '''Load releng_mapper in test mode
+    '''Load mapper_api in test mode
     '''
-    import releng_mapper
+    import mapper_api
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     })
-    app = releng_mapper.create_app(config)
+    app = mapper_api.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)

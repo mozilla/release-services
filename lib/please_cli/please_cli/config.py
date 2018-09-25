@@ -200,7 +200,7 @@ PROJECTS_CONFIG = {
             'tooltool/api',
             'tokens/api',
             'treestatus/api',
-            'releng-mapper',
+            'mapper/api',
             'releng-notification-policy',
             'releng-notification-identity',
         ],
@@ -240,7 +240,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'releng-mapper': {
+    'mapper/api': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),

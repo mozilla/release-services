@@ -3,6 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import releng_mapper
-
-app = releng_mapper.create_app()
+PROJECT_NAME = 'mapper/api'
+APP_NAME = 'mapper/api'
+SCOPE_PREFIX = 'project:releng:services/{}'.format(PROJECT_NAME)

@@ -29,7 +29,7 @@ Projects
 
     docs <projects/docs>
     releng-frontend <projects/releng-frontend>
-    releng-mapper <projects/releng-mapper>
+    mapper <projects/mapper>
     releng-notification-identity <projects/releng-notification-identity>
     releng-notification-policy <projects/releng-notification-policy>
     tooltool <projects/tooltool>

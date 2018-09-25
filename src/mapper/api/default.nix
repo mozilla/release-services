@@ -20,16 +20,17 @@ let
   '';
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-releng-mapper";
-  dirname = "releng_mapper";
+  name = "mozilla-mapper-api";
+  dirname = "mapper_api";
+  src_path = "mapper/api";
 
   self = mkBackend {
-    inherit python name dirname;
+    inherit python name dirname src_path;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
-      (fromRequirementsFile ./../../lib/backend_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);
