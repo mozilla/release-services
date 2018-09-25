@@ -34,12 +34,12 @@ Projects
     notification <projects/notification>
     tooltool <projects/tooltool>
     treestatus <projects/treestatus>
-    shipit-code-coverage <projects/shipit-code-coverage>
-    shipit-code-coverage-backend <projects/shipit-code-coverage-backend>
-    shipit-code-coverage-crawler <projects/shipit-code-coverage-crawler>
+    codecoverage/bot <projects/codecoverage-bot>
+    codecoverage/backend <projects/codecoverage-backend>
+    codecoverage/crawler <projects/codecoverage-crawler>
     shipit/frontend <projects/shipit-frontend>
-    shipit-static-analysis <projects/shipit-static-analysis>
-    shipit-pulse-listener <projects/shipit-pulse-listener>
+    staticanalysis/bot <projects/staticanalysis-bot>
+    pulselistener <projects/pulselistener>
     uplift/backend <projects/uplift-backend>
     uplift/frontend <projects/uplift-frontend>
     uplift/bot <projects/uplift-bot>

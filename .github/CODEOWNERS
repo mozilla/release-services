@@ -14,7 +14,7 @@
 /src/codecoverage/crawler             @mozilla/release-management
 /src/shipit/frontend                  @mozilla/Releng
 /src/shipit_pipeline                  @mozilla/Releng
-/src/shipit_pulse_listener            @mozilla/release-management
+/src/pulselistener                    @mozilla/release-management
 /src/shipit_signoff                   @mozilla/Releng
 /src/staticanalysis                   @mozilla/release-management
 /src/shipit_taskcluster               @mozilla/Releng
