@@ -29,7 +29,7 @@ paths:
 
   /stack:
     get:
-      operationId: "releng_treestatus.api.get_stack"
+      operationId: "treestatus_api.api.get_stack"
       description: |
         Get the `undo stack` of changes to trees, most recent first.
       responses:
@@ -47,7 +47,7 @@ paths:
 
   /stack/{id}:
     delete:
-      operationId: "releng_treestatus.api.revert_change"
+      operationId: "treestatus_api.api.revert_change"
       description: |
         Remove the given change from the undo stack.
 
@@ -74,7 +74,7 @@ paths:
 
   /stack2/discard/{id}:
     delete:
-      operationId: "releng_treestatus.api.discard_change"
+      operationId: "treestatus_api.api.discard_change"
       description: |
         Removes the change from the stack without changing the settings on the
         tree.
@@ -91,7 +91,7 @@ paths:
 
   /stack2/restore/{id}:
     delete:
-      operationId: "releng_treestatus.api.restore_change"
+      operationId: "treestatus_api.api.restore_change"
       description: |
         Remove the given change from the undo stack that were present before
         the change to the affected trees.
@@ -108,7 +108,7 @@ paths:
 
   /trees:
     get:
-      operationId: "releng_treestatus.api.get_trees"
+      operationId: "treestatus_api.api.get_trees"
       description: Get the status of all trees.
       responses:
         200:
@@ -123,7 +123,7 @@ paths:
                 additionalProperties:
                   $ref: '#/definitions/Tree'
     patch:
-      operationId: "releng_treestatus.api.update_trees"
+      operationId: "treestatus_api.api.update_trees"
       description: |
         Update trees status.
 
@@ -147,7 +147,7 @@ paths:
 
   /trees/{tree}:
     get:
-      operationId: "releng_treestatus.api.get_tree"
+      operationId: "treestatus_api.api.get_tree"
       description: |
         Get the status of a single tree.
 
@@ -170,7 +170,7 @@ paths:
               result:
                 $ref: '#/definitions/Tree'
     put:
-      operationId: "releng_treestatus.api.make_tree"
+      operationId: "treestatus_api.api.make_tree"
       description: Make a new tree.
       parameters:
         - name: tree
@@ -190,7 +190,7 @@ paths:
           schema:
             type: string
     delete:
-      operationId: "releng_treestatus.api.kill_tree"
+      operationId: "treestatus_api.api.kill_tree"
       description: Delete a tree.
       parameters:
         - name: tree
@@ -206,7 +206,7 @@ paths:
 
   /trees/{tree}/logs:
     get:
-      operationId: "releng_treestatus.api.get_logs"
+      operationId: "treestatus_api.api.get_logs"
       description: |
         Get a log of changes for the given tree.  This is limited to the most
         recent 5 entries by default.  Use `?all=1` to get all log entries.
@@ -236,7 +236,7 @@ paths:
 
   /trees2:
     get:
-      operationId: "releng_treestatus.api.get_trees2"
+      operationId: "treestatus_api.api.get_trees2"
       description: Get the status of all trees.
       responses:
         200:
@@ -251,7 +251,7 @@ paths:
                 items:
                   $ref: '#/definitions/Tree'
     delete:
-      operationId: "releng_treestatus.api.kill_trees"
+      operationId: "treestatus_api.api.kill_trees"
       description: Delete trees.
       parameters:
         - name: trees
@@ -270,7 +270,7 @@ paths:
 
   /v0/trees:
     get:
-      operationId: "releng_treestatus.api.v0_get_trees"
+      operationId: "treestatus_api.api.v0_get_trees"
       description: |
         Get the status of all trees in a format compatible with the old
         treestatus.
@@ -289,7 +289,7 @@ paths:
 
   /v0/trees/{tree}:
     get:
-      operationId: "releng_treestatus.api.v0_get_tree"
+      operationId: "treestatus_api.api.v0_get_tree"
       description: |
         Get the status of a single tree in a format compatible with the old
         treestatus.

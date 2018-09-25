@@ -109,11 +109,6 @@ ALLOWED_TABLES = [
 def init_app(app):
     db.init_app(app)
 
-    # Check every table starts with app.import_name
-    for table_name in db.metadata.tables.keys():
-        if not table_name.startswith(app.import_name) and table_name not in ALLOWED_TABLES:
-            raise Exception('DB table {} should start with {}'.format(table_name, app.import_name))
-
     # Try to run migrations on the app
     # or direct db creation
     init_database(app)

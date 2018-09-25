@@ -3,6 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import releng_treestatus
+import treestatus_api
 
-app = releng_treestatus.create_app()
+app = treestatus_api.create_app()

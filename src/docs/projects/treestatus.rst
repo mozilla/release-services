@@ -1,7 +1,7 @@
-.. _releng-treestatus-project:
+.. _treestatus-project:
 
-Project: releng-treestatus
-==========================
+Project: treestatus
+===================
 
 
 :Url:
@@ -40,7 +40,7 @@ status of all trees**. It also allows "sheriffs" to manipulate tree status.
 Giving permission/roles to Sherrifs to close/open trees
 -------------------------------------------------------
 
-A common request one administrator of ``releng-treestatus`` would receive is to
+A common request one administrator of ``treestatus`` would receive is to
 give permission for new 
 
 Certain JSON API endpoints are protected by `Taskcluster scopes`_ (for details
@@ -77,7 +77,7 @@ In case of an incident this five steps that should help you narrow down the
 problem.
 
 #. Look at `Heroku metrics
-   <https://dashboard.heroku.com/apps/releng-production-treestatus/metrics/web>`_
+   <https://dashboard.heroku.com/apps/production-treestatus/metrics/web>`_
    to get birds view on the running application.
 
 #. There might be some problems with Heroku. Make sure to also check their
@@ -89,13 +89,13 @@ problem.
 
 #. Sometimes restarting an application might solve the issue (at least
    temporary). Once you restart the application also verify that it is working
-   correctly (follow :ref:`instructions below <verify-releng-treestatus>`).
+   correctly (follow :ref:`instructions below <verify-treestatus>`).
 
 
 Deploying
 ---------
 
-``releng-treestatus`` is a Flask application deployed to Heroku. Please follow
+``treestatus`` is a Flask application deployed to Heroku. Please follow
 the :ref:`Heroku deployment guide <deploy-heroku-target>` how to manually
 deploy hotfixes.
 
@@ -111,7 +111,7 @@ The architecture
       , height = 60
       ];
 
-    B [ label = "https://treestatus.mozilla-releng.net/\nreleng-treestatus on Heroku"
+    B [ label = "URL: https://treestatus.mozilla-releng.net/\nPROJECT: treestatus/api on Heroku"
       , width = 280
       , height = 60
       ];
@@ -128,9 +128,9 @@ The architecture
 Is TreeStatus working correctly?
 --------------------------------
 
-.. _verify-releng-treestatus:
+.. _verify-treestatus:
 
-**To test and verify** that ``releng-treestatus`` is running correctly please
+**To test and verify** that ``treestatus`` is running correctly please
 follow the following steps:
 
 #. Select which environement (production or staging).
@@ -196,7 +196,7 @@ follow the following steps:
 Develop
 -------
 
-To start developing ``releng-treestatus`` you would need to:
+To start developing ``treestatus`` you would need to:
 
 #. Install all :ref:`requirements <develop-requirements>` and read through
    general :ref:`guide how to contribute <develop-contribute>`.
@@ -208,7 +208,7 @@ To start developing ``releng-treestatus`` you would need to:
 #. And last you will have to read about conventions we use to :ref:`write REST
    endpoints using Flask <develop-flask-project>`.
 
-   It is important to know that ``releng-treestatus`` uses the following
+   It is important to know that ``treestatus`` uses the following
    Flask extensions:
 
    - :ref:`log <develop-flask-log-extension>` (centralize logging),
