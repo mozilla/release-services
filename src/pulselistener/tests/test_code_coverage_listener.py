@@ -4,7 +4,7 @@ import os
 
 import responses
 
-from shipit_pulse_listener.listener import HookCodeCoverage
+from pulselistener.listener import HookCodeCoverage
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 

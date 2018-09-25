@@ -28,7 +28,7 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='shipit_pulse_listener',
+    name='pulselistener',
     version=VERSION,
     description='Listens to bugzilla entries, executes'
     'some static analysis and reports results.',
@@ -43,7 +43,7 @@ setuptools.setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-pulse-listener = shipit_pulse_listener.cli:main',
+            'pulselistener = pulselistener.cli:main',
         ]
     },
 )
