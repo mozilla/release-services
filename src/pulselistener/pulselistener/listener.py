@@ -7,9 +7,9 @@ from cli_common.log import get_logger
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.pulse import run_consumer
 from cli_common.utils import retry
-from shipit_pulse_listener import task_monitoring
-from shipit_pulse_listener.hook import Hook
-from shipit_pulse_listener.hook import PulseHook
+from pulselistener import task_monitoring
+from pulselistener.hook import Hook
+from pulselistener.hook import PulseHook
 
 logger = get_logger(__name__)
 
