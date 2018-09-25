@@ -7,7 +7,7 @@ import base64
 import os
 
 import cli_common.taskcluster
-import releng_notification_policy.config
+import notification_policy.config
 
 DEBUG = bool(os.environ.get('DEBUG', False))
 
@@ -28,7 +28,7 @@ if not DEBUG:
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
-    releng_notification_policy.config.PROJECT_NAME,
+    notification_policy.config.PROJECT_NAME,
     required=required,
     existing={x: os.environ.get(x) for x in required if x in os.environ},
     taskcluster_client_id=os.getenv('TASKCLUSTER_CLIENT_ID'),

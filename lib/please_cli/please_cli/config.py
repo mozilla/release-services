@@ -79,7 +79,7 @@ PROJECTS_CONFIG = {
             'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
-    'releng-notification-policy': {
+    'notification/policy': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -201,7 +201,7 @@ PROJECTS_CONFIG = {
             'tokens/api',
             'treestatus/api',
             'mapper/api',
-            'releng-notification-policy',
+            'notification/policy',
             'releng-notification-identity',
         ],
         'deploys': [

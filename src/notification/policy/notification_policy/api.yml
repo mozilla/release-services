@@ -23,7 +23,7 @@ paths:
   '/message':
     get:
       summary: Return all pending notification messages
-      operationId : releng_notification_policy.api.get_pending_messages
+      operationId : notification_policy.api.get_pending_messages
 
       responses:
         200:
@@ -49,7 +49,7 @@ paths:
   '/message/{uid}':
     get:
       summary: Get details about the notification policies for message with specified UID.
-      operationId: releng_notification_policy.api.get_message_by_uid
+      operationId: notification_policy.api.get_message_by_uid
       parameters:
         - name: uid
           in: path
@@ -71,7 +71,7 @@ paths:
 
     put:
       summary: Add a new notification message to the service.
-      operationId: "releng_notification_policy.api.put_message"
+      operationId: "notification_policy.api.put_message"
       parameters:
         - name: uid
           in: path
@@ -101,7 +101,7 @@ paths:
 
     delete:
       summary: End the notification policy.
-      operationId: releng_notification_policy.api.delete_message
+      operationId: notification_policy.api.delete_message
       parameters:
         - name: uid
           in: path
@@ -121,7 +121,7 @@ paths:
   '/policy/{identity_name}':
     get:
       summary: Return all active policies related to this identity.
-      operationId: releng_notification_policy.api.get_active_policies_for_identity
+      operationId: notification_policy.api.get_active_policies_for_identity
       parameters:
         - name: identity_name
           in: path
@@ -139,7 +139,7 @@ paths:
   '/ticktock':
     post:
       summary: Hook endpoint to take action on pending policies.
-      operationId: releng_notification_policy.api.post_tick_tock
+      operationId: notification_policy.api.post_tick_tock
       responses:
         404:
           description: No pending policies to trigger.
