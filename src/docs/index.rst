@@ -30,8 +30,7 @@ Projects
     docs <projects/docs>
     releng-frontend <projects/releng-frontend>
     mapper <projects/mapper>
-    releng-notification-identity <projects/releng-notification-identity>
-    releng-notification-policy <projects/releng-notification-policy>
+    notification <projects/notification>
     tooltool <projects/tooltool>
     treestatus <projects/treestatus>
     codecoverage/bot <projects/codecoverage-bot>
