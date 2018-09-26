@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import tempfile
+import urllib
 
 import awscli.clidriver
 import cli_common.cli
@@ -184,7 +185,7 @@ def cmd_S3(ctx,
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
             aws = awscli.clidriver.create_clidriver().main
             if subfolder:
-                subfolder = '/' + subfolder
+                subfolder = urllib.parse.urljoin('/', subfolder)
             result = aws([
                 's3',
                 'sync',
