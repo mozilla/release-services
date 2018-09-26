@@ -193,7 +193,7 @@ def cmd_S3(ctx,
                 '--delete',
                 '--acl', 'public-read',
                 tmp_dir,
-                's3://{}' + s3_bucket + subfolder,
+                's3://' + s3_bucket + subfolder,
             ])
         please_cli.utils.check_result(
             result,
