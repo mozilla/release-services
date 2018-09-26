@@ -42,7 +42,7 @@ log = cli_common.log.get_logger(__name__)
     '--subfolder',
     required=False,
     type=str,
-    default=None,
+    default='',
     )
 @click.option(
     '--nix-path-attribute',
