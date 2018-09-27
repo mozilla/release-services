@@ -153,9 +153,11 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
     assert len(issues) == 2
     assert isinstance(issues[0], ClangTidyIssue)
     assert issues[0].check == 'modernize-use-nullptr'
+    assert issues[0].reason == 'Modernize our code base to C++11'
     assert issues[0].line == 3
     assert isinstance(issues[1], ClangTidyIssue)
     assert issues[1].check == 'modernize-use-nullptr'
+    assert issues[1].reason == 'Modernize our code base to C++11'
     assert issues[1].line == 8
 
     # Ensure the raw output dump exists
