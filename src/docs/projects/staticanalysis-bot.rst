@@ -36,7 +36,31 @@ Once logged on Taskcluster, please check that you can view the contents of the T
 
 This secret holds the configuration for all the services, you can look at the ``staticanalysis/bot`` section for more details.
 
-If you need to make some changes to this secret, create a copy of this secret in your own namespace; and use its name everywhere the ``master`` secret is mentioned in this documentation.
+If you don't have access to that secret, or you need to make some changes to it, you can create a new secret under the "garbage" namespace (publicly visible to anyone); and use its name everywhere the ``master`` secret is mentioned in this documentation.
+
+For example, you can create a secret called ``garbage/LOGIN/staticanalysis-bot-dev`` with this value:
+
+.. code-block:: yaml
+
+  common:
+    APP_CHANNEL: master
+  static-analysis-bot:
+    ANALYZERS:
+      - clang-tidy
+      - clang-format
+      - infer
+      - mozlint
+    PHABRICATOR:
+      url: 'https://phabricator-dev.allizom.org/api/'
+      api_key: api-YOURTOKEN
+    REPORTERS:
+      - reporter: mail
+        emails:
+          - YOUR@EMAIL.COM
+      - reporter: phabricator
+
+Just replace ``LOGIN`` with your username (e.g. ``michel``); ``api-YOURTOKEN`` with a new Conduit API Token from `Phabricator-dev https://phabricator-dev.allizom.org/settings/`_ (hint: on Bugzilla-dev, you can just "Sign in with GitHub"); and ``YOUR@EMAIL.COM`` with your email address.
+
 
 2. Taskcluster client
 """""""""""""""""""""
@@ -47,20 +71,24 @@ Use the form to create a new client in your own namespace (the ``ClientId`` shou
 
 Add an explicit description, you can leave the ``Expires`` setting into the far future.
 
-Add the Taskcluster scope needed to read the secret previously mentioned: ``secrets:get:repo:github.com/mozilla-releng/services:branch:master``
+Add the Taskcluster scope needed to read the secret previously mentioned: ``secrets:get:repo:github.com/mozilla-releng/services:branch:master`` (or ``secrets:get:garbage/michel/staticanalysis-bot-dev`` if you're using your own secret)
 
-To summarize, you need to setup your client (if your login is ``bastien``), like this:
+You may also want to add the scope needed to send you an email report: ``notify:email:michel@email.com`` (if your email is ``michel@email.com``)
+
+To summarize, you need to setup your client (if your login is ``michel``), like this:
 
 ============= ====================================================================
 Key           Value
 ============= ====================================================================
-ClientId      ``mozilla-auth0/ad|Mozilla-LDAP|bastien/static-analysis-dev``
+ClientId      ``mozilla-auth0/ad|Mozilla-LDAP|michel/static-analysis-dev``
 Description   My own static analysis dev. client
 Client Scopes ``secrets:get:repo:github.com/mozilla-releng/services:branch:master``
+              ``notify:email:michel@email.com``
 ============= ====================================================================
 
 
 .. warning::
+
   Save the **access token** provided by Taskcluster after creating your client, it won't be displayed afterwards
 
 
@@ -72,7 +100,7 @@ Run the following (where ``XXX`` is the Taskcluster access token):
 .. code-block:: shell
 
   ./please shell staticanalysis/bot \
-    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|bastien/static-analysis-dev" \
+    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|michel/static-analysis-dev" \
     --taskcluster-access-token=XXX
 
 Once the initial build finishes, you should get a green Nix shell, running in ``/app/src/staticanalysis/bot``.
