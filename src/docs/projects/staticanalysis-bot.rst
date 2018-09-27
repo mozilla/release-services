@@ -77,50 +77,8 @@ Run the following (where ``XXX`` is the Taskcluster access token):
 
 Once the initial build finishes, you should get a green Nix shell, running in ``/app/src/staticanalysis/bot``.
 
-4. Setup a Mozreview test
-"""""""""""""""""""""""""
 
-.. note::
-  Make sure your Taskcluster secret has a ``mozreview`` reporter setup, as follows (with a valid ReviewBoard url, username and api_key):
-
-  .. code-block:: yaml
-
-    staticanalysis/bot:
-      ...
-      REPORTERS:
-        - reporter: mozreview
-          url: 'https://reviewboard.mozilla.org/'
-          username: XXXX@mozilla.com
-          api_key: YYYYY
-
-
-The bot needs an environment variable ``MOZREVIEW`` with the following information:
-
-* the Mozreview mercurial revision of the patch to analyze (named ``<HG_SHA>`` here),
-* the Mozreview Review ID (named ``<MOZREVIEW_ID>`` here), 
-* the Mozreview Diff ID (named ``<MOZREVIEW_DIFF>`` here).
-
-So you'll need to do the following in the nix shell:
-
-.. code-block:: shell
-  
-  export MOZREVIEW="<HG_SHA>:<MOZREVIEW_ID>:<MOZREVIEW_DIFF>"
-
-Here is an example with this `Mozreview <https://reviewboard.mozilla.org/r/164530/>`_:
-
-1. You can get ``<MOZREVIEW_ID>`` straight from the url (``164530`` here)
-2. The Mercurial hash is in the first code sample (``hg pull -r ...``, so ``<HG_SHA>`` is : ``308c22e7899048467002de4ffb126cac0875c994``)
-3. To get the ``<MOZREVIEW_DIFF>``, click on the Diff tab, then you'll see the last diff of this patch (in this case it is diff 7)
-
-So the command would be:
-
-.. code-block:: shell
-  
-  export MOZREVIEW="308c22e7899048467002de4ffb126cac0875c994:164530:7"
-
-
-
-5. Setup a Phabricator test
+4. Setup a Phabricator test
 """""""""""""""""""""""""""
 
 
@@ -137,13 +95,12 @@ So the command would be:
           api_key: api-XXXX
 
 
-
 The bot needs an environment variable ``PHABRICATOR`` containing the PHID of the diff to be reviewed.
 
 So you'll need to do the following in the nix shell:
 
 .. code-block:: shell
-  
+
   export PHABRICATOR="<DIFF_PHID>"
 
 Here is an example with this `Phabricator Diff review <https://phabricator-dev.allizom.org/D41>`_:
@@ -158,11 +115,11 @@ Here is an example with this `Phabricator Diff review <https://phabricator-dev.a
 Here is the final command line:
 
 .. code-block:: shell
-  
+
   export PHABRICATOR="PHID-DIFF-b5wsvctabxjmwqonwryv"
 
 
-6. Run the bot
+5. Run the bot
 """"""""""""""
 
 Finally, you can run the bot with this command (in the Nix Shell):
@@ -170,7 +127,9 @@ Finally, you can run the bot with this command (in the Nix Shell):
 .. code-block:: shell
 
   mkdir -p /app/tmp
-  staticanalysis/bot \
+  static-analysis-bot \
+    --source=phabricator \
+    --id=$PHABRICATOR \
     --taskcluster-secret=repo:github.com/mozilla-releng/services:branch:master \
     --cache-root=/app/tmp
 
