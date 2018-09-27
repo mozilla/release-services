@@ -1,9 +1,7 @@
 fs = require('fs');
 
 const envs = {
-    //XXX once migrate away from using in code configuration we remove CONFIG env
-    CONFIG: process.env.CONFIG || 'staging',
-    SHIPIT_WORKFLOW_URL: process.env.SHIPIT_WORKFLOW_URL,
+    SHIPIT_API_URL: process.env.SHIPIT_API_URL,
     RELEASE_CHANNEL: process.env.RELEASE_CHANNEL,
     RELEASE_VERSION: process.env.RELEASE_VERSION,
     SENTRY_DSN: process.env.SENTRY_DSN || null,
