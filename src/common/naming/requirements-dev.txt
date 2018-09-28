@@ -1,0 +1,18 @@
+# linting
+flake8
+flake8-coding
+flake8-copyright
+flake8-debugger
+flake8-isort
+flake8-mypy
+flake8-quotes
+
+# testing
+codecov
+coveralls
+pytest
+pytest-cov
+
+# develop
+pdbpp
+ipdb
