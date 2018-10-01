@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-notification-policy";
   dirname = "notification_policy";
-  src_path = "notification/policy";
+  src_path = "src/notification/policy";
 
   self = mkBackend {
     inherit python name dirname src_path;
