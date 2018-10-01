@@ -27,17 +27,20 @@ Release schedule is published in `Release Services calendar`_.
 Protocol that we follow is:
 
 
-1. Push to staging branch
--------------------------
+1. Push to staging channel
+--------------------------
 
-Prior to release a push to ``staging`` branch must happen. This will
-trigger a deploy of all projects to staging environments.
+A day before pushing to production (usually on Wednesday morning), we push
+release services code to **staging channel**.
+
+To trigger automatic deployment of all project to staging channel you need to
+**force push** from ``master`` to ``staging`` branch.
 
 .. code-block:: console
 
-     $ git clone git@github.com:mozilla/release-services.git
-     $ cd release-services
-     $ git push -f origin origin/master:staging
+     git clone git@github.com:mozilla/release-services.git
+     cd release-services
+     git push -f origin origin/master:staging
 
 
 2. Verify projects on production
