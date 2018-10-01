@@ -203,13 +203,28 @@ in skipOverrides {
 
   "pytest-cov" = self: old: {
     patchPhase = ''
-      sed -i -e "s|pytest>=2.6.0|pytest|" setup.py
+      sed -i \
+        -e "s|pytest>=2.6.0|pytest|" \
+        -e "s|pytest>=2.9|pytest|" \
+        setup.py
     '';
   };
 
   "python-dateutil" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
+    '';
+  };
+
+  "python-jose" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+    '';
+  };
+
+  "rsa" = self: old: {
+    patchPhase = ''
+      echo "" > README.md
     '';
   };
 

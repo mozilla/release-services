@@ -28,7 +28,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-treestatus-api";
   dirname = "treestatus_api";
-  src_path = "treestatus/api";
+  src_path = "src/treestatus/api";
 
   self = mkBackend {
     inherit python name dirname src_path;

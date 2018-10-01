@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-tokens-api";
   dirname = "tokens_api";
-  src_path = "tokens/api";
+  src_path = "src/tokens/api";
 
   self = mkBackend {
     inherit python name dirname src_path;

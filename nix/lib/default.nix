@@ -475,6 +475,7 @@ in rec {
             export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
             pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
             rm -rf ./node_modules
+            ${releng_pkgs.pkgs.yarn}/bin/yarn install
             ${releng_pkgs.pkgs.yarn}/bin/yarn upgrade
             popd
           '';

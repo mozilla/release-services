@@ -22,7 +22,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-mapper-api";
   dirname = "mapper_api";
-  src_path = "mapper/api";
+  src_path = "src/mapper/api";
 
   self = mkBackend {
     inherit python name dirname src_path;
