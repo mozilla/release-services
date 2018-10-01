@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-notification-identity";
   dirname = "notification_identity";
-  src_path = "notification/identity";
+  src_path = "src/notification/identity";
 
   self = mkBackend {
     inherit python name dirname src_path;
