@@ -1,3 +1,6 @@
 -r ./../../../lib/backend_common/requirements-dev.txt
 
 aresponses
+# pytest-asyncio is a dependency of aresponses, but source tarball does not
+# include LICENSE file so we need to pin it manually
+https://github.com/pytest-dev/pytest-asyncio/archive/v0.9.0.tar.gz#egg=pytest-asyncio
