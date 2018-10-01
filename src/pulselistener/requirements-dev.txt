@@ -1,3 +1,4 @@
 -r ./../../lib/cli_common/requirements-dev.txt
 
 pytest-asyncio
+https://github.com/pytest-dev/pytest-asyncio/archive/v0.9.0.tar.gz#egg=pytest-asyncio
