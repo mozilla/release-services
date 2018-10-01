@@ -1,20 +1,30 @@
-.. _deploy-weekly-releases:
+.. _deploy-regular:
 
-Regular weekly releases
-=======================
+Regular releases
+================
 
-Push to production happen in weekly batches. Once a week (usually on Thursday)
-a release happens.
+Push to production happens in regular batches. Usually every second week,
+starting on Wednesday (testing on staging) and final deployment to production
+on Thursday.
 
 .. _deploy-release-managers:
 
-Current administrators that perform this weekly release are:
+Current administrators that perform regular releases are:
 
 - `Rok Garbas`_
 - `Bastien Abadie`_
 - `Rail Aliiev`_
+- `Jan Keromnes`_
 
-Protocal that we follow is:
+Release schedule is published in `Release Services calendar`_.
+
+.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
+.. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
+.. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
+.. _`Jan Keromnes`: https://phonebook.mozilla.org/?search/Jan%20Keromnes
+.. _`Release Services calendar`: https://calendar.google.com/calendar/embed?src=mozilla.com_sq62ki4vs3cgpclvkdbhe3rgic%40group.calendar.google.com
+
+Protocol that we follow is:
 
 
 #. Prior to release a push to ``staging`` branch must happen. This will
