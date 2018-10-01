@@ -22,7 +22,7 @@ ipdb
 # tests dependencies
 Logbook
 aioamqp
-click
+Click
 mozdef-client
 python-dateutil<2.7.0,>=2.1
 python-hglib

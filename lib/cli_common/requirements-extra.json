@@ -7,14 +7,14 @@
     ],
     "cli": [
         "Logbook",
-        "click",
+        "Click",
         "mozdef-client",
         "raven",
         "structlog"
     ],
     "command": [
         "Logbook",
-        "click",
+        "Click",
         "mozdef-client",
         "raven",
         "structlog"
@@ -35,7 +35,7 @@
     ],
     "taskcluster": [
         "Logbook",
-        "click",
+        "Click",
         "mozdef-client",
         "raven",
         "structlog",
