@@ -38,12 +38,21 @@ def setup(index, job_name='linux64-infer', revision='latest',
     '''
     if job_name == 'linux64-infer':
         jobs = [
-            {'job-name': 'linux64-infer', 'artifact': 'public/build/infer.tar.xz',
-                'namespace': 'gecko.v2.autoland.latest.static-analysis.linux64-infer'},
-            {'job-name': 'linux64-android-sdk-linux-repack', 'artifact': 'project/gecko/android-sdk/android-sdk-linux.tar.xz',
-                'namespace': 'gecko.cache.level-1.toolchains.v2.linux64-android-sdk-linux-repack.latest'},
-            {'job-name': 'linux64-android-ndk-linux-repack', 'artifact': 'project/gecko/android-ndk/android-ndk.tar.xz',
-                'namespace': 'gecko.cache.level-1.toolchains.v2.linux64-android-ndk-linux-repack.latest'}
+            {
+                'job-name': 'linux64-infer',
+                'artifact': 'public/build/infer.tar.xz',
+                'namespace': 'gecko.v2.autoland.latest.static-analysis.linux64-infer'
+            },
+            {
+                'job-name': 'linux64-android-sdk-linux-repack',
+                'artifact': 'project/gecko/android-sdk/android-sdk-linux.tar.xz',
+                'namespace': 'gecko.cache.level-1.toolchains.v2.linux64-android-sdk-linux-repack.latest'
+            },
+            {
+                'job-name': 'linux64-android-ndk-linux-repack',
+                'artifact': 'project/gecko/android-ndk/android-ndk.tar.xz',
+                'namespace': 'gecko.cache.level-1.toolchains.v2.linux64-android-ndk-linux-repack.latest'
+            }
         ]
 
         for element in jobs:
