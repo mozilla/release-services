@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-tooltool-api";
   dirname = "tooltool_api";
-  src_path = "tooltool/api";
+  src_path = "src/tooltool/api";
   version = fileContents ./VERSION;
 
   mkCronJob = { schedule, command }:
