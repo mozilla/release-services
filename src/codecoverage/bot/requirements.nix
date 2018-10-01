@@ -87,6 +87,21 @@ let
   python = withPackages {};
 
   generated = self: {
+    "Click" = python.mkDerivation {
+      name = "Click-7.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/f8/5c/f60e9d8a1e77005f664b76ff8aeaee5bc05d0a91798afd7f53fc998dbc47/Click-7.0.tar.gz"; sha256 = "5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://palletsprojects.com/p/click/";
+        license = licenses.bsdOriginal;
+        description = "Composable command line interface toolkit";
+      };
+    };
+
     "Logbook" = python.mkDerivation {
       name = "Logbook-1.4.0";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/36/4b/b610bee18d5cfc4cec7dde056639994e9b34991e4c57816bfff0f3d0ac33/Logbook-1.4.0.tar.gz"; sha256 = "3c0a3ebd48e89fcdd725fe393eb9226c789dca5a4e7842d65e2f256645fd1cd9"; };
@@ -222,8 +237,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.8";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/65/49/212aae4e83e81a46f992243f499e520be42c0ff992472f6a649d4905f800/boto3-1.9.8.tar.gz"; sha256 = "d8f9aa40e30ea166ca7e67fe2db15b3d2c41fd2f4a308e4c10f607980ea7ce65"; };
+      name = "boto3-1.9.13";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/88/65/53a5dcd23c9185ae54e89289ffc427e13412afd563093d6e9a6a75ce4533/boto3-1.9.13.tar.gz"; sha256 = "67e89880fceedab0dc922b42206affd19bc52dd8bc113e56e1354b40fff4f4ea"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -241,8 +256,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.8";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/3f/94/37c4286d9ec89ee5296095c29754594c0433586ceccccf8e76627223226c/botocore-1.12.8.tar.gz"; sha256 = "38ee0fbc13a22b904d0e573ac78b4dbc5c3eb633ace76a08959086307a664234"; };
+      name = "botocore-1.12.13";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/09/08/4315f1eff0e3b81952316f1442cbc62bceab997afc9cb86c9566849f4194/botocore-1.12.13.tar.gz"; sha256 = "d3a286aaa63c3388afb49feb36b61992dd37c735462c8b40add79c48bd845bc7"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -287,21 +302,6 @@ let
         homepage = "https://github.com/chardet/chardet";
         license = licenses.lgpl2;
         description = "Universal encoding detector for Python 2 and 3";
-      };
-    };
-
-    "click" = python.mkDerivation {
-      name = "click-6.7";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/95/d9/c3336b6b5711c3ab9d1d3a80f1a3e2afeb9d8c02a7166462f6cc96570897/click-6.7.tar.gz"; sha256 = "f15516df478d5a56180fbf80e68f206010e6d160fc39fa508b65e035fd75130b"; };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://github.com/mitsuhiko/click";
-        license = licenses.bsdOriginal;
-        description = "A simple wrapper around optparse for powerful command line utilities.";
       };
     };
 
@@ -354,8 +354,8 @@ let
     };
 
     "coveralls" = python.mkDerivation {
-      name = "coveralls-1.5.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b4/2f/aa954703728177258a935b766004f7504b9a4ff8c8aec0adee3d311feec2/coveralls-1.5.0.tar.gz"; sha256 = "9dee67e78ec17b36c52b778247762851c8e19a893c9a14e921a2fc37f05fac22"; };
+      name = "coveralls-1.5.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/d2/4a/d0966ab522988667a9f23886dcec5cc029f1eb9848843466fbd2bb7a37fb/coveralls-1.5.1.tar.gz"; sha256 = "ab638e88d38916a6cedbf80a9cd8992d5fa55c77ab755e262e00b36792b7cd6d"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -608,8 +608,8 @@ let
     };
 
     "ipython" = python.mkDerivation {
-      name = "ipython-6.5.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1a/76/0b51dc7dd3a801477d00e6db065f50cce9fe5bdbea3c911fce62c9f02c23/ipython-6.5.0.tar.gz"; sha256 = "b0f2ef9eada4a68ef63ee10b6dde4f35c840035c50fd24265f8052c98947d5a4"; };
+      name = "ipython-7.0.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/5b/e3/4b3082bd7f6908af828561b0129b5064bff4a13e6acadb321fc2d939a605/ipython-7.0.1.tar.gz"; sha256 = "9fed506c3772c875a3048bc134a25e6f5e997b1569b2636f6a5d891f34cbfd46"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -772,9 +772,9 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."Click"
       self."Logbook"
       self."aioamqp"
-      self."click"
       self."mozdef-client"
       self."python-dateutil"
       self."python-hglib"
@@ -890,8 +890,8 @@ let
     };
 
     "pickleshare" = python.mkDerivation {
-      name = "pickleshare-0.7.4";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/69/fe/dd137d84daa0fd13a709e448138e310d9ea93070620c9db5454e234af525/pickleshare-0.7.4.tar.gz"; sha256 = "84a9257227dfdd6fe1b4be1319096c20eb85ff1e82c7932f36efccfe1b09737b"; };
+      name = "pickleshare-0.7.5";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/d8/b6/df3c1c9b616e9c0edbc4fbab6ddd09df9535849c64ba51fcb6531c32d4d8/pickleshare-0.7.5.tar.gz"; sha256 = "87683d47965c1da65cdacaf31c8441d12b8044cdec9aca500cd78fc2c683afca"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -920,8 +920,8 @@ let
     };
 
     "prompt-toolkit" = python.mkDerivation {
-      name = "prompt-toolkit-1.0.15";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/8a/ad/cf6b128866e78ad6d7f1dc5b7f99885fb813393d9860778b2984582e81b5/prompt_toolkit-1.0.15.tar.gz"; sha256 = "858588f1983ca497f1cf4ffde01d978a3ea02b01c8a26a8bbc5cd2e66d816917"; };
+      name = "prompt-toolkit-2.0.4";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/77/bf/5d7664605c91db8f39a3e49abb57a3c933731a90b7a58cdcafd4a9bcbe97/prompt_toolkit-2.0.4.tar.gz"; sha256 = "ff58ce8bb82c11c43416dd3eec7701dcbe8c576e2d7649f1d2b9d21a2fd93808"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -998,8 +998,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.8.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/bf/4f/3cc568e63e2e68de369bfb76758db3aa168e34976fcc87fdfb2c19c645d9/pytest-3.8.0.tar.gz"; sha256 = "a8a07f84e680482eb51e244370aaf2caa6301ef265f37c2bdefb3dd3b663f99d"; };
+      name = "pytest-3.8.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/22/77/8dba15a7ec756b040e82bc216120d19dffb5f4a1e4f896822fd3a45bd0a8/pytest-3.8.1.tar.gz"; sha256 = "95529588ff4e85114a0b0ad8e9cf0131ca47d46b28230e25366c5aba66b1d854"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
