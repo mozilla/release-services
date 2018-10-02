@@ -55,12 +55,10 @@ class CodeCov(object):
             self.github_revision = uploader.get_latest_codecov()
             self.revision = self.githubUtils.git_to_mercurial(self.github_revision)
             self.from_pulse = False
-            suites_to_ignore = []
         else:
             self.github_revision = None
             self.revision = revision
             self.from_pulse = True
-            suites_to_ignore = ['awsy', 'talos']
             self.notifier = Notifier(self.repo_dir, revision, client_id, access_token)
 
         logger.info('Mercurial revision', revision=self.revision)
@@ -70,7 +68,7 @@ class CodeCov(object):
             'windows': taskcluster.get_task('mozilla-central', self.revision, 'win'),
         }
 
-        self.artifactsHandler = ArtifactsHandler(task_ids, suites_to_ignore, self.artifacts_dir)
+        self.artifactsHandler = ArtifactsHandler(task_ids, self.artifacts_dir)
 
     def clone_mozilla_central(self, revision):
         shared_dir = self.repo_dir + '-shared'
