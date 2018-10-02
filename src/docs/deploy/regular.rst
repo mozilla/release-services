@@ -101,34 +101,27 @@ The role of the release manager is that it ensures that all projects are
 verified and tested before deploying to production.
 
 
-4. Announce new deployment
---------------------------
+5. Announce new deployment to teams that help us monitor projects
+-----------------------------------------------------------------
 
-Announce that new deployment to production is going to happen
+.. todo:: This step wont be needed once `#1568`_ is implemented
 
-- announce in ``#ci`` channel that a push to production is about to
-  happen.
+Once all project have been tested successfully on staging only then we can
+proceed further.
 
-  Example message::
+Announce that deployment to production is going to happen shortly:
 
-      I am about to release a new version of mozilla/release-services
-      (*.mozilla-releng.net, *.moz.tools). Any alerts coming up soon will be
-      best directed to me. I'll let you know when it's all done. Thank you!
+- on ``#ci`` IRC channel. when
+- and on ``#moc`` IRC channel
 
-- inform MOC person on duty (in ``#moc`` channel) that new deployment of
-  ``mozilla/release-services`` is going to be happen. The channel subject
-  should contain ``on duty sysadmin:`` followed by the IRC nickname you need
-  to contact.
+You can use the following message:::
 
-  Example message::
+  I am about to release a new version of mozilla/release-services (*.mozilla-releng.net, *.moz.tools). Any alerts coming up soon will be best directed to me. I'll let you know when it's all done. Thank you!
 
-      nickname: I am about to release a new version of
-      mozilla/release-services (*.mozilla-releng.net, *.moz.tools). Any
-      alerts coming up soon will be best directed to me. I'll let you know
-      when it's all done. Thank you!
+.. _`#1568`: https://github.com/mozilla/release-services/issues/1568
 
 
-5. Start production deployment
+6. Start production deployment
 ------------------------------
 
 Push to ``production``. Create a merge commit of master branch and tag it.
