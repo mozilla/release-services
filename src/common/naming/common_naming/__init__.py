@@ -20,7 +20,7 @@ class Project:
 
     @property
     def python_distribution_name(self):
-        return f'mozilla-release-{LETTERS.sub(\'-\', self.name)}'
+        return f'mozilla-release-{LETTERS.sub("-", self.name)}'
 
     @property
     def flask_app_name(self):
