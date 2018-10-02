@@ -117,10 +117,11 @@ Once the initial build finishes, you should get a green Nix shell, running in ``
 
     staticanalysis/bot:
       ...
+      PHABRICATOR:
+        url: 'https://phabricator-dev.allizom.org/api/'
+        api_key: api-XXXX
       REPORTERS:
         - reporter: phabricator
-          url: 'https://phabricator-dev.allizom.org/api/'
-          api_key: api-XXXX
 
 
 The bot needs an environment variable ``PHABRICATOR`` containing the PHID of the diff to be reviewed.
