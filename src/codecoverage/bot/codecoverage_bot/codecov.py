@@ -13,15 +13,15 @@ from cli_common.command import run_check
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from cli_common.utils import ThreadPoolExecutorResult
-from code_coverage_bot import chunk_mapping
-from code_coverage_bot import grcov
-from code_coverage_bot import taskcluster
-from code_coverage_bot import uploader
-from code_coverage_bot.artifacts import ArtifactsHandler
-from code_coverage_bot.github import GitHubUtils
-from code_coverage_bot.notifier import Notifier
-from code_coverage_bot.secrets import secrets
-from code_coverage_bot.zero_coverage import ZeroCov
+from codecoverage_bot import chunk_mapping
+from codecoverage_bot import grcov
+from codecoverage_bot import taskcluster
+from codecoverage_bot import uploader
+from codecoverage_bot.artifacts import ArtifactsHandler
+from codecoverage_bot.github import GitHubUtils
+from codecoverage_bot.notifier import Notifier
+from codecoverage_bot.secrets import secrets
+from codecoverage_bot.zero_coverage import ZeroCov
 
 logger = get_logger(__name__)
 
@@ -181,8 +181,8 @@ class CodeCov(object):
             # Given that all tasks have the same rank, the latest task that finishes will
             # overwrite the "latest" entry.
             namespaces = [
-                'project.releng.services.project.{}.code_coverage_bot.{}'.format(secrets[secrets.APP_CHANNEL], self.revision),
-                'project.releng.services.project.{}.code_coverage_bot.latest'.format(secrets[secrets.APP_CHANNEL]),
+                'project.releng.services.project.{}.codecoverage_bot.{}'.format(secrets[secrets.APP_CHANNEL], self.revision),
+                'project.releng.services.project.{}.codecoverage_bot.latest'.format(secrets[secrets.APP_CHANNEL]),
             ]
 
             for namespace in namespaces:

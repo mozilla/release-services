@@ -8,7 +8,7 @@ import pytest
 import requests
 import responses
 
-from code_coverage_bot import taskcluster
+from codecoverage_bot import taskcluster
 
 
 @responses.activate

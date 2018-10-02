@@ -2,7 +2,7 @@
 
 import responses
 
-from code_coverage_bot.github import GitHubUtils
+from codecoverage_bot.github import GitHubUtils
 
 
 @responses.activate

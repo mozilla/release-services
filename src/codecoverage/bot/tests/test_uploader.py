@@ -4,7 +4,7 @@ import pytest
 import requests
 import responses
 
-from code_coverage_bot import uploader
+from codecoverage_bot import uploader
 
 
 @responses.activate

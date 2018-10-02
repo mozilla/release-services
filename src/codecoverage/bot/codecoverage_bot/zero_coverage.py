@@ -7,8 +7,8 @@ import pytz
 import requests
 
 from cli_common.log import get_logger
-from code_coverage_bot import grcov
-from code_coverage_bot import hgmo
+from codecoverage_bot import grcov
+from codecoverage_bot import hgmo
 
 logger = get_logger(__name__)
 

@@ -5,8 +5,8 @@ import requests
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from cli_common.utils import retry
-from code_coverage_bot import hgmo
-from code_coverage_bot.secrets import secrets
+from codecoverage_bot import hgmo
+from codecoverage_bot.secrets import secrets
 
 logger = get_logger(__name__)
 

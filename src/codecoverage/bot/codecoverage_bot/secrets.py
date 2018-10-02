@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common.taskcluster import get_secrets
-from code_coverage_bot import config
+from codecoverage_bot import config
 
 
 class Secrets(dict):

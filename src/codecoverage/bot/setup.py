@@ -28,13 +28,13 @@ with open('VERSION') as f:
 
 
 setuptools.setup(
-    name='code_coverage_bot',
+    name='codecoverage_bot',
     version=VERSION,
     description='Listens to bugzilla entries, executes'
     'some static analysis and reports results.',
     author='Mozilla Release Management',
     author_email='release-mgmt-analysis@mozilla.com',
-    url='https://shipit.mozilla-releng.net',
+    url='https://docs.mozilla-releng.net/projects/codecoverage.html#bot',
     tests_require=read_requirements('requirements-dev.txt'),
     install_requires=read_requirements('requirements.txt'),
     packages=setuptools.find_packages(),
@@ -43,7 +43,7 @@ setuptools.setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'code-coverage-bot = code_coverage_bot.cli:main',
+            'code-coverage-bot = codecoverage_bot.cli:main',
         ]
     },
 )

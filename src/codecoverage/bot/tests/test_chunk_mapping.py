@@ -7,7 +7,7 @@ import tarfile
 import pytest
 import responses
 
-from code_coverage_bot import chunk_mapping
+from codecoverage_bot import chunk_mapping
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def fake_artifacts_handler(grcov_artifact, jsvm_artifact, grcov_existing_file_ar
             elif platform == 'linux' and chunk == 'chunk2':
                 return [jsvm_artifact]  # toolkit/components/osfile/osfile.jsm
             elif platform == 'windows' and chunk == 'chunk1':
-                return [grcov_existing_file_artifact]  # code_coverage_bot/cli.py
+                return [grcov_existing_file_artifact]  # codecoverage_bot/cli.py
             elif platform == 'windows' and chunk == 'chunk2':
                 return [grcov_uncovered_function_artifact]  # js/src/jit/JIT.cpp
 
@@ -166,7 +166,7 @@ def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo):
 
         assert_file_to_chunk(c, 'js/src/jit/BitSet.cpp', 'linux', 'chunk1')
         assert_file_to_chunk(c, 'toolkit/components/osfile/osfile.jsm', 'linux', 'chunk2')
-        assert_file_to_chunk(c, 'code_coverage_bot/cli.py', 'windows', 'chunk1')
+        assert_file_to_chunk(c, 'codecoverage_bot/cli.py', 'windows', 'chunk1')
         assert_file_to_chunk(c, 'js/src/jit/JIT.cpp', 'windows', 'chunk2')
 
         assert_chunk_to_test(c, 'linux', 'marionette-headless', ['marionette-test1'])

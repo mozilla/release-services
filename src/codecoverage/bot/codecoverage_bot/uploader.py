@@ -5,7 +5,7 @@ import requests
 
 from cli_common import utils
 from cli_common.log import get_logger
-from code_coverage_bot.secrets import secrets
+from codecoverage_bot.secrets import secrets
 
 logger = get_logger(__name__)
 
