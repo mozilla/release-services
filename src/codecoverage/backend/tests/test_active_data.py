@@ -11,7 +11,7 @@ async def test_available_revisions(mock_secrets, mock_active_data):
     '''
     Test last available revisions from Elastic Search cluster
     '''
-    from code_coverage_backend.services.active_data import ActiveDataCoverage
+    from codecoverage_backend.services.active_data import ActiveDataCoverage
     activeDataCoverage = ActiveDataCoverage()
     revs = await activeDataCoverage.available_revisions()
 
@@ -25,7 +25,7 @@ async def test_latest_build(mock_secrets, mock_active_data):
     '''
     Test latest build availables from Elastic Search cluster
     '''
-    from code_coverage_backend.services.active_data import ActiveDataCoverage
+    from codecoverage_backend.services.active_data import ActiveDataCoverage
     activeDataCoverage = ActiveDataCoverage()
     latest_rev, previous_rev = await activeDataCoverage.get_latest_build()
 
@@ -38,7 +38,7 @@ async def test_list_tests_invalid(mock_secrets, mock_active_data):
     '''
     Test latest build availables from Elastic Search cluster
     '''
-    from code_coverage_backend.services.active_data import ActiveDataCoverage
+    from codecoverage_backend.services.active_data import ActiveDataCoverage
     activeDataCoverage = ActiveDataCoverage()
 
     nb, tests = await activeDataCoverage.list_tests('dummy', 'test.cpp')
@@ -51,7 +51,7 @@ async def test_list_tests_valid(mock_secrets, mock_active_data):
     '''
     Test latest build availables from Elastic Search cluster
     '''
-    from code_coverage_backend.services.active_data import ActiveDataCoverage
+    from codecoverage_backend.services.active_data import ActiveDataCoverage
     activeDataCoverage = ActiveDataCoverage()
 
     nb, tests = await activeDataCoverage.list_tests('2d83e1843241d869a2fc5cf06f96d3af44c70e70', 'js/src/jsutil.cpp')
@@ -68,7 +68,7 @@ async def test_file_coverage(mock_secrets, mock_active_data):
     '''
     Test file coverage API from Elastic Search cluster
     '''
-    from code_coverage_backend.services.active_data import ActiveDataCoverage
+    from codecoverage_backend.services.active_data import ActiveDataCoverage
     activeDataCoverage = ActiveDataCoverage()
 
     file_coverage = await activeDataCoverage.get_file_coverage('2d83e1843241d869a2fc5cf06f96d3af44c70e70', 'js/src/jsutil.cpp')

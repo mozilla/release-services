@@ -11,8 +11,8 @@ from elasticsearch_async import AsyncElasticsearch
 from esFrontLine.client.async import AsyncHawkConnection
 
 from cli_common import log
-from code_coverage_backend import secrets
-from code_coverage_backend.services.base import Coverage
+from codecoverage_backend import secrets
+from codecoverage_backend.services.base import Coverage
 
 logger = log.get_logger(__name__)
 

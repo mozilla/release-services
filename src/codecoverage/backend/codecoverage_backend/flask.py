@@ -5,6 +5,6 @@
 
 from __future__ import absolute_import
 
-import code_coverage_backend
+import codecoverage_backend
 
-app = code_coverage_backend.create_app()
+app = codecoverage_backend.create_app()

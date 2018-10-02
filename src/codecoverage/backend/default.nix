@@ -10,7 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-code-coverage-backend";
-  dirname = "code_coverage_backend";
+  dirname = "codecoverage_backend";
 
   self = mkBackend rec {
     inherit python name dirname;
@@ -29,7 +29,7 @@ let
       mkdir -p $out/bin
       cp ${src}/launch.sh $out/bin
       chmod +x $out/bin/launch.sh
-      cp ${src}/code_coverage_backend/worker.py $out/bin/code_coverage_backend_worker
+      cp ${src}/codecoverage_backend/worker.py $out/bin/codecoverage_backend_worker
     '';
     passthru = {
       update = writeScript "update-${name}" ''
