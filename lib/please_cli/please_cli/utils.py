@@ -81,6 +81,9 @@ class ClickCustomCommand(click.Command):
 class ClickCustomGroup(click.Group, ClickCustomCommand):
     """A custom click group Command which doesn't indent help and epilog text.
     """
+    def format_usage(self, ctx, formatter):
+        pieces = self.collect_usage_pieces(ctx)
+        formatter.write_usage('./please', ' '.join(pieces))
 
     def format_options(self, ctx, formatter):
         ClickCustomCommand.format_options(self, ctx, formatter)
