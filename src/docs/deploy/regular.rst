@@ -162,14 +162,12 @@ The role of the release manager is that it ensures that all projects are
 verified and tested before deploying to production.
 
 
-7. Write release notes
-----------------------
+8. Write the release notes
+--------------------------
 
-Fill in the release notes on GitHub
+`Create the release notes`_ on GitHub and use tag we created in step 7.
 
-`New GitHub Release`_
-
-If the previous release was done on 2017/05/04 then a good starting point might be
+A good starting point for writing release notes is:
 
 .. code-block:: console
 
@@ -177,6 +175,8 @@ If the previous release was done on 2017/05/04 then a good starting point might 
         | cut -d' ' -f2- \
         | sort \
         | grep -v 'setup: bumping to'
+
+.. _`Create the release notes`: https://github.com/mozilla/release-services/releases/new
 
 
 8. Bump version
@@ -254,6 +254,5 @@ ensure that docker base image created in previous steps is working.
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
 .. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
 .. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
-.. _`New GitHub Release`: https://github.com/mozilla/release-services/releases/new
 .. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
 .. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction
