@@ -41,9 +41,7 @@ If you see a problem in this automated review, please report it here: {bug_repor
 '''
 COMMENT_DIFF_DOWNLOAD = '''
 
-A full diff for the formatting issues found by clang-format is provided here: {url}
-
-You can use it in your repository with `hg import` or `git apply`
+For your convenience, here is a patch that fixes all the clang-format defects (use it in your repository with `hg import` or `git apply`): {url}
 '''
 
 
@@ -139,10 +137,10 @@ class Reporter(object):
             defects='\n'.join(defects),
             analyzers='\n'.join(analyzers),
         )
-        comment += BUG_REPORT.format(bug_report_url=bug_report_url)
         if ClangFormatIssue in stats and diff_url is not None:
             comment += COMMENT_DIFF_DOWNLOAD.format(
                 url=diff_url,
             )
+        comment += BUG_REPORT.format(bug_report_url=bug_report_url)
 
         return comment
