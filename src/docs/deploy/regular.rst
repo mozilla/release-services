@@ -121,21 +121,27 @@ You can use the following message:::
 .. _`#1568`: https://github.com/mozilla/release-services/issues/1568
 
 
-6. Start production deployment
-------------------------------
+6. Deploy projects to production
+--------------------------------
 
-Push to ``production``. Create a merge commit of master branch and tag it.
-Don't forget to push just created tag.
+To deploy all project to production we need to push respected code to
+``production`` branch. We also need to tag the commit with version of the
+deployment, which can be found in ``./VERSION`` file.
+
+You can follow below command to help you push correctly.
 
 .. code-block:: console
 
     $ git clone git@github.com/mozilla/release-services.git
     $ cd release-services
-    $ git checkout -b production origin/production
-    $ git merge master -m "Release: v$(git show master:VERSION)"
-    $ git push origin production
+    $ git push origin origin/staging:production
     $ git tag v$(cat ./VERSION)
     $ git push origin v$(cat ./VERSION)
+
+Once deployment starts record the taskcluster graph to the tracking Pull
+Request of the deployment as shown below.
+
+.. image:: step_6_taskcluster_graph_link.png
 
 
 6. Verify projects on production
