@@ -72,26 +72,35 @@ You should provide `<LINK_TASKCLUSTER_GRAPH>` which you can find under Commit st
 
 .. image:: step_3_page_listing_commits_of_staging_branch.png
 
+Also copy past link to tracking Pull Request of the deployment under respective
+build number as shown bellow.
+
+
+.. image:: step_3_taskcluster_graph_link.png
+
 .. -`#1565`: https://github.com/mozilla/release-services/issues/1565
 
 
-4. Verify projects on staging
------------------------------
+4. Verify if projects are working on staging
+--------------------------------------------
 
-Verify that all the production projects in staging that they are functioning
-properly. Each project should have a list of steps that you can easily
-verify that a deployment was sucessful.
+Before we push to production, we verify that projects are working on staging.
 
- .. todo:: ref to list of production projects.
- .
-Example: :ref:`verify tooltool/api project <verify-tooltool-api>`
+Each project is verified and reported back to the tracking Pull Request of
+the release. This Pull Request is usually open by the end of previous release.
 
-Only proceed further once production projects work in staging environment.
+Each project should have a verification guide, which you can follow in their
+documentation page.
 
-.. todo:: explain that some projects are only enabled on staging, but you
-          only need to check projects which are enabled on production.
+Once you verify that the project works on staging, you must check it off in
+tracking Pull Request for this deployment, as shown bellow.
 
+.. image:: step_4_verified_project_on_staging.png
   
+The role of the release manager is that it ensures that all projects are
+verified and tested before deploying to production.
+
+
 4. Announce new deployment
 --------------------------
 
