@@ -43,8 +43,22 @@ To trigger automatic deployment of all project to staging channel you need to
      git push -f origin origin/master:staging
 
 
-2. Verify projects on production
---------------------------------
+2. Close staging branch
+-----------------------
+
+Once the code you wish to deploy to production is pushed to staging branch, you
+need to make sure nobody else can push to staging branch.
+
+To do this you need to `go to Github`_ and mark staging branch as protected, by
+removing `-unprotected` suffix as shown bellow.
+
+.. image:: step_2_staging_branch_settings_page.png
+
+.. _`go to Github`: https://github.com/mozilla/release-services/settings/branch_protection_rules/2244704
+
+
+3. Verify projects on staging 
+-----------------------------
 
 Verify that all the production projects in staging that they are functioning
 properly. Each project should have a list of steps that you can easily
@@ -60,7 +74,7 @@ Only proceed further once production projects work in staging environment.
           only need to check projects which are enabled on production.
 
   
-3. Announce new deployment
+4. Announce new deployment
 --------------------------
 
 Announce that new deployment to production is going to happen
@@ -87,7 +101,7 @@ Announce that new deployment to production is going to happen
       when it's all done. Thank you!
 
 
-4. Start production deployment
+5. Start production deployment
 ------------------------------
 
 Push to ``production``. Create a merge commit of master branch and tag it.
@@ -104,7 +118,7 @@ Don't forget to push just created tag.
     $ git push origin v$(cat ./VERSION)
 
 
-5. Verify projects on production
+6. Verify projects on production
 --------------------------------
 
 Verify that all production projects are now deployed and working properly in
@@ -116,7 +130,7 @@ Example: :ref:`verify tooltool/api project <verify-tooltool-api>`
 .. todo:: need to explain how to revert when a deployment goes bad.
 
 
-6. Write release notes
+7. Write release notes
 ----------------------
 
 Fill in the release notes on GitHub
@@ -133,7 +147,7 @@ If the previous release was done on 2017/05/04 then a good starting point might 
         | grep -v 'setup: bumping to'
 
 
-7. Bump version
+8. Bump version
 ---------------
 
 **DO NOT** push upstream just yet.
@@ -147,7 +161,7 @@ If the previous release was done on 2017/05/04 then a good starting point might 
     $ mv VERSION2 VERSION
 
 
-8. Push new base image for new version
+9. Push new base image for new version
 --------------------------------------
 
 .. code-block:: console
@@ -168,8 +182,8 @@ image is quite big (~1.5GB). When it fails you can only retrigger the
     $ docker push mozillareleng/services:base-$(cat ./VERSION)
 
 
-9. Commit the version bump
---------------------------
+10. Commit the version bump
+---------------------------
 
 Once base image is pushed to docker hub, commit the version bump and push it
 to upstream repository.
@@ -183,7 +197,7 @@ Make sure that commit gets properly build before proceeding. This will
 ensure that docker base image created in previous steps is working.
 
 
-10. Announce that deployment to production is done
+11. Announce that deployment to production is done
 --------------------------------------------------
 
 - announce in ``#ci`` channel that a push to production is complete.
