@@ -132,11 +132,11 @@ You can follow below command to help you push correctly.
 
 .. code-block:: console
 
-    $ git clone git@github.com/mozilla/release-services.git
-    $ cd release-services
-    $ git push origin origin/staging:production
-    $ git tag v$(cat ./VERSION)
-    $ git push origin v$(cat ./VERSION)
+    git clone git@github.com/mozilla/release-services.git
+    cd release-services
+    git push origin origin/staging:production
+    git tag v$(cat ./VERSION)
+    git push origin v$(cat ./VERSION)
 
 Once deployment starts record the taskcluster graph to the tracking Pull
 Request of the deployment as shown below.
@@ -184,7 +184,7 @@ A good starting point for writing release notes is:
 
 .. code-block:: console
 
-    $ git log --oneline v$((($(cat VERSION)) - 1)).. HEAD \
+    git log --oneline v$((($(cat VERSION)) - 1)).. HEAD \
         | cut -d' ' -f2- \
         | sort \
         | grep -v 'setup: bumping to'
@@ -192,60 +192,57 @@ A good starting point for writing release notes is:
 .. _`Create the release notes`: https://github.com/mozilla/release-services/releases/new
 
 
-8. Bump version
----------------
+10. Push new base image
+-----------------------
 
-**DO NOT** push upstream just yet.
+This step will take some time (~30-60min) also good Internet connection is
+required.
 
-.. code-block:: console
+.. warning:: This step currently doesn't work. Please ping @garbas to do this
+             instead of you (for now).
 
-    $ git clone git@github.com/mozilla/release-services.git
-    $ cd release-services
-    $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
-    $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
-    $ mv VERSION2 VERSION
-
-
-9. Push new base image for new version
---------------------------------------
+- First we need to create a temporary branch
+- Then apply the tracking Pull Request of deployment to the temporary branch
+- And then we build new base image
+- At the end we can get rid of temporary branch
 
 .. code-block:: console
 
-    $ ./please -vv tools base-image \
-         --taskcluster-client-id="..." \
-         --taskcluster-access-token="..."
-
-Docker username and password you get in `staging secrets`_ or `production
-secrets`_ secrets.
-
+    git clone git@github.com/mozilla/release-services.git
+    cd release-services
+    git checkout -b temp origin/staging
+    curl -L https://github.com/mozilla/release-services/pull/<PR_NUMBER>.patch | git am
+    ./please -vv tools base-image \
+        --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
+        --taskcluster-client-id="..." \
+        --taskcluster-access-token="..."
+    git branch -D temp
+   
 It might happen that push to docker hub will fail since the resulting docker
 image is quite big (~1.5GB). When it fails you can only retrigger the
 ``docker push`` command.
 
 .. code-block:: console
 
-    $ docker push mozillareleng/services:base-$(cat ./VERSION)
+    docker push mozillareleng/services:base-$(cat ./VERSION)
 
 
-10. Commit the version bump
----------------------------
+11. Bump version
+----------------
 
-Once base image is pushed to docker hub, commit the version bump and push it
-to upstream repository.
+Once base image is pushed to Docker Hub we can merged tracking Pull Request of
+this deployment. Before that, hit **Update branch** button to re-trigger Taskcluster
+builds, which would verify if above created base image is working correctly.
+
+If Taskcluster build for the Pull Request turns out green feel free to merge it and
+bump the version with it.
+
+All we need to do now is create a new Pull Request and bump the version.
 
 .. code-block:: console
 
-    $ git commit VERSION .taskcluster.yml -m "setup: bumping to v$(cat ./VERSION)"
-    $ git push origin master
-
-Make sure that commit gets properly build before proceeding. This will
-ensure that docker base image created in previous steps is working.
-
-
-
-
-.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
-.. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
-.. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
-.. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
-.. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction
+    git clone git@github.com/mozilla/release-services.git
+    cd release-services
+    echo "$((($(cat VERSION)) + 1))" | tee VERSION2
+    sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
+    mv VERSION2 VERSION
