@@ -162,7 +162,20 @@ The role of the release manager is that it ensures that all projects are
 verified and tested before deploying to production.
 
 
-8. Write the release notes
+8. Announce that deployment to production is done
+-------------------------------------------------
+
+Announce that deployment to production is done:
+
+- on ``#ci`` IRC channel. when
+- and on ``#moc`` IRC channel
+
+You can use the following message:::
+
+  Previously annonced release of mozilla/release-services (*.mozilla-releng.net, *.moz.tools) to productions is now complete. If you see anything behaving weird please let me know.
+
+
+9. Write the release notes
 --------------------------
 
 `Create the release notes`_ on GitHub and use tag we created in step 7.
@@ -229,26 +242,6 @@ Make sure that commit gets properly build before proceeding. This will
 ensure that docker base image created in previous steps is working.
 
 
-11. Announce that deployment to production is done
---------------------------------------------------
-
-- announce in ``#ci`` channel that a push to production is complete.
-
-  Example message::
-
-      Previously annonced release of mozilla/release-services
-      (*.mozilla-releng.net, *.moz.tools) to productions is now complete. If
-      you see anything behaving weird please let me know. Changes ->
-      <link-to-release-notes>.
-
-- inform MOC person on duty (in ``#moc`` channel) that deployment of
-  ``mozilla/release-services`` is complete.
-
-  Example message::
-
-      nickname: Previously annonced release of mozilla/release-services
-      (*.mozilla-releng.net, *.moz.tools) to productions is now complete.
-      Changes -> <link-to-release-notes>.
 
 
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
