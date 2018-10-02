@@ -144,16 +144,22 @@ Request of the deployment as shown below.
 .. image:: step_6_taskcluster_graph_link.png
 
 
-6. Verify projects on production
---------------------------------
+7. Verify if projects are working on production
+-----------------------------------------------
 
-Verify that all production projects are now deployed and working properly in
-production environment. Use the same checks as we did before when we were
-checking if projects are working on staging, but now use production URLs.
+Each project is verified and reported back to the tracking Pull Request of
+the release. This Pull Request is usually open by the end of previous release.
 
-Example: :ref:`verify tooltool/api project <verify-tooltool-api>`
+Each project should have a verification guide, which you can follow in their
+documentation page.
 
-.. todo:: need to explain how to revert when a deployment goes bad.
+Once you verify that the project works on production, you must check it off in
+tracking Pull Request for this deployment, as shown bellow.
+
+.. image:: step_7_verified_project_on_production.png
+  
+The role of the release manager is that it ensures that all projects are
+verified and tested before deploying to production.
 
 
 7. Write release notes
