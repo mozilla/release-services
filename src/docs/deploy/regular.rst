@@ -38,9 +38,9 @@ To trigger automatic deployment of all project to staging channel you need to
 
 .. code-block:: console
 
-     git clone git@github.com:mozilla/release-services.git
-     cd release-services
-     git push -f origin origin/master:staging
+  git clone git@github.com:mozilla/release-services.git
+  cd release-services
+  git push -f origin origin/master:staging
 
 
 2. Close staging branch
@@ -57,7 +57,25 @@ removing `-unprotected` suffix as shown bellow.
 .. _`go to Github`: https://github.com/mozilla/release-services/settings/branch_protection_rules/2244704
 
 
-3. Verify projects on staging 
+3. Notify about to start staging deployment
+-------------------------------------------
+
+.. todo:: This step is not going to be needed once we finish `#1565`_
+
+To coordinate and inform others please send a message to others in ``#release-services`` IRC channel.
+
+::
+
+  I have pushed to staging branch. Until tomorrow, when we deploy to production, staging branch is closed. You can follow the progress at <LINK_TASKCLUSTER_GRAPH>.
+
+You should provide `<LINK_TASKCLUSTER_GRAPH>` which you can find under Commit status icon on staging branch, example is shown bellow.
+
+.. image:: step_3_page_listing_commits_of_staging_branch.png
+
+.. -`#1565`: https://github.com/mozilla/release-services/issues/1565
+
+
+4. Verify projects on staging
 -----------------------------
 
 Verify that all the production projects in staging that they are functioning
