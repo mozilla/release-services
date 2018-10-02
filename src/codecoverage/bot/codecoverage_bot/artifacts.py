@@ -4,7 +4,7 @@ import time
 
 from cli_common.log import get_logger
 from cli_common.utils import ThreadPoolExecutorResult
-from code_coverage_bot import taskcluster
+from codecoverage_bot import taskcluster
 
 logger = get_logger(__name__)
 
