@@ -1,7 +1,7 @@
 Welcome to Release Services
 ===========================
 
-This repository contains various Mozilla *Release Engineering Services* used in
+This repository contains various Mozilla *Release Engineering and Management Services* used in
 our Continous Integration and Release Automation.
 
 :Documentation: https://docs.mozilla-releng.net
