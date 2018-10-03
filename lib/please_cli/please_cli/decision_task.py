@@ -40,7 +40,7 @@ def get_build_task(index,
     ]
 
     nix_path_attributes = [project]
-    deployments = please_cli.config.PROJECTS_CONFIG[project]['deploys']
+    deployments = please_cli.config.PROJECTS_CONFIG[project].get('deploys', [])
     for deployment in deployments:
         for channel in deployment['options']:
             if 'nix_path_attribute' in deployment['options'][channel]:
