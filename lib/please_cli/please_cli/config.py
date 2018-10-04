@@ -65,6 +65,7 @@ PROJECTS += DEV_PROJECTS
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
+    'common/naming': {},
     'postgresql': {
         'run': 'POSTGRESQL',
         'run_options': {
