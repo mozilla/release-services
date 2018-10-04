@@ -25,13 +25,10 @@ def mock_secrets():
     '''
     import cli_common.taskcluster
     cli_common.taskcluster.get_secrets = unittest.mock.Mock(return_value={
-        'ESFRONTLINE': {
+        'ACTIVE_DATA': {
             'url': 'http://mock-active-data:8000',
-            'user': {
-                'algorithm': 'sha256',
-                'id': 'test@allizom.org',
-                'key': 'dummySecret',
-            },
+            'user': 'test@allizom.org',
+            'password': 'dummySecret',
         },
         'PHABRICATOR_TOKEN': 'api-correct',
     })
