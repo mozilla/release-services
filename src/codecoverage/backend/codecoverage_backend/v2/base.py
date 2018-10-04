@@ -3,11 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from elasticsearch import Elasticsearch
-from esFrontLine.client.sync import HawkConnection
 
 from cli_common import log
-from code_coverage_backend import secrets
-from code_coverage_backend.services.active_data import ActiveDataCoverage
+from codecoverage_backend import secrets
+from codecoverage_backend.services.active_data import ActiveDataCoverage
 
 logger = log.get_logger(__name__)
 
@@ -26,10 +25,13 @@ class ActiveData(object):
 
     def __init__(self):
         try:
+            conf = secrets.ACTIVE_DATA
             self.client = Elasticsearch(
-                hosts=[secrets.ESFRONTLINE['url']],
-                connection_class=HawkConnection,
-                hawk_credentials=secrets.ESFRONTLINE['user'],
+                hosts=[conf['url'], ],
+                http_auth=(
+                    conf['user'],
+                    conf['password'],
+                )
             )
         except Exception as e:
             logger.warn('ES client failure: {}'.format(e))

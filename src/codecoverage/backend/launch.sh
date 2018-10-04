@@ -1,5 +1,5 @@
 #!/bin/sh
 
-python /bin/code_coverage_backend_worker &
-python /bin/code_coverage_backend_worker &
-gunicorn code_coverage_backend.flask:app --log-file -
+python /bin/codecoverage_backend_worker &
+python /bin/codecoverage_backend_worker &
+gunicorn codecoverage_backend.flask:app --log-file -

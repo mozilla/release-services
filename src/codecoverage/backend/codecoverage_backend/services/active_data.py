@@ -8,11 +8,10 @@ import itertools
 
 from async_lru import alru_cache
 from elasticsearch_async import AsyncElasticsearch
-from esFrontLine.client.async import AsyncHawkConnection
 
 from cli_common import log
-from code_coverage_backend import secrets
-from code_coverage_backend.services.base import Coverage
+from codecoverage_backend import secrets
+from codecoverage_backend.services.base import Coverage
 
 logger = log.get_logger(__name__)
 
@@ -22,10 +21,13 @@ class ActiveDataClient():
     Active data async client, through Elastic Search
     '''
     def __init__(self):
+        conf = secrets.ACTIVE_DATA
         self.client = AsyncElasticsearch(
-            hosts=[secrets.ESFRONTLINE['url']],
-            connection_class=AsyncHawkConnection,
-            hawk_credentials=secrets.ESFRONTLINE['user'],
+            hosts=[conf['url'], ],
+            http_auth=(
+                conf['user'],
+                conf['password'],
+            )
         )
 
     async def __aenter__(self):

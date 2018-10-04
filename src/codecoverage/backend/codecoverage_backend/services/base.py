@@ -8,7 +8,7 @@ from abc import abstractmethod
 import aiohttp
 from async_lru import alru_cache
 
-from code_coverage_backend.services import secrets
+from codecoverage_backend.services import secrets
 
 
 class Coverage(ABC):

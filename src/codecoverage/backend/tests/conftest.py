@@ -25,13 +25,10 @@ def mock_secrets():
     '''
     import cli_common.taskcluster
     cli_common.taskcluster.get_secrets = unittest.mock.Mock(return_value={
-        'ESFRONTLINE': {
+        'ACTIVE_DATA': {
             'url': 'http://mock-active-data:8000',
-            'user': {
-                'algorithm': 'sha256',
-                'id': 'test@allizom.org',
-                'key': 'dummySecret',
-            },
+            'user': 'test@allizom.org',
+            'password': 'dummySecret',
         },
         'PHABRICATOR_TOKEN': 'api-correct',
     })
@@ -39,7 +36,7 @@ def mock_secrets():
 
 @pytest.fixture(scope='function')
 def mock_secrets_bad_phabricator_token(mock_secrets):
-    import code_coverage_backend.secrets as s
+    import codecoverage_backend.secrets as s
     old = s.PHABRICATOR_TOKEN
     s.PHABRICATOR_TOKEN = 'api-bad-token'
     yield
@@ -49,13 +46,13 @@ def mock_secrets_bad_phabricator_token(mock_secrets):
 @pytest.fixture()
 def app(mock_secrets):
     '''
-    Load code_coverage_backend app in test mode
+    Load codecoverage_backend app in test mode
     '''
-    import code_coverage_backend
+    import codecoverage_backend
 
     config = backend_common.testing.get_app_config({
     })
-    app = code_coverage_backend.create_app(config)
+    app = codecoverage_backend.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)
