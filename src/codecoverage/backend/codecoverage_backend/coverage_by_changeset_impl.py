@@ -28,12 +28,12 @@ async def generate(changeset):
         if not coverage_supported(path):
             return None
 
+        # Retrieve coverage data.
+        coverage_future = coverage_service.get_file_coverage(build_changeset, path)
+
         # Retrieve annotate data.
         async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-annotate/{}/{}'.format(build_changeset, path)) as r:
             annotate_future = r.json()
-
-            # Retrieve coverage data.
-            coverage_future = coverage_service.get_file_coverage(build_changeset, path)
 
             # Use hg annotate to report lines in their correct positions and to avoid
             # reporting lines that have been modified by a successive patch in the same push.
@@ -43,7 +43,7 @@ async def generate(changeset):
                 return None
             annotate = data['annotate']
 
-            coverage = await coverage_future
+        coverage = await coverage_future
 
         # If we don't have coverage for this file, we skip it.
         if coverage is None:
@@ -56,7 +56,10 @@ async def generate(changeset):
             if data['node'][:len(changeset)] != changeset:
                 continue
 
+            # The line number at the build changeset.
             new_line = data['lineno']
+            # The line number at the changeset (that is, when it was introduced).
+            orig_line = data['targetline']
 
             if new_line not in coverage or coverage[new_line] is None:
                 # We have no coverage information for this line (e.g. a definition, like
@@ -69,7 +72,7 @@ async def generate(changeset):
 
             changes.append({
                 'coverage': covered,
-                'line': data['targetline'],
+                'line': orig_line,
             })
 
         return {
