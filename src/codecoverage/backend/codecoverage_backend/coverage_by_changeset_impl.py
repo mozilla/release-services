@@ -7,10 +7,10 @@ import asyncio
 
 import aiohttp
 
-from code_coverage_backend.coverage import coverage_supported
-from code_coverage_backend.coverage import get_coverage_build
-from code_coverage_backend.services import coverage_service
-from code_coverage_backend.services.base import get_github_commit
+from codecoverage_backend.coverage import coverage_supported
+from codecoverage_backend.coverage import get_coverage_build
+from codecoverage_backend.services import coverage_service
+from codecoverage_backend.services.base import get_github_commit
 
 
 async def generate(changeset):

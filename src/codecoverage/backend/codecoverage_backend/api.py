@@ -9,12 +9,12 @@ from rq import Queue
 
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.phabricator import revision_exists_on_central
-from code_coverage_backend import coverage
-from code_coverage_backend import coverage_by_changeset_impl
-from code_coverage_backend import coverage_for_file_impl
-from code_coverage_backend import coverage_summary_by_changeset_impl
-from code_coverage_backend import secrets
-from code_coverage_backend.worker import conn
+from codecoverage_backend import coverage
+from codecoverage_backend import coverage_by_changeset_impl
+from codecoverage_backend import coverage_for_file_impl
+from codecoverage_backend import coverage_summary_by_changeset_impl
+from codecoverage_backend import secrets
+from codecoverage_backend.worker import conn
 
 q = Queue(connection=conn)
 

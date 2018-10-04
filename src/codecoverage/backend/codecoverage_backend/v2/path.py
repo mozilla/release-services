@@ -3,8 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from cli_common import log
-from code_coverage_backend.services.active_data import ActiveDataCoverage
-from code_coverage_backend.v2.base import active_data
+from codecoverage_backend.services.active_data import ActiveDataCoverage
+from codecoverage_backend.v2.base import active_data
 
 logger = log.get_logger(__name__)
 

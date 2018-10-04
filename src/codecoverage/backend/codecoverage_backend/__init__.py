@@ -6,15 +6,15 @@
 from __future__ import absolute_import
 
 import os
-import code_coverage_backend.config
+import codecoverage_backend.config
 
 
 def create_app(config=None):
     import backend_common
 
     app = backend_common.create_app(
-        project_name=code_coverage_backend.config.PROJECT_NAME,
-        app_name=code_coverage_backend.config.APP_NAME,
+        project_name=codecoverage_backend.config.PROJECT_NAME,
+        app_name=codecoverage_backend.config.APP_NAME,
         config=config,
         extensions=[
             'log',

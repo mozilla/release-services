@@ -6,11 +6,11 @@
 import os
 
 import cli_common.taskcluster
-import code_coverage_backend.config
+import codecoverage_backend.config
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
-    code_coverage_backend.config.PROJECT_NAME,
+    codecoverage_backend.config.PROJECT_NAME,
     required=['ESFRONTLINE', 'PHABRICATOR_TOKEN'],
     existing={x: os.environ.get(x) for x in ['REDIS_URL'] if x in os.environ},
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),

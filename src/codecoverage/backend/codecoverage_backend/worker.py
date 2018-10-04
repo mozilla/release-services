@@ -8,7 +8,7 @@ from rq import Connection
 from rq import Queue
 from rq import SimpleWorker
 
-from code_coverage_backend import secrets
+from codecoverage_backend import secrets
 
 conn = redis.from_url(secrets.REDIS_URL)
 

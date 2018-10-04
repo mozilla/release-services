@@ -6,8 +6,8 @@ from elasticsearch import Elasticsearch
 from esFrontLine.client.sync import HawkConnection
 
 from cli_common import log
-from code_coverage_backend import secrets
-from code_coverage_backend.services.active_data import ActiveDataCoverage
+from codecoverage_backend import secrets
+from codecoverage_backend.services.active_data import ActiveDataCoverage
 
 logger = log.get_logger(__name__)
 
