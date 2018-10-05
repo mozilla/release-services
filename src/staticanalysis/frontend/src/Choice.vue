@@ -8,11 +8,11 @@
     </div>
     <div class="dropdown-menu" id="dropdown-menu" role="menu">
       <div class="dropdown-content">
-        <a href="#" class="dropdown-item" v-on:click="$emit('new-choice', null)">
+        <a href="#" class="dropdown-item" v-on:click="select(null)">
           {{ default_choice_name }}
         </a>
         <hr class="dropdown-divider">
-        <a href="#" class="dropdown-item" v-for="choice in choices" v-on:click="$emit('new-choice', choice)">
+        <a href="#" class="dropdown-item" v-for="choice in choices" v-on:click="select(choice)">
           {{ choice.name }}
         </a>
       </div>
@@ -23,9 +23,19 @@
 <script>
 export default {
   props: {
-    'current': Object,
     'name': String,
     'choices': Array
+  },
+  data: function () {
+    return {
+      current: null
+    }
+  },
+  methods: {
+    select: function (choice) {
+      this.current = choice
+      this.$emit('new-choice', choice)
+    }
   },
   computed: {
     default_choice_name: function () {

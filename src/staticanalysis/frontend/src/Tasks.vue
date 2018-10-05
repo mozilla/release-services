@@ -13,7 +13,24 @@ export default {
   data: function () {
     return {
       filters: {
-        state: null
+        state: null,
+        issues: null
+      },
+      choices: {
+        issues: [
+          {
+            name: 'No issues',
+            func: t => t.data.issues === undefined || t.data.issues === 0
+          },
+          {
+            name: 'Has issues',
+            func: t => t.data.issues && t.data.issues > 0
+          },
+          {
+            name: 'Publishable issues',
+            func: t => t.data.issues_publishable && t.data.issues_publishable > 0
+          }
+        ]
       }
     }
   },
@@ -24,12 +41,20 @@ export default {
     tasks () {
       let tasks = this.$store.state.tasks
 
-      // Choice by states
+      // Filter by states
       if (this.filters.state !== null) {
         tasks = _.filter(tasks, t => t.state_full === this.filters.state.key)
       }
 
+      // Filter by issues
+      if (this.filters.issues !== null) {
+        tasks = _.filter(tasks, this.filters.issues.func)
+      }
+
       return tasks
+    },
+    tasks_total () {
+      return this.$store.state.tasks ? this.$store.state.tasks.length : 0
     },
     states () {
       return this.$store.state.states
@@ -47,7 +72,7 @@ export default {
           <progress class="progress" :class="{'is-danger': state.key.startsWith('error'), 'is-success': state.key == 'done', 'is-info': state.key != 'done' && !state.key.startsWith('error')}" :value="state.percent" max="100">{{ state.percent }}%</progress>
         </div>
         <div class="column is-one-third">
-          <strong>{{ state.name }}</strong> - <span class="has-text-grey-light">{{ state.nb }}/{{ tasks.length }} tasks or {{ state.percent }}%</span>
+          <strong>{{ state.name }}</strong> - <span class="has-text-grey-light">{{ state.nb }}/{{ tasks_total }} tasks or {{ state.percent }}%</span>
         </div>
       </div>
     </div>
@@ -58,9 +83,11 @@ export default {
           <td>#</td>
           <td>Revision</td>
           <td>
-            <Choice :choices="states" :current="filters.state" name="state" v-on:new-choice="filters.state = $event"/>
+            <Choice :choices="states" name="state" v-on:new-choice="filters.state = $event"/>
           </td>
-          <td>Nb. Issues</td>
+          <td>
+            <Choice :choices="choices.issues" name="issue" v-on:new-choice="filters.issues = $event"/>
+          </td>
           <td>Indexed</td>
           <td>Actions</td>
         </tr>
