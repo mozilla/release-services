@@ -1,16 +1,37 @@
 <script>
 import mixins from './mixins.js'
+import _ from 'lodash'
 
 export default {
   mounted () {
     this.$store.dispatch('load_index')
   },
+  data: function () {
+    return {
+      filters: {
+        state: null
+      }
+    }
+  },
   mixins: [
     mixins.date
   ],
+  methods: {
+    filter_state: function (state) {
+      // Save filter locally
+      this.filters.state = state
+    }
+  },
   computed: {
     tasks () {
-      return this.$store.state.tasks
+      let tasks = this.$store.state.tasks
+
+      // Filter by states
+      if (this.filters.state !== null) {
+        tasks = _.filter(tasks, t => t.state_full === this.filters.state.key)
+      }
+
+      return tasks
     },
     states () {
       return this.$store.state.states
@@ -22,7 +43,7 @@ export default {
 <template>
   <section>
 
-    <div class="states" v-if="tasks.length > 0">
+    <div class="states" >
       <div class="state columns" v-for="state in states">
         <div class="column is-one-third">
           <progress class="progress" :class="{'is-danger': state.key.startsWith('error'), 'is-success': state.key == 'done', 'is-info': state.key != 'done' && !state.key.startsWith('error')}" :value="state.percent" max="100">{{ state.percent }}%</progress>
@@ -38,7 +59,27 @@ export default {
         <tr>
           <td>#</td>
           <td>Revision</td>
-          <td>State</td>
+          <td>
+            <div class="dropdown is-hoverable">
+              <div class="dropdown-trigger">
+                <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
+                  <span v-if="filters.state === null">All states</span>
+                  <span v-else>{{ filters.state.name }}</span>
+                </button>
+              </div>
+              <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                <div class="dropdown-content">
+                  <a href="#" class="dropdown-item" v-on:click="filter_state(null)">
+                    All states
+                  </a>
+                  <hr class="dropdown-divider">
+                  <a href="#" class="dropdown-item" v-for="state in states" v-on:click="filter_state(state)">
+                    {{ state.name }}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </td>
           <td>Nb. Issues</td>
           <td>Indexed</td>
           <td>Actions</td>
