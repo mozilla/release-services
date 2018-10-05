@@ -1,10 +1,14 @@
 <script>
 import mixins from './mixins.js'
 import _ from 'lodash'
+import Choice from './Choice.vue'
 
 export default {
   mounted () {
     this.$store.dispatch('load_index')
+  },
+  components: {
+    Choice: Choice
   },
   data: function () {
     return {
@@ -16,17 +20,11 @@ export default {
   mixins: [
     mixins.date
   ],
-  methods: {
-    filter_state: function (state) {
-      // Save filter locally
-      this.filters.state = state
-    }
-  },
   computed: {
     tasks () {
       let tasks = this.$store.state.tasks
 
-      // Filter by states
+      // Choice by states
       if (this.filters.state !== null) {
         tasks = _.filter(tasks, t => t.state_full === this.filters.state.key)
       }
@@ -60,25 +58,7 @@ export default {
           <td>#</td>
           <td>Revision</td>
           <td>
-            <div class="dropdown is-hoverable">
-              <div class="dropdown-trigger">
-                <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
-                  <span v-if="filters.state === null">All states</span>
-                  <span v-else>{{ filters.state.name }}</span>
-                </button>
-              </div>
-              <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                <div class="dropdown-content">
-                  <a href="#" class="dropdown-item" v-on:click="filter_state(null)">
-                    All states
-                  </a>
-                  <hr class="dropdown-divider">
-                  <a href="#" class="dropdown-item" v-for="state in states" v-on:click="filter_state(state)">
-                    {{ state.name }}
-                  </a>
-                </div>
-              </div>
-            </div>
+            <Choice :choices="states" :current="filters.state" name="state" v-on:new-choice="filters.state = $event"/>
           </td>
           <td>Nb. Issues</td>
           <td>Indexed</td>
