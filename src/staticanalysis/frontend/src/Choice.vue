@@ -8,11 +8,11 @@
     </div>
     <div class="dropdown-menu" id="dropdown-menu" role="menu">
       <div class="dropdown-content">
-        <a href="#" class="dropdown-item" v-on:click="select(null)">
+        <a href="#" class="dropdown-item" v-on:click="select(null)" :class="{'is-active': current === null }">
           {{ default_choice_name }}
         </a>
         <hr class="dropdown-divider">
-        <a href="#" class="dropdown-item" v-for="choice in choices" v-on:click="select(choice)">
+        <a href="#" class="dropdown-item" v-for="choice in choices" v-on:click="select(choice)" :class="{'is-active': current === choice }">
           {{ choice.name }}
         </a>
       </div>

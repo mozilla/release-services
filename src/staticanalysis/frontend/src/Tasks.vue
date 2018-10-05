@@ -14,7 +14,8 @@ export default {
     return {
       filters: {
         state: null,
-        issues: null
+        issues: null,
+        revision: null
       },
       choices: {
         issues: [
@@ -51,6 +52,14 @@ export default {
         tasks = _.filter(tasks, this.filters.issues.func)
       }
 
+      // Filter by revision
+      if (this.filters.revision !== null) {
+        tasks = _.filter(tasks, t => {
+          let payload = t.data.title + t.data.bugzilla_id + t.data.phid + t.data.diff_phid
+          return payload.toLowerCase().indexOf(this.filters.revision.toLowerCase()) !== -1
+        })
+      }
+
       return tasks
     },
     tasks_total () {
@@ -81,7 +90,9 @@ export default {
       <thead>
         <tr>
           <td>#</td>
-          <td>Revision</td>
+          <td>
+            <input class="input" type="text" v-model="filters.revision" placeholder="Filter using phabricator, bugzilla Id or word, ..."/>
+          </td>
           <td>
             <Choice :choices="states" name="state" v-on:new-choice="filters.state = $event"/>
           </td>
@@ -158,5 +169,9 @@ div.states div.column {
 
 div.states div.column progress {
   margin-top: 0.3rem;
+}
+
+div.table input.input {
+  display: inline-block;
 }
 </style>
