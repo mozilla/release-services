@@ -9,6 +9,7 @@ from code_coverage_bot import taskcluster
 logger = get_logger(__name__)
 
 
+SUITES_TO_IGNORE = ['awsy', 'talos']  # Ignore awsy and talos as they aren't actually suites of tests.
 FINISHED_STATUSES = ['completed', 'failed', 'exception']
 ALL_STATUSES = FINISHED_STATUSES + ['unscheduled', 'pending', 'running']
 STATUS_VALUE = {
@@ -20,9 +21,8 @@ STATUS_VALUE = {
 
 class ArtifactsHandler(object):
 
-    def __init__(self, task_ids, suites_to_ignore, parent_dir='ccov-artifacts'):
+    def __init__(self, task_ids, parent_dir='ccov-artifacts'):
         self.task_ids = task_ids
-        self.suites_to_ignore = suites_to_ignore
         self.parent_dir = parent_dir
 
     def generate_path(self, platform, chunk, artifact):
@@ -97,8 +97,8 @@ class ArtifactsHandler(object):
 
             chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
             platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
-            # Ignore awsy and talos as they aren't actually suites of tests.
-            if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
+
+            if any(to_ignore in chunk_name for to_ignore in SUITES_TO_IGNORE):
                 continue
 
             if (chunk_name, platform_name) not in download_tasks:
