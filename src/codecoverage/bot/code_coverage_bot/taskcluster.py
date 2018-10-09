@@ -19,12 +19,20 @@ class TaskclusterException(Exception):
 def get_task(branch, revision, platform):
     if platform == 'linux':
         platform_name = 'linux64-ccov-debug'
+        product = 'firefox'
     elif platform == 'win':
         platform_name = 'win64-ccov-debug'
+        product = 'firefox'
+    elif platform == 'android-test':
+        platform_name = 'android-test-ccov'
+        product = 'mobile'
+    elif platform == 'android-emulator':
+        platform_name = 'android-api-16-ccov-debug'
+        product = 'mobile'
     else:
         raise TaskclusterException('Unsupported platform: %s' % platform)
 
-    r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.firefox.{}'.format(branch, revision, platform_name))
+    r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.{}.{}'.format(branch, revision, product, platform_name))
     task = r.json()
     if r.status_code == requests.codes.ok:
         return task['taskId']
@@ -92,7 +100,12 @@ def download_artifact(artifact_path, task_id, artifact_name):
     retry(perform_download)
 
 
-TEST_PLATFORMS = ['test-linux64-ccov/debug', 'test-windows10-64-ccov/debug']
+TEST_PLATFORMS = [
+    'test-linux64-ccov/debug',
+    'test-windows10-64-ccov/debug',
+    'test-android-em-4.3-arm7-api-16-ccov/debug',
+    'build-android-test-ccov/opt',
+]
 
 
 def is_coverage_task(task):
@@ -116,5 +129,9 @@ def get_platform(name):
         return 'linux'
     elif 'windows' in name:
         return 'windows'
+    elif 'android-test' in name:
+        return 'android-test'
+    elif 'android-em' in name:
+        return 'android-emulator'
     else:
         raise Exception('Unknown platform')
