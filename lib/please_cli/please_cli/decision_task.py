@@ -511,6 +511,13 @@ def cmd(ctx,
         deploy_tasks = {}
         for index, (project, project_requires, deploy_target, deploy_options) in \
                 enumerate(sorted(projects_to_deploy, key=lambda x: x[0])):
+            try:
+                enable = deploy_options['enable']
+            except KeyError:
+                raise click.ClickException(f'Missing {enable} in project {project} and channel {channel} deploy options')
+
+            if not enable:
+                continue
             project_uuid = slugid.nice().decode('utf-8')
             project_task = get_deploy_task(
                 index,
