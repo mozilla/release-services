@@ -66,8 +66,7 @@ Happy hacking!
 )
 
 
-@click.group("please", cls=please_cli.utils.ClickCustomGroup,
-             invoke_without_command=True, help=CMD_HELP, epilog=CMD_EPILOG)
+@click.group("please", cls=please_cli.utils.ClickCustomGroup, invoke_without_command=True, help=CMD_HELP, epilog=CMD_EPILOG)
 @click.option('-v', '--verbose', count=True, help='Increase verbosity level')
 @click.version_option(version=please_cli.config.VERSION)
 @click.help_option()
