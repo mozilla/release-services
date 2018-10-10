@@ -9,7 +9,6 @@ def report(artifacts, source_dir=None, service_number=None, commit_sha='unused',
     cmd = [
       'grcov',
       '-t', out_format,
-      '-p', '/home/worker/workspace/build/src/',
     ]
 
     if 'coveralls' in out_format:
