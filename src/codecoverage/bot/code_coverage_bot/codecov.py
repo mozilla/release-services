@@ -2,8 +2,6 @@
 
 import json
 import os
-import shutil
-import tarfile
 import tempfile
 from datetime import datetime
 from datetime import timedelta
@@ -11,12 +9,12 @@ from datetime import timedelta
 import hglib
 import requests
 
-from cli_common.command import run_check
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from cli_common.utils import ThreadPoolExecutorResult
 from code_coverage_bot import chunk_mapping
 from code_coverage_bot import grcov
+from code_coverage_bot import suite_reports
 from code_coverage_bot import taskcluster
 from code_coverage_bot import uploader
 from code_coverage_bot.artifacts import ArtifactsHandler
@@ -92,32 +90,6 @@ class CodeCov(object):
 
         logger.info('mozilla-central cloned')
 
-    def generate_suite_reports(self):
-        for suite in self.suites:
-            output = grcov.report(self.artifactsHandler.get(suite=suite), out_format='lcov')
-
-            info_file = os.path.join(self.ccov_reports_dir, '%s.info' % suite)
-
-            with open(info_file, 'wb') as f:
-                f.write(output)
-
-            suite_dir = os.path.join(self.ccov_reports_dir, suite)
-            run_check([
-                'genhtml',
-                '-o', suite_dir,
-                '--show-details', '--highlight', '--ignore-errors', 'source',
-                '--legend', info_file,
-                '--prefix', self.repo_dir
-            ], cwd=self.repo_dir)
-
-            os.remove(info_file)
-
-            with tarfile.open(os.path.join(self.ccov_reports_dir, '%s.tar.xz' % suite), 'w:xz') as tar:
-                tar.add(suite_dir, arcname=suite)
-            shutil.rmtree(suite_dir)
-
-            logger.info('Suite report generated', suite=suite)
-
     def go(self):
         if self.from_pulse:
             commit_sha = self.githubUtils.mercurial_to_git(self.revision)
@@ -173,7 +145,7 @@ class CodeCov(object):
         else:
             logger.info('Generating suite reports')
             os.makedirs(self.ccov_reports_dir, exist_ok=True)
-            self.generate_suite_reports()
+            suite_reports.generate(self.suites, self.artifactsHandler, self.ccov_reports_dir, self.repo_dir)
 
             logger.info('Generating zero coverage reports')
             zc = ZeroCov(self.repo_dir)
