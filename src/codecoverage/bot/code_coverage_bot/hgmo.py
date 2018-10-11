@@ -65,6 +65,7 @@ class HGMO(object):
     def get_push_changesets(self, changeset):
         push_data = self.get_pushes(changeset=changeset)
 
+        # Reduce operation to concatenate the lists of changesets from all pushes.
         return sum((data['changesets'] for data in push_data['pushes'].values()), [])
 
     def get_annotate(self, revision, path):
