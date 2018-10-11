@@ -13,6 +13,7 @@ logger = get_logger(__name__)
 class HGMO(object):
 
     PID_FILE = 'hgmo.pid'
+    SERVER_ADDRESS = 'http://localhost:8000'
 
     def __init__(self, repo_dir):
         self.repo_dir = repo_dir
@@ -56,7 +57,7 @@ class HGMO(object):
         if changeset is not None:
             params['changeset'] = changeset
 
-        r = requests.get('http://localhost:8000/json-pushes', params=params)
+        r = requests.get('{}/json-pushes'.format(SERVER_ADDRESS), params=params)
 
         r.raise_for_status()
         return r.json()
@@ -67,7 +68,7 @@ class HGMO(object):
         return sum((data['changesets'] for data in push_data['pushes'].values()), [])
 
     def get_annotate(self, revision, path):
-        r = requests.get('http://localhost:8000/json-annotate/{}/{}'.format(revision, path))
+        r = requests.get('{}/json-annotate/{}/{}'.format(SERVER_ADDRESS, revision, path))
 
         r.raise_for_status()
         annotate_data = r.json()
