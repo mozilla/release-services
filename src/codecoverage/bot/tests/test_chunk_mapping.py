@@ -55,7 +55,7 @@ def assert_chunk_to_test(c, platform, chunk, tests):
 
 
 @responses.activate
-def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo):
+def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo_with_contents):
     tmp_path = tmpdir.strpath
 
     def request_callback(request):
@@ -149,7 +149,7 @@ def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo):
     )
 
     chunk_mapping.generate(
-        fake_hg_repo,
+        fake_hg_repo_with_contents,
         '632bb768b1dd4b96a196412e8f7b669ca09d6d91',
         fake_artifacts_handler,
         out_dir=tmp_path,

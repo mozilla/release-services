@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 import pytz
-import requests
 
 from cli_common.log import get_logger
 from code_coverage_bot import grcov
@@ -36,20 +35,12 @@ class ZeroCov(object):
         return d.strftime(ZeroCov.DATE_FORMAT)
 
     def get_pushlog(self):
-        with hgmo.HGMO(self.repo_dir) as url:
-            url += '/json-pushes'
-            logger.info('Get pushlog', url=url)
-            r = requests.get(url, params={'startID': 0,
-                                          'version': 2,
-                                          'full': 1})
-
-        if not r.ok:
-            logger.error('Pushlog cannot be retrieved', url=r.url, status_code=r.status_code)
-            return {}
+        with hgmo.HGMO(self.repo_dir) as hgmo_server:
+            pushlog = hgmo_server.get_pushes(startID=0)
 
         logger.info('Pushlog retrieved')
 
-        return r.json()
+        return pushlog
 
     def get_fileinfo(self, filenames):
         pushlog = self.get_pushlog()

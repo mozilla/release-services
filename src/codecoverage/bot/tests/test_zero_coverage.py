@@ -12,12 +12,12 @@ def test_zero_coverage(tmpdir,
                        grcov_artifact, grcov_uncovered_artifact,
                        jsvm_artifact, jsvm_uncovered_artifact,
                        grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact,
-                       fake_hg_repo):
+                       fake_hg_repo_with_contents):
     tmp_path = tmpdir.strpath
 
     hgrev = '314159265358'
     gitrev = '271828182845'
-    ZeroCov(fake_hg_repo).generate([
+    ZeroCov(fake_hg_repo_with_contents).generate([
         grcov_artifact, grcov_uncovered_artifact,
         jsvm_artifact, jsvm_uncovered_artifact,
         grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact

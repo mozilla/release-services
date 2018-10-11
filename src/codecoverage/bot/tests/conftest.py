@@ -170,6 +170,8 @@ def mock_secrets():
     secrets.update({
         'CODECOV_REPO': 'marco-c/gecko-dev',
         'CODECOV_ACCESS_TOKEN': 'XXX',
+        'PHABRICATOR_URL': 'http://phabricator.test/api/',
+        'PHABRICATOR_TOKEN': 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
     })
 
 
@@ -189,12 +191,8 @@ def codecov_commits():
             )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_hg_repo(tmpdir):
-
-    def tobytes(x):
-        return bytes(x, 'ascii')
-
     tmp_path = tmpdir.strpath
     dest = os.path.join(tmp_path, 'repos')
     local = os.path.join(dest, 'local')
@@ -204,9 +202,18 @@ def fake_hg_repo(tmpdir):
         hglib.init(d)
 
     os.environ['USER'] = 'app'
-    oldcwd = os.getcwd()
-    os.chdir(local)
     hg = hglib.open(local)
+
+    responses.add_passthru('http://localhost:8000')
+
+    yield hg, local, remote
+
+    hg.close()
+
+
+@pytest.fixture
+def fake_hg_repo_with_contents(fake_hg_repo):
+    hg, local, remote = fake_hg_repo
 
     files = [
         {'name': 'mozglue/build/dummy.cpp',
@@ -225,21 +232,36 @@ def fake_hg_repo(tmpdir):
 
     for c in '?!':
         for f in files:
-            fname = f['name']
+            fname = os.path.join(local, f['name'])
             parent = os.path.dirname(fname)
             if not os.path.exists(parent):
                 os.makedirs(parent)
             with open(fname, 'w') as Out:
                 Out.write(c * f['size'])
-            hg.add(files=[tobytes(fname)])
+            hg.add(files=[bytes(fname, 'ascii')])
             hg.commit(message='Commit file {} with {} inside'.format(fname, c),
                       user='Moz Illa <milla@mozilla.org>')
-            hg.push(dest=tobytes(remote))
-
-    hg.close()
-    os.chdir(oldcwd)
+            hg.push(dest=bytes(remote, 'ascii'))
 
     shutil.copyfile(os.path.join(remote, '.hg/pushlog2.db'),
                     os.path.join(local, '.hg/pushlog2.db'))
 
     return local
+
+
+@pytest.fixture
+def mock_phabricator():
+    '''
+    Mock phabricator authentication process
+    '''
+    def _response(name):
+        path = os.path.join(FIXTURES_DIR, 'phabricator_{}.json'.format(name))
+        assert os.path.exists(path)
+        return open(path).read()
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/user.whoami',
+        body=_response('auth'),
+        content_type='application/json',
+    )
