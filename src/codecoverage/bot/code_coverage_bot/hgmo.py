@@ -57,7 +57,7 @@ class HGMO(object):
         if changeset is not None:
             params['changeset'] = changeset
 
-        r = requests.get('{}/json-pushes'.format(SERVER_ADDRESS), params=params)
+        r = requests.get('{}/json-pushes'.format(HGMO.SERVER_ADDRESS), params=params)
 
         r.raise_for_status()
         return r.json()
@@ -69,7 +69,7 @@ class HGMO(object):
         return sum((data['changesets'] for data in push_data['pushes'].values()), [])
 
     def get_annotate(self, revision, path):
-        r = requests.get('{}/json-annotate/{}/{}'.format(SERVER_ADDRESS, revision, path))
+        r = requests.get('{}/json-annotate/{}/{}'.format(HGMO.SERVER_ADDRESS, revision, path))
 
         r.raise_for_status()
         annotate_data = r.json()
