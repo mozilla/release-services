@@ -3,8 +3,8 @@ import os
 import shutil
 import tarfile
 
-from cli.common_log import get_logger
 from cli_common.command import run_check
+from cli_common.log import get_logger
 from code_coverage_bot import grcov
 
 logger = get_logger(__name__)
