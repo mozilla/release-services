@@ -23,9 +23,9 @@ class PhabricatorUploader(object):
 
         return None
 
-    def _parse_differential(self, desc):
-        PHABRICATOR_DIFFERENTIAL_REGEX = 'Differential Revision: https://phabricator.services.mozilla.com/D([0-9]+)'
-        match = re.search(PHABRICATOR_DIFFERENTIAL_REGEX, desc)
+    def _parse_revision_id(self, desc):
+        PHABRICATOR_REVISION_REGEX = 'Differential Revision: https://phabricator.services.mozilla.com/D([0-9]+)'
+        match = re.search(PHABRICATOR_REVISION_REGEX, desc)
         if not match:
             return None
         return match.group(1)
@@ -88,12 +88,12 @@ class PhabricatorUploader(object):
             changesets = hgmo_server.get_push_changesets(self.revision)
 
             for changeset in changesets:
-                # Retrieve the differential ID for this changeset.
-                differential = self._parse_differential(changeset['desc'])
-                if differential is None:
+                # Retrieve the revision ID for this changeset.
+                revision_id = self._parse_revision_id(changeset['desc'])
+                if revision_id is None:
                     continue
 
-                results[differential] = {}
+                results[revision_id] = {}
 
                 # For each file...
                 for path in changeset['files']:
@@ -119,13 +119,13 @@ class PhabricatorUploader(object):
                         assert False, 'Failure to retrieve annotate data for the changeset of interest'
 
                     # Apply the coverage map on the annotate data of the changeset of interest.
-                    results[differential][path] = self._apply_coverage_map(annotate, coverage_map)
+                    results[revision_id][path] = self._apply_coverage_map(annotate, coverage_map)
 
         return results
 
     def upload(self, report):
         results = self.generate(report)
 
-        for differential, coverage in results.items():
+        for revision_id, coverage in results.items():
             # TODO: Actually upload coverage data to Phabricator.
             pass
