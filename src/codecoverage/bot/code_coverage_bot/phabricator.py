@@ -124,4 +124,4 @@ class PhabricatorUploader(object):
 
         for revision_id, coverage in results.items():
             # TODO: Actually upload coverage data to Phabricator.
-            pass
+            log.info("{} coverage: {}".format(revision_id, coverage))
