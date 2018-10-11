@@ -28,7 +28,7 @@ class PhabricatorUploader(object):
 
     def _build_coverage_map(self, annotate, coverage_record):
         # We can't use plain line numbers to map coverage data from the build changeset to the
-        # changeset of interest, infact there could be intermediate changesets between them
+        # changeset of interest, indeed there could be intermediate changesets between them
         # modifying the same lines, thus displacing the line numbers.
         # In order to uniquely identify lines, and thus map coverage data, we use the annotate
         # data. The line number and changeset where a line was introduced are unique, so whenever
