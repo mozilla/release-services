@@ -17,11 +17,7 @@ class PhabricatorUploader(object):
         self.phabricator = PhabricatorAPI(secrets[secrets.PHABRICATOR_TOKEN], secrets[secrets.PHABRICATOR_URL])
 
     def _find_coverage(self, report, path):
-        for sf in report['source_files']:
-            if sf['name'] == path:
-                return sf['coverage']
-
-        return None
+        return next((sf['coverage'] for sf in report['source_files'] if sf['name'] == path), None)
 
     def _parse_revision_id(self, desc):
         PHABRICATOR_REVISION_REGEX = 'Differential Revision: https://phabricator.services.mozilla.com/D([0-9]+)'
