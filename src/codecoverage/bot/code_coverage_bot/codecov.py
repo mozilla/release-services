@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+import json
 import os
 import shutil
 import tarfile
@@ -20,6 +22,7 @@ from code_coverage_bot import uploader
 from code_coverage_bot.artifacts import ArtifactsHandler
 from code_coverage_bot.github import GitHubUtils
 from code_coverage_bot.notifier import Notifier
+from code_coverage_bot.phabricator import PhabricatorUploader
 from code_coverage_bot.secrets import secrets
 from code_coverage_bot.zero_coverage import ZeroCov
 
@@ -155,6 +158,10 @@ class CodeCov(object):
             with ThreadPoolExecutorResult(max_workers=2) as executor:
                 executor.submit(uploader.coveralls, output)
                 executor.submit(uploader.codecov, output, commit_sha)
+
+            logger.info('Upload changeset coverage data to Phabricator')
+            phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
+            phabricatorUploader.upload(json.loads(output))
 
             logger.info('Waiting for build to be ingested by Codecov...')
             # Wait until the build has been ingested by Codecov.

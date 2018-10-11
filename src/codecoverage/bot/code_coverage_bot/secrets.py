@@ -18,6 +18,8 @@ class Secrets(dict):
     EMAIL_ADDRESSES = 'EMAIL_ADDRESSES'
     APP_CHANNEL = 'APP_CHANNEL'
     BACKEND_HOST = 'BACKEND_HOST'
+    PHABRICATOR_URL = 'PHABRICATOR_URL'
+    PHABRICATOR_TOKEN = 'PHABRICATOR_TOKEN'
 
     def load(self, taskcluster_secret, taskcluster_client_id, taskcluster_access_token):
         secrets = get_secrets(
@@ -30,6 +32,8 @@ class Secrets(dict):
                 Secrets.CODECOV_REPO,
                 Secrets.CODECOV_TOKEN,
                 Secrets.CODECOV_ACCESS_TOKEN,
+                Secrets.PHABRICATOR_URL,
+                Secrets.PHABRICATOR_TOKEN,
             ),
             taskcluster_client_id=taskcluster_client_id,
             taskcluster_access_token=taskcluster_access_token,
