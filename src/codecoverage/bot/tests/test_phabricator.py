@@ -52,9 +52,9 @@ def test_upload_simple(mock_secrets, mock_phabricator, fake_hg_repo):
         }]
     })
 
-    assert set(results.keys()) == set(['1'])
-    assert set(results['1'].keys()) == set(['file'])
-    assert results['1']['file'] == 'NUCCCCU'
+    assert set(results.keys()) == set([1])
+    assert set(results[1].keys()) == set(['file'])
+    assert results[1]['file'] == 'NUCCCCU'
 
 
 @responses.activate
@@ -73,8 +73,8 @@ def test_upload_file_with_no_coverage(mock_secrets, mock_phabricator, fake_hg_re
         'source_files': []
     })
 
-    assert set(results.keys()) == set(['1'])
-    assert set(results['1'].keys()) == set()
+    assert set(results.keys()) == set([1])
+    assert set(results[1].keys()) == set()
 
 
 @responses.activate
@@ -128,12 +128,12 @@ def test_upload_two_commits_two_files(mock_secrets, mock_phabricator, fake_hg_re
         }]
     })
 
-    assert set(results.keys()) == set(['1', '2'])
-    assert set(results['1'].keys()) == set(['file1_commit1', 'file2_commit1'])
-    assert set(results['2'].keys()) == set(['file3_commit2'])
-    assert results['1']['file1_commit1'] == 'NUCCCCU'
-    assert results['1']['file2_commit1'] == 'CCU'
-    assert results['2']['file3_commit2'] == 'CCUCN'
+    assert set(results.keys()) == set([1, 2])
+    assert set(results[1].keys()) == set(['file1_commit1', 'file2_commit1'])
+    assert set(results[2].keys()) == set(['file3_commit2'])
+    assert results[1]['file1_commit1'] == 'NUCCCCU'
+    assert results[1]['file2_commit1'] == 'CCU'
+    assert results[2]['file3_commit2'] == 'CCUCN'
 
 
 @responses.activate
@@ -158,11 +158,11 @@ def test_upload_changesets_overwriting(mock_secrets, mock_phabricator, fake_hg_r
         }]
     })
 
-    assert set(results.keys()) == set(['1', '2'])
-    assert set(results['1'].keys()) == set(['file'])
-    assert set(results['2'].keys()) == set(['file'])
-    assert results['1']['file'] == 'NUCXCCU'
-    assert results['2']['file'] == 'NUCCCCU'
+    assert set(results.keys()) == set([1, 2])
+    assert set(results[1].keys()) == set(['file'])
+    assert set(results[2].keys()) == set(['file'])
+    assert results[1]['file'] == 'NUCXCCU'
+    assert results[2]['file'] == 'NUCCCCU'
 
 
 @responses.activate
@@ -187,11 +187,11 @@ def test_upload_changesets_displacing(mock_secrets, mock_phabricator, fake_hg_re
         }]
     })
 
-    assert set(results.keys()) == set(['1', '2'])
-    assert set(results['1'].keys()) == set(['file'])
-    assert set(results['2'].keys()) == set(['file'])
-    assert results['1']['file'] == 'NUCCCCU'
-    assert results['2']['file'] == 'UCNUCCCCUCU'
+    assert set(results.keys()) == set([1, 2])
+    assert set(results[1].keys()) == set(['file'])
+    assert set(results[2].keys()) == set(['file'])
+    assert results[1]['file'] == 'NUCCCCU'
+    assert results[2]['file'] == 'UCNUCCCCUCU'
 
 
 @responses.activate
@@ -216,11 +216,11 @@ def test_upload_changesets_reducing_size(mock_secrets, mock_phabricator, fake_hg
         }]
     })
 
-    assert set(results.keys()) == set(['1', '2'])
-    assert set(results['1'].keys()) == set(['file'])
-    assert set(results['2'].keys()) == set(['file'])
-    assert results['1']['file'] == 'NUCCCXX'
-    assert results['2']['file'] == 'NUCCC'
+    assert set(results.keys()) == set([1, 2])
+    assert set(results[1].keys()) == set(['file'])
+    assert set(results[2].keys()) == set(['file'])
+    assert results[1]['file'] == 'NUCCCXX'
+    assert results[2]['file'] == 'NUCCC'
 
 
 @responses.activate
@@ -245,9 +245,9 @@ def test_upload_changesets_overwriting_one_commit_without_differential(mock_secr
         }]
     })
 
-    assert set(results.keys()) == set(['1'])
-    assert set(results['1'].keys()) == set(['file'])
-    assert results['1']['file'] == 'NUCXCCU'
+    assert set(results.keys()) == set([1])
+    assert set(results[1].keys()) == set(['file'])
+    assert results[1]['file'] == 'NUCXCCU'
 
 
 @responses.activate
@@ -269,5 +269,5 @@ def test_removed_file(mock_secrets, mock_phabricator, fake_hg_repo):
         'source_files': []
     })
 
-    assert set(results.keys()) == set(['1'])
-    assert set(results['1'].keys()) == set()
+    assert set(results.keys()) == set([1])
+    assert set(results[1].keys()) == set()

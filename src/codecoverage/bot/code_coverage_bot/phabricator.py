@@ -28,7 +28,7 @@ class PhabricatorUploader(object):
         match = re.search(PHABRICATOR_REVISION_REGEX, desc)
         if not match:
             return None
-        return match.group(1)
+        return int(match.group(1))
 
     def _build_coverage_map(self, annotate, coverage_record):
         # We can't use plain line numbers to map coverage data from the build changeset to the
