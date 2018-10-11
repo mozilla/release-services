@@ -34,13 +34,11 @@ Code analysis found {defects_total} in this patch{extras_comments}:
 
 You can run this analysis locally with:
 {analyzers}
-
 '''
 BUG_REPORT = '''
 If you see a problem in this automated review, please report it here: {bug_report_url}
 '''
 COMMENT_DIFF_DOWNLOAD = '''
-
 For your convenience, here is a patch that fixes all the clang-format defects (use it in your repository with `hg import` or `git apply`): {url}
 '''
 
