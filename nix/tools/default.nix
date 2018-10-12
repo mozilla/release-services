@@ -31,8 +31,6 @@ in {
     };
   };
 
-  elm2nix = import ./elm2nix.nix { inherit releng_pkgs; };
-
   mysql2pgsql = (import ./mysql2pgsql.nix { inherit (releng_pkgs) pkgs; }).packages."py-mysql2pgsql" // {
     update = writeScript "update-tools-mysql2pgsql" ''
       pushd nix/tools
