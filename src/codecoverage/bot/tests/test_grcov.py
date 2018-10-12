@@ -80,14 +80,14 @@ def test_report_multiple_artifacts(grcov_artifact, jsvm_artifact):
     assert set(['toolkit/components/osfile/osfile.jsm', 'js/src/jit/BitSet.cpp']) == set([sf['name'] for sf in report['source_files']])
 
 
-def test_report_source_dir(grcov_artifact, grcov_existing_file_artifact):
-    output = grcov.report([grcov_existing_file_artifact], source_dir=os.getcwd(), out_format='coveralls')
+def test_report_source_dir(fake_source_dir, grcov_artifact, grcov_existing_file_artifact):
+    output = grcov.report([grcov_existing_file_artifact], source_dir=fake_source_dir, out_format='coveralls')
     report = json.loads(output.decode('utf-8'))
     # When we pass the source directory to the report function, grcov ignores not-existing files.
     assert len(report['source_files']) == 1
     assert report['source_files'][0]['name'] == 'code_coverage_bot/cli.py'
     # When we pass the source directory to grcov and the file exists, grcov can calculate its hash.
-    assert report['source_files'][0]['source_digest'] == 'b53ea39de2095ba8dd0a6e4e6e52173d'
+    assert report['source_files'][0]['source_digest'] == '6ddb4095eb719e2a9f0a3f95677d24e0'
 
 
 def test_report_service_number(grcov_artifact):
@@ -120,6 +120,6 @@ def test_files_list(grcov_artifact, grcov_uncovered_artifact):
     assert set(files) == set(['js/src/jit/BitSet.cpp'])
 
 
-def test_files_list_source_dir(grcov_artifact, grcov_existing_file_artifact):
-    files = grcov.files_list([grcov_artifact, grcov_existing_file_artifact], source_dir=os.getcwd())
+def test_files_list_source_dir(fake_source_dir, grcov_artifact, grcov_existing_file_artifact):
+    files = grcov.files_list([grcov_artifact, grcov_existing_file_artifact], source_dir=fake_source_dir)
     assert set(files) == set(['code_coverage_bot/cli.py'])
