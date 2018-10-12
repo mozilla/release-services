@@ -67,6 +67,8 @@ class CodeCov(object):
         task_ids = {
             'linux': taskcluster.get_task('mozilla-central', self.revision, 'linux'),
             'windows': taskcluster.get_task('mozilla-central', self.revision, 'win'),
+            'android-test': taskcluster.get_task('mozilla-central', self.revision, 'android-test'),
+            'android-emulator': taskcluster.get_task('mozilla-central', self.revision, 'android-emulator'),
         }
 
         self.artifactsHandler = ArtifactsHandler(task_ids, self.artifacts_dir)
