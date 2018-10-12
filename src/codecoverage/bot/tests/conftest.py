@@ -265,3 +265,15 @@ def mock_phabricator():
         body=_response('auth'),
         content_type='application/json',
     )
+
+
+@pytest.fixture
+def fake_source_dir(tmpdir):
+    tmpdir_path = tmpdir.strpath
+
+    os.makedirs(os.path.join(tmpdir_path, 'code_coverage_bot'))
+
+    with open(os.path.join(tmpdir_path, 'code_coverage_bot', 'cli.py'), 'w') as f:
+        f.write('1\n2\n')
+
+    return tmpdir_path
