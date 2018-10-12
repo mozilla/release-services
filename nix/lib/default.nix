@@ -28,13 +28,24 @@ let
     splitString
     unique;
 
-  inherit (releng_pkgs)
-    elmPackages;
-
   inherit (releng_pkgs.tools)
     pypi2nix
-    elm2nix
     node2nix;
+
+  pkgs_for_elm =
+    let
+      nixpkgs-json = builtins.fromJSON (builtins.readFile ./nixpkgs_for_elm.json);
+      src-nixpkgs = releng_pkgs.pkgs.fetchFromGitHub { inherit (nixpkgs-json) owner repo rev sha256; };
+    in
+      import src-nixpkgs {
+        overlays = [
+          (import ./../overlay/default.nix)
+        ];
+      };
+
+  elm2nix = import ./elm2nix.nix { pkgs = pkgs_for_elm; };
+
+  inherit (pkgs_for_elm) elmPackages;
 
   ignoreRequirementsLines = specs:
     builtins.filter
