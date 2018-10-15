@@ -112,7 +112,8 @@ class PhabricatorUploader(object):
                     # Retrieve the annotate data for the changeset of interest.
                     annotate = hgmo_server.get_annotate(changeset['node'], path)
                     if annotate is None:
-                        assert False, 'Failure to retrieve annotate data for the changeset of interest'
+                        # This means the file has been removed by this changeset, and maybe was brought back by a following changeset.
+                        continue
 
                     # Apply the coverage map on the annotate data of the changeset of interest.
                     results[revision_id][path] = self._apply_coverage_map(annotate, coverage_map)
