@@ -58,7 +58,7 @@ class ClangFormat(object):
         with open(clang_output_path, 'w') as f:
             f.write(clang_output)
 
-        # Loof for any fixes `./mach clang-format` may have found
+        # Look for any fixes `./mach clang-format` may have found
         client = hglib.open(settings.repo_dir)
         self.diff = client.diff(unified=8).decode('utf-8')
 
@@ -86,6 +86,7 @@ class ClangFormat(object):
                         groups.append(group)
                         group = []
                     group.append(line)
+
                 # Don't forget to add the last group
                 groups.append(group)
 
