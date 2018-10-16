@@ -31,7 +31,7 @@ def get_stats():
     else:
         logger.info('No datadog credentials')
 
-    # Must be instanciated after initialize
+    # Must be instantiated after initialize
     # https://datadogpy.readthedocs.io/en/latest/#datadog-threadstats-module
     __stats = datadog.ThreadStats(
         constant_tags=[

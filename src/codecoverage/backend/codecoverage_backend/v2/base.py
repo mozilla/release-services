@@ -64,7 +64,6 @@ class ActiveData(object):
     def enabled(self):
         return self.client is not None
 
-    @stats.timed('codecoverage.active_data.get_latest_changeset')
     def get_latest_changeset(self):
         '''
         Get the latest coverage changeset pushed to ES

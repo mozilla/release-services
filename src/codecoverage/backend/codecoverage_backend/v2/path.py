@@ -3,12 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from cli_common import log
-from codecoverage_backend.datadog import get_stats
 from codecoverage_backend.services.active_data import ActiveDataCoverage
 from codecoverage_backend.v2.base import active_data
 
 logger = log.get_logger(__name__)
-stats = get_stats()
 
 # This is a "painless" ES script, that is used by the aggregation
 # to build coverage per path.
@@ -23,7 +21,6 @@ return _value.substring(0, {path_len} + index + 1);
 '''
 
 
-@stats.timed('codecoverage.active_data.coverage_paths')
 def coverage_paths(path, changeset):
     '''
     Aggregate coverage percent data from ES for a given path and changeset
