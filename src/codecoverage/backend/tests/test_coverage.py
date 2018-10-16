@@ -7,8 +7,6 @@ import json
 
 import pytest
 
-from codecoverage_backend import coverage_summary_by_changeset_impl
-
 
 def test_coverage_supported_extensions_api(client):
     # List supported extensions for coverage analysis through the API
@@ -51,6 +49,7 @@ async def test_coverage_by_changeset_impl(coverage_responses, coverage_builds):
 
 
 def test_coverage_summary_by_changeset_impl(coverage_builds):
+    from codecoverage_backend import coverage_summary_by_changeset_impl
     # Get changeset coverage summary from coverage information
     for changeset, expected in coverage_builds['summary'].items():
         coverage_data = coverage_builds['info'][changeset]

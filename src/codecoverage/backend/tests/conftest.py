@@ -31,6 +31,7 @@ def mock_secrets():
             'password': 'dummySecret',
         },
         'PHABRICATOR_TOKEN': 'api-correct',
+        'APP_CHANNEL': 'test',
     })
 
 
