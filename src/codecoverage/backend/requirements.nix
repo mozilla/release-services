@@ -747,6 +747,25 @@ let
       };
     };
 
+    "datadog" = python.mkDerivation {
+      name = "datadog-0.22.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/29/45/4f21ad21de22c7abe64f340e6fe1ebc412bb1e8bb580dd963fd70ac86441/datadog-0.22.0.tar.gz"; sha256 = "86cef95acd73543d18c417f1b0313c0a7274ed8f5ae9cceb46314f4e588085b1"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."decorator"
+      self."requests"
+      self."simplejson"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://www.datadoghq.com";
+        license = licenses.bsdOriginal;
+        description = "The Datadog Python library";
+      };
+    };
+
     "decorator" = python.mkDerivation {
       name = "decorator-4.3.0";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/6f/24/15a229626c775aae5806312f6bf1e2a73785be3402c0acdec5dbddd8c11e/decorator-4.3.0.tar.gz"; sha256 = "c39efa13fbdeb4506c476c9b3babf6a718da943dab7811c206005a4a956c080c"; };
@@ -1993,6 +2012,21 @@ let
         homepage = "https://github.com/boto/s3transfer";
         license = licenses.asl20;
         description = "An Amazon S3 Transfer Manager";
+      };
+    };
+
+    "simplejson" = python.mkDerivation {
+      name = "simplejson-3.16.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e3/24/c35fb1c1c315fc0fffe61ea00d3f88e85469004713dab488dee4f35b0aff/simplejson-3.16.0.tar.gz"; sha256 = "b1f329139ba647a9548aa05fb95d046b4a677643070dc2afc05fa2e975d09ca5"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/simplejson/simplejson";
+        license = licenses.mit;
+        description = "Simple, fast, extensible JSON encoder/decoder for Python";
       };
     };
 
