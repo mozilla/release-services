@@ -20,14 +20,35 @@ logger = log.get_logger(__name__)
 stats = get_stats()
 
 
+class TookCounter(AsyncElasticsearch):
+    '''
+    Overrides elasticsearch client to count the time took and
+    reported by ES server
+    '''
+    took = 0
+
+    async def search(self, *args, **kwargs):
+        return self._save_took(await super().search(*args, **kwargs))
+
+    async def count(self, *args, **kwargs):
+        return self._save_took(await super().count(*args, **kwargs))
+
+    def _save_took(self, data):
+        if isinstance(data, dict) and 'took' in data:
+            self.took += data['took'] / 1000.0  # took is in ms
+
+        return data
+
+
 class ActiveDataClient():
     '''
     Active data async client, through Elastic Search
     '''
+
     def __init__(self):
         self.start_time = None
         conf = secrets.ACTIVE_DATA
-        self.client = AsyncElasticsearch(
+        self.client = TookCounter(
             hosts=[conf['url'], ],
             http_auth=(
                 conf['user'],
@@ -45,11 +66,16 @@ class ActiveDataClient():
 
     async def __aexit__(self, *args, **kwargs):
 
-        # Report query time in datadog
+        # Report full query time in datadog
         if self.start_time is not None:
             query_time = time.time() - self.start_time
             stats.histogram('codecoverage.active_data.{}'.format(self.name), query_time)
-            logger.info('ActiveData ES query {} took {}'.format(self.name, query_time))
+            logger.info('ActiveData full query {} took {:0.2f}s'.format(self.name, query_time))
+
+        # Report ES query time in datadog
+        if self.client.took > 0:
+            stats.histogram('codecoverage.active_data.es.{}'.format(self.name), self.client.took)
+            logger.info('ActiveData ES query {} took {:0.2f}s'.format(self.name, self.client.took))
 
         await self.client.transport.close()
 

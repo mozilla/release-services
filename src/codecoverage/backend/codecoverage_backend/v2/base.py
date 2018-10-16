@@ -50,12 +50,14 @@ class ActiveData(object):
         if out['timed_out']:
             logger.warn('ES query {} timed out'.format(name))
         else:
+            took = out['took'] / 1000.0
             logger.info('ES query {name} took {time}s to hit {nb} items'.format(
                 name=name,
-                time=out['took'] / 1000.0,
+                time=took,
                 nb=out['hits'].get('total', 0),
                 scroll='1m',
             ))
+            stats.histogram('codecoverage.active_data.es.{}'.format(name), took)
         if out['hits']['total'] == 0:
             raise NoResults
         return out
