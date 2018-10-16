@@ -6,6 +6,7 @@ import logging
 
 import datadog
 
+from codecoverage_backend import config
 from codecoverage_backend import secrets
 
 logger = logging.getLogger(__name__)
@@ -33,8 +34,10 @@ def get_stats():
     # Must be instanciated after initialize
     # https://datadogpy.readthedocs.io/en/latest/#datadog-threadstats-module
     __stats = datadog.ThreadStats(
-        namespace='codecoverage.backend',
-        constant_tags=['channel:{}'.format(secrets.APP_CHANNEL), ],
+        constant_tags=[
+            config.PROJECT_NAME,
+            'channel:{}'.format(secrets.APP_CHANNEL),
+        ],
     )
     __stats.start(flush_in_thread=True)
     return __stats

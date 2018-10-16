@@ -23,7 +23,7 @@ return _value.substring(0, {path_len} + index + 1);
 '''
 
 
-@stats.timed('active_data.coverage_paths')
+@stats.timed('codecoverage.active_data.coverage_paths')
 def coverage_paths(path, changeset):
     '''
     Aggregate coverage percent data from ES for a given path and changeset

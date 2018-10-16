@@ -45,7 +45,7 @@ class ActiveDataClient():
         # Report query time in datadog
         if self.start_time is not None:
             query_time = time.time() - self.start_time
-            stats.histogram('active_data.{}'.format(self.name), query_time)
+            stats.histogram('codecoverage.active_data.{}'.format(self.name), query_time)
             logger.info('ActiveData ES query {} took {}'.format(self.name, query_time))
 
         await self.client.transport.close()

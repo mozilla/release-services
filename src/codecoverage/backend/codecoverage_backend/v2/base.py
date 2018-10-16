@@ -39,7 +39,7 @@ class ActiveData(object):
             logger.warn('ES client failure: {}'.format(e))
 
     def search(self, name, body, timeout=10):
-        with stats.timer('active_data.{}'.format(name)):
+        with stats.timer('codecoverage.active_data.{}'.format(name)):
             out = self.client.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=body,
@@ -64,7 +64,7 @@ class ActiveData(object):
     def enabled(self):
         return self.client is not None
 
-    @stats.timed('active_data.get_latest_changeset')
+    @stats.timed('codecoverage.active_data.get_latest_changeset')
     def get_latest_changeset(self):
         '''
         Get the latest coverage changeset pushed to ES
