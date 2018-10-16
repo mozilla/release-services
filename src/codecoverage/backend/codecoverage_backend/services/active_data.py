@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import collections
+import inspect
 import itertools
 import time
 
@@ -23,8 +24,8 @@ class ActiveDataClient():
     '''
     Active data async client, through Elastic Search
     '''
-    def __init__(self, name):
-        assert isinstance(name, str)
+    def __init__(self):
+        self.start_time = None
         conf = secrets.ACTIVE_DATA
         self.client = AsyncElasticsearch(
             hosts=[conf['url'], ],
@@ -33,8 +34,10 @@ class ActiveDataClient():
                 conf['password'],
             )
         )
-        self.name = name
-        self.start_time = None
+
+        # Use name from the calling function in the stack
+        stack = inspect.stack()
+        self.name = stack[1].function if len(stack) > 1 else 'unknown'
 
     async def __aenter__(self):
         self.start_time = time.time()
@@ -109,7 +112,7 @@ class ActiveDataCoverage(Coverage):
             ]
         )
 
-        async with ActiveDataClient('list_tests') as es:
+        async with ActiveDataClient() as es:
             # First, count results
             res = await es.count(index=secrets.ACTIVE_DATA_INDEX, body=query)
             count = res['count']
@@ -169,7 +172,7 @@ class ActiveDataCoverage(Coverage):
 
     @staticmethod
     async def available_revisions(nb=2, max_date=None):
-        async with ActiveDataClient('available_revisions') as es:
+        async with ActiveDataClient() as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=ActiveDataCoverage.available_revisions_query(nb, max_date),
@@ -199,7 +202,7 @@ class ActiveDataCoverage(Coverage):
                 },
             },
         })
-        async with ActiveDataClient('get_revision_date') as es:
+        async with ActiveDataClient() as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=query,
@@ -227,7 +230,7 @@ class ActiveDataCoverage(Coverage):
                 },
             },
         })
-        async with ActiveDataClient('calc_revision_coverage') as es:
+        async with ActiveDataClient() as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=query,
@@ -301,7 +304,7 @@ class ActiveDataCoverage(Coverage):
                 }
             }
         }
-        async with ActiveDataClient('get_push') as es:
+        async with ActiveDataClient() as es:
             out = await es.search(
                 index='repo',
                 body=query,
