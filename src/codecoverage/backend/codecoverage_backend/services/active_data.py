@@ -5,22 +5,26 @@
 
 import collections
 import itertools
+import time
 
 from async_lru import alru_cache
 from elasticsearch_async import AsyncElasticsearch
 
 from cli_common import log
 from codecoverage_backend import secrets
+from codecoverage_backend.datadog import get_stats
 from codecoverage_backend.services.base import Coverage
 
 logger = log.get_logger(__name__)
+stats = get_stats()
 
 
 class ActiveDataClient():
     '''
     Active data async client, through Elastic Search
     '''
-    def __init__(self):
+    def __init__(self, name):
+        assert isinstance(name, str)
         conf = secrets.ACTIVE_DATA
         self.client = AsyncElasticsearch(
             hosts=[conf['url'], ],
@@ -29,11 +33,21 @@ class ActiveDataClient():
                 conf['password'],
             )
         )
+        self.name = name
+        self.start_time = None
 
     async def __aenter__(self):
+        self.start_time = time.time()
         return self.client
 
     async def __aexit__(self, *args, **kwargs):
+
+        # Report query time in datadog
+        if self.start_time is not None:
+            query_time = time.time() - self.start_time
+            stats.histogram('active_data.{}'.format(self.name), query_time)
+            logger.info('ActiveData ES query {} took {}'.format(self.name, query_time))
+
         await self.client.transport.close()
 
 
@@ -95,7 +109,7 @@ class ActiveDataCoverage(Coverage):
             ]
         )
 
-        async with ActiveDataClient() as es:
+        async with ActiveDataClient('list_tests') as es:
             # First, count results
             res = await es.count(index=secrets.ACTIVE_DATA_INDEX, body=query)
             count = res['count']
@@ -155,7 +169,7 @@ class ActiveDataCoverage(Coverage):
 
     @staticmethod
     async def available_revisions(nb=2, max_date=None):
-        async with ActiveDataClient() as es:
+        async with ActiveDataClient('available_revisions') as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=ActiveDataCoverage.available_revisions_query(nb, max_date),
@@ -185,7 +199,7 @@ class ActiveDataCoverage(Coverage):
                 },
             },
         })
-        async with ActiveDataClient() as es:
+        async with ActiveDataClient('get_revision_date') as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=query,
@@ -213,7 +227,7 @@ class ActiveDataCoverage(Coverage):
                 },
             },
         })
-        async with ActiveDataClient() as es:
+        async with ActiveDataClient('calc_revision_coverage') as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=query,
@@ -287,7 +301,7 @@ class ActiveDataCoverage(Coverage):
                 }
             }
         }
-        async with ActiveDataClient() as es:
+        async with ActiveDataClient('get_push') as es:
             out = await es.search(
                 index='repo',
                 body=query,

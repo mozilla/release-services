@@ -11,7 +11,7 @@ import codecoverage_backend.config
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
     codecoverage_backend.config.PROJECT_NAME,
-    required=['ACTIVE_DATA', 'PHABRICATOR_TOKEN'],
+    required=['ACTIVE_DATA', 'PHABRICATOR_TOKEN', 'APP_CHANNEL'],
     existing={x: os.environ.get(x) for x in ['REDIS_URL'] if x in os.environ},
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
     taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
@@ -25,3 +25,5 @@ COVERAGE_SERVICE = secrets['COVERAGE_SERVICE'] if 'COVERAGE_SERVICE' in secrets 
 ACTIVE_DATA_INDEX = secrets['ACTIVE_DATA_INDEX'] if 'ACTIVE_DATA_INDEX' in secrets else 'coverage'
 HG_GIT_MAPPER = secrets['HG_GIT_MAPPER'] if 'HG_GIT_MAPPER' in secrets else 'https://mapper.mozilla-releng.net'
 PHABRICATOR_TOKEN = secrets['PHABRICATOR_TOKEN']
+DATADOG_API_KEY = secrets.get('DATADOG_API_KEY')
+APP_CHANNEL = secrets['APP_CHANNEL']
