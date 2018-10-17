@@ -402,6 +402,11 @@ def cmd(ctx,
         please_cli.utils.check_result(0, '')
         click.echo('    taskGroupId: ' + task_group_id)
 
+    taskcluster_notify = cli_common.taskcluster.get_service('notify')
+    if channel in please_cli.config.DEPLOY_CHANNELS:
+        taskcluster_notify.irc(dict(channel='#release-services',
+                                    message=f'New deployment on {channel} is about to start: https://tools.taskcluster.net/groups/{task_group_id}'))
+
     click.echo(' => Checking cache which project needs to be rebuilt')
     build_projects = []
     project_hashes = dict()
