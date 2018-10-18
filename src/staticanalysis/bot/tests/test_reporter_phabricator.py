@@ -122,6 +122,8 @@ def test_phabricator_clang_format(mock_repository, mock_phabricator):
     issue = ClangFormatIssue('test.cpp', 42, 1, revision)
     assert issue.is_publishable()
 
-    revision.diff_url = 'https://diff.url'
+    revision.improvement_patches = {
+        'clang-format': 'https://diff.url'
+    }
 
     reporter.publish([issue, ], revision)

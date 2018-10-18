@@ -6,13 +6,14 @@
 from unittest import mock
 
 
-def test_taskcluster_index(mock_workflow, mock_revision):
+def test_taskcluster_index(mock_workflow, mock_config, mock_revision):
     '''
     Test the Taskcluster indexing API
+    by mocking an online taskcluster state
     '''
+    from static_analysis_bot.config import TaskCluster
+    mock_config.taskcluster = TaskCluster('/tmp/dummy', '12345deadbeef', 0, True)
     mock_workflow.index_service = mock.Mock()
-    mock_workflow.on_taskcluster = True
-    mock_workflow.taskcluster_task_id = '12345deadbeef'
     mock_revision.namespaces = ['mock.1234']
     mock_revision.as_dict = lambda: {'id': '1234', 'source': 'mock'}
     mock_workflow.index(mock_revision, test='dummy')
