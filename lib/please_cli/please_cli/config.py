@@ -907,15 +907,16 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        'url': 'https://shipitbackend-default.dev.mozaws.net',
+                        'url': 'https://api.shipit.staging.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
                     },
                     'production': {
                         'enable': True,
+                        # TODO: we will switch to new url soon
+                        # 'url': 'https://api.shipit.mozilla-releng.net',
                         'url': 'https://shipit-api.mozilla-releng.net',
-                        'dns': 'shipitbackend-default.prod.mozaws.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
