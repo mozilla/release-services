@@ -21,7 +21,7 @@ EMAIL_HEADER = '''
 Review Url: {review_url}
 
 '''
-EMAIL_HEADER_PATCH = '* Improvement patch from {} : {}\n'
+EMAIL_HEADER_PATCH = '* Improvement patch from {} : {}'
 
 
 class MailReporter(Reporter):
@@ -63,8 +63,13 @@ class MailReporter(Reporter):
             stats=stats,
             review_url=revision.url,
         )
-        for analyzer, url in revision.improvement_patches.items():
-            content += EMAIL_HEADER_PATCH.format(analyzer, url)
+        if revision.improvement_patches:
+            content += '## Improvement patches:\n\n{}\n\n'.format(
+                '\n'.join(
+                    EMAIL_HEADER_PATCH.format(analyzer, url)
+                    for analyzer, url in revision.improvement_patches.items()
+                )
+            )
         content += '\n\n'.join([i.as_markdown() for i in issues])
         if len(content) > 102400:
             # Content is 102400 chars max
