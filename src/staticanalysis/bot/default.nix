@@ -1,5 +1,5 @@
-{ releng_pkgs 
-}: 
+{ releng_pkgs
+}:
 
 let
 
@@ -96,7 +96,7 @@ let
     src = filterSource ./. { inherit name; };
     src_path = "src/staticanalysis/bot";
     buildInputs =
-      [ mercurial clang_5 ] ++ 
+      [ mercurial clang_5 ] ++
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
@@ -175,6 +175,7 @@ let
         "SHELLCHECK=${shellcheck}/bin/shellcheck"
         "MOZ_AUTOMATION=1"
         "MOZBUILD_STATE_PATH=/tmp/mozilla-state"
+        "_JAVA_OPTIONS=-Duser.home=\"/tmp/mozilla-state\""
         "SHELL=xterm"
 
         # Needed to run clang Taskcluster static build
