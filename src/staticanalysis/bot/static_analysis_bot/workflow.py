@@ -259,8 +259,7 @@ class Workflow(object):
             analyzer = analyzer_class()
 
             # Run analyzer on revision and store generated issues
-            analyser_issues = analyzer.run(revision)
-            issues += analyser_issues
+            issues += analyzer.run(revision)
 
         return issues
 
@@ -270,7 +269,7 @@ class Workflow(object):
         '''
         assert isinstance(revision, Revision)
 
-        if not settings.taskcluster.online:
+        if settings.taskcluster.local:
             logger.info('Skipping taskcluster indexing', rev=str(revision), **kwargs)
             return
 

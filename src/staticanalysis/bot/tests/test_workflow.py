@@ -14,7 +14,7 @@ def test_taskcluster_index(mock_workflow, mock_config, mock_revision):
     by mocking an online taskcluster state
     '''
     from static_analysis_bot.config import TaskCluster
-    mock_config.taskcluster = TaskCluster('/tmp/dummy', '12345deadbeef', 0, True)
+    mock_config.taskcluster = TaskCluster('/tmp/dummy', '12345deadbeef', 0, False)
     mock_workflow.index_service = mock.Mock()
     mock_revision.namespaces = ['mock.1234']
     mock_revision.as_dict = lambda: {'id': '1234', 'source': 'mock'}
@@ -36,7 +36,7 @@ def test_taskcluster_artifacts(tmpdir, mock_config, mock_revision):
 
     from static_analysis_bot.config import TaskCluster
     results = tmpdir.mkdir('results')
-    mock_config.taskcluster = TaskCluster(str(results), '12345deadbeef', 0, True)
+    mock_config.taskcluster = TaskCluster(str(results), '12345deadbeef', 0, False)
 
     # Write an artifact
     artifact = results.join('something.txt')

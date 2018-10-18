@@ -23,7 +23,7 @@ REPO_UNIFIED = b'https://hg.mozilla.org/mozilla-unified'
 
 logger = get_logger(__name__)
 
-TaskCluster = collections.namedtuple('TaskCluster', 'results_dir, task_id, run_id, online')
+TaskCluster = collections.namedtuple('TaskCluster', 'results_dir, task_id, run_id, local')
 
 
 class Publication(enum.Enum):
@@ -70,9 +70,9 @@ class Settings(object):
 
         # Save Taskcluster ID for logging
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            self.taskcluster = TaskCluster('/tmp/results', os.environ['TASK_ID'], os.environ['RUN_ID'], True)
+            self.taskcluster = TaskCluster('/tmp/results', os.environ['TASK_ID'], os.environ['RUN_ID'], False)
         else:
-            self.taskcluster = TaskCluster(tempfile.mkdtemp(), 'local instance', 0, False)
+            self.taskcluster = TaskCluster(tempfile.mkdtemp(), 'local instance', 0, True)
         if not os.path.isdir(self.taskcluster.results_dir):
             os.makedirs(self.taskcluster.results_dir)
 
