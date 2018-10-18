@@ -27,8 +27,6 @@ ac_add_options --target=arm-linux-androideabi
 ac_add_options --with-android-sdk="{mozbuild}/android-sdk-linux/android-sdk-linux"
 ac_add_options --with-android-ndk="{mozbuild}/android-ndk/android-ndk"'''
 
-RES_DIRECTORY = '/tmp/mozilla-state'
-
 
 def setup(index, job_name='linux64-infer', revision='latest',
           artifact='public/build/infer.tar.xz'):
@@ -101,10 +99,12 @@ class AndroidConfig():
         os.environ['MOZCONFIG'] = self.__android_mozconfig
         subprocess.run(['chmod', 'u+w', self.__android_mozconfig])
         with open(self.__android_mozconfig, 'a') as f:
-            f.write(ANDROID_MOZCONFIG.format(mozbuild=RES_DIRECTORY))
+            f.write(ANDROID_MOZCONFIG.format(
+                mozbuild=os.environ['MOZBUILD_STATE_PATH']))
 
-        # set GRADLE_USER_HOME this is needed in automation
-        gradle_home_dir = os.path.join(RES_DIRECTORY, 'gradle')
+        # set GRADLE_USER_HOME as it is needed for Gradle to use sane paths.
+        gradle_home_dir = os.path.join(
+            os.environ['MOZBUILD_STATE_PATH'], 'gradle')
         if not os.path.exists(gradle_home_dir):
             os.makedirs(gradle_home_dir)
         logger.info('Setting GRADLE_USER_HOME to {}.'.format(gradle_home_dir))
