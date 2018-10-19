@@ -9,6 +9,7 @@ import re
 import subprocess
 
 from cli_common.log import get_logger
+from static_analysis_bot import CLANG_TIDY
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
@@ -116,7 +117,7 @@ class ClangTidy(object):
 
         # Dump raw clang-tidy output as a Taskcluster artifact (for debugging)
         clang_output_path = os.path.join(
-            settings.taskcluster_results_dir,
+            settings.taskcluster.results_dir,
             '{}-clang-tidy.txt'.format(repr(revision)),
         )
         with open(clang_output_path, 'w') as f:
@@ -230,6 +231,8 @@ class ClangTidyIssue(Issue):
     '''
     An issue reported by clang-tidy
     '''
+    ANALYZER = CLANG_TIDY
+
     def __init__(self, header_data, revision):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
@@ -332,11 +335,6 @@ class ClangTidyIssue(Issue):
                 ) for n in self.notes
             ]),
         )
-
-    def as_diff(self):
-        '''
-        No diff available
-        '''
 
     def as_dict(self):
         '''

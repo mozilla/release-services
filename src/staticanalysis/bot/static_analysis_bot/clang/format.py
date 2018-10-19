@@ -6,6 +6,7 @@ import hglib
 from parsepatch.patch import Patch
 
 from cli_common.log import get_logger
+from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import settings
@@ -37,7 +38,6 @@ class ClangFormat(object):
         Run ./mach clang-format on the current patch
         '''
         assert isinstance(revision, Revision)
-        issues = []
 
         # Commit the current revision for `./mach clang-format` to reformat its changes
 
@@ -52,7 +52,7 @@ class ClangFormat(object):
 
         # Dump raw clang-format output as a Taskcluster artifact (for debugging)
         clang_output_path = os.path.join(
-            settings.taskcluster_results_dir,
+            settings.taskcluster.results_dir,
             '{}-clang-format.txt'.format(repr(revision)),
         )
         with open(clang_output_path, 'w') as f:
@@ -62,38 +62,44 @@ class ClangFormat(object):
         client = hglib.open(settings.repo_dir)
         self.diff = client.diff(unified=8).decode('utf-8')
 
-        if len(self.diff) > 0:
-            # Generate a reverse diff for `parsepatch` (in order to get original
-            # line numbers from the dev's patch instead of new line numbers)
-            reverse_diff = client.diff(unified=8, reverse=True).decode('utf-8')
+        if not self.diff:
+            return [], None
 
-            # List all the lines that were fixed by `./mach clang-format`
-            patch = Patch.parse_patch(reverse_diff, skip_comments=False)
-            assert patch != {}, \
-                'Empty patch'
+        # Generate a reverse diff for `parsepatch` (in order to get original
+        # line numbers from the dev's patch instead of new line numbers)
+        reverse_diff = client.diff(unified=8, reverse=True).decode('utf-8')
 
-            # Build `ClangFormatIssue`s
-            for filename, diff in patch.items():
-                lines = sorted(diff.get('touched', []) + diff.get('added', []))
+        # Store that diff as an improvement sent to devs
+        revision.add_improvement_patch('clang-format', reverse_diff)
 
-                # Group consecutive lines together (algorithm by calixte)
-                groups = []
-                group = [lines[0]]
-                for line in lines[1:]:
-                    # If the line is not consecutive with the group, start a new
-                    # group
-                    if line != group[-1] + 1:
-                        groups.append(group)
-                        group = []
-                    group.append(line)
+        # List all the lines that were fixed by `./mach clang-format`
+        patch = Patch.parse_patch(reverse_diff, skip_comments=False)
+        assert patch != {}, \
+            'Empty patch'
 
-                # Don't forget to add the last group
-                groups.append(group)
+        # Build `ClangFormatIssue`s
+        issues = []
+        for filename, diff in patch.items():
+            lines = sorted(diff.get('touched', []) + diff.get('added', []))
 
-                issues += [
-                    ClangFormatIssue(filename, group[0], len(group), revision)
-                    for group in groups
-                ]
+            # Group consecutive lines together (algorithm by calixte)
+            groups = []
+            group = [lines[0]]
+            for line in lines[1:]:
+                # If the line is not consecutive with the group, start a new
+                # group
+                if line != group[-1] + 1:
+                    groups.append(group)
+                    group = []
+                group.append(line)
+
+            # Don't forget to add the last group
+            groups.append(group)
+
+            issues += [
+                ClangFormatIssue(filename, group[0], len(group), revision)
+                for group in groups
+            ]
 
         stats.report_issues('clang-format', issues)
         return issues
@@ -103,6 +109,8 @@ class ClangFormatIssue(Issue):
     '''
     An issue created by the Clang Format tool
     '''
+    ANALYZER = CLANG_FORMAT
+
     def __init__(self, path, line, nb_lines, revision):
         self.path = path
         self.line = line
@@ -148,11 +156,6 @@ class ClangFormatIssue(Issue):
             nb_lines=self.nb_lines,
             is_new='yes' if self.is_new else 'no',
         )
-
-    def as_diff(self):
-        '''
-        No diff available
-        '''
 
     def as_dict(self):
         '''
