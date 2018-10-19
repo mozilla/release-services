@@ -6,9 +6,11 @@ from elasticsearch import Elasticsearch
 
 from cli_common import log
 from codecoverage_backend import secrets
+from codecoverage_backend.datadog import get_stats
 from codecoverage_backend.services.active_data import ActiveDataCoverage
 
 logger = log.get_logger(__name__)
+stats = get_stats()
 
 
 class NoResults(Exception):
@@ -37,22 +39,25 @@ class ActiveData(object):
             logger.warn('ES client failure: {}'.format(e))
 
     def search(self, name, body, timeout=10):
-        out = self.client.search(
-            index=secrets.ACTIVE_DATA_INDEX,
-            body=body,
-            request_timeout=timeout,
-        )
+        with stats.timer('codecoverage.active_data.{}'.format(name)):
+            out = self.client.search(
+                index=secrets.ACTIVE_DATA_INDEX,
+                body=body,
+                request_timeout=timeout,
+            )
         if out is None:
             raise Exception('No response from ES server')
         if out['timed_out']:
             logger.warn('ES query {} timed out'.format(name))
         else:
+            took = out['took'] / 1000.0
             logger.info('ES query {name} took {time}s to hit {nb} items'.format(
                 name=name,
-                time=out['took'] / 1000.0,
+                time=took,
                 nb=out['hits'].get('total', 0),
                 scroll='1m',
             ))
+            stats.histogram('codecoverage.active_data.es.{}'.format(name), took)
         if out['hits']['total'] == 0:
             raise NoResults
         return out
@@ -66,7 +71,7 @@ class ActiveData(object):
         Get the latest coverage changeset pushed to ES
         '''
         query = ActiveDataCoverage.available_revisions_query(nb=1)
-        out = self.search('latest-build', query)
+        out = self.search('latest-build', query, timeout=30)
         if out['aggregations']:
             return out['aggregations']['revisions']['buckets'][0]['key']
 

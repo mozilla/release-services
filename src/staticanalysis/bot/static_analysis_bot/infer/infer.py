@@ -9,6 +9,7 @@ import subprocess
 
 from cli_common.command import run_check
 from cli_common.log import get_logger
+from static_analysis_bot import INFER
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
@@ -87,7 +88,7 @@ class Infer(object):
 
         # Dump raw infer output as a Taskcluster artifact (for debugging)
         infer_output_path = os.path.join(
-            settings.taskcluster_results_dir,
+            settings.taskcluster.results_dir,
             '{}-infer.txt'.format(repr(revision)),
         )
         with open(infer_output_path, 'w') as f:
@@ -119,6 +120,8 @@ class InferIssue(Issue):
     '''
     An issue reported by infer
     '''
+    ANALYZER = INFER
+
     def __init__(self, entry, revision):
         assert isinstance(entry, dict)
         assert not settings.repo_dir.endswith('/')
@@ -177,11 +180,6 @@ class InferIssue(Issue):
             publishable='yes' if self.is_publishable() else 'no',
             is_new='yes' if self.is_new else 'no'
         )
-
-    def as_diff(self):
-        '''
-        No diff available
-        '''
 
     def as_dict(self):
         '''

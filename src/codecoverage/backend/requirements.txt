@@ -4,6 +4,7 @@
 aiohttp
 async-lru
 cachetools
+datadog
 redis
 rq
 gunicorn

@@ -402,6 +402,11 @@ def cmd(ctx,
         please_cli.utils.check_result(0, '')
         click.echo('    taskGroupId: ' + task_group_id)
 
+    taskcluster_notify = cli_common.taskcluster.get_service('notify')
+    if channel in please_cli.config.DEPLOY_CHANNELS:
+        taskcluster_notify.irc(dict(channel='#release-services',
+                                    message=f'New deployment on {channel} is about to start: https://tools.taskcluster.net/groups/{task_group_id}'))
+
     click.echo(' => Checking cache which project needs to be rebuilt')
     build_projects = []
     project_hashes = dict()
@@ -511,6 +516,13 @@ def cmd(ctx,
         deploy_tasks = {}
         for index, (project, project_requires, deploy_target, deploy_options) in \
                 enumerate(sorted(projects_to_deploy, key=lambda x: x[0])):
+            try:
+                enable = deploy_options['enable']
+            except KeyError:
+                raise click.ClickException(f'Missing {enable} in project {project} and channel {channel} deploy options')
+
+            if not enable:
+                continue
             project_uuid = slugid.nice().decode('utf-8')
             project_task = get_deploy_task(
                 index,

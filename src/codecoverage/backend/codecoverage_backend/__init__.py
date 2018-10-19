@@ -7,6 +7,7 @@ from __future__ import absolute_import
 
 import os
 import codecoverage_backend.config
+import codecoverage_backend.datadog
 
 
 def create_app(config=None):
@@ -25,4 +26,8 @@ def create_app(config=None):
     )
     # TODO: add predefined api.yml
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
+
+    # Setup datadog stats
+    codecoverage_backend.datadog.get_stats()
+
     return app
