@@ -271,3 +271,34 @@ def test_removed_file(mock_secrets, mock_phabricator, fake_hg_repo):
 
     assert set(results.keys()) == set([1])
     assert set(results[1].keys()) == set()
+
+
+@responses.activate
+def test_backout_removed_file(mock_secrets, mock_phabricator, fake_hg_repo):
+    hg, local, remote = fake_hg_repo
+
+    add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
+    commit(hg, 1)
+
+    hg.remove(files=[bytes(os.path.join(local, 'file'), 'ascii')])
+    revision = commit(hg, 2)
+
+    hg.backout(rev=revision, message='backout', user='marco')
+    revision = hg.log(limit=1)[0][1].decode('ascii')
+
+    hg.push(dest=bytes(remote, 'ascii'))
+
+    copy_pushlog_database(remote, local)
+
+    phabricator = PhabricatorUploader(local, revision)
+    results = phabricator.generate({
+        'source_files': [{
+            'name': 'file',
+            'coverage': [None, 0, 1, 1, 1, 1, 0],
+        }]
+    })
+
+    assert set(results.keys()) == set([1, 2])
+    assert set(results[1].keys()) == set(['file'])
+    assert set(results[2].keys()) == set([])
+    assert results[1]['file'] == 'NUCCCCU'

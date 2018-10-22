@@ -71,7 +71,11 @@ class HGMO(object):
     def get_annotate(self, revision, path):
         r = requests.get('{}/json-annotate/{}/{}'.format(HGMO.SERVER_ADDRESS, revision, path))
 
-        r.raise_for_status()
+        # 200 means success.
+        # 404 means a file that doesn't exist (never existed or was removed).
+        if r.status_code not in [200, 404]:
+            r.raise_for_status()
+
         annotate_data = r.json()
 
         if 'not found in manifest' in annotate_data:
