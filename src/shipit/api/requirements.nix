@@ -422,8 +422,8 @@ let
     };
 
     "async-timeout" = python.mkDerivation {
-      name = "async-timeout-3.0.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/35/82/6c7975afd97661e6115eee5105359ee191a71ff3267fde081c7c8d05fae6/async-timeout-3.0.0.tar.gz"; sha256 = "b3c0ddc416736619bd4a95ca31de8da6920c3b9a140c64dbef2b2fa7bf521287"; };
+      name = "async-timeout-3.0.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/a1/78/aae1545aba6e87e23ecab8d212b58bb70e72164b67eb090b81bb17ad38e3/async-timeout-3.0.1.tar.gz"; sha256 = "0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -516,8 +516,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.13";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/88/65/53a5dcd23c9185ae54e89289ffc427e13412afd563093d6e9a6a75ce4533/boto3-1.9.13.tar.gz"; sha256 = "67e89880fceedab0dc922b42206affd19bc52dd8bc113e56e1354b40fff4f4ea"; };
+      name = "boto3-1.9.23";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/41/66/545a1249d92444d948f87847ab40be2cd5ce0b15eac889b83944ca952567/boto3-1.9.23.tar.gz"; sha256 = "ff13a7a92e55c387c1dcdbe395f22de332cc9de12492ce5bc44199c2f5dc384a"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -535,8 +535,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.13";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/09/08/4315f1eff0e3b81952316f1442cbc62bceab997afc9cb86c9566849f4194/botocore-1.12.13.tar.gz"; sha256 = "d3a286aaa63c3388afb49feb36b61992dd37c735462c8b40add79c48bd845bc7"; };
+      name = "botocore-1.12.23";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/f6/6f/8df979ecb0aeaf82a62dc561c243405bf4f5264833a2c5463576172df596/botocore-1.12.23.tar.gz"; sha256 = "e19d83d787575644e5c52654a979b931f198394ad1b27412b7d37ce6cbbc3c6e"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -812,8 +812,8 @@ let
     };
 
     "flake8-copyright" = python.mkDerivation {
-      name = "flake8-copyright-0.2.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/3a/22/2973cbdfd5c2df98bbd1b187c19c438653ffa75ea2ed1b0e610b344d70b6/flake8-copyright-0.2.0.tar.gz"; sha256 = "aeef26eb4d5223c9cd5b101e68175fcef6d2b353bf36da688fdde62fccfe2b73"; };
+      name = "flake8-copyright-0.2.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/66/35/3a5712611f8345329582817c71db68f6a1b6f4d500efeaeca1137b241417/flake8-copyright-0.2.2.tar.gz"; sha256 = "5c3632dd8c586547b25fff4272282005fdbcba56eeb77b7487564aa636b6e533"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -921,8 +921,8 @@ let
     };
 
     "flask-talisman" = python.mkDerivation {
-      name = "flask-talisman-0.5.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/5a/51/529d44d7c3ba055c43696d22c627151bc7f52a0dabeec5377f8e857fe6b9/flask-talisman-0.5.1.tar.gz"; sha256 = "f39755e804edfc63e4ef30ee62d3b762283d5b40871f61b87f2dea39654f4fb7"; };
+      name = "flask-talisman-0.6.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1f/0a/06a0f5af06978710833d1a49bc4a35c6ec7113bda5ec2d85c98c3557cdba/flask-talisman-0.6.0.tar.gz"; sha256 = "85c6688bcbc8de6c37b86bfb60db2da295ee1935c2ed27ca16396792ab45a3ef"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1136,8 +1136,8 @@ let
     };
 
     "jedi" = python.mkDerivation {
-      name = "jedi-0.12.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/49/2f/cdfb8adc8cfc9fc2e5673e724d9b9098619dc1a2772cc6b8af34c6b7bef9/jedi-0.12.1.tar.gz"; sha256 = "b409ed0f6913a701ed474a614a3bb46e6953639033e31f769ca7581da5bd1ec1"; };
+      name = "jedi-0.13.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c1/fd/cba30adcd2a739b1288b9dc87830c28797181492757080294523d03599e6/jedi-0.13.1.tar.gz"; sha256 = "b7493f73a2febe0dc33d51c99b474547f7f6c0b2c8fb2b21f453eef204c12148"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1145,6 +1145,7 @@ let
       propagatedBuildInputs = [
       self."docopt"
       self."parso"
+      self."pytest"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/davidhalter/jedi";
@@ -1517,8 +1518,8 @@ let
     };
 
     "prompt-toolkit" = python.mkDerivation {
-      name = "prompt-toolkit-2.0.4";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/77/bf/5d7664605c91db8f39a3e49abb57a3c933731a90b7a58cdcafd4a9bcbe97/prompt_toolkit-2.0.4.tar.gz"; sha256 = "ff58ce8bb82c11c43416dd3eec7701dcbe8c576e2d7649f1d2b9d21a2fd93808"; };
+      name = "prompt-toolkit-2.0.6";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/96/29/179b81ea51e5abbd04888489d745ef4817c0c1b29b2a3f8efe7ea569b4a4/prompt_toolkit-2.0.6.tar.gz"; sha256 = "82766ffd7397e6661465e20bd1390db0781ca4fbbab4cf6c2578cacdd8b09754"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1565,8 +1566,8 @@ let
     };
 
     "py" = python.mkDerivation {
-      name = "py-1.6.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/4f/38/5f427d1eedae73063ce4da680d2bae72014995f9fdeaa57809df61c968cd/py-1.6.0.tar.gz"; sha256 = "06a30435d058473046be836d3fc4f27167fd84c45b99704f2fb5509ef61f9af1"; };
+      name = "py-1.7.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c7/fa/eb6dd513d9eb13436e110aaeef9a1703437a8efa466ce6bb2ff1d9217ac7/py-1.7.0.tar.gz"; sha256 = "bf92637198836372b520efcba9e020c330123be8ce527e535d185ed4b6f45694"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1642,8 +1643,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.8.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/22/77/8dba15a7ec756b040e82bc216120d19dffb5f4a1e4f896822fd3a45bd0a8/pytest-3.8.1.tar.gz"; sha256 = "95529588ff4e85114a0b0ad8e9cf0131ca47d46b28230e25366c5aba66b1d854"; };
+      name = "pytest-3.8.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/5f/d2/7f77f406ac505abda02ab4afb50d06ebf304f6ea42fca34f8f37529106b2/pytest-3.8.2.tar.gz"; sha256 = "9332147e9af2dcf46cd7ceb14d5acadb6564744ddff1fe8c17f0ce60ece7d9a2"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1950,8 +1951,8 @@ let
     };
 
     "swagger-spec-validator" = python.mkDerivation {
-      name = "swagger-spec-validator-2.4.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/6b/4b/148b5b5a99c55ef99f4e381638141e9288fb1848e620798cfb6f587dd96a/swagger-spec-validator-2.4.0.tar.gz"; sha256 = "7212467c6be39a86ed5b0009ad04d1a1a8c4b0bb7eea8ba396763347bdc3e20a"; };
+      name = "swagger-spec-validator-2.4.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/2f/ff/9a25285add264305e8ecb477d11c36608ff6dabe12c39cc9f8621dccbbcb/swagger-spec-validator-2.4.1.tar.gz"; sha256 = "b9618efbfa5446cdf09e72f9d384b869970c63c9a726c981f0abcf2d63a929cb"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -2041,6 +2042,24 @@ let
         homepage = "https://github.com/python/typed_ast";
         license = licenses.asl20;
         description = "a fork of Python 2 and 3 ast modules with type comment support";
+      };
+    };
+
+    "typeguard" = python.mkDerivation {
+      name = "typeguard-2.2.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/27/e4/e1def692e2c21dfcdc32456993af00fb75dc9ac4e8258f2d697374241a52/typeguard-2.2.2.tar.gz"; sha256 = "b8ddc6e2e60bd64b7003f9a685a09ba387b74adf2f6bea7534a76d61892f573e"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."pytest"
+      self."pytest-cov"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "Run-time type checker for Python";
       };
     };
 

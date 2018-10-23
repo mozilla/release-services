@@ -234,6 +234,19 @@ in skipOverrides {
     '';
   };
 
+  "typeguard" = self: old: {
+    configurePhase = ''
+      export LANG=en_US.UTF-8
+      export LC_ALL=en_US.UTF-8
+      ${if pkgs.stdenv.isLinux then "export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive;" else ""}
+    '';
+    patchPhase = ''
+      echo "from setuptools import setup" > setup.py
+      echo "setup()" >> setup.py
+    '';
+
+  };
+
   "Flask-Cache" = self: old: {
     # XXX: from https://github.com/thadeusb/flask-cache/pull/189
     patchPhase = ''
