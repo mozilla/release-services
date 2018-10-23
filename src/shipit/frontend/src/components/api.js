@@ -1,4 +1,4 @@
-import config from '../config';
+import { SHIPIT_API_URL } from '../config';
 
 /**
  * Get build numbers from the API endpoint.
@@ -7,7 +7,7 @@ import config from '../config';
  * started yet.
  */
 export async function getBuildNumbers(product, branch, version) {
-  const url = new URL(`${config.API_URL}/releases`);
+  const url = new URL(`${SHIPIT_API_URL}/releases`);
   const params = new URLSearchParams({
     product,
     branch,
@@ -27,7 +27,7 @@ export async function getBuildNumbers(product, branch, version) {
  * combination. Optionally the version can be specified.
  */
 export async function getShippedReleases(product, branch, version = null, buildNumber = null) {
-  const url = new URL(`${config.API_URL}/releases`);
+  const url = new URL(`${SHIPIT_API_URL}/releases`);
   const params = new URLSearchParams({
     product,
     branch,
