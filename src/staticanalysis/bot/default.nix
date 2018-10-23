@@ -119,7 +119,7 @@ let
       mkdir -p $out/etc
       mkdir -p $out/tmp
       mkdir -p $out/bin
-      mkdir -p $out/usr/bin
+      mkdir -p $out/usr/bin $out/usr/share
       mkdir -p $out/lib64
       ln -s ${mercurial}/bin/hg $out/bin
       ln -s ${patch}/bin/patch $out/bin
@@ -146,6 +146,7 @@ let
 
       # Use UTC as timezone
       ln -s ${tzdata}/share/zoneinfo/UTC $out/etc/localtime
+      ln -s ${tzdata}/share/zoneinfo $out/usr/share
       echo UTC > $out/etc/timezone
     '';
     shellHook = ''
