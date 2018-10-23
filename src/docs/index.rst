@@ -40,7 +40,6 @@ Projects
     staticanalysis/bot <projects/staticanalysis-bot>
     pulselistener <projects/pulselistener>
     uplift/backend <projects/uplift-backend>
-    uplift/frontend <projects/uplift-frontend>
     uplift/bot <projects/uplift-bot>
 
 
