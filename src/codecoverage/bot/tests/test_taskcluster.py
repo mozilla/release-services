@@ -129,6 +129,7 @@ def test_is_coverage_task():
         }
     })
 
+
 def test_get_chunk():
     tests = [
         ('test-linux64-ccov/debug-mochitest-1', 'mochitest-1'),
