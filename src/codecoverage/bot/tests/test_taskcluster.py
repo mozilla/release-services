@@ -161,6 +161,10 @@ def test_get_platform():
     tests = [
         ('test-linux64-ccov/debug-mochitest-1', 'linux'),
         ('test-windows10-64-ccov/debug-mochitest-1', 'windows'),
+        ('build-linux64-ccov/debug', 'linux'),
+        ('build-win64-ccov/debug', 'windows'),
+        ('build-android-test-ccov/opt', 'android-test'),
+        ('test-android-em-4.3-arm7-api-16-ccov/debug-robocop-2', 'android-emulator'),
     ]
 
     for (name, platform) in tests:
