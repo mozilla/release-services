@@ -101,7 +101,9 @@ def download_artifact(artifact_path, task_id, artifact_name):
 
 
 TEST_PLATFORMS = [
+    'build-linux64-ccov/debug',
     'test-linux64-ccov/debug',
+    'build-win64-ccov/debug',
     'test-windows10-64-ccov/debug',
     'test-android-em-4.3-arm7-api-16-ccov/debug',
     'build-android-test-ccov/opt',
