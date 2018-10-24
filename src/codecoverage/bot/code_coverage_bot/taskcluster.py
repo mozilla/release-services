@@ -129,7 +129,7 @@ def get_suite(chunk_name):
 def get_platform(name):
     if 'linux' in name:
         return 'linux'
-    elif 'windows' in name or 'win' in name:
+    elif 'win' in name:
         return 'windows'
     elif 'android-test' in name:
         return 'android-test'
