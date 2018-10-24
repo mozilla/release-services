@@ -647,69 +647,6 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'uplift/frontend': {
-        'run': 'ELM',
-        'run_options': {
-            'port': 8010,
-            'envs': {
-                'bugzilla-url': 'https://bugzilla-dev.allizom.org',
-            }
-        },
-        'requires': [
-            'uplift/backend',
-        ],
-        'deploys': [
-            {
-                'target': 'S3',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        's3_bucket': 'release-services-uplift-frontend-testing',
-                        'url': 'https://uplift.testing.moz.tools',
-                        'dns': 'd1swet7sulei5z.cloudfront.net.',
-                        'envs': {
-                            'bugzilla-url': 'https://bugzilla.mozilla.org',
-                        },
-                        'csp': [
-                            'https://login.taskcluster.net',
-                            'https://auth.taskcluster.net',
-                            'https://bugzilla.mozilla.org',
-                        ],
-                    },
-                    'staging': {
-                        'enable': True,
-                        's3_bucket': 'release-services-uplift-frontend-staging',
-                        'url': 'https://uplift.staging.moz.tools',
-                        'dns': 'd3voyguhnvtgyb.cloudfront.net.',
-                        'envs': {
-                            'bugzilla-url': 'https://bugzilla.mozilla.org',
-                        },
-                        'csp': [
-                            'https://login.taskcluster.net',
-                            'https://auth.taskcluster.net',
-                            'https://bugzilla.mozilla.org',
-                            'https://uplift.shipit.staging.mozilla-releng.net',
-                        ],
-                    },
-                    'production': {
-                        'enable': True,
-                        's3_bucket': 'release-services-uplift-frontend-production',
-                        'url': 'https://uplift.moz.tools',
-                        'dns': 'd2j55he28msyhx.cloudfront.net.',
-                        'envs': {
-                            'bugzilla-url': 'https://bugzilla.mozilla.org',
-                        },
-                        'csp': [
-                            'https://login.taskcluster.net',
-                            'https://auth.taskcluster.net',
-                            'https://bugzilla.mozilla.org',
-                            'https://uplift.shipit.mozilla-releng.net',
-                        ],
-                    },
-                },
-            },
-        ],
-    },
     'pulselistener': {
         'checks': [
             ('Checking code quality', 'flake8'),
