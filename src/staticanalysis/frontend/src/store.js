@@ -149,17 +149,26 @@ export default new Vuex.Store({
   actions: {
     // Switch data channel to use
     switch_channel (state, channel) {
+      state.commit('reset_tasks')
       state.commit('use_channel', channel)
       state.dispatch('load_index')
       router.push({ name: 'tasks' })
     },
 
     // Load Phabricator indexed tasks summary from Taskcluster
-    load_index (state) {
-      state.commit('reset_tasks')
+    load_index (state, payload) {
       let url = TASKCLUSTER_INDEX + '/tasks/project.releng.services.project.' + this.state.channel + '.static_analysis_bot.phabricator'
+      url += '?limit=200'
+      if (payload && payload.continuationToken) {
+        url += '&continuationToken=' + payload.continuationToken
+      }
       return axios.get(url).then(resp => {
         state.commit('use_tasks', resp.data.tasks)
+
+        // Continue loading available tasks
+        if (resp.data.continuationToken) {
+          state.dispatch('load_index', { continuationToken: resp.data.continuationToken })
+        }
       })
     },
 
