@@ -6,7 +6,7 @@ import {
 import { object } from 'prop-types';
 import { NavLink } from 'react-router-dom';
 
-import { SHIPIT_API_URL, config } from '../../config';
+import config from '../../config';
 import { getBuildNumbers, getShippedReleases } from '../../components/api';
 import { getPushes, getVersion, getLocales } from '../../components/mercurial';
 import maybeShorten from '../../components/text';
@@ -187,7 +187,7 @@ export default class NewRelease extends React.Component {
       this.setState({ errorMsg: 'Login required!' });
       return;
     }
-    const url = `${SHIPIT_API_URL}/releases`;
+    const url = `${config.API_URL}/releases`;
     const { accessToken } = this.context.authController.getUserSession();
     const headers = {
       Authorization: `Bearer ${accessToken}`,
