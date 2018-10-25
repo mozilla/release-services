@@ -14,8 +14,7 @@ from code_coverage_bot import taskcluster
 
 logger = get_logger(__name__)
 
-# TODO: Change the IP to a domain name when bug 1429482 is fixed.
-ACTIVEDATA_QUERY_URL = 'http://54.149.21.8/query'
+ACTIVEDATA_QUERY_URL = 'http://activedata.allizom.org/query'
 
 PLATFORMS = ['linux', 'windows']
 IGNORED_SUITE_PREFIXES = ['awsy', 'talos', 'test-coverage', 'test-coverage-wpt']

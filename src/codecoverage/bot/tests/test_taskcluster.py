@@ -65,41 +65,69 @@ def test_get_tasks_in_group(GROUP_TASKS_1, GROUP_TASKS_2):
 
 
 def test_is_coverage_task():
-    cov_task = {
+    assert taskcluster.is_coverage_task({
         'task': {
             'metadata': {
                 'name': 'test-linux64-ccov/debug-mochitest-1'
             }
         }
-    }
-    assert taskcluster.is_coverage_task(cov_task)
+    })
 
-    nocov_task = {
+    assert not taskcluster.is_coverage_task({
         'task': {
             'metadata': {
                 'name': 'test-linux64/debug-mochitest-1'
             }
         }
-    }
-    assert not taskcluster.is_coverage_task(nocov_task)
+    })
 
-    cov_task = {
+    assert taskcluster.is_coverage_task({
         'task': {
             'metadata': {
                 'name': 'test-windows10-64-ccov/debug-cppunit'
             }
         }
-    }
-    assert taskcluster.is_coverage_task(cov_task)
+    })
 
-    nocov_task = {
+    assert not taskcluster.is_coverage_task({
         'task': {
             'metadata': {
                 'name': 'test-windows10-64/debug-cppunit'
             }
         }
-    }
-    assert not taskcluster.is_coverage_task(nocov_task)
+    })
+
+    assert taskcluster.is_coverage_task({
+        'task': {
+            'metadata': {
+                'name': 'build-win64-ccov/debug'
+            }
+        }
+    })
+
+    assert not taskcluster.is_coverage_task({
+        'task': {
+            'metadata': {
+                'name': 'build-win64/debug'
+            }
+        }
+    })
+
+    assert taskcluster.is_coverage_task({
+        'task': {
+            'metadata': {
+                'name': 'build-linux64-ccov/debug'
+            }
+        }
+    })
+
+    assert not taskcluster.is_coverage_task({
+        'task': {
+            'metadata': {
+                'name': 'build-linux64/debug'
+            }
+        }
+    })
 
 
 def test_get_chunk():
@@ -133,6 +161,10 @@ def test_get_platform():
     tests = [
         ('test-linux64-ccov/debug-mochitest-1', 'linux'),
         ('test-windows10-64-ccov/debug-mochitest-1', 'windows'),
+        ('build-linux64-ccov/debug', 'linux'),
+        ('build-win64-ccov/debug', 'windows'),
+        ('build-android-test-ccov/opt', 'android-test'),
+        ('test-android-em-4.3-arm7-api-16-ccov/debug-robocop-2', 'android-emulator'),
     ]
 
     for (name, platform) in tests:

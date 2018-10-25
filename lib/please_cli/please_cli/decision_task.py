@@ -407,6 +407,17 @@ def cmd(ctx,
         taskcluster_notify.irc(dict(channel='#release-services',
                                     message=f'New deployment on {channel} is about to start: https://tools.taskcluster.net/groups/{task_group_id}'))
 
+    message = ("release-services team is about to release a new version of mozilla/release-services "
+               "(*.mozilla-releng.net, *.moz.tools).\ Any alerts coming up soon will be best directed "
+               "to #release-services IRC channel. Automated message (such as this) will be send "
+               "once deployment is done. Thank you.")
+
+    """This message will only be sent when channel is production.
+    """
+    if channel is 'production':
+        for msgChannel in ['#ci', '#moc']:
+                taskcluster_notify.irc(dict(channel=msgChannel, message=message))
+
     click.echo(' => Checking cache which project needs to be rebuilt')
     build_projects = []
     project_hashes = dict()

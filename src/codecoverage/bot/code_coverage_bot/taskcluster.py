@@ -101,7 +101,9 @@ def download_artifact(artifact_path, task_id, artifact_name):
 
 
 TEST_PLATFORMS = [
+    'build-linux64-ccov/debug',
     'test-linux64-ccov/debug',
+    'build-win64-ccov/debug',
     'test-windows10-64-ccov/debug',
     'test-android-em-4.3-arm7-api-16-ccov/debug',
     'build-android-test-ccov/opt',
@@ -127,7 +129,7 @@ def get_suite(chunk_name):
 def get_platform(name):
     if 'linux' in name:
         return 'linux'
-    elif 'windows' in name:
+    elif 'win' in name:
         return 'windows'
     elif 'android-test' in name:
         return 'android-test'
