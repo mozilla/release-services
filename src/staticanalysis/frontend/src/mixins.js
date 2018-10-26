@@ -1,8 +1,5 @@
 export default {
   stats: {
-    mounted () {
-      this.$store.dispatch('calc_stats')
-    },
     computed: {
       stats () {
         return this.$store.state.stats
