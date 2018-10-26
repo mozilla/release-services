@@ -122,15 +122,13 @@ export default new Vuex.Store({
 
       if (state.stats !== null) {
         // Calc stats for this report
-        // clang-format does not provide any check information
-        var checks = report.issues.filter(i => i.analyzer !== 'clang-format')
-        state.stats.checks = checks.reduce((stats, issue) => {
+        state.stats.checks = report.issues.reduce((stats, issue) => {
           var analyzer = issue.analyzer + (issue.analyzer === 'mozlint' ? '.' + issue.linter : '')
           var check = null
           if (issue.analyzer === 'clang-tidy') {
             check = issue.check
           } else if (issue.analyzer === 'clang-format') {
-            check = 'unknown'
+            check = 'lint' // No check informations on clang-format
           } else if (issue.analyzer === 'infer') {
             check = issue.bug_type
           } else if (issue.analyzer === 'mozlint') {
