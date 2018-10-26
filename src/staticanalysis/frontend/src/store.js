@@ -14,9 +14,9 @@ export default new Vuex.Store({
     channel: 'production',
     tasks: [],
     indexes: [],
-    report: null,
     stats: {
       loaded: 0,
+      errors: 0,
       ids: [],
       checks: {},
       start_date: new Date()
@@ -48,11 +48,11 @@ export default new Vuex.Store({
       state.indexes = []
       state.stats = {
         loaded: 0,
+        errors: 0,
         ids: [],
         checks: {},
         start_date: new Date()
       }
-      state.report = null
       this.commit('save_preferences')
     },
     use_tasks (state, payload) {
@@ -110,19 +110,34 @@ export default new Vuex.Store({
       )
     },
     use_report (state, report) {
-      state.report = report
+      if (report === null) {
+        return
+      }
 
-      if (report !== null && state.stats !== null) {
+      if (report.response && report.response.status !== 200) {
+        // Manage errors
+        state.stats.errors += 1
+        return
+      }
+
+      if (state.stats !== null) {
         // Calc stats for this report
         // clang-format does not provide any check information
         var checks = report.issues.filter(i => i.analyzer !== 'clang-format')
         state.stats.checks = checks.reduce((stats, issue) => {
           var analyzer = issue.analyzer + (issue.analyzer === 'mozlint' ? '.' + issue.linter : '')
-          var check = issue.rule
+          var check = null
           if (issue.analyzer === 'clang-tidy') {
             check = issue.check
+          } else if (issue.analyzer === 'clang-format') {
+            check = 'unknown'
           } else if (issue.analyzer === 'infer') {
             check = issue.bug_type
+          } else if (issue.analyzer === 'mozlint') {
+            check = issue.rule
+          } else {
+            console.warn('Unsupported analyzer', issue.analyzer)
+            return
           }
           var key = analyzer + '.' + check
           if (stats[key] === undefined) {
@@ -197,6 +212,8 @@ export default new Vuex.Store({
       state.commit('use_report', null)
       return axios.get(url).then(resp => {
         state.commit('use_report', Object.assign({ taskId }, resp.data))
+      }).catch(err => {
+        state.commit('use_report', err)
       })
     },
 
@@ -224,7 +241,9 @@ export default new Vuex.Store({
 
       // Slice full loading in smaller batches to avoid using too many ressources
       var slice = state.state.stats.ids.slice(step * TASKS_SLICE, (step + 1) * TASKS_SLICE)
-      var batch = Promise.all(slice.map(taskId => state.dispatch('load_report', taskId)))
+      var batch = Promise.all(
+        slice.map(taskId => state.dispatch('load_report', taskId))
+      )
       batch.then(resp => console.info('Loaded batch', step))
       batch.then(resp => state.dispatch('load_report_batch', step + 1))
     }

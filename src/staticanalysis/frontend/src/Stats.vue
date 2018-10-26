@@ -42,7 +42,11 @@ export default {
   <div>
     <h1 class="title">Statistics</h1>
     <h2 class="subtitle" v-if="stats && stats.ids">
-      <span>Loaded {{ stats.loaded }}/{{ stats.ids.length }} tasks with issues</span>
+      <span>
+        Loaded {{ stats.loaded }}
+        <span v-if="stats.errors > 0" class="has-text-danger" :title="stats.errors + ' errors while loading reports'"> + {{ stats.errors }}</span>
+        / {{ stats.ids.length }} tasks with issues
+      </span>
       <span v-if="stats && stats.start_date" :title="stats.start_date">, since {{ stats.start_date|since }} ago</span>
     </h2>
 
