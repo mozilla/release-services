@@ -6,7 +6,7 @@ import {
 import { object } from 'prop-types';
 import { NavLink } from 'react-router-dom';
 
-import { SHIPIT_API_URL, TREEHERDER_URL, PRODUCTS } from '../../config';
+import config, { SHIPIT_API_URL } from '../../config';
 import { getBuildNumbers, getShippedReleases } from '../../components/api';
 import { getPushes, getVersion, getLocales } from '../../components/mercurial';
 import maybeShorten from '../../components/text';
@@ -224,7 +224,7 @@ export default class NewRelease extends React.Component {
       );
     }
     if (!submitted) {
-      const url = `${TREEHERDER_URL}/#/jobs?repo=${this.state.selectedBranch.project}&revision=${this.state.revision}`;
+      const url = `${config.TREEHERDER_URL}/#/jobs?repo=${this.state.selectedBranch.project}&revision=${this.state.revision}`;
       const buildName =
         `${this.state.selectedProduct.product}-${this.state.version}-build${this.state.buildNumber}`;
       return (
@@ -271,7 +271,7 @@ export default class NewRelease extends React.Component {
         <h3>Start a new release</h3>
         <div>
           <ButtonToolbar>
-            {PRODUCTS.map(product => (
+            {config.PRODUCTS.map(product => (
               <Button
                 key={product.product}
                 bsStyle={this.state.selectedProduct === product ? 'primary' : 'default'}

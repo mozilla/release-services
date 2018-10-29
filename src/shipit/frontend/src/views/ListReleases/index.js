@@ -3,7 +3,7 @@ import { ProgressBar, Button, Modal, Collapse } from 'react-bootstrap';
 import { object } from 'prop-types';
 import ReactInterval from 'react-interval';
 import { Queue } from 'taskcluster-client-web';
-import { SHIPIT_API_URL, TASKCLUSTER_TOOLS_URL, TREEHERDER_URL } from '../../config';
+import config, { SHIPIT_API_URL } from '../../config';
 
 const statusStyles = {
   // TC statuses
@@ -161,7 +161,7 @@ class Release extends React.Component {
       <div className="row">
         <div className="col">
           <h3>
-            <a href={`${TREEHERDER_URL}/#/jobs?repo=${release.project}&revision=${release.revision}`}>
+            <a href={`${config.TREEHERDER_URL}/#/jobs?repo=${release.project}&revision=${release.revision}`}>
               {release.product} <small>{release.version} build{release.build_number}</small>
             </a>
             <Button
@@ -262,7 +262,7 @@ class TaskProgress extends React.Component {
               name={name}
               submitted={submitted}
               status={status}
-              taskGroupUrl={`${TASKCLUSTER_TOOLS_URL}/groups/${actionTaskId}`}
+              taskGroupUrl={`${config.TASKCLUSTER_TOOLS_URL}/groups/${actionTaskId}`}
               url={`${SHIPIT_API_URL}/releases/${releaseName}/${name}`}
             />}
           />
