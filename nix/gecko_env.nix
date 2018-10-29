@@ -17,18 +17,18 @@ let
     "${glibc.dev}/include"
   ];
 
-  # Mach needs 0.6.4 at least
+  # Mach needs 0.6.6 at least
   # From https://github.com/NixOS/nixpkgs/blob/cdf90258e6bf911db2b56280301014a88c91be65/pkgs/development/tools/rust/cbindgen/default.nix
   rustPlatform = mkRustPlatform {};
   rust-cbindgen =  rustPlatform.buildRustPackage rec {
     name = "rust-cbindgen-${version}";
-    version = "0.6.4";
+    version = "0.6.6";
 
     src = fetchFromGitHub {
       owner = "eqrion";
       repo = "cbindgen";
       rev = "v${version}";
-      sha256 = "19jpl4h22yk3564yz8sjwla0j35jhqmz2sjzw6ksv50sk6x6kywh";
+      sha256 = "12s4lps8p6hrxvki9a5dxzbmxsddvkm6ias3n4daa1s3bncd86zk";
     };
 
     cargoSha256 = "137dqj1sp02dh0dz9psf8i8q57gmz3rfgmwk073k7x5zzkgvj21c";
