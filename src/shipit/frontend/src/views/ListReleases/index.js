@@ -3,7 +3,7 @@ import { ProgressBar, Button, Modal, Collapse } from 'react-bootstrap';
 import { object } from 'prop-types';
 import ReactInterval from 'react-interval';
 import { Queue } from 'taskcluster-client-web';
-import config from '../../config';
+import config, { SHIPIT_API_URL } from '../../config';
 
 const statusStyles = {
   // TC statuses
@@ -39,7 +39,7 @@ export default class ListReleases extends React.Component {
 
   getReleases = async () => {
     try {
-      const req = await fetch(`${config.API_URL}/releases`);
+      const req = await fetch(`${SHIPIT_API_URL}/releases`);
       const releases = await req.json();
       let message = '';
       if (releases.length === 0) {
@@ -110,7 +110,7 @@ class Release extends React.Component {
   };
 
   abortRelease = async (release) => {
-    const url = `${config.API_URL}/releases/${release.name}`;
+    const url = `${SHIPIT_API_URL}/releases/${release.name}`;
     if (!this.context.authController.userSession) {
       this.setState({ errorMsg: 'Login required!' });
       return;
@@ -263,7 +263,7 @@ class TaskProgress extends React.Component {
               submitted={submitted}
               status={status}
               taskGroupUrl={`${config.TASKCLUSTER_TOOLS_URL}/groups/${actionTaskId}`}
-              url={`${config.API_URL}/releases/${releaseName}/${name}`}
+              url={`${SHIPIT_API_URL}/releases/${releaseName}/${name}`}
             />}
           />
         ))}
