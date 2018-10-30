@@ -39,6 +39,8 @@ export default class NewRelease extends React.Component {
     errorMsg: null,
     submitted: false,
     inProgress: false,
+    releaseDate: '',
+    releaseTime: '',
   });
 
   readyToSubmit = () => (
@@ -139,6 +141,27 @@ export default class NewRelease extends React.Component {
     });
   };
 
+  handleReleaseDateChange = (event) => {
+    this.setState({
+      releaseDate: event.target.value,
+    });
+  };
+
+  handleReleaseTimeChange = (event) => {
+    this.setState({
+      releaseTime: event.target.value,
+    });
+  };
+
+
+  generateReleaseEta = (date, time) => {
+    if (date !== '' && time !== '') {
+      return (new Date(`${date}T${time}Z`)).toJSON();
+    }
+    return '';
+  };
+
+
   submitRelease = async () => {
     this.setState({ inProgress: true });
     const { product } = this.state.selectedProduct;
@@ -149,7 +172,7 @@ export default class NewRelease extends React.Component {
       revision: this.state.revision,
       version: this.state.version,
       build_number: this.state.buildNumber,
-      release_eta: '', // TODO
+      release_eta: this.generateReleaseEta(this.state.releaseDate, this.state.releaseTime),
     };
 
     if (this.state.selectedProduct.enablePartials) {
@@ -248,18 +271,48 @@ export default class NewRelease extends React.Component {
     const { selectedProduct, partialVersions } = this.state;
     if (selectedProduct && selectedProduct.enablePartials) {
       return (
-        <div>
-          <div className="text-muted">Partial versions:</div>
-          <FormControl
-            type="text"
-            value={partialVersions.join(',')}
-            onChange={this.handlePartialsChange}
-          />
+        <FormGroup>
+          <InputGroup>
+            <InputGroup.Addon>Partial versions</InputGroup.Addon>
+            <FormControl
+              type="text"
+              value={partialVersions.join(',')}
+              onChange={this.handlePartialsChange}
+            />
+          </InputGroup>
           <small>
             Coma-separated list of versions with build number, e.g. 59.0b8build7.
             UX will be improved!
           </small>
-        </div>
+        </FormGroup>
+      );
+    }
+    return '';
+  };
+
+
+  renderReleaseEta = () => {
+    if (this.state.selectedBranch.enableReleaseEta) {
+      const now = new Date();
+      return (
+        <FormGroup>
+          <InputGroup>
+            <InputGroup.Addon>Release ETA (UTC)</InputGroup.Addon>
+            <FormControl
+              type="date"
+              value={this.state.releaseDate}
+              onChange={this.handleReleaseDateChange}
+              style={{ marginLeft: '5px', width: '200px' }}
+              min={`${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`}
+            />
+            <FormControl
+              type="time"
+              value={this.state.releaseTime}
+              onChange={this.handleReleaseTimeChange}
+              style={{ marginLeft: '5px', width: '150px' }}
+            />
+          </InputGroup>
+        </FormGroup>
       );
     }
     return '';
@@ -331,9 +384,10 @@ export default class NewRelease extends React.Component {
                 <FormControl type="text" value={this.state.revision} onChange={this.handleRevisionChange} />
               </InputGroup>
             </FormGroup>
+            {this.renderReleaseEta()}
+            {this.renderPartials()}
             <div className="text-muted">Version: {this.state.version || ''}</div>
             <div className="text-muted">Build number: {this.state.buildNumber || ''}</div>
-            {this.renderPartials()}
             <div style={{ paddingTop: '10px', paddingBottom: '10px' }}>
               <Button type="submit" bsStyle="primary" onClick={this.open} disabled={!this.readyToSubmit()}>Start tracking it!</Button>
               <Modal show={this.state.showModal} onHide={this.close}>
