@@ -16,8 +16,13 @@ import typing
 
 import aiohttp
 import click
+import flask
 import mypy_extensions
+import sqlalchemy.orm
 import typeguard
+
+import shipit_api.config
+import shipit_api.models
 
 
 def coroutine(f):
@@ -105,6 +110,7 @@ class ProductCategory(enum.Enum):
     ESR = 'esr'
 
 
+File = str
 ReleaseDetails = mypy_extensions.TypedDict('ReleaseDetails', {
     'category': str,
     'product': str,
@@ -180,7 +186,7 @@ MobileVersions = mypy_extensions.TypedDict('MobileVersions', {
     'ios_beta_version': str,
     'ios_version': str,
 })
-Regions = typing.Dict[str, str]
+Region = typing.Dict[str, str]
 ThunderbirdVersions = mypy_extensions.TypedDict('ThunderbirdVersions', {
     'LATEST_THUNDERBIRD_VERSION': str,
     'LATEST_THUNDERBIRD_ALPHA_VERSION': str,
@@ -188,13 +194,21 @@ ThunderbirdVersions = mypy_extensions.TypedDict('ThunderbirdVersions', {
     'LATEST_THUNDERBIRD_NIGHTLY_VERSION': str,
 })
 
-File = str
-JSONDict = typing.Dict
-ProductDetails = typing.Dict[File, JSONDict]
+ProductDetails = typing.Dict[File, typing.Union[
+    Releases,
+    ReleasesHistory,
+    PrimaryBuilds,
+    FirefoxVersions,
+    MobileVersions,
+    MobileDetails,
+    Region,
+    L10n,
+    Languages,
+    ThunderbirdVersions,
+]]
 Products = typing.List[Product]
 
 
-@typeguard.typechecked
 def get_old_product_details(directory: str) -> ProductDetails:
 
     if not os.path.isdir(directory):
@@ -211,8 +225,19 @@ def get_old_product_details(directory: str) -> ProductDetails:
     return data
 
 
-@typeguard.typechecked
-def get_releases(products: Products, old_product_details: ProductDetails) -> Releases:
+def get_releases_from_db(db_session: sqlalchemy.orm.Session,
+                         breakpoint_version: int,
+                         ) -> typing.List[shipit_api.models.Release]:
+    Release = shipit_api.models.Release
+    releases = db_session.query(Release)
+    releases = releases.filter(Release.versionn >= breakpoint_version)
+    return releases.all()
+
+
+def get_releases(releases: typing.List[shipit_api.models.Release],
+                 products: Products,
+                 old_product_details: ProductDetails,
+                 ) -> Releases:
     '''This file holds historical information about all Firefox, Firefox for
        Mobile (aka Fennec), Firefox Dev Edition and Thunderbird releases we
        shipped in the past.
@@ -239,7 +264,6 @@ def get_releases(products: Products, old_product_details: ProductDetails) -> Rel
     return dict()  # TODO: not implemented
 
 
-@typeguard.typechecked
 def get_release_history(product: Product,
                         product_category: ProductCategory,
                         old_product_details: ProductDetails) -> ReleasesHistory:
@@ -271,7 +295,6 @@ def get_release_history(product: Product,
     return dict()  # TODO: not implemented
 
 
-@typeguard.typechecked
 def get_primary_builds(product: Product,
                        old_product_details: ProductDetails) -> PrimaryBuilds:
     '''This file contains all the Thunderbird builds we provide per locale. The
@@ -304,7 +327,6 @@ def get_primary_builds(product: Product,
     return dict()  # TODO: not implemented
 
 
-@typeguard.typechecked
 def get_firefox_versions(old_product_details: ProductDetails) -> FirefoxVersions:
     '''All the versions we ship for Firefox for Desktop
 
@@ -336,8 +358,7 @@ def get_firefox_versions(old_product_details: ProductDetails) -> FirefoxVersions
     )
 
 
-@typeguard.typechecked
-def get_regions(old_product_details: ProductDetails) -> typing.Dict[File, Regions]:
+def get_regions(old_product_details: ProductDetails) -> ProductDetails:
     '''The files in this folder store the localized names for countries. The
        data was extracted from our Gecko localization files and converted to
        JSON as we needed it for projects that needed to associate product and
@@ -357,15 +378,17 @@ def get_regions(old_product_details: ProductDetails) -> typing.Dict[File, Region
            }
     '''
     # TODO: can we fetch regions from somewhere else
-    return {
-        file_: content
-        for file_, content in old_product_details.items()
-        if file_.startswith('json/1.0/regions/')
-    }
+    regions = dict()
+    for file_, content in old_product_details.items():
+        if not (file_.startswith('json/1.0/regions/')
+                and typeguard.check_type('file_', file_, File)
+                and typeguard.check_type('content', content, Region)):
+            continue
+        regions[file_] = content
+    return regions
 
 
-@typeguard.typechecked
-def get_l10n(old_product_details: ProductDetails) -> typing.Dict[File, L10n]:
+def get_l10n(old_product_details: ProductDetails) -> ProductDetails:
     '''This folder contains the l10n changeset per locale used for each build.
        The translation of our products is done in separate l10n repositories,
        each locale provides a good known version of their translations through
@@ -394,8 +417,7 @@ def get_l10n(old_product_details: ProductDetails) -> typing.Dict[File, L10n]:
     return dict()
 
 
-@typeguard.typechecked
-def get_languages(old_product_details: ProductDetails) -> typing.Dict[str, Languages]:
+def get_languages(old_product_details: ProductDetails) -> Languages:
     '''List of all the supported BCP-47 locales with their English and native names.
 
        This function will output to the following files:
@@ -421,14 +443,18 @@ def get_languages(old_product_details: ProductDetails) -> typing.Dict[str, Langu
 
     '''
     # TODO: can we fetch languages from somewhere else
-    file_ = 'json/1.0/languages.json'
-    data = dict()
-    if file_ in old_product_details:
-        data[file_] = old_product_details[file_]
-    return data
+    languages = old_product_details.get('json/1.0/languages.json')
+
+    if languages is None:
+        raise click.ClickException('"json/1.0/languages.json" does not exists in old product details"')
+
+    # I can not use isinstance with generics (like Languages) for this reason
+    # I'm casting to output type
+    # https://gist.github.com/garbas/0cf4b6c3c34d1aa311225df283db19a6
+
+    return typing.cast(Languages, languages)
 
 
-@typeguard.typechecked
 def get_mobile_details(old_product_details: ProductDetails) -> MobileDetails:
     '''This file contains all the release information for Firefox for Android
        and Firefox for iOS. We are keeping this file around for backward
@@ -518,7 +544,6 @@ def get_mobile_details(old_product_details: ProductDetails) -> MobileDetails:
     )
 
 
-@typeguard.typechecked
 def get_mobile_versions(old_product_details: ProductDetails) -> MobileVersions:
     '''This file contains all the versions we ship for Firefox for Android
 
@@ -538,7 +563,6 @@ def get_mobile_versions(old_product_details: ProductDetails) -> MobileVersions:
     '''
 
 
-@typeguard.typechecked
 def get_thunderbird_versions(old_product_details: ProductDetails) -> ThunderbirdVersions:
     '''
 
@@ -562,7 +586,6 @@ def get_thunderbird_versions(old_product_details: ProductDetails) -> Thunderbird
     )
 
 
-@typeguard.typechecked
 def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.Dict:
     '''This file is empty and not used today.
 
@@ -588,43 +611,49 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
     ),
 )
 @click.option(
+    '--breakpoint-version',
+    default=shipit_api.config.BREAKPOINT_VERSION,
+    type=int,
+)
+@click.option(
     '--keep-temporary-dir',
     is_flag=True,
 )
-def upload_product_details(data_dir: str, keep_temporary_dir: bool):
+def upload_product_details(data_dir: str,
+                           breakpoint_version: int,
+                           keep_temporary_dir: bool):
 
     # get data from older product-details
     old_product_details = get_old_product_details(data_dir)
 
-    # TODO: we should do all IO here
+    # get all the releases from the database from (including)
+    # breakpoint_version on
+    releases = get_releases_from_db(flask.current_app.db.session, breakpoint_version)
 
     # combine old and new data
     product_details: ProductDetails = {
-        file_: method(old_product_details)
-        for file_, method in [
-            ('all.json', functools.partial(get_releases, [i.value for i in list(Product)])),
-            ('devedition.json', functools.partial(get_releases, [Product.DEVEDITION])),
-            ('firefox.json', functools.partial(get_releases, [Product.FIREFOX])),
-            ('firefox_history_development_releases.json', functools.partial(get_release_history, Product.FIREFOX, ProductCategory.DEVELOPMENT)),
-            ('firefox_history_major_releases.json', functools.partial(get_release_history, Product.FIREFOX, ProductCategory.MAJOR)),
-            ('firefox_history_stability_releases.json', functools.partial(get_release_history, Product.FIREFOX, ProductCategory.STABILITY)),
-            ('firefox_primary_builds.json', functools.partial(get_primary_builds, Product.FIREFOX)),
-            ('firefox_versions.json', get_firefox_versions),
-            ('languages.json', get_languages),
-            ('mobile_android.json', functools.partial(get_releases, [Product.FENNEC])),
-            ('mobile_details.json', get_mobile_details),
-            ('mobile_history_development_releases.json', functools.partial(get_release_history, Product.FENNEC, ProductCategory.DEVELOPMENT)),
-            ('mobile_history_major_releases.json', functools.partial(get_release_history, Product.FENNEC, ProductCategory.MAJOR)),
-            ('mobile_history_stability_releases.json', functools.partial(get_release_history, Product.FENNEC, ProductCategory.STABILITY)),
-            ('mobile_versions.json', get_mobile_versions),
-            ('thunderbird.json', functools.partial(get_releases, [Product.THUNDERBIRD])),
-            ('thunderbird_beta_builds.json', get_thunderbird_beta_builds),
-            ('thunderbird_history_development_releases.json', functools.partial(get_release_history, Product.THUNDERBIRD, ProductCategory.DEVELOPMENT)),
-            ('thunderbird_history_major_releases.json', functools.partial(get_release_history, Product.THUNDERBIRD, ProductCategory.MAJOR)),
-            ('thunderbird_history_stability_releases.json', functools.partial(get_release_history, Product.THUNDERBIRD, ProductCategory.STABILITY)),
-            ('thunderbird_primary_builds.json', functools.partial(get_primary_builds, Product.THUNDERBIRD)),
-            ('thunderbird_versions.json', get_thunderbird_versions),
-        ]
+        'all.json': get_releases(releases, [i.value for i in list(Product)], old_product_details),
+        'devedition.json': get_releases(releases, [Product.DEVEDITION], old_product_details),
+        'firefox.json': get_releases(releases, [Product.FIREFOX], old_product_details),
+        'firefox_history_development_releases.json': get_release_history(Product.FIREFOX, ProductCategory.DEVELOPMENT, old_product_details),
+        'firefox_history_major_releases.json': get_release_history(Product.FIREFOX, ProductCategory.MAJOR, old_product_details),
+        'firefox_history_stability_releases.json': get_release_history(Product.FIREFOX, ProductCategory.STABILITY, old_product_details),
+        'firefox_primary_builds.json': get_primary_builds(Product.FIREFOX, old_product_details),
+        'firefox_versions.json': get_firefox_versions(old_product_details),
+        'languages.json': get_languages(old_product_details),
+        'mobile_android.json': get_releases(releases, [Product.FENNEC], old_product_details),
+        'mobile_details.json': get_mobile_details(old_product_details),
+        'mobile_history_development_releases.json': get_release_history(Product.FENNEC, ProductCategory.DEVELOPMENT, old_product_details),
+        'mobile_history_major_releases.json': get_release_history(Product.FENNEC, ProductCategory.MAJOR, old_product_details),
+        'mobile_history_stability_releases.json': get_release_history(Product.FENNEC, ProductCategory.STABILITY, old_product_details),
+        'mobile_versions.json': get_mobile_versions(old_product_details),
+        'thunderbird.json': get_releases(releases, [Product.THUNDERBIRD], old_product_details),
+        'thunderbird_beta_builds.json': get_thunderbird_beta_builds(old_product_details),
+        'thunderbird_history_development_releases.json': get_release_history(Product.THUNDERBIRD, ProductCategory.DEVELOPMENT, old_product_details),
+        'thunderbird_history_major_releases.json': get_release_history(Product.THUNDERBIRD, ProductCategory.MAJOR, old_product_details),
+        'thunderbird_history_stability_releases.json': get_release_history(Product.THUNDERBIRD, ProductCategory.STABILITY, old_product_details),
+        'thunderbird_primary_builds.json': get_primary_builds(Product.THUNDERBIRD, old_product_details),
+        'thunderbird_versions.json': get_thunderbird_versions(old_product_details),
     }
     product_details.update(get_regions(old_product_details))
     product_details.update(get_l10n(old_product_details))

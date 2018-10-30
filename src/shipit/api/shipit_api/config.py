@@ -5,3 +5,5 @@
 
 PROJECT_NAME = 'shipit/api'
 APP_NAME = 'shipit_api'
+
+BREAKPOINT_VERSION = 60
