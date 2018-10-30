@@ -230,7 +230,7 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
                          ) -> typing.List[shipit_api.models.Release]:
     Release = shipit_api.models.Release
     releases = db_session.query(Release)
-    releases = releases.filter(Release.versionn >= breakpoint_version)
+    releases = releases.filter(Release.version >= breakpoint_version)
     return releases.all()
 
 
