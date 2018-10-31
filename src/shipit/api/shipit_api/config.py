@@ -5,3 +5,4 @@
 
 PROJECT_NAME = 'shipit/api'
 APP_NAME = 'shipit_api'
+SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)
