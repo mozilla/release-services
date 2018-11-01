@@ -1,10 +1,11 @@
 import React from 'react';
 import {
   ButtonToolbar, Button, FormGroup, FormControl, ControlLabel, InputGroup, DropdownButton,
-  MenuItem, Collapse, Modal,
+  MenuItem, Collapse, Modal, Tooltip, OverlayTrigger,
 } from 'react-bootstrap';
 import { object } from 'prop-types';
 import { NavLink } from 'react-router-dom';
+import * as moment from 'moment';
 
 import config, { SHIPIT_API_URL } from '../../config';
 import { getBuildNumbers, getShippedReleases } from '../../components/api';
@@ -156,7 +157,7 @@ export default class NewRelease extends React.Component {
 
   generateReleaseEta = (date, time) => {
     if (date !== '' && time !== '') {
-      return (new Date(`${date}T${time}Z`)).toJSON();
+      return moment(`${date}T${time}Z`).toISOString();
     }
     return '';
   };
@@ -230,6 +231,18 @@ export default class NewRelease extends React.Component {
     }
   };
 
+
+  releaseEtaValidationState = () => {
+    const { releaseDate, releaseTime } = this.state;
+    if (releaseDate === '' && releaseTime === '') {
+      return null;
+    } else if (releaseDate !== '' && releaseTime !== '') {
+      return 'success';
+    }
+    return 'error';
+  };
+
+
   renderBody = () => {
     const { inProgress, submitted, errorMsg } = this.state;
     if (errorMsg) {
@@ -293,17 +306,27 @@ export default class NewRelease extends React.Component {
 
   renderReleaseEta = () => {
     if (this.state.selectedBranch.enableReleaseEta) {
-      const now = new Date();
+      const tooltip = (
+        <Tooltip id="releaseEtaHelp">
+          Date and time at which the release is planned to be public. This date
+          is used by Balrog to automatically activate the new rule. One extra
+          condition: The new rule should be signed off by a set of human before
+          going live. In the case the date expires, the rule will go live
+          immediately after every signoff is made.
+        </Tooltip>
+      );
       return (
-        <FormGroup>
+        <FormGroup validationState={this.releaseEtaValidationState()}>
           <InputGroup>
-            <InputGroup.Addon>Release ETA (UTC)</InputGroup.Addon>
+            <OverlayTrigger placement="right" overlay={tooltip}>
+              <InputGroup.Addon>Release ETA (UTC)</InputGroup.Addon>
+            </OverlayTrigger>
             <FormControl
               type="date"
               value={this.state.releaseDate}
               onChange={this.handleReleaseDateChange}
               style={{ marginLeft: '5px', width: '200px' }}
-              min={`${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`}
+              min={moment().format('YYYY-MM-DD')}
             />
             <FormControl
               type="time"
@@ -311,6 +334,7 @@ export default class NewRelease extends React.Component {
               onChange={this.handleReleaseTimeChange}
               style={{ marginLeft: '5px', width: '150px' }}
             />
+            <FormControl.Feedback />
           </InputGroup>
         </FormGroup>
       );
