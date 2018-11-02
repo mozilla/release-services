@@ -131,6 +131,9 @@ export default class NewRelease extends React.Component {
       this.state.selectedProduct.appName,
     );
     await this.guessBuildId();
+    if (this.state.selectedProduct.enablePartials) {
+      await this.guessPartialVersions();
+    }
   };
 
   handlePartialsChange = async (event) => {
