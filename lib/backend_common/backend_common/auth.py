@@ -402,7 +402,7 @@ def user_to_jsontoken(user):
 
 def str_to_claims(token_str):
     try:
-        claims = flask.current_app.tokenauth_serializer.loads(token_str)
+        claims = flask.current_app.auth_relengapi_serializer.loads(token_str)
     except itsdangerous.BadData:
         logger.warning('Got invalid signature in token %r', token_str)
         return None
