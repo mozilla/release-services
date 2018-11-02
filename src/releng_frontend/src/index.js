@@ -31,11 +31,11 @@ var init = function() {
     // Start the ELM application
     var app = require('./Main.elm').Main.fullscreen({
       auth0: localstorage.load_item(AUTH_KEY),
-      treestatusUrl: getData('treestatus-api-url', process.env.RELENG_TREESTATUS_URL),
+      treestatusUrl: getData('treestatus-api-url', process.env.TREESTATUS_API_URL),
       docsUrl: getData('docs-url', process.env.DOCS_URL),
       version: release_version,
       identityUrl: getData('notification-identity-url', process.env.NOTIFICATION_IDENTITY_URL),
-      policyUrl: getData('notification-policy-url', process.env.RELENG_NOTIFICATION_POLICY_URL)
+      policyUrl: getData('notification-policy-url', process.env.NOTIFICATION_POLICY_URL)
     });
 
     // Setup ports
