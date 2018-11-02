@@ -88,9 +88,8 @@ def shipit_v1_sync(ldap_username,
 
     with click.progressbar(releases, label='Fetching release data') as releases:
         for release in releases:
-            if release.startswith('Firefox-'):
-                r = s.get(f'{api_from}/releases/{release}')
-                releases_json.append(r.json())
+            r = s.get(f'{api_from}/releases/{release}')
+            releases_json.append(r.json())
 
     click.echo('Syncing release list...', nl=False)
     headers = get_taskcluster_headers(
