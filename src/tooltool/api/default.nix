@@ -18,7 +18,7 @@ let
     builtins.listToAttrs (
       map (channel:
         { name = channel;
-          value = 
+          value =
             let
               hook_name = "${name}_${command}_${channel}";
               hook = mkTaskclusterHook {
@@ -60,7 +60,7 @@ let
     passthru = {
       cron = {
         check_pending_uploads = mkCronJob { schedule = [ "*/10 * * * *" ];  # every 10 min;
-                                            command = "check_pending_uploads";
+                                            command = "check-pending-uploads";
                                           };
         replicate = mkCronJob { schedule = [ "0 * * * *" ];  # every 1 hour;
                                 command = "replicate";
