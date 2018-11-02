@@ -328,14 +328,14 @@ export default class NewRelease extends React.Component {
               type="date"
               value={this.state.releaseDate}
               onChange={this.handleReleaseDateChange}
-              style={{ marginLeft: '5px', width: '200px' }}
+              style={{ width: '200px' }}
               min={moment().format('YYYY-MM-DD')}
             />
             <FormControl
               type="time"
               value={this.state.releaseTime}
               onChange={this.handleReleaseTimeChange}
-              style={{ marginLeft: '5px', width: '150px' }}
+              style={{ width: '150px' }}
             />
             <FormControl.Feedback />
           </InputGroup>
