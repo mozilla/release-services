@@ -33,7 +33,7 @@ def create_app(config=None):
     )
 
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
-    # app.cli.add_command(shipit_api.cli.upload_product_details)
-    app.cli.add_command(shipit_api.cli.download_product_details)
+    app.cli.add_command(shipit_api.cli.upload_product_details, 'upload')
+    app.cli.add_command(shipit_api.cli.download_product_details, 'download')
 
     return app

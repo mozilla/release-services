@@ -17,6 +17,7 @@ import typing
 import aiohttp
 import click
 import flask
+import mozilla_version.gecko
 import mypy_extensions
 import sqlalchemy.orm
 import typeguard
@@ -108,6 +109,23 @@ class ProductCategory(enum.Enum):
     DEVELOPMENT = 'development'
     STABILITY = 'stability'
     ESR = 'esr'
+
+
+def get_product_mozilla_version(product: Product,
+                                version: str,
+                                ) -> typing.Optional[mozilla_version.gecko.GeckoVersion]:
+    klass = {
+        Product.DEVEDITION: mozilla_version.gecko.DeveditionVersion,
+        Product.FIREFOX: mozilla_version.gecko.FirefoxVersion,
+        Product.FENNEC: mozilla_version.gecko.FennecVersion,
+        Product.THUNDERBIRD: mozilla_version.gecko.ThunderbirdVersion,
+    }.get(product)
+
+    if klass:
+        try:
+            return klass.parse(version)
+        except Exception as e:
+            pass
 
 
 File = str
@@ -234,8 +252,9 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
     return releases.all()
 
 
-def get_releases(releases: typing.List[shipit_api.models.Release],
+def get_releases(breakpoint_version: int,
                  products: Products,
+                 releases: typing.List[shipit_api.models.Release],
                  old_product_details: ProductDetails,
                  ) -> Releases:
     '''This file holds historical information about all Firefox, Firefox for
@@ -261,7 +280,25 @@ def get_releases(releases: typing.List[shipit_api.models.Release],
                "date":               "2018-01-23",
            }
     '''
-    return dict()  # TODO: not implemented
+    releases = dict()
+
+    for product in products:
+        product_file = f'json/1.0/{product.value}.json'
+        if product is Product.FENNEC:
+            product_file = 'json/1.0/mobile_android.json'
+        old_product_detail = old_product_details[product_file].get('releases', dict())
+        for product_with_version in old_product_detail.keys():
+            # mozilla_version.gecko.GeckoVersion does not parse rc (yet)
+            # https://github.com/mozilla-releng/mozilla-version/pull/40
+            #
+            # version = get_product_mozilla_version(product, product_with_version[len(product.value) + 1:])
+            # if version.major_number >= breakpoint_version:
+            version = int(product_with_version[len(product.value) + 1:].split('.')[0])
+            if version >= breakpoint_version:
+                continue
+            releases[product_with_version] = old_product_detail[product_with_version]
+
+    return dict(releases)
 
 
 def get_release_history(product: Product,
@@ -616,9 +653,11 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
     type=int,
 )
 @click.option(
+    '-K',
     '--keep-temporary-dir',
     is_flag=True,
 )
+@flask.cli.with_appcontext
 def upload_product_details(data_dir: str,
                            breakpoint_version: int,
                            keep_temporary_dir: bool):
@@ -632,22 +671,22 @@ def upload_product_details(data_dir: str,
 
     # combine old and new data
     product_details: ProductDetails = {
-        'all.json': get_releases(releases, [i.value for i in list(Product)], old_product_details),
-        'devedition.json': get_releases(releases, [Product.DEVEDITION], old_product_details),
-        'firefox.json': get_releases(releases, [Product.FIREFOX], old_product_details),
+        'all.json': get_releases(breakpoint_version, [i for i in list(Product)], releases, old_product_details),
+        'devedition.json': get_releases(breakpoint_version, [Product.DEVEDITION], releases, old_product_details),
+        'firefox.json': get_releases(breakpoint_version, [Product.FIREFOX], releases, old_product_details),
         'firefox_history_development_releases.json': get_release_history(Product.FIREFOX, ProductCategory.DEVELOPMENT, old_product_details),
         'firefox_history_major_releases.json': get_release_history(Product.FIREFOX, ProductCategory.MAJOR, old_product_details),
         'firefox_history_stability_releases.json': get_release_history(Product.FIREFOX, ProductCategory.STABILITY, old_product_details),
         'firefox_primary_builds.json': get_primary_builds(Product.FIREFOX, old_product_details),
         'firefox_versions.json': get_firefox_versions(old_product_details),
         'languages.json': get_languages(old_product_details),
-        'mobile_android.json': get_releases(releases, [Product.FENNEC], old_product_details),
+        'mobile_android.json': get_releases(breakpoint_version, [Product.FENNEC], releases, old_product_details),
         'mobile_details.json': get_mobile_details(old_product_details),
         'mobile_history_development_releases.json': get_release_history(Product.FENNEC, ProductCategory.DEVELOPMENT, old_product_details),
         'mobile_history_major_releases.json': get_release_history(Product.FENNEC, ProductCategory.MAJOR, old_product_details),
         'mobile_history_stability_releases.json': get_release_history(Product.FENNEC, ProductCategory.STABILITY, old_product_details),
         'mobile_versions.json': get_mobile_versions(old_product_details),
-        'thunderbird.json': get_releases(releases, [Product.THUNDERBIRD], old_product_details),
+        'thunderbird.json': get_releases(breakpoint_version, [Product.THUNDERBIRD], releases, old_product_details),
         'thunderbird_beta_builds.json': get_thunderbird_beta_builds(old_product_details),
         'thunderbird_history_development_releases.json': get_release_history(Product.THUNDERBIRD, ProductCategory.DEVELOPMENT, old_product_details),
         'thunderbird_history_major_releases.json': get_release_history(Product.THUNDERBIRD, ProductCategory.MAJOR, old_product_details),
@@ -669,7 +708,8 @@ def upload_product_details(data_dir: str,
             file_ = temp_dir / file__
 
             # we must ensure that all needed folders exists
-            os.makedirs(str(file_.parent))
+            if file_.parent != temp_dir:
+                os.makedirs(str(file_.parent))
 
             # write content into json file
             with file_.open('w+') as f:
@@ -682,7 +722,3 @@ def upload_product_details(data_dir: str,
             click.echo(f'Temporary folder: {temp_dir}')
         else:
             shutil.rmtree(temp_dir)
-
-
-if __name__ == '__main__':
-    upload_product_details()
