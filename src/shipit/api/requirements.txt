@@ -4,6 +4,7 @@
 aiohttp
 json-e
 typeguard
+mozilla-version
 
 # deployment
 gunicorn

@@ -339,4 +339,5 @@ def app_heartbeat():
         r = requests.get('https://auth.mozilla.auth0.com/test')
         assert 'clock' in r.json()
     except Exception as e:
+        logger.exception(e)
         raise backend_common.dockerflow.HeartbeatException('Cannot connect to the mozilla auth0 service.')

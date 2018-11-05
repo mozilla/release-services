@@ -36,5 +36,5 @@ class ThreadPoolExecutorResult(ThreadPoolExecutor):
         except Exception as e:
             for future in self.futures:
                 future.cancel()
-            raise
+            raise e
         return super(ThreadPoolExecutorResult, self).__exit__(*args)

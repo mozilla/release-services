@@ -30,7 +30,7 @@ def read_hosts():
     Only reads ipv4 entries to avoid duplicates
     '''
     out = {}
-    regex = re.compile('([\w:\-\.]+)')
+    regex = re.compile(r'([\w:\-\.]+)')
     for line in open('/etc/hosts').readlines():
         if ':' in line:  # only ipv4
             continue

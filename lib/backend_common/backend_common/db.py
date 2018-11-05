@@ -125,4 +125,5 @@ def app_heartbeat():
         db = flask.current_app.db
         db.session.execute('SELECT 1').fetchall()
     except Exception as e:
+        logger.exception(e)
         raise backend_common.dockerflow.HeartbeatException('Cannot connect to the database.')

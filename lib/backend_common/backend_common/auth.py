@@ -332,6 +332,7 @@ def is_relengapi_token(token_str):
         return EMPTY
 
     except Exception as e:
+        logger.exception(e)
         logger.error('Error processing signature in token %r', token_str)
         return EMPTY
 
@@ -483,4 +484,5 @@ def app_heartbeat():
         ping = taskcluster.Auth().ping()
         assert ping['alive'] is True
     except Exception as e:
+        logger.exception(e)
         raise backend_common.dockerflow.HeartbeatException('Cannot connect to the taskcluster auth service.')

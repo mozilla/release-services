@@ -9,6 +9,9 @@ import flask
 import kombu
 
 import backend_common.dockerflow
+import cli_common.log
+
+logger = cli_common.log.get_logger(__name__)
 
 
 class Pulse(object):
@@ -79,4 +82,5 @@ def app_heartbeat():
     try:
         flask.current_app.pulse.ping()
     except Exception as e:
+        logger.exception(e)
         raise backend_common.dockerflow.HeartbeatException('Cannot connect to pulse the service.')
