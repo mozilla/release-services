@@ -19,6 +19,7 @@ import click
 import flask
 import mozilla_version.gecko
 import mypy_extensions
+import sqlalchemy
 import sqlalchemy.orm
 import typeguard
 
@@ -122,10 +123,8 @@ def get_product_mozilla_version(product: Product,
     }.get(product)
 
     if klass:
-        try:
-            return klass.parse(version)
-        except Exception as e:
-            pass
+        return klass.parse(version)
+    return None
 
 
 File = str
@@ -138,7 +137,9 @@ ReleaseDetails = mypy_extensions.TypedDict('ReleaseDetails', {
     'version': str,
     'date': str,
 })
-Releases = typing.Dict[str, ReleaseDetails]
+Releases = mypy_extensions.TypedDict('Releases', {
+  'releases': typing.Dict[str, ReleaseDetails],
+})
 ReleasesHistory = typing.Dict[str, str]
 PrimaryBuildDetails = mypy_extensions.TypedDict('PrimaryBuildDetails', {
     'filesize': int,
@@ -246,9 +247,18 @@ def get_old_product_details(directory: str) -> ProductDetails:
 def get_releases_from_db(db_session: sqlalchemy.orm.Session,
                          breakpoint_version: int,
                          ) -> typing.List[shipit_api.models.Release]:
+    '''
+     SELECT *
+     FROM shipit_api_releases as r
+     WHERE cast(split_part(r.version, '.', 1) as int) > 20;
+    '''
     Release = shipit_api.models.Release
     releases = db_session.query(Release)
-    releases = releases.filter(Release.version >= breakpoint_version)
+    # Using cast and split_part is postgresql specific
+    releases = releases.filter(
+        sqlalchemy.cast(
+            sqlalchemy.func.split_part(Release.version, '.', 1),
+            sqlalchemy.Integer) >= breakpoint_version)
     return releases.all()
 
 
@@ -280,13 +290,13 @@ def get_releases(breakpoint_version: int,
                "date":               "2018-01-23",
            }
     '''
-    releases = dict()
+    releases: ReleaseDetails = dict()
 
     for product in products:
         product_file = f'json/1.0/{product.value}.json'
         if product is Product.FENNEC:
             product_file = 'json/1.0/mobile_android.json'
-        old_product_detail = old_product_details[product_file].get('releases', dict())
+        old_product_detail = typing.cast(ReleaseDetails, old_product_details[product_file].get('releases', dict()))
         for product_with_version in old_product_detail.keys():
             # mozilla_version.gecko.GeckoVersion does not parse rc (yet)
             # https://github.com/mozilla-releng/mozilla-version/pull/40
@@ -298,7 +308,7 @@ def get_releases(breakpoint_version: int,
                 continue
             releases[product_with_version] = old_product_detail[product_with_version]
 
-    return dict(releases)
+    return dict(releases=releases)
 
 
 def get_release_history(product: Product,
