@@ -3,8 +3,9 @@
 
 aiohttp
 json-e
-typeguard
+mohawk
 mozilla-version
+typeguard
 
 # deployment
 gunicorn

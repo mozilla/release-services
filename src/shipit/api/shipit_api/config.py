@@ -7,3 +7,4 @@ PROJECT_NAME = 'shipit/api'
 APP_NAME = 'shipit_api'
 
 BREAKPOINT_VERSION = 60
+SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)

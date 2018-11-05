@@ -1,5 +1,4 @@
 module.exports = {
-  API_URL: process.env.SHIPIT_API_URL || 'https://localhost:8015',
   TREEHERDER_URL: 'https://treeherder.mozilla.org',
   TASKCLUSTER_TOOLS_URL: 'https://tools.taskcluster.net',
   AUTH0: {
@@ -19,6 +18,7 @@ module.exports = {
           project: 'maple',
           branch: 'projects/maple',
           repo: 'https://hg.mozilla.org/projects/maple',
+          enableReleaseEta: true,
         },
       ],
       enablePartials: true,
@@ -35,6 +35,7 @@ module.exports = {
           project: 'maple',
           branch: 'projects/maple',
           repo: 'https://hg.mozilla.org/projects/maple',
+          enableReleaseEta: false,
         },
       ],
       enablePartials: false,
@@ -50,6 +51,7 @@ module.exports = {
           project: 'maple',
           branch: 'projects/maple',
           repo: 'https://hg.mozilla.org/projects/maple',
+          enableReleaseEta: false,
         },
       ],
       enablePartials: true,
@@ -65,6 +67,7 @@ module.exports = {
           project: 'try-comm-central',
           branch: 'try-comm-central',
           repo: 'https://hg.mozilla.org/try-comm-central',
+          enableReleaseEta: false,
         },
       ],
       // TODO

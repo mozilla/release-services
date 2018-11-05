@@ -1,5 +1,4 @@
 module.exports = {
-  API_URL: process.env.SHIPIT_API_URL || 'https://shipitbackend-default.dev.mozaws.net',
   TREEHERDER_URL: 'https://treeherder.mozilla.org',
   TASKCLUSTER_TOOLS_URL: 'https://tools.taskcluster.net',
   AUTH0: {
@@ -19,12 +18,14 @@ module.exports = {
           project: 'maple',
           branch: 'projects/maple',
           repo: 'https://hg.mozilla.org/projects/maple',
+          enableReleaseEta: true,
         },
         {
           prettyName: 'Try',
           project: 'try',
           branch: 'try',
           repo: 'https://hg.mozilla.org/try',
+          enableReleaseEta: false,
         },
       ],
       enablePartials: true,
@@ -41,12 +42,14 @@ module.exports = {
           project: 'maple',
           branch: 'projects/maple',
           repo: 'https://hg.mozilla.org/projects/maple',
+          enableReleaseEta: false,
         },
         {
           prettyName: 'Try',
           project: 'try',
           branch: 'try',
           repo: 'https://hg.mozilla.org/try',
+          enableReleaseEta: false,
         },
       ],
       enablePartials: false,
@@ -62,12 +65,14 @@ module.exports = {
           project: 'maple',
           branch: 'projects/maple',
           repo: 'https://hg.mozilla.org/projects/maple',
+          enableReleaseEta: false,
         },
         {
           prettyName: 'Try',
           project: 'try',
           branch: 'try',
           repo: 'https://hg.mozilla.org/try',
+          enableReleaseEta: false,
         },
       ],
       enablePartials: true,
@@ -83,6 +88,7 @@ module.exports = {
           project: 'try-comm-central',
           branch: 'try-comm-central',
           repo: 'https://hg.mozilla.org/try-comm-central',
+          enableReleaseEta: false,
         },
       ],
       // TODO

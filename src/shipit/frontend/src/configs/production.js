@@ -1,5 +1,4 @@
 module.exports = {
-  API_URL: process.env.SHIPIT_API_URL || 'https://shipit-api.mozilla-releng.net',
   TREEHERDER_URL: 'https://treeherder.mozilla.org',
   TASKCLUSTER_TOOLS_URL: 'https://tools.taskcluster.net',
   AUTH0: {
@@ -19,6 +18,7 @@ module.exports = {
           project: 'mozilla-beta',
           branch: 'releases/mozilla-beta',
           repo: 'https://hg.mozilla.org/releases/mozilla-beta',
+          enableReleaseEta: false,
         },
       ],
       enablePartials: true,
@@ -34,6 +34,7 @@ module.exports = {
           project: 'mozilla-beta',
           branch: 'releases/mozilla-beta',
           repo: 'https://hg.mozilla.org/releases/mozilla-beta',
+          enableReleaseEta: false,
         },
       ],
       enablePartials: false,
@@ -48,6 +49,7 @@ module.exports = {
           project: 'mozilla-beta',
           branch: 'releases/mozilla-beta',
           repo: 'https://hg.mozilla.org/releases/mozilla-beta',
+          enableReleaseEta: false,
         },
       ],
       enablePartials: true,

@@ -1,12 +1,13 @@
 import React from 'react';
 import {
   ButtonToolbar, Button, FormGroup, FormControl, ControlLabel, InputGroup, DropdownButton,
-  MenuItem, Collapse, Modal,
+  MenuItem, Collapse, Modal, Tooltip, OverlayTrigger,
 } from 'react-bootstrap';
 import { object } from 'prop-types';
 import { NavLink } from 'react-router-dom';
+import * as moment from 'moment';
 
-import config from '../../config';
+import config, { SHIPIT_API_URL } from '../../config';
 import { getBuildNumbers, getShippedReleases } from '../../components/api';
 import { getPushes, getVersion, getLocales } from '../../components/mercurial';
 import maybeShorten from '../../components/text';
@@ -39,6 +40,8 @@ export default class NewRelease extends React.Component {
     errorMsg: null,
     submitted: false,
     inProgress: false,
+    releaseDate: '',
+    releaseTime: '',
   });
 
   readyToSubmit = () => (
@@ -131,6 +134,9 @@ export default class NewRelease extends React.Component {
       this.state.selectedProduct.appName,
     );
     await this.guessBuildId();
+    if (this.state.selectedProduct.enablePartials) {
+      await this.guessPartialVersions();
+    }
   };
 
   handlePartialsChange = async (event) => {
@@ -138,6 +144,27 @@ export default class NewRelease extends React.Component {
       partialVersions: event.target.value.split(',').map(v => v.trim()),
     });
   };
+
+  handleReleaseDateChange = (event) => {
+    this.setState({
+      releaseDate: event.target.value,
+    });
+  };
+
+  handleReleaseTimeChange = (event) => {
+    this.setState({
+      releaseTime: event.target.value,
+    });
+  };
+
+
+  generateReleaseEta = (date, time) => {
+    if (date !== '' && time !== '') {
+      return moment(`${date}T${time}Z`).toISOString();
+    }
+    return '';
+  };
+
 
   submitRelease = async () => {
     this.setState({ inProgress: true });
@@ -149,7 +176,7 @@ export default class NewRelease extends React.Component {
       revision: this.state.revision,
       version: this.state.version,
       build_number: this.state.buildNumber,
-      release_eta: '', // TODO
+      release_eta: this.generateReleaseEta(this.state.releaseDate, this.state.releaseTime),
     };
 
     if (this.state.selectedProduct.enablePartials) {
@@ -187,7 +214,7 @@ export default class NewRelease extends React.Component {
       this.setState({ errorMsg: 'Login required!' });
       return;
     }
-    const url = `${config.API_URL}/releases`;
+    const url = `${SHIPIT_API_URL}/releases`;
     const { accessToken } = this.context.authController.getUserSession();
     const headers = {
       Authorization: `Bearer ${accessToken}`,
@@ -206,6 +233,18 @@ export default class NewRelease extends React.Component {
       throw e;
     }
   };
+
+
+  releaseEtaValidationState = () => {
+    const { releaseDate, releaseTime } = this.state;
+    if (releaseDate === '' && releaseTime === '') {
+      return null;
+    } else if (releaseDate !== '' && releaseTime !== '') {
+      return 'success';
+    }
+    return 'error';
+  };
+
 
   renderBody = () => {
     const { inProgress, submitted, errorMsg } = this.state;
@@ -248,18 +287,59 @@ export default class NewRelease extends React.Component {
     const { selectedProduct, partialVersions } = this.state;
     if (selectedProduct && selectedProduct.enablePartials) {
       return (
-        <div>
-          <div className="text-muted">Partial versions:</div>
-          <FormControl
-            type="text"
-            value={partialVersions.join(',')}
-            onChange={this.handlePartialsChange}
-          />
+        <FormGroup>
+          <InputGroup>
+            <InputGroup.Addon>Partial versions</InputGroup.Addon>
+            <FormControl
+              type="text"
+              value={partialVersions.join(',')}
+              onChange={this.handlePartialsChange}
+            />
+          </InputGroup>
           <small>
             Coma-separated list of versions with build number, e.g. 59.0b8build7.
             UX will be improved!
           </small>
-        </div>
+        </FormGroup>
+      );
+    }
+    return '';
+  };
+
+
+  renderReleaseEta = () => {
+    if (this.state.selectedBranch.enableReleaseEta) {
+      const tooltip = (
+        <Tooltip id="releaseEtaHelp">
+          Date and time at which the release is planned to be public. This date
+          is used by Balrog to automatically activate the new rule. One extra
+          condition: The new rule should be signed off by a set of human before
+          going live. In the case the date expires, the rule will go live
+          immediately after every signoff is made.
+        </Tooltip>
+      );
+      return (
+        <FormGroup validationState={this.releaseEtaValidationState()}>
+          <InputGroup>
+            <OverlayTrigger placement="right" overlay={tooltip}>
+              <InputGroup.Addon>Release ETA (UTC)</InputGroup.Addon>
+            </OverlayTrigger>
+            <FormControl
+              type="date"
+              value={this.state.releaseDate}
+              onChange={this.handleReleaseDateChange}
+              style={{ width: '200px' }}
+              min={moment().format('YYYY-MM-DD')}
+            />
+            <FormControl
+              type="time"
+              value={this.state.releaseTime}
+              onChange={this.handleReleaseTimeChange}
+              style={{ width: '150px' }}
+            />
+            <FormControl.Feedback />
+          </InputGroup>
+        </FormGroup>
       );
     }
     return '';
@@ -331,9 +411,10 @@ export default class NewRelease extends React.Component {
                 <FormControl type="text" value={this.state.revision} onChange={this.handleRevisionChange} />
               </InputGroup>
             </FormGroup>
+            {this.renderReleaseEta()}
+            {this.renderPartials()}
             <div className="text-muted">Version: {this.state.version || ''}</div>
             <div className="text-muted">Build number: {this.state.buildNumber || ''}</div>
-            {this.renderPartials()}
             <div style={{ paddingTop: '10px', paddingBottom: '10px' }}>
               <Button type="submit" bsStyle="primary" onClick={this.open} disabled={!this.readyToSubmit()}>Start tracking it!</Button>
               <Modal show={this.state.showModal} onHide={this.close}>
