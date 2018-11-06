@@ -206,7 +206,7 @@ def client(app):
             if hasattr(app, 'auth0'):
                 requests_mock.add_callback(
                     responses.GET,
-                    re.compile('https://auth\.mozilla\.auth0\.com/userinfo.*'),
+                    re.compile(r'https://auth\.mozilla\.auth0\.com/userinfo.*'),
                     callback=mock_auth_auth0,
                 )
 

@@ -13,7 +13,7 @@ Jinja2
 SQLAlchemy
 Werkzeug
 boto
-connexion
+connexion<2.0.0
 flask-oidc
 flask-talisman
 itsdangerous
@@ -23,4 +23,4 @@ mohawk
 python-dateutil<2.7.0,>=2.1
 python-jose
 requests
-taskcluster
+taskcluster==4.0.1

@@ -68,6 +68,7 @@ def create_app(
         try:
             extension_init_app = getattr(importlib.import_module('backend_common.' + extension_name), 'init_app')
         except Exception as e:
+            logger.exception(e)
             pass
 
         if extension_init_app is None:

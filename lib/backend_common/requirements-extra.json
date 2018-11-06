@@ -6,7 +6,7 @@
     "api": [
         "Flask",
         "Werkzeug",
-        "connexion",
+        "connexion<2.0.0",
         "mozilla-cli-common[log]"
     ],
     "db": [
