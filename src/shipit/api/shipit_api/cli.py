@@ -256,13 +256,13 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
      WHERE cast(split_part(r.version, '.', 1) as int) > 20;
     '''
     Release = shipit_api.models.Release
-    releases = db_session.query(Release)
+    query = db_session.query(Release)
     # Using cast and split_part is postgresql specific
-    releases = releases.filter(
+    query = query.filter(
         sqlalchemy.cast(
             sqlalchemy.func.split_part(Release.version, '.', 1),
             sqlalchemy.Integer) >= breakpoint_version)
-    return releases.all()
+    return query.all()
 
 
 def get_releases(breakpoint_version: int,
@@ -293,14 +293,14 @@ def get_releases(breakpoint_version: int,
                "date":               "2018-01-23",
            }
     '''
-    releases: ReleaseDetails = dict()
+    details = dict()
 
     for product in products:
         product_file = f'json/1.0/{product.value}.json'
         if product is Product.FENNEC:
             product_file = 'json/1.0/mobile_android.json'
-        old_product_detail = typing.cast(ReleaseDetails, old_product_details[product_file].get('releases', dict()))
-        for product_with_version in old_product_detail.keys():
+        old_releases = typing.cast(typing.Dict[str, ReleaseDetails], old_product_details[product_file].get('releases', dict()))
+        for product_with_version in old_releases:
             # mozilla_version.gecko.GeckoVersion does not parse rc (yet)
             # https://github.com/mozilla-releng/mozilla-version/pull/40
             #
@@ -309,12 +309,13 @@ def get_releases(breakpoint_version: int,
             version = int(product_with_version[len(product.value) + 1:].split('.')[0])
             if version >= breakpoint_version:
                 continue
-            releases[product_with_version] = old_product_detail[product_with_version]
+            details[product_with_version] = old_releases[product_with_version]
 
-    return dict(releases=releases)
+    return dict(releases=details)
 
 
-def get_release_history(product: Product,
+def get_release_history(breakpoint_version: int,
+                        product: Product,
                         product_category: ProductCategory,
                         old_product_details: ProductDetails) -> ReleasesHistory:
     '''This file contains all the Product release dates for releases in that
@@ -342,10 +343,35 @@ def get_release_history(product: Product,
                ...
            }
     '''
-    return dict()  # TODO: not implemented
+    if Product.DEVEDITION is product:
+        raise click.ClickException(f'We don\'t generate product history for "{product.value}" product.')
+
+    if ProductCategory.ESR is product_category:
+        raise click.ClickException(f'We don\'t generate product history for "{product_category.value}" product category.')
+
+    history = dict()
+
+    product_file = f'json/1.0/{product.value}_history_{product_category.value}_releases.json'
+    if product is Product.FENNEC:
+        product_file = f'json/1.0/mobile_history_{product_category.value}_releases.json'
+
+    old_history = typing.cast(ReleasesHistory, old_product_details[product_file])
+    for product_with_version in old_history:
+        # mozilla_version.gecko.GeckoVersion does not parse rc (yet)
+        # https://github.com/mozilla-releng/mozilla-version/pull/40
+        #
+        # version = get_product_mozilla_version(product, product_with_version[len(product.value) + 1:])
+        # if version.major_number >= breakpoint_version:
+        version = int(product_with_version.split('.')[0])
+        if version >= breakpoint_version:
+            continue
+        history[product_with_version] = old_history[product_with_version]
+
+    return history  # TODO: not implemented
 
 
-def get_primary_builds(product: Product,
+def get_primary_builds(breakpoint_version: int,
+                       product: Product,
                        old_product_details: ProductDetails) -> PrimaryBuilds:
     '''This file contains all the Thunderbird builds we provide per locale. The
        filesize fields have the same value for all lcoales, this is not a bug,
@@ -374,7 +400,28 @@ def get_primary_builds(product: Product,
                }
            }
     '''
-    return dict()  # TODO: not implemented
+    if Product.DEVEDITION is product or \
+       Product.FENNEC is product:
+        raise click.ClickException(f'We don\'t generate product history for "{product.value}" product.')
+
+    builds = dict()
+
+    product_file = f'json/1.0/{product.value}_primary_builds.json'
+    old_builds = typing.cast(PrimaryBuilds, old_product_details[product_file])
+
+    for language in old_builds:
+        language_builds = dict()
+
+        for version in old_builds[language]:
+            major_version = int(version.split('.')[0])
+            if major_version >= breakpoint_version:
+                continue
+            language_builds[version] = old_builds[language][version]
+
+        if language_builds:
+            builds[language] = language_builds
+
+    return builds  # TODO: not implemented
 
 
 def get_firefox_versions(old_product_details: ProductDetails) -> FirefoxVersions:
@@ -684,27 +731,89 @@ def upload_product_details(data_dir: str,
 
     # combine old and new data
     product_details: ProductDetails = {
-        'all.json': get_releases(breakpoint_version, [i for i in list(Product)], releases, old_product_details),
-        'devedition.json': get_releases(breakpoint_version, [Product.DEVEDITION], releases, old_product_details),
-        'firefox.json': get_releases(breakpoint_version, [Product.FIREFOX], releases, old_product_details),
-        'firefox_history_development_releases.json': get_release_history(Product.FIREFOX, ProductCategory.DEVELOPMENT, old_product_details),
-        'firefox_history_major_releases.json': get_release_history(Product.FIREFOX, ProductCategory.MAJOR, old_product_details),
-        'firefox_history_stability_releases.json': get_release_history(Product.FIREFOX, ProductCategory.STABILITY, old_product_details),
-        'firefox_primary_builds.json': get_primary_builds(Product.FIREFOX, old_product_details),
+        'all.json': get_releases(breakpoint_version,
+                                 [i for i in list(Product)],
+                                 releases,
+                                 old_product_details,
+                                 ),
+        'devedition.json': get_releases(breakpoint_version,
+                                        [Product.DEVEDITION],
+                                        releases,
+                                        old_product_details,
+                                        ),
+        'firefox.json': get_releases(breakpoint_version,
+                                     [Product.FIREFOX],
+                                     releases,
+                                     old_product_details,
+                                     ),
+        'firefox_history_development_releases.json': get_release_history(breakpoint_version,
+                                                                         Product.FIREFOX,
+                                                                         ProductCategory.DEVELOPMENT,
+                                                                         old_product_details,
+                                                                         ),
+        'firefox_history_major_releases.json': get_release_history(breakpoint_version,
+                                                                   Product.FIREFOX,
+                                                                   ProductCategory.MAJOR,
+                                                                   old_product_details,
+                                                                   ),
+        'firefox_history_stability_releases.json': get_release_history(breakpoint_version,
+                                                                       Product.FIREFOX,
+                                                                       ProductCategory.STABILITY,
+                                                                       old_product_details,
+                                                                       ),
+        'firefox_primary_builds.json': get_primary_builds(breakpoint_version,
+                                                          Product.FIREFOX,
+                                                          old_product_details,
+                                                          ),
         'firefox_versions.json': get_firefox_versions(old_product_details),
         'languages.json': get_languages(old_product_details),
-        'mobile_android.json': get_releases(breakpoint_version, [Product.FENNEC], releases, old_product_details),
+        'mobile_android.json': get_releases(breakpoint_version,
+                                            [Product.FENNEC],
+                                            releases,
+                                            old_product_details,
+                                            ),
         'mobile_details.json': get_mobile_details(old_product_details),
-        'mobile_history_development_releases.json': get_release_history(Product.FENNEC, ProductCategory.DEVELOPMENT, old_product_details),
-        'mobile_history_major_releases.json': get_release_history(Product.FENNEC, ProductCategory.MAJOR, old_product_details),
-        'mobile_history_stability_releases.json': get_release_history(Product.FENNEC, ProductCategory.STABILITY, old_product_details),
+        'mobile_history_development_releases.json': get_release_history(breakpoint_version,
+                                                                        Product.FENNEC,
+                                                                        ProductCategory.DEVELOPMENT,
+                                                                        old_product_details,
+                                                                        ),
+        'mobile_history_major_releases.json': get_release_history(breakpoint_version,
+                                                                  Product.FENNEC,
+                                                                  ProductCategory.MAJOR,
+                                                                  old_product_details,
+                                                                  ),
+        'mobile_history_stability_releases.json': get_release_history(breakpoint_version,
+                                                                      Product.FENNEC,
+                                                                      ProductCategory.STABILITY,
+                                                                      old_product_details,
+                                                                      ),
         'mobile_versions.json': get_mobile_versions(old_product_details),
-        'thunderbird.json': get_releases(breakpoint_version, [Product.THUNDERBIRD], releases, old_product_details),
+        'thunderbird.json': get_releases(breakpoint_version,
+                                         [Product.THUNDERBIRD],
+                                         releases,
+                                         old_product_details,
+                                         ),
         'thunderbird_beta_builds.json': get_thunderbird_beta_builds(old_product_details),
-        'thunderbird_history_development_releases.json': get_release_history(Product.THUNDERBIRD, ProductCategory.DEVELOPMENT, old_product_details),
-        'thunderbird_history_major_releases.json': get_release_history(Product.THUNDERBIRD, ProductCategory.MAJOR, old_product_details),
-        'thunderbird_history_stability_releases.json': get_release_history(Product.THUNDERBIRD, ProductCategory.STABILITY, old_product_details),
-        'thunderbird_primary_builds.json': get_primary_builds(Product.THUNDERBIRD, old_product_details),
+        'thunderbird_history_development_releases.json': get_release_history(breakpoint_version,
+                                                                             Product.THUNDERBIRD,
+                                                                             ProductCategory.DEVELOPMENT,
+                                                                             old_product_details,
+                                                                             ),
+        'thunderbird_history_major_releases.json': get_release_history(breakpoint_version,
+                                                                       Product.THUNDERBIRD,
+                                                                       ProductCategory.MAJOR,
+                                                                       old_product_details,
+                                                                       ),
+        'thunderbird_history_stability_releases.json': get_release_history(breakpoint_version,
+                                                                           Product.THUNDERBIRD,
+                                                                           ProductCategory.STABILITY,
+                                                                           old_product_details,
+                                                                           ),
+        'thunderbird_primary_builds.json': get_primary_builds(breakpoint_version,
+                                                              Product.THUNDERBIRD,
+                                                              old_product_details,
+                                                              ),
         'thunderbird_versions.json': get_thunderbird_versions(old_product_details),
     }
     product_details.update(get_regions(old_product_details))
