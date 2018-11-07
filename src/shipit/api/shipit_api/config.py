@@ -8,3 +8,6 @@ APP_NAME = 'shipit_api'
 
 BREAKPOINT_VERSION = 60
 SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)
+
+CURRENT_ESR = '60'
+ESR_NEXT = ''

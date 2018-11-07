@@ -10,6 +10,7 @@ import io
 import json
 import os
 import pathlib
+import re
 import shutil
 import tempfile
 import typing
@@ -264,6 +265,54 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
     return query.all()
 
 
+def get_product_categories(product: Product,
+                           version: str,
+                           ) -> typing.List[ProductCategory]:
+
+    # typically, these are dot releases that are considered major
+    SPECIAL_FIREFOX_MAJORS = ['14.0.1']
+    SPECIAL_THUNDERBIRD_MAJORS = ['14.0.1', '38.0.1']
+
+    def patternize_versions(versions):
+        if not versions:
+            return ''
+        return '|' + '|'.join([v.replace(r'.', r'\.') for v in versions])
+
+    categories = []
+    categories_mapping: typing.List[typing.Tuple[ProductCategory, str]] = []
+
+    if product is Product.THUNDERBIRD:
+        special_majors = patternize_versions(SPECIAL_THUNDERBIRD_MAJORS)
+    else:
+        special_majors = patternize_versions(SPECIAL_FIREFOX_MAJORS)
+
+    categories_mapping.append((ProductCategory.MAJOR,
+                               r'([0-9]+\.[0-9]+%s)$' % special_majors))
+    categories_mapping.append((ProductCategory.MAJOR,
+                               r'([0-9]+\.[0-9]+(esr|)%s)$' % special_majors))
+    categories_mapping.append((ProductCategory.STABILITY,
+                               r'([0-9]+\.[0-9]+\.[0-9]+$|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$)'))
+    categories_mapping.append((ProductCategory.STABILITY,
+                               r'([0-9]+\.[0-9]+\.[0-9]+(esr|)$|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(esr|)$)'))
+    # We had 38.0.5b2
+    categories_mapping.append((ProductCategory.DEVELOPMENT,
+                               r'([0-9]+\.[0-9]|[0-9]+\.[0-9]+\.[0-9])(b|rc|build|plugin)[0-9]+$'))
+
+    # Ugly hack to manage the next ESR (when we have two overlapping esr)
+    if shipit_api.config.ESR_NEXT:
+        categories_mapping.append((ProductCategory.ESR,
+                                   shipit_api.config.ESR_NEXT + r'(\.[0-9]+){1,2}esr$'))
+    else:
+        categories_mapping.append((ProductCategory.ESR,
+                                   shipit_api.config.CURRENT_ESR + r'(\.[0-9]+){1,2}esr$'))
+
+    for (product_category, version_pattern) in categories_mapping:
+        if re.match(version_pattern, version):
+            categories.append(product_category)
+
+    return categories
+
+
 def get_releases(breakpoint_version: int,
                  products: Products,
                  releases: typing.List[shipit_api.models.Release],
@@ -295,9 +344,14 @@ def get_releases(breakpoint_version: int,
     details = dict()
 
     for product in products:
+
+        #
+        # get release details from the JSON files up to breakpoint_version
+        #
         product_file = f'json/1.0/{product.value}.json'
         if product is Product.FENNEC:
             product_file = 'json/1.0/mobile_android.json'
+
         old_releases = typing.cast(typing.Dict[str, ReleaseDetails], old_product_details[product_file].get('releases', dict()))
         for product_with_version in old_releases:
             # mozilla_version.gecko.GeckoVersion does not parse rc (yet)
@@ -310,12 +364,29 @@ def get_releases(breakpoint_version: int,
                 continue
             details[product_with_version] = old_releases[product_with_version]
 
+        #
+        # get release history from the database
+        #
+        for release in releases:
+            categories = get_product_categories(Product(release.product), release.version)
+            for category in categories:
+                details[f'{release.product}-{release.version}'] = dict(
+                    category=category.value,
+                    product=release.product,
+                    build_number=release.build_number,
+                    description='',  # XXX: we don't have this field anymore
+                    is_security_driven=False,  # XXX: we don't have this field anymore
+                    version=release.version,
+                    date=release.completed.strftime('%Y-%m-%d'),
+                )
+
     return dict(releases=details)
 
 
 def get_release_history(breakpoint_version: int,
                         product: Product,
                         product_category: ProductCategory,
+                        releases: typing.List[shipit_api.models.Release],
                         old_product_details: ProductDetails) -> ReleasesHistory:
     '''This file contains all the Product release dates for releases in that
        category.
@@ -350,6 +421,9 @@ def get_release_history(breakpoint_version: int,
 
     history = dict()
 
+    #
+    # get release history from the JSON files up to breakpoint_version
+    #
     product_file = f'json/1.0/{product.value}_history_{product_category.value}_releases.json'
     if product is Product.FENNEC:
         product_file = f'json/1.0/mobile_history_{product_category.value}_releases.json'
@@ -365,6 +439,19 @@ def get_release_history(breakpoint_version: int,
         if version >= breakpoint_version:
             continue
         history[product_with_version] = old_history[product_with_version]
+
+    #
+    # get release history from the database
+    #
+    for release in releases:
+        if product.value != release.product:
+            continue
+
+        version = int(release.version.split('.')[0])
+        if version < breakpoint_version:
+            continue
+
+        history[release.version] = release.completed.strftime('%Y-%m-%d')
 
     return history  # TODO: not implemented
 
@@ -748,16 +835,19 @@ def upload_product_details(data_dir: str,
         'firefox_history_development_releases.json': get_release_history(breakpoint_version,
                                                                          Product.FIREFOX,
                                                                          ProductCategory.DEVELOPMENT,
+                                                                         releases,
                                                                          old_product_details,
                                                                          ),
         'firefox_history_major_releases.json': get_release_history(breakpoint_version,
                                                                    Product.FIREFOX,
                                                                    ProductCategory.MAJOR,
+                                                                   releases,
                                                                    old_product_details,
                                                                    ),
         'firefox_history_stability_releases.json': get_release_history(breakpoint_version,
                                                                        Product.FIREFOX,
                                                                        ProductCategory.STABILITY,
+                                                                       releases,
                                                                        old_product_details,
                                                                        ),
         'firefox_primary_builds.json': get_primary_builds(breakpoint_version,
@@ -775,16 +865,19 @@ def upload_product_details(data_dir: str,
         'mobile_history_development_releases.json': get_release_history(breakpoint_version,
                                                                         Product.FENNEC,
                                                                         ProductCategory.DEVELOPMENT,
+                                                                        releases,
                                                                         old_product_details,
                                                                         ),
         'mobile_history_major_releases.json': get_release_history(breakpoint_version,
                                                                   Product.FENNEC,
                                                                   ProductCategory.MAJOR,
+                                                                  releases,
                                                                   old_product_details,
                                                                   ),
         'mobile_history_stability_releases.json': get_release_history(breakpoint_version,
                                                                       Product.FENNEC,
                                                                       ProductCategory.STABILITY,
+                                                                      releases,
                                                                       old_product_details,
                                                                       ),
         'mobile_versions.json': get_mobile_versions(old_product_details),
@@ -797,16 +890,19 @@ def upload_product_details(data_dir: str,
         'thunderbird_history_development_releases.json': get_release_history(breakpoint_version,
                                                                              Product.THUNDERBIRD,
                                                                              ProductCategory.DEVELOPMENT,
+                                                                             releases,
                                                                              old_product_details,
                                                                              ),
         'thunderbird_history_major_releases.json': get_release_history(breakpoint_version,
                                                                        Product.THUNDERBIRD,
                                                                        ProductCategory.MAJOR,
+                                                                       releases,
                                                                        old_product_details,
                                                                        ),
         'thunderbird_history_stability_releases.json': get_release_history(breakpoint_version,
                                                                            Product.THUNDERBIRD,
                                                                            ProductCategory.STABILITY,
+                                                                           releases,
                                                                            old_product_details,
                                                                            ),
         'thunderbird_primary_builds.json': get_primary_builds(breakpoint_version,
@@ -818,6 +914,7 @@ def upload_product_details(data_dir: str,
     product_details.update(get_regions(old_product_details))
     product_details.update(get_l10n(old_product_details))
 
+    # TODO: add 'json/1.0/' infront of each file path
     # TODO: json_exports.json
 
     # create temp directory where generated files will be temporary created
