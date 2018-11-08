@@ -35,16 +35,16 @@ PROJECTS:
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
-    '--nix-shell',
+    '--nix-build',
     required=True,
-    default=please_cli.config.NIX_BIN_DIR + 'nix-shell',
-    help='Path to nix-shell command (default: {}).'.format(
-        please_cli.config.NIX_BIN_DIR + 'nix-shell',
+    default=please_cli.config.NIX_BIN_DIR + 'nix-build',
+    help='Path to nix-build command (default: {}).'.format(
+        please_cli.config.NIX_BIN_DIR + 'nix-build',
         ),
     )
 @cli_common.cli.taskcluster_options
 @click.pass_context
-def cmd(ctx, project, nix_shell,
+def cmd(ctx, project, nix_build,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
@@ -61,7 +61,7 @@ def cmd(ctx, project, nix_shell,
                                                    project=project,
                                                    quiet=True,
                                                    command=check_command,
-                                                   nix_shell=nix_shell,
+                                                   nix_shell=nix_build,
                                                    taskcluster_secret=taskcluster_secret,
                                                    taskcluster_client_id=taskcluster_client_id,
                                                    taskcluster_access_token=taskcluster_access_token,
