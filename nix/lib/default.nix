@@ -412,7 +412,8 @@ in rec {
         ) src;
 
   mkYarnFrontend =
-    { src
+    { name
+    , src
     , src_path ? null
     , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
     , extraBuildInputs ? []
@@ -457,6 +458,7 @@ in rec {
           ln -s ${self.node_modules} ./node_modules
           export PATH=$PWD/node_modules/.bin:$PATH
           export NODE_PATH=$PWD/node_modules:$NODE_PATH
+          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
         '' + shellHook;
 
         passthru = {
@@ -494,6 +496,20 @@ in rec {
       };
     in self;
 
+  shellWithProjectName =
+    args @
+    { name
+    , shellHook ? ""
+    , ...
+    }:
+    let
+      self = stdenv.mkDerivation (args // {
+        shellHook = shellHook + ''
+          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
+        '';
+      });
+      in self;
+
   mkFrontend =
     { name
     , version
@@ -513,7 +529,7 @@ in rec {
     let
       scss_common = ./../../lib/frontend_common/scss;
       frontend_common = ./../../lib/frontend_common;
-      self = stdenv.mkDerivation {
+      self = shellWithProjectName {
         name = "${name}-${version}";
 
         src = builtins.filterSource
@@ -770,7 +786,7 @@ in rec {
           )
         );
 
-      self = stdenv.mkDerivation {
+      self = shellWithProjectName {
         inherit name passthru;
         buildInputs = [ makeWrapper python.__old.python ];
         buildCommand = ''
@@ -971,6 +987,7 @@ in rec {
           popd >> /dev/null
 
           cd ${self.src_path}
+          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
         '' + shellHook;
 
         passthru = {
