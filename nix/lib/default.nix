@@ -426,9 +426,11 @@ in rec {
     }:
     let
 
-      self = releng_pkgs.pkgs.yarn2nix.mkYarnPackage {
+      self = mkProject {
         # yarn2nix knows how to extract the name/version from package.json
-        inherit src;
+        inherit src name;
+
+        mkDerivation = releng_pkgs.pkgs.yarn2nix.mkYarnPackage;
 
         doCheck = true;
 
@@ -458,7 +460,6 @@ in rec {
           ln -s ${self.node_modules} ./node_modules
           export PATH=$PWD/node_modules/.bin:$PATH
           export NODE_PATH=$PWD/node_modules:$NODE_PATH
-          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
         '' + shellHook;
 
         passthru = {
@@ -496,14 +497,19 @@ in rec {
       };
     in self;
 
-  shellWithProjectName =
+  mkProject =
     args @
     { name
     , shellHook ? ""
+    , mkDerivation ? stdenv.mkDerivation
     , ...
     }:
     let
-      self = stdenv.mkDerivation (args // {
+      self = mkDerivation (
+        (releng_pkgs.pkgs.lib.filterAttrs
+          (n: v: n != "mkDerivation")
+          args
+        ) // {
         shellHook = shellHook + ''
           PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
         '';
@@ -529,7 +535,7 @@ in rec {
     let
       scss_common = ./../../lib/frontend_common/scss;
       frontend_common = ./../../lib/frontend_common;
-      self = shellWithProjectName {
+      self = mkProject {
         name = "${name}-${version}";
 
         src = builtins.filterSource
@@ -786,7 +792,7 @@ in rec {
           )
         );
 
-      self = shellWithProjectName {
+      self = mkProject {
         inherit name passthru;
         buildInputs = [ makeWrapper python.__old.python ];
         buildCommand = ''
@@ -890,7 +896,9 @@ in rec {
         '';
       };
 
-      self = python.mkDerivation {
+      self = mkProject {
+
+        mkDerivation = python.mkDerivation;
 
         namePrefix = "";
         name = "${name}-${version}";
@@ -987,7 +995,6 @@ in rec {
           popd >> /dev/null
 
           cd ${self.src_path}
-          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
         '' + shellHook;
 
         passthru = {
