@@ -2,7 +2,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython3 fromRequirementsFile filterSource mkRustPlatform;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython fromRequirementsFile filterSource mkRustPlatform;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert git llvm_7 libxml2;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
@@ -105,7 +105,7 @@ let
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
-  self = mkPython3 {
+  self = mkPython {
     inherit python project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit (self) name; };

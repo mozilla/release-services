@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend3 fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "shipit/api";
 
-  self = mkBackend3 {
+  self = mkBackend {
     inherit python project_name;
     inProduction = false;
     version = fileContents ./VERSION;

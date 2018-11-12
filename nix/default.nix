@@ -41,8 +41,9 @@ let
     gecko-env = import ./gecko_env.nix { inherit releng_pkgs; };
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
 
+
     "postgresql" =
-      releng_pkgs.lib.mkProject3
+      releng_pkgs.lib.mkProject
         { project_name = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.postgresql.name) 0;
           version = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.postgresql.name) 1;
           name = "${pkgs.postgresql.name}-env";
@@ -54,7 +55,7 @@ let
         };
 
     "redis" =
-      releng_pkgs.lib.mkProject3
+      releng_pkgs.lib.mkProject
         { project_name = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.redis.name) 0;
           version = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.redis.name) 1;
           name = "${pkgs.redis.name}-env";

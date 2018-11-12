@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend3 fromRequirementsFile filterSource mysql2postgresql;
+  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource mysql2postgresql;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -22,7 +22,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "mapper/api";
 
-  self = mkBackend3 {
+  self = mkBackend {
     inherit python project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit (self) name; };

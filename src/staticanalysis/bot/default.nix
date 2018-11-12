@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkTaskclusterMergeRoutes mkPython3 fromRequirementsFile filterSource ;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkTaskclusterMergeRoutes mkPython fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs-8_x git python27 python36 coreutils clang_5 zlib shellcheck tzdata;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -89,7 +89,7 @@ let
     "${xorg.renderproto}/include"
   ];
 
-  self = mkPython3 {
+  self = mkPython {
     inherit python project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit(self) name; };

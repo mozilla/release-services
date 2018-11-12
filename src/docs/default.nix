@@ -3,7 +3,7 @@
 let
 
   inherit (builtins) readFile concatStringsSep;
-  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask mkProject3 mkProjectFullName;
+  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask mkProject mkProjectFullName;
   inherit (releng_pkgs.tools) pypi2nix;
   inherit (releng_pkgs.pkgs) writeScript graphviz-nox;
   inherit (releng_pkgs.pkgs.lib) fileContents replaceStrings;
@@ -14,7 +14,7 @@ let
   project_name = "docs";
   version = fileContents ./VERSION;
 
-  self = mkProject3 {
+  self = mkProject {
     inherit project_name version;
 
     src = ./.;

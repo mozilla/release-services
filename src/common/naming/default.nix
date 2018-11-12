@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkPython3 fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "common/naming";
 
-  self = mkPython3 {
+  self = mkPython {
     inherit python project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit (self) name; };

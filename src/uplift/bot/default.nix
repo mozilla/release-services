@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython3 fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
@@ -50,7 +50,7 @@ let
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
-  self = mkPython3 {
+  self = mkPython {
     inherit python project_name;
     inProduction = true;
     version = fileContents ./VERSION;

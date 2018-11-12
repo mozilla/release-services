@@ -2,7 +2,7 @@
 }:
 let
   inherit (builtins) readFile;
-  inherit (releng_pkgs.lib) mkFrontend2;
+  inherit (releng_pkgs.lib) mkFrontend;
   inherit (releng_pkgs.pkgs.lib) fileContents;
 
   nodejs = releng_pkgs.pkgs."nodejs-6_x";
@@ -12,7 +12,7 @@ let
   };
   elm_packages = import ./elm-packages.nix;
 
-in mkFrontend2 {
+in mkFrontend {
   inProduction = true;
   project_name = "releng_frontend";
   inherit nodejs node_modules elm_packages;

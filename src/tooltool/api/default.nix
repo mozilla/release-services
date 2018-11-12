@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend3 mkTaskclusterHook fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript writeText dockerTools;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -44,7 +44,7 @@ let
               writeText "taskcluster-hook-${hook_name}.json" (builtins.toJSON hook);
         }) ["testing" "staging" "production"]);
 
-  self = mkBackend3 {
+  self = mkBackend {
     inherit python version project_name;
     inStaging = true;
     inProduction = true;

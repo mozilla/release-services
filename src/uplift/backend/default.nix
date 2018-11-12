@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend3 fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript redis;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "uplift/backend";
 
-  self = mkBackend3 rec {
+  self = mkBackend rec {
     inherit python project_name;
     inProduction = true;
     version = fileContents ./VERSION;
