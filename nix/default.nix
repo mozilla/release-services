@@ -47,7 +47,10 @@ let
           version = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.postgresql.name) 1;
           name = "${pkgs.postgresql.name}-env";
           buildInputs = [ pkgs.postgresql95 ];
-          passthru.package = pkgs.postgresql95;
+          mkDerivation = pkgs.stdenv.mkDerivation;
+          passthru = {
+            package = pkgs.postgresql95;
+          };
         };
 
     "redis" =
@@ -56,6 +59,8 @@ let
           version = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.redis.name) 1;
           name = "${pkgs.redis.name}-env";
           buildInputs = [ pkgs.redis ];
+          mkDerivation = pkgs.stdenv.mkDerivation;
+          package = pkgs.redis;
           passthru.package = pkgs.redis;
         };
 

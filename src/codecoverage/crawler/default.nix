@@ -3,15 +3,13 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython2 fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython3 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  project_name = "codecoverage-crawler";
-  name = "mozilla-code-coverage-crawler";
-  dirname = "code_coverage_crawler";
+  project_name = "codecoverage/crawler";
 
   mkBot = branch:
     let
@@ -52,11 +50,10 @@ let
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
-  self = mkPython2 {
-    inherit python project_name name dirname;
+  self = mkPython3 {
+    inherit python project_name;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
-    src_path = "src/codecoverage/crawler";
+    src = filterSource ./. { inherit (self) name; };
     buildInputs =
       fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
@@ -67,7 +64,7 @@ let
         staging = mkBot "staging";
         production = mkBot "production";
       };
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

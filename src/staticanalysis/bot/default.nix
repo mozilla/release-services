@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkTaskclusterMergeRoutes mkPython2 fromRequirementsFile filterSource ;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkTaskclusterMergeRoutes mkPython3 fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs-8_x git python27 python36 coreutils clang_5 zlib shellcheck tzdata;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -11,8 +11,6 @@ let
   nodejs = nodejs-8_x;
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "staticanalysis/bot";
-  name = "mozilla-static-analysis-bot";
-  dirname = "static_analysis_bot";
 
   # Customize gecko environment with Nodejs & Python 3 for linters
   gecko-env = releng_pkgs.gecko-env.overrideDerivation(old : {
@@ -91,11 +89,10 @@ let
     "${xorg.renderproto}/include"
   ];
 
-  self = mkPython2 {
-    inherit python name dirname project_name;
+  self = mkPython3 {
+    inherit python project_name;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
-    src_path = "src/staticanalysis/bot";
+    src = filterSource ./. { inherit(self) name; };
     buildInputs =
       [ mercurial clang_5 ] ++
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
@@ -198,7 +195,7 @@ let
         staging = mkBot "staging";
         production = mkBot "production";
       };
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

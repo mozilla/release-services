@@ -3,15 +3,13 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkPython2 fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkPython3 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper mercurial cacert ;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "pulselistener";
-  name = "mozilla-pulselistener";
-  dirname = "pulselistener";
 
   mercurial' = mercurial.overrideDerivation (old: {
     postInstall = old.postInstall + ''
@@ -26,10 +24,10 @@ let
     '';
   });
 
-  self = mkPython2 {
-    inherit python project_name name dirname;
+  self = mkPython3 {
+    inherit python project_name;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
+    src = filterSource ./. { inherit (self) name; };
     buildInputs =
       (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
@@ -43,7 +41,7 @@ let
       "/bin/pulselistener"
     ];
     passthru = {
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

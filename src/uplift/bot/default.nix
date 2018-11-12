@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython2 fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython3 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
@@ -11,8 +11,6 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "uplift/bot";
-  name = "mozilla-uplift-bot";
-  dirname = "uplift_bot";
 
   mkBot = branch:
     let
@@ -52,12 +50,11 @@ let
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
-  self = mkPython2 {
-    inherit python name dirname project_name;
+  self = mkPython3 {
+    inherit python project_name;
     inProduction = true;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
-    src_path = "src/uplift/bot";
+    src = filterSource ./. { inherit(self) name; };
     buildInputs =
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
@@ -76,7 +73,7 @@ let
         staging = mkBot "staging";
         production = mkBot "production";
       };
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

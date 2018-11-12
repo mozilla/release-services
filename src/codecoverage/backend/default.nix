@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend2 fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend3 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript redis;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -15,8 +15,7 @@ let
     inherit python project_name;
     inProduction = true;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
-    src_path = "src/codecoverage/backend";
+    src = filterSource ./. { inherit (self) name; };
     buildInputs =
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
@@ -31,7 +30,7 @@ let
       cp ${src}/codecoverage_backend/worker.py $out/bin/codecoverage_backend_worker
     '';
     passthru = {
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \
