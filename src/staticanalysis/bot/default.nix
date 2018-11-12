@@ -1,15 +1,16 @@
-{ releng_pkgs 
-}: 
+{ releng_pkgs
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkTaskclusterMergeRoutes mkPython fromRequirementsFile filterSource ;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkTaskclusterMergeRoutes mkPython2 fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs-8_x git python27 python36 coreutils clang_5 zlib shellcheck tzdata;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
   nodejs = nodejs-8_x;
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "staticanalysis/bot";
   name = "mozilla-static-analysis-bot";
   dirname = "static_analysis_bot";
 
@@ -90,13 +91,13 @@ let
     "${xorg.renderproto}/include"
   ];
 
-  self = mkPython {
-    inherit python name dirname;
+  self = mkPython2 {
+    inherit python name dirname project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     src_path = "src/staticanalysis/bot";
     buildInputs =
-      [ mercurial clang_5 ] ++ 
+      [ mercurial clang_5 ] ++
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =

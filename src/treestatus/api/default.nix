@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource mysql2postgresql;
+  inherit (releng_pkgs.lib) mkBackend2 fromRequirementsFile filterSource mysql2postgresql;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -26,12 +26,13 @@ let
   '';
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "treestatus/api";
   name = "mozilla-treestatus-api";
   dirname = "treestatus_api";
   src_path = "src/treestatus/api";
 
-  self = mkBackend {
-    inherit python name dirname src_path;
+  self = mkBackend2 {
+    inherit python name dirname src_path project_name;
     inProduction = true;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };

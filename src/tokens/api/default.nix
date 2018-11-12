@@ -1,20 +1,21 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend2 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "tokens/api";
   name = "mozilla-tokens-api";
   dirname = "tokens_api";
   src_path = "src/tokens/api";
 
-  self = mkBackend {
-    inherit python name dirname src_path;
+  self = mkBackend2 {
+    inherit python name dirname src_path project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     inStaging = true;

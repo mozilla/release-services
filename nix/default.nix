@@ -42,15 +42,19 @@ let
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
 
     "postgresql" =
-      releng_pkgs.lib.mkProject
-        { name = "${pkgs.postgresql.name}-env";
+      releng_pkgs.lib.mkProject2
+        { project_name = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.postgresql.name) 0;
+          version = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.postgresql.name) 1;
+          name = "${pkgs.postgresql.name}-env";
           buildInputs = [ pkgs.postgresql95 ];
           passthru.package = pkgs.postgresql95;
         };
 
     "redis" =
-      releng_pkgs.lib.mkProject
-        { name = "${pkgs.redis.name}-env";
+      releng_pkgs.lib.mkProject2
+        { project_name = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.redis.name) 0;
+          version = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.redis.name) 1;
+          name = "${pkgs.redis.name}-env";
           buildInputs = [ pkgs.redis ];
           passthru.package = pkgs.redis;
         };

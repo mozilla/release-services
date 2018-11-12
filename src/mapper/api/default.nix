@@ -1,9 +1,9 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource mysql2postgresql;
+  inherit (releng_pkgs.lib) mkBackend2 fromRequirementsFile filterSource mysql2postgresql;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -20,12 +20,13 @@ let
   '';
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "mapper/api";
   name = "mozilla-mapper-api";
   dirname = "mapper_api";
   src_path = "src/mapper/api";
 
-  self = mkBackend {
-    inherit python name dirname src_path;
+  self = mkBackend2 {
+    inherit python name dirname src_path project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =

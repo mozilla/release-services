@@ -1,8 +1,8 @@
-{releng_pkgs }: 
+{releng_pkgs }:
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython fromRequirementsFile filterSource mkRustPlatform;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython2 fromRequirementsFile filterSource mkRustPlatform;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert git llvm_7 libxml2;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
@@ -10,6 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   rustPlatform = mkRustPlatform {};
+  project_name = "codecoverage-bot";
   name = "mozilla-code-coverage-bot";
   dirname = "code_coverage_bot";
 
@@ -106,8 +107,8 @@ let
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
-  self = mkPython {
-    inherit python name dirname;
+  self = mkPython2 {
+    inherit python name dirname project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     src_path = "src/codecoverage/bot";

@@ -3,12 +3,13 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend2 mkTaskclusterHook fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript writeText dockerTools;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "tooltool/api";
   name = "mozilla-tooltool-api";
   dirname = "tooltool_api";
   src_path = "src/tooltool/api";
@@ -46,8 +47,8 @@ let
               writeText "taskcluster-hook-${hook_name}.json" (builtins.toJSON hook);
         }) ["testing" "staging" "production"]);
 
-  self = mkBackend {
-    inherit python name version dirname src_path;
+  self = mkBackend2 {
+    inherit python name version dirname src_path project_name;
     inStaging = true;
     inProduction = true;
     src = filterSource ./. { inherit name; };

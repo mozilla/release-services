@@ -1,20 +1,21 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend2 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript redis;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "uplift/backend";
   name = "mozilla-uplift-backend";
   dirname = "uplift_backend";
   src_path = "src/uplift/backend";
 
-  self = mkBackend rec {
-    inherit python name dirname src_path;
+  self = mkBackend2 rec {
+    inherit python name dirname src_path project_name;
     inProduction = true;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };

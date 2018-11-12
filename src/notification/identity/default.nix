@@ -1,20 +1,21 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend2 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "notification/identity";
   name = "mozilla-notification-identity";
   dirname = "notification_identity";
   src_path = "src/notification/identity";
 
-  self = mkBackend {
-    inherit python name dirname src_path;
+  self = mkBackend2 {
+    inherit python name dirname src_path project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =

@@ -1,19 +1,20 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend2 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "{{cookiecutter.project}}";
   name = "mozilla-{{cookiecutter.project}}";
   dirname = "{{cookiecutter.project_path}}";
 
-  self = mkBackend {
-    inherit python name dirname;
+  self = mkBackend2 {
+    inherit python name dirname project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =

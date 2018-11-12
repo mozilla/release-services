@@ -1,14 +1,15 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython2 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "codecoverage-crawler";
   name = "mozilla-code-coverage-crawler";
   dirname = "code_coverage_crawler";
 
@@ -51,8 +52,8 @@ let
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
-  self = mkPython {
-    inherit python name dirname;
+  self = mkPython2 {
+    inherit python project_name name dirname;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     src_path = "src/codecoverage/crawler";

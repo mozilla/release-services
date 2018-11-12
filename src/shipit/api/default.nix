@@ -3,17 +3,18 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkBackend2 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "shipit/api";
   name = "mozilla-shipit-api";
   dirname = "shipit_api";
 
-  self = mkBackend {
-    inherit python name dirname;
+  self = mkBackend2 {
+    inherit python name dirname project_name;
     inProduction = false;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };

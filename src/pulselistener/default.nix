@@ -1,14 +1,15 @@
-{ releng_pkgs 
-}: 
+{ releng_pkgs
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkPython2 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper mercurial cacert ;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "pulselistener";
   name = "mozilla-pulselistener";
   dirname = "pulselistener";
 
@@ -18,15 +19,15 @@ let
       cat > $out/etc/mercurial/hgrc <<EOF
       [web]
       cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
-      
+
       [extensions]
       purge =
       EOF
     '';
   });
 
-  self = mkPython {
-    inherit python name dirname;
+  self = mkPython2 {
+    inherit python project_name name dirname;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =

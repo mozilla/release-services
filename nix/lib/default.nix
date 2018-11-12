@@ -412,9 +412,9 @@ in rec {
         ) src;
 
   mkYarnFrontend =
-    { name
+    { project_name
+    , version
     , src
-    , src_path ? null
     , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
     , extraBuildInputs ? []
     , patchPhase ? ""
@@ -426,9 +426,9 @@ in rec {
     }:
     let
 
-      self = mkProject {
+      self = mkProject3 {
         # yarn2nix knows how to extract the name/version from package.json
-        inherit src name;
+        inherit src project_name version;
 
         mkDerivation = releng_pkgs.pkgs.yarn2nix.mkYarnPackage;
 
@@ -463,19 +463,13 @@ in rec {
         '' + shellHook;
 
         passthru = {
+          inherit (self) src_path;
 
           deploy = {
             testing = self;
             staging = self;
             production = self;
           };
-
-          src_path =
-            if src_path != null
-              then src_path
-              else
-                "src/" +
-                  (replaceStrings ["-"] ["_"] self.package.name);
 
           taskclusterGithubTasks =
             map (branch: mkTaskclusterGithubTask { inherit (self.package) name; inherit branch; inherit (self) src_path; })
@@ -497,6 +491,71 @@ in rec {
       };
     in self;
 
+  mkProjectModuleName = builtins.replaceStrings ["/" "_"] ["-" "-"];
+  mkProjectDirName = builtins.replaceStrings ["/" ] ["_"];
+  mkProjectSrcPath = project_name: "src/" + project_name;
+  mkProjectFullName = project_name: version: "mozilla-${mkProjectModuleName project_name}-${version}";
+
+  mkProject3 =
+    args @
+    { project_name
+    , version
+    # bikin ini 4 kalo gk ada, kasih default
+    , name ? mkProjectFullName project_name version
+    , dirname ? mkProjectDirName project_name
+    , module_name ? mkProjectModuleName project_name
+    , src_path ? mkProjectSrcPath project_name
+    , shellHook ? ""
+    , mkDerivation ? stdenv.mkDerivation
+    , ...
+    }:
+    let
+      self = mkDerivation (
+        (releng_pkgs.pkgs.lib.filterAttrs
+          (n: v: n != "mkDerivation")
+          args
+        ) // {
+        shellHook = shellHook + ''
+          echo "######### old name ${name} new ${mkProjectFullName project_name version}"
+          echo "######### old dirname ${dirname} new ${mkProjectDirName project_name}"
+          echo "######### old module_name ${module_name} new ${mkProjectModuleName project_name}"
+          echo "######### old src_path ${src_path} new ${mkProjectSrcPath project_name}"
+          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
+        '';
+        passthru.module_name = module_name;
+        passthru.src_path = src_path;
+      });
+      in self;
+
+  mkProject2 =
+    args @
+    { project_name
+    , version
+    # bikin ini 4 kalo gk ada, kasih default
+    , name ? ""
+    , dirname ? ""
+    , module_name ? ""
+    , src_path ? mkProjectSrcPath project_name
+    , shellHook ? ""
+    , mkDerivation ? stdenv.mkDerivation
+    , ...
+    }:
+    let
+      self = mkDerivation (
+        (releng_pkgs.pkgs.lib.filterAttrs
+          (n: v: n != "mkDerivation")
+          args
+        ) // {
+        shellHook = shellHook + ''
+          echo "######### old name ${name} new ${mkProjectFullName project_name version}"
+          echo "######### old dirname ${dirname} new ${mkProjectDirName project_name}"
+          echo "######### old module_name ${module_name} new ${mkProjectModuleName project_name}"
+          echo "######### old src_path ${src_path} new ${mkProjectSrcPath project_name}"
+          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
+        '';
+      });
+      in self;
+
   mkProject =
     args @
     { name
@@ -517,7 +576,8 @@ in rec {
       in self;
 
   mkFrontend =
-    { name
+    { project_name
+    , name
     , version
     , src
     , src_path ? null
@@ -535,7 +595,9 @@ in rec {
     let
       scss_common = ./../../lib/frontend_common/scss;
       frontend_common = ./../../lib/frontend_common;
-      self = mkProject {
+      self = mkProject2 {
+        inherit project_name version;
+
         name = "${name}-${version}";
 
         src = builtins.filterSource
@@ -679,6 +741,103 @@ in rec {
       };
     in self;
 
+  mkBackend2 =
+    args @
+    { project_name
+    , name
+    , dirname
+    , version
+    , src
+    , python
+    , src_path ? null
+    , buildInputs ? []
+    , propagatedBuildInputs ? []
+    , doCheck ? true
+    , checkPhase ? null
+    , postInstall ? ""
+    , shellHook ? ""
+    , dockerCmd ? [
+        "gunicorn"
+        "${dirname}.flask:app"
+        "--log-file"
+        "-"
+      ]
+    , dockerEnv ? []
+    , dockerContents ? []
+    , dockerUser ? "app"
+    , dockerUserId ? 10001
+    , dockerGroup ? "app"
+    , dockerGroupId ? 10001
+    , passthru ? {}
+    , inTesting ? true
+    , inStaging ? true
+    , inProduction ? false
+    , gunicornWorkers ? 3
+    }:
+    let
+      self = mkPython2 (args // {
+
+        buildInputs = [ releng_pkgs.postgresql.package ] ++ buildInputs;
+
+        postInstall = ''
+          mkdir -p $out/bin
+          ln -s ${python.packages."Flask"}/bin/flask $out/bin
+          ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
+          for i in $out/bin/*; do
+            wrapProgram $i --set PYTHONPATH $PYTHONPATH
+          done
+          if [ -e ./settings.py ]; then
+            mkdir -p $out/etc
+            cp ./settings.py $out/etc
+          fi
+          if [ -d ./migrations ]; then
+            mv ./migrations $out/${python.__old.python.sitePackages}
+          fi
+        '' + postInstall;
+
+
+        checkPhase =
+          if checkPhase != null
+            then checkPhase
+            else ''
+              export LANG=en_US.UTF-8
+              export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+              export APP_TESTING=${name}
+
+              echo "################################################################"
+              echo "## flake8 ######################################################"
+              echo "################################################################"
+              flake8 -v --mypy-config=setup.cfg
+              echo "################################################################"
+
+              echo "################################################################"
+              echo "## pytest ######################################################"
+              echo "################################################################"
+              pytest tests/ -vvv
+              echo "################################################################"
+            '';
+
+        shellHook = ''
+          export CACHE_DEFAULT_TIMEOUT=3600
+          export CACHE_TYPE=filesystem
+          export CACHE_DIR=$PWD/cache
+          export LANG=en_US.UTF-8
+          export DEBUG=1
+          export APP_TESTING=${name}
+          export FLASK_APP=${dirname}.flask:app
+        '' + shellHook;
+
+        inherit dockerContents;
+        dockerEnv = [
+          "APP_SETTINGS=${self}/etc/settings.py"
+          "FLASK_APP=${dirname}.flask:app"
+          "WEB_CONCURRENCY=${builtins.toString gunicornWorkers}"
+        ];
+        dockerCmd = dockerCmd;
+
+      });
+    in self;
+
   mkBackend =
     args @
     { name
@@ -808,6 +967,221 @@ in rec {
         '';
       };
 
+    in self;
+
+  mkPython2 =
+    { project_name
+    , name
+    , dirname
+    , version
+    , src
+    , python
+    , src_path ? null
+    , buildInputs ? []
+    , propagatedBuildInputs ? []
+    , doCheck ? true
+    , checkPhase ? null
+    , prePatch ? ""
+    , postPatch ? ""
+    , postInstall ? ""
+    , shellHook ? ""
+    , dockerCmd ? []
+    , dockerEnv ? []
+    , dockerContents ? []
+    , dockerUser ? "app"
+    , dockerUserId ? 10001
+    , dockerGroup ? "app"
+    , dockerGroupId ? 10001
+    , passthru ? {}
+    , inTesting ? true
+    , inStaging ? true
+    , inProduction ? false
+    }:
+    let
+
+      self_docker_config =
+          { Env = [
+              "APP_NAME=${name}-${version}"
+              "PATH=/bin"
+              "LANG=en_US.UTF-8"
+              "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
+              "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            ] ++ dockerEnv;
+            Cmd = dockerCmd;
+            WorkingDir = "/";
+          };
+      self_docker = mkDocker {
+        inherit name version;
+        contents = [ busybox self ] ++ dockerContents;
+        config = self_docker_config;
+      };
+
+      githubCommit = builtins.getEnv "GITHUB_COMMIT";
+      taskGroupId = builtins.getEnv "TASK_GROUP_ID";
+
+      version_json = {
+        inherit version;
+        source = "https://github.com/mozilla/release-services";
+        commit = githubCommit;
+        build =
+          if taskGroupId != ""
+            then "https://tools.taskcluster.net/groups/${taskGroupId}"
+            else "unknown";
+      };
+
+      self_dockerflow = dockerTools.buildImage {
+        inherit name;
+        tag = version;
+        fromImage = self_docker;
+        config = self_docker_config // {
+            User = dockerUser;
+        };
+        runAsRoot = (if dockerUser == null then "" else ''
+          #!${stdenv.shell}
+          ${dockerTools.shadowSetup}
+          groupadd --gid ${toString dockerGroupId} ${dockerGroup}
+          useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
+          # gunicorn requires /tmp, /var/tmp, or /usr/tmp
+          mkdir -p --mode=1777 /tmp
+          mkdir -p /app
+          cp -a ${self.src}/. /app/
+        '') + ''
+          cp -a ${self.src}/* /app
+          cat > /app/version.json  <<EOF
+          ${builtins.toJSON version_json}
+          EOF
+          echo "/app/version.json content:"
+          cat /app/version.json
+
+        '';
+      };
+
+      self = mkProject2 {
+        inherit project_name version dirname src_path;
+
+        mkDerivation = python.mkDerivation;
+
+        namePrefix = "";
+        name = "${name}-${version}";
+
+        inherit src;
+
+        buildInputs =
+          [ makeWrapper
+            glibcLocales
+          ] ++ buildInputs;
+
+        propagatedBuildInputs =
+          [ releng_pkgs.pkgs.cacert
+          ] ++ propagatedBuildInputs;
+
+        preConfigure = ''
+          rm -rf build *.egg-info
+        '';
+
+        patchPhase = prePatch + ''
+          # replace synlink with real file
+          rm -f setup.cfg
+          ln -s ${../setup.cfg} setup.cfg
+
+          # generate MANIFEST.in to make sure every file is included
+          rm -f MANIFEST.in
+          cat > MANIFEST.in <<EOF
+          recursive-include ${dirname}/*
+
+          include VERSION
+          include ${dirname}/VERSION
+          include ${dirname}/*.ini
+          include ${dirname}/*.json
+          include ${dirname}/*.mako
+          include ${dirname}/*.yml
+
+          recursive-exclude * __pycache__
+          recursive-exclude * *.py[co]
+          EOF
+        '' + postPatch;
+
+        inherit doCheck;
+
+        checkPhase =
+          if checkPhase != null
+            then checkPhase
+            else ''
+              export LANG=en_US.UTF-8
+              export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+
+              echo "################################################################"
+              echo "## flake8 ######################################################"
+              echo "################################################################"
+              flake8 -v
+              echo "################################################################"
+
+              echo "################################################################"
+              echo "## pytest ######################################################"
+              echo "################################################################"
+              pytest tests/ -vvv -s
+              echo "################################################################"
+            '';
+
+        postInstall = ''
+          mkdir -p $out/bin
+          ln -s ${python.__old.python.interpreter} $out/bin
+          ln -s ${python.__old.python.interpreter} $out/bin/python
+          for i in $out/bin/*; do
+            wrapProgram $i \
+              --set PYTHONPATH $PYTHONPATH \
+              --set LANG "en_US.UTF-8" \
+              --set LOCALE_ARCHIVE "${glibcLocales}/lib/locale/locale-archive"
+          done
+          find $out -type d -name "__pycache__" -exec 'rm -r "{}"' \;
+          find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
+
+          mkdir -p $out/etc
+          echo "${name}-${version}" > $out/etc/mozilla-releng-services
+        '' + postInstall;
+
+        shellHook = ''
+          export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
+          export SECRET_KEY_BASE64=`dd if=/dev/urandom bs=24 count=1 | base64`
+          export APP_NAME="${name}-${version}"
+          export LANG=en_US.UTF-8
+          export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+
+          pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
+          tmp_path=$(mktemp -d)
+          export PATH="$tmp_path/bin:$PATH"
+          export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
+          mkdir -p $tmp_path/${python.__old.python.sitePackages}
+          ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
+          popd >> /dev/null
+
+          cd ${self.src_path}
+        '' + shellHook;
+
+        passthru = {
+          inherit python;
+
+          src_path =
+            if src_path != null
+              then src_path
+              else
+                "src/" +
+                  (replaceStrings ["-"] ["_"]
+                    (builtins.substring 8
+                      (builtins.stringLength name - 8) name));
+
+          taskclusterGithubTasks =
+            map (branch: mkTaskclusterGithubTask { inherit name branch; inherit (self) src_path; })
+                ([ "master" ] ++ optional inTesting "testing"
+                              ++ optional inStaging "staging"
+                              ++ optional inProduction "production"
+                );
+
+          docker = self_docker;
+          dockerflow = self_dockerflow;
+
+        } // passthru;
+      };
     in self;
 
   mkPython =

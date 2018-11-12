@@ -1,15 +1,16 @@
-{ releng_pkgs 
-}: 
+{ releng_pkgs
+}:
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython2 fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  project_name = "uplift/bot";
   name = "mozilla-uplift-bot";
   dirname = "uplift_bot";
 
@@ -51,8 +52,8 @@ let
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
-  self = mkPython {
-    inherit python name dirname;
+  self = mkPython2 {
+    inherit python name dirname project_name;
     inProduction = true;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };

@@ -3,7 +3,7 @@
 let
 
   inherit (builtins) readFile concatStringsSep;
-  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask mkProject;
+  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask mkProject2;
   inherit (releng_pkgs.tools) pypi2nix;
   inherit (releng_pkgs.pkgs) writeScript graphviz-nox;
   inherit (releng_pkgs.pkgs.lib) fileContents replaceStrings;
@@ -11,6 +11,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
 
+  project_name = "docs";
   name = "mozilla-docs";
   version = fileContents ./VERSION;
   src_path =
@@ -19,7 +20,9 @@ let
         (builtins.substring 8
           (builtins.stringLength name - 8) name));
 
-  self = mkProject {
+  self = mkProject2 {
+    inherit project_name version src_path;
+
     name = "${name}-${version}";
     src = ./.;
 
