@@ -89,9 +89,11 @@ in skipOverrides {
 
   "connexion" = self: old: {
     patchPhase = ''
-      sed -i -e "s|setup_requires=\['flake8'\],||" setup.py
-      sed -i -e "s|jsonschema>=2.5.1|jsonschema|" setup.py
-      sed -i -e "s|'pathlib>=1.0.1; python_version < \"3.4\"',||" setup.py
+      sed -i \
+        -e "s|setup_requires=\['flake8'\],||" \
+        -e "s|jsonschema>=2.5.1,<3.0.0|jsonschema|" \
+        -e "s|jsonschema>=2.5.1|jsonschema|" \
+          setup.py
     '';
   };
 
@@ -135,6 +137,12 @@ in skipOverrides {
         -e "s|view_function = flask.current_app.view_functions\[|view_function = flask.current_app.view_functions.get(|" \
         -e "s|flask.request.endpoint\]|flask.request.endpoint)|" \
           flask_talisman/talisman.py
+    '';
+  };
+
+  "gunicorn" = self: old: {
+    patchPhase = ''
+      sed -i -e 's|psutil ; platform_python_implementation == "CPython" or sys_platform != "win32"|psutil|' setup.py
     '';
   };
 

@@ -8,9 +8,9 @@ import copy
 import jsone
 import requests
 import slugid
-import taskcluster
 
 from cli_common.log import get_logger
+from cli_common.taskcluster import get_service
 from shipit_api.release import is_rc
 
 log = get_logger(__name__)
@@ -69,13 +69,13 @@ def get_trust_domain(project):
 def find_decision_task_id(project, revision):
     decision_task_route = '{trust_domain}.v2.{project}.revision.{revision}.taskgraph.decision'.format(
         trust_domain=get_trust_domain(project), project=project, revision=revision)
-    index = taskcluster.Index()
+    index = get_service('index')
     return index.findTask(decision_task_route)['taskId']
 
 
 def fetch_actions_json(task_id):
     try:
-        queue = taskcluster.Queue()
+        queue = get_service('queue')
         actions_url = queue.buildUrl('getLatestArtifact', task_id, 'public/actions.json')
         q = requests.get(actions_url)
         q.raise_for_status()

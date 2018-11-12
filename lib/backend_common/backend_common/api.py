@@ -54,86 +54,49 @@ class Api:
             app.register_error_handler(error_code, common_error_handler)
 
     def register(self,
-                 swagger_file,
+                 specification,
                  base_path=None,
                  arguments=None,
-                 auth_all_paths=False,
-                 swagger_json=True,
-                 swagger_ui=True,
-                 swagger_path=None,
-                 swagger_url='docs',
                  validate_responses=True,
                  strict_validation=True,
-                 resolver=connexion.resolver.Resolver(),
+                 resolver=None,
+                 auth_all_paths=False,
+                 debug=False,
+                 resolver_error_handler=None,
+                 validator_map=None,
+                 pythonic_params=False,
+                 pass_context_arg_name=None,
+                 options=None
                  ):
         '''Adds an API to the application based on a swagger file
-
-        :param swagger_file: swagger file with the specification
-        :type swagger_file: str
-
-        :param base_path: base path where to add this api
-        :type base_path: str | None
-
-        :param arguments: api version specific arguments to replace on the
-                          specification
-        :type arguments: dict | None
-
-        :param auth_all_paths: whether to authenticate not defined paths
-        :type auth_all_paths: bool
-
-        :param swagger_json: whether to include swagger json or not
-        :type swagger_json: bool
-
-        :param swagger_ui: whether to include swagger ui or not
-        :type swagger_ui: bool
-
-        :param swagger_path: path to swagger-ui directory
-        :type swagger_path: string | None
-
-        :param swagger_url: URL to access swagger-ui documentation
-        :type swagger_url: string | None
-
-        :param validate_responses: True enables validation. Validation errors
-                                   generate HTTP 500 responses.
-        :type validate_responses: bool
-
-        :param strict_validation: True enables validation on invalid request
-                                  parameters
-        :type strict_validation: bool
-
-        :param resolver: Operation resolver.
-        :type resolver: connexion.resolver.Resolver | types.FunctionType
-
-        :rtype: None
         '''
 
         app = self.__app
-        if hasattr(resolver, '__call__'):
-            resolver = connexion.resolver.Resolver(resolver)
 
-        logger.debug('Adding API: %s', swagger_file)
+        logger.debug('Adding API: {}'.format(specification))
 
-        self.swagger_url = swagger_url
-        self.__api = connexion.apis.flask_api.FlaskApi(
-            specification=pathlib.Path(swagger_file),
+        self.__api = api = connexion.apis.flask_api.FlaskApi(
+            specification=pathlib.Path(specification),
             base_path=base_path,
             arguments=arguments,
-            swagger_json=swagger_json,
-            swagger_ui=swagger_ui,
-            swagger_path=swagger_path,
-            swagger_url=swagger_url,
-            resolver=resolver,
             validate_responses=validate_responses,
             strict_validation=strict_validation,
+            resolver=resolver,
             auth_all_paths=auth_all_paths,
             debug=app.debug,
+            resolver_error_handler=resolver_error_handler,
+            validator_map=validator_map,
+            pythonic_params=pythonic_params,
+            pass_context_arg_name=pass_context_arg_name,
+            options=options,
         )
-        app.register_blueprint(self.__api.blueprint)
+        self.swagger_url = api.options.openapi_console_ui_path
+        app.register_blueprint(api.blueprint)
 
         for code, exception in werkzeug.exceptions.default_exceptions.items():
             app.register_error_handler(exception, handle_default_exceptions)
 
-        return self.__api
+        return api
 
 
 def handle_default_exceptions_raw(e):

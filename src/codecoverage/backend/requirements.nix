@@ -548,8 +548,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.38";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/91/fe/4c31eb83464f04dd9948eac7cc31cb88b8d8f55d473378c05c406ac4d381/boto3-1.9.38.tar.gz"; sha256 = "0b8b783bc7c85e5a9da310156ae776a26330d290af9fe4687c54d74505eae9de"; };
+      name = "boto3-1.9.40";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/be/5e/8985b22727b0a8f3aa076eb4cde2485e3d30e0e0d8fb3d686b85adf9f641/boto3-1.9.40.tar.gz"; sha256 = "d97f89a8d1a50377cbb7eca15040e65cd1a97d049e7396757fef00d08db9f285"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -567,8 +567,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.38";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/2e/0d/8dc8ba3aa19678d6aa0fd9a0dd0c08b933b0c0c291628eb100fd3395504e/botocore-1.12.38.tar.gz"; sha256 = "a9772401d199a7ac4059c5d4a142af37de752065473a086c29cc24960fde9333"; };
+      name = "botocore-1.12.40";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ca/06/32ca86578bf7664b49762a10f06a69b4a38d247f94b165fe0fd4684514c7/botocore-1.12.40.tar.gz"; sha256 = "cd01d12bd983c132d53b839097f6d7a9bda0d31d9dd0cb9b86566680efdad24a"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -669,8 +669,8 @@ let
     };
 
     "connexion" = python.mkDerivation {
-      name = "connexion-1.5.3";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ec/d2/3cf5bab189ca40ebd5061b1d63d50066f1daaa8ab280378a2b647675fcb5/connexion-1.5.3.tar.gz"; sha256 = "a7b8629c7175017ef4bb9cb234d172aaf91ad48f769513dae21142e42668fa04"; };
+      name = "connexion-2.0.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b1/8c/32b736f5848370519b1d3acdd14f80bb7695469cca0039de832592ed7bde/connexion-2.0.1.tar.gz"; sha256 = "94476c76c98e9a4837454ad62eb4b881726c338ae552dc8e7e5e4138452db538"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -683,11 +683,11 @@ let
       self."decorator"
       self."inflection"
       self."jsonschema"
+      self."openapi-spec-validator"
       self."pytest"
       self."pytest-cov"
       self."requests"
       self."six"
-      self."swagger-spec-validator"
       self."testfixtures"
     ];
       meta = with pkgs.stdenv.lib; {
@@ -1530,6 +1530,25 @@ let
       };
     };
 
+    "openapi-spec-validator" = python.mkDerivation {
+      name = "openapi-spec-validator-0.2.4";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/05/7e/c36db69b76e5141cf993087741d1847c73972fc671782d44af4f75e98a3a/openapi-spec-validator-0.2.4.tar.gz"; sha256 = "14684aaec4c4f30e911132ffad3c5863047908251647f49114d249dcc2d41f4e"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."PyYAML"
+      self."jsonschema"
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/p1c2u/openapi-spec-validator";
+        license = licenses.asl20;
+        description = "UNKNOWN";
+      };
+    };
+
     "parso" = python.mkDerivation {
       name = "parso-0.3.1";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/46/31/60de7c9cbb97cac56b193a5b61a1fd4d21df84843a570b370ec34781316b/parso-0.3.1.tar.gz"; sha256 = "35704a43a3c113cce4de228ddb39aab374b8004f4f2407d070b6a2ca784ce8a2"; };
@@ -1942,8 +1961,8 @@ let
     };
 
     "responses" = python.mkDerivation {
-      name = "responses-0.10.2";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/58/88/02584faf6a89ec96b7a389f5c3091df2124e7fa69df331d46470c2cde8d0/responses-0.10.2.tar.gz"; sha256 = "682fafb124e799eeee67ec15c9678d955a88affda5613b09788ef80c03987cf0"; };
+      name = "responses-0.10.3";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b1/b9/5d6cd5b7c07bdf51841ac09518168010a9f836db7066caa18d312480a8a0/responses-0.10.3.tar.gz"; sha256 = "5b99beef28dd177da180604be2e849a16c3a40605bfda7c8d792a9924dd3d60e"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -2095,28 +2114,9 @@ let
       };
     };
 
-    "swagger-spec-validator" = python.mkDerivation {
-      name = "swagger-spec-validator-2.4.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/2f/ff/9a25285add264305e8ecb477d11c36608ff6dabe12c39cc9f8621dccbbcb/swagger-spec-validator-2.4.1.tar.gz"; sha256 = "b9618efbfa5446cdf09e72f9d384b869970c63c9a726c981f0abcf2d63a929cb"; };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."PyYAML"
-      self."jsonschema"
-      self."six"
-    ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://github.com/Yelp/swagger_spec_validator";
-        license = licenses.asl20;
-        description = "Validation of Swagger specifications";
-      };
-    };
-
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-4.0.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/23/4b/fca86867f22194abd63b97d72e94a8a9da91628d2b156e8c1908de677f08/taskcluster-4.0.1.tar.gz"; sha256 = "99dd90bc1c566968868c8b07ede32f8e031cbccd52c7195a61e802679d461447"; };
+      name = "taskcluster-5.0.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/74/9f/42ad92011c43074b3f3cb21c3e1d1bba695aa768b59113e8f63afbb64491/taskcluster-5.0.0.tar.gz"; sha256 = "ca8a70239d1bead7e097905d9e7fda9a02fc0fda4f51b41d324575097753885d"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -2128,11 +2128,27 @@ let
       self."requests"
       self."six"
       self."slugid"
+      self."taskcluster-urls"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/taskcluster/taskcluster-client.py";
         license = "";
         description = "Python client for Taskcluster";
+      };
+    };
+
+    "taskcluster-urls" = python.mkDerivation {
+      name = "taskcluster-urls-10.1.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/30/e7/dec333d28f7a34dace5bcb7cd78deeb97e5efa61f75309ae230d8881f401/taskcluster-urls-10.1.0.tar.gz"; sha256 = "a572a8a5f2db1cef3d36d1b2b7d7bdba97d66c1f9b61e45bd2dce32e41d03e34"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/taskcluster/taskcluster-lib-urls";
+        license = licenses.mpl20;
+        description = "Standardized url generator for taskcluster resources.";
       };
     };
 

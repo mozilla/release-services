@@ -5,6 +5,7 @@
 
 import datetime
 import functools
+import os
 import time
 
 import flask
@@ -12,12 +13,12 @@ import flask_login
 import itsdangerous
 import pytz
 import sqlalchemy as sa
-import taskcluster
 import taskcluster.utils
 
 import backend_common.db
 import backend_common.dockerflow
 import cli_common.log
+import cli_common.taskcluster
 
 logger = cli_common.log.get_logger(__name__)
 
@@ -120,7 +121,6 @@ class RelengapiTokenUser(BaseUser):
     type = 'relengapi-token'
 
     def __init__(self, claims, authenticated_email=None, permissions=[], token_data={}):
-
         self.claims = claims
         self._permissions = set([from_relengapi_permission(p) for p in permissions])
         self.token_data = token_data
@@ -421,6 +421,20 @@ def str_to_claims(token_str):
     return claims
 
 
+def get_taskcluster_credentials():
+    if flask.current_app.config['TESTING'] is True:
+        return dict(
+            client_id='XXX',
+            access_token='YYY',
+        )
+    return dict(
+        client_id=os.environ.get('TASKCLUSTER_CLIENT_ID',
+                                 flask.current_app.config.get('TASKCLUSTER_CLIENT_ID')),
+        access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN',
+                                    flask.current_app.config.get('TASKCLUSTER_ACCESS_TOKEN')),
+    )
+
+
 @auth.login_manager.request_loader
 def parse_header(request):
     auth_header = request.headers.get('Authorization')
@@ -456,7 +470,7 @@ def parse_header(request):
     }
 
     # Auth with taskcluster
-    auth = taskcluster.Auth()
+    auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
     try:
         resp = auth.authenticateHawk(payload)
         if not resp.get('status') == 'auth-success':
@@ -464,6 +478,8 @@ def parse_header(request):
     except Exception as e:
         logger.error('TC auth error: {}'.format(e))
         logger.error('TC auth details: {}'.format(payload))
+        print(str(e))
+        print(payload)
         return
 
     return TaskclusterUser(resp)
@@ -480,8 +496,9 @@ def init_app(app):
 
 
 def app_heartbeat():
+    auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
     try:
-        ping = taskcluster.Auth().ping()
+        ping = auth.ping()
         assert ping['alive'] is True
     except Exception as e:
         logger.exception(e)
