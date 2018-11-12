@@ -501,7 +501,6 @@ in rec {
     args @
     { project_name
     , version
-    # bikin ini 4 kalo gk ada, kasih default
     , name ? null
     , dirname ? null
     , module_name ? null
@@ -522,10 +521,6 @@ in rec {
         module_name = getOrDefault module_name (mkProjectModuleName project_name);
         src_path = getOrDefault src_path (mkProjectSrcPath project_name);
         shellHook = shellHook + ''
-          echo "######### old name ${self.name} new ${mkProjectFullName project_name version}"
-          echo "######### old dirname ${self.dirname} new ${mkProjectDirName project_name}"
-          echo "######### old module_name ${self.module_name} new ${mkProjectModuleName project_name}"
-          echo "######### old src_path ${self.src_path} new ${mkProjectSrcPath project_name}"
           PS1="\n\[\033[1;32m\][${self.module_name}:\w]\$\[\033[0m\] "
         '';
         passthru = passthru // {

@@ -62,7 +62,9 @@ let
           buildInputs = [ pkgs.redis ];
           mkDerivation = pkgs.stdenv.mkDerivation;
           package = pkgs.redis;
-          passthru.package = pkgs.redis;
+          passthru = {
+            package = pkgs.redis;
+          };
         };
 
     "please-cli" = import ./../lib/please_cli { inherit releng_pkgs; };
