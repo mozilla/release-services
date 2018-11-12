@@ -477,8 +477,6 @@ def parse_header(request):
     except Exception as e:
         logger.error('TC auth error: {}'.format(e))
         logger.error('TC auth details: {}'.format(payload))
-        print(str(e))
-        print(payload)
         return
 
     return TaskclusterUser(resp)
