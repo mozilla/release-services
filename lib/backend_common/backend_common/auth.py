@@ -332,8 +332,7 @@ def is_relengapi_token(token_str):
         return EMPTY
 
     except Exception as e:
-        logger.exception(e)
-        logger.error('Error processing signature in token %r', token_str)
+        logger.error('Error processing signature in token %r: %s', token_str, e)
         return EMPTY
 
     # convert v1 to ra2
