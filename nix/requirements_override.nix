@@ -241,6 +241,8 @@ in skipOverrides {
   "taskcluster" = self: old: {
     patchPhase = ''
       sed -i -e "s|six>=1.10.0,<1.11|six|" setup.py
+      # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37
+      sed -i -e "s|/api/|/|" taskcluster/client.py
     '';
   };
 
