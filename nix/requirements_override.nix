@@ -166,12 +166,6 @@ in skipOverrides {
     '';
   };
 
-  "mockredispy" = self: old: {
-    patchPhase = ''
-      sed -i -e "s|'nose'||" setup.py
-    '';
-  };
-
   "pdbpp" = self: old: {
     patchPhase = ''
       sed -i \

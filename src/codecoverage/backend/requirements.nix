@@ -142,8 +142,8 @@ let
     };
 
     "Flask-Cors" = python.mkDerivation {
-      name = "Flask-Cors-3.0.6";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/df/a6/be0d36d487ed5967a130919b2dedbd5324af3a576d322a6b7a02e0230386/Flask-Cors-3.0.6.tar.gz"; sha256 = "ecc016c5b32fa5da813ec8d272941cfddf5f6bba9060c405a70285415cbf24c9"; };
+      name = "Flask-Cors-3.0.7";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/45/b4/1810eb0c69d8432417dd25e3dd581bf0619d5c4f1b0c9f529f392d4aed31/Flask-Cors-3.0.7.tar.gz"; sha256 = "7e90bf225fdf163d11b84b59fb17594d0580a16b97ab4e1146b1fb2737c1cfec"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -314,8 +314,8 @@ let
     };
 
     "SQLAlchemy" = python.mkDerivation {
-      name = "SQLAlchemy-1.2.13";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1e/98/4dba86354d271344e25fa01dc38a0bf0e0ba6407ad2d5e8426496a95b568/SQLAlchemy-1.2.13.tar.gz"; sha256 = "84412de3794acee05630e7788f25e80e81f78eb4837e7b71d0499129f660486a"; };
+      name = "SQLAlchemy-1.2.14";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e2/0a/05b7d13618ad41c108a6c2b886af83bf9bb7e35f8951227abb18b1330745/SQLAlchemy-1.2.14.tar.gz"; sha256 = "9de7c7dabcf06319becdb7e15099c44e5e34ba7062f9ba10bc00e562f5db3d04"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -548,8 +548,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.40";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/be/5e/8985b22727b0a8f3aa076eb4cde2485e3d30e0e0d8fb3d686b85adf9f641/boto3-1.9.40.tar.gz"; sha256 = "d97f89a8d1a50377cbb7eca15040e65cd1a97d049e7396757fef00d08db9f285"; };
+      name = "boto3-1.9.42";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/18/89/fb6dec1de25c1e446bc11da7d43dab967d8b948bda734140a6b3fb7dcc4a/boto3-1.9.42.tar.gz"; sha256 = "02e5c1b85a8b22a92f612daf2d1eea305818076b24ce02878b85e92d9ae0082e"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -567,8 +567,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.40";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ca/06/32ca86578bf7664b49762a10f06a69b4a38d247f94b165fe0fd4684514c7/botocore-1.12.40.tar.gz"; sha256 = "cd01d12bd983c132d53b839097f6d7a9bda0d31d9dd0cb9b86566680efdad24a"; };
+      name = "botocore-1.12.42";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/80/ac/518d1fa4b0ec896cc564742e5ce4e4b4d8ce1f8d3f9b6bb29409d1db97ca/botocore-1.12.42.tar.gz"; sha256 = "0e495bcf2e474b82da7938b35ad2f71e28384c246b47ca131779f736621da504"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -851,6 +851,23 @@ let
         homepage = "https://github.com/elastic/elasticsearch-py-async";
         license = licenses.asl20;
         description = "Async backend for elasticsearch-py";
+      };
+    };
+
+    "fakeredis" = python.mkDerivation {
+      name = "fakeredis-0.15.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/75/76/b76481a6d2e31e53f920b8079dbcb034b50da32b9d851dc4756f6e11b204/fakeredis-0.15.0.tar.gz"; sha256 = "1971c28c11f50b9f9fd33aaa949318208ee75ff8ed483527c8a4d7b54d807c00"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."redis"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/jamesls/fakeredis";
+        license = licenses.bsdOriginal;
+        description = "Fake implementation of redis API for testing purposes.";
       };
     };
 
@@ -1313,21 +1330,6 @@ let
       };
     };
 
-    "mockredispy" = python.mkDerivation {
-      name = "mockredispy-2.9.3";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/0a/f1/d7db33898151aa9a1d647654cac55d01a5a1302fa4244af5fb5d3021f848/mockredispy-2.9.3.tar.gz"; sha256 = "8caefadab8f32bd41bbccbcc9615347dd4f840cfedc253f43a4675f07036a446"; };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://www.github.com/locationlabs/mockredis";
-        license = "Apache2";
-        description = "Mock for redis-py";
-      };
-    };
-
     "mohawk" = python.mkDerivation {
       name = "mohawk-0.3.4";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/19/22/10f696548a8d41ad41b92ab6c848c60c669e18c8681c179265ce4d048b03/mohawk-0.3.4.tar.gz"; sha256 = "e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3"; };
@@ -1741,8 +1743,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.10.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ec/d1/8e96334154a20f8bf8924b7a67227a3af30c87cf0d8239f9885fc8bca385/pytest-3.10.0.tar.gz"; sha256 = "a2b5232735dd0b736cbea9c0f09e5070d78fcaba2823a4f6f09d9a81bd19415c"; };
+      name = "pytest-3.10.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b5/96/37011e484665fab8b51add4f707d2aa28f1a06c68dd1c8a50e03551693b3/pytest-3.10.1.tar.gz"; sha256 = "e246cf173c01169b9617fc07264b7b1316e78d7a650055235d6d897bc80d9660"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1924,8 +1926,8 @@ let
     };
 
     "requests" = python.mkDerivation {
-      name = "requests-2.20.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/97/10/92d25b93e9c266c94b76a5548f020f3f1dd0eb40649cb1993532c0af8f4c/requests-2.20.0.tar.gz"; sha256 = "99dcfdaaeb17caf6e526f32b6a7b780461512ab3f1d992187801694cba42770c"; };
+      name = "requests-2.20.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/40/35/298c36d839547b50822985a2cf0611b3b978a5ab7a5af5562b8ebe3e1369/requests-2.20.1.tar.gz"; sha256 = "ea881206e59f41dbd0bd445437d792e43906703fff75ca8ff43ccdb11f33f263"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
