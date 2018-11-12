@@ -244,6 +244,12 @@ in skipOverrides {
     '';
   };
 
+  "whichcraft" = self: old: {
+    patchPhase = ''
+      echo "" > README.rst
+    '';
+  };
+
   "Flask-Cache" = self: old: {
     # XXX: from https://github.com/thadeusb/flask-cache/pull/189
     patchPhase = ''
