@@ -494,17 +494,18 @@ in rec {
   mkProjectModuleName = builtins.replaceStrings ["/" "_"] ["-" "-"];
   mkProjectDirName = builtins.replaceStrings ["/" ] ["_"];
   mkProjectSrcPath = project_name: "src/" + project_name;
-  mkProjectFullName = project_name: version: "mozilla-${mkProjectModuleName project_name}-${version}";
+  mkProjectFullName = project_name: version: "mozilla-${project_name}-${version}";
+  getOrDefault = item: default: if item != null then item else default;
 
   mkProject3 =
     args @
     { project_name
     , version
     # bikin ini 4 kalo gk ada, kasih default
-    , name ? mkProjectFullName project_name version
-    , dirname ? mkProjectDirName project_name
-    , module_name ? mkProjectModuleName project_name
-    , src_path ? mkProjectSrcPath project_name
+    , name ? null
+    , dirname ? null
+    , module_name ? null
+    , src_path ? null
     , shellHook ? ""
     , mkDerivation ? stdenv.mkDerivation
     , ...
@@ -515,15 +516,19 @@ in rec {
           (n: v: n != "mkDerivation")
           args
         ) // {
+        name = getOrDefault name (mkProjectFullName project_name version);
+        dirname = getOrDefault dirname (mkProjectDirName project_name);
+        module_name = getOrDefault module_name (mkProjectModuleName project_name);
+        src_path = getOrDefault src_path (mkProjectSrcPath project_name);
         shellHook = shellHook + ''
-          echo "######### old name ${name} new ${mkProjectFullName project_name version}"
-          echo "######### old dirname ${dirname} new ${mkProjectDirName project_name}"
-          echo "######### old module_name ${module_name} new ${mkProjectModuleName project_name}"
-          echo "######### old src_path ${src_path} new ${mkProjectSrcPath project_name}"
-          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
+          echo "######### old name ${self.name} new ${mkProjectFullName project_name version}"
+          echo "######### old dirname ${self.dirname} new ${mkProjectDirName project_name}"
+          echo "######### old module_name ${self.module_name} new ${mkProjectModuleName project_name}"
+          echo "######### old src_path ${self.src_path} new ${mkProjectSrcPath project_name}"
+          PS1="\n\[\033[1;32m\][${self.name}:\w]\$\[\033[0m\] "
         '';
-        passthru.module_name = module_name;
-        passthru.src_path = src_path;
+        passthru.module_name = getOrDefault module_name (mkProjectModuleName project_name);
+        passthru.src_path = getOrDefault src_path (mkProjectSrcPath project_name);
       });
       in self;
 

@@ -3,7 +3,7 @@
 let
 
   inherit (builtins) readFile concatStringsSep;
-  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask mkProject2;
+  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask mkProject3 mkProjectFullName;
   inherit (releng_pkgs.tools) pypi2nix;
   inherit (releng_pkgs.pkgs) writeScript graphviz-nox;
   inherit (releng_pkgs.pkgs.lib) fileContents replaceStrings;
@@ -12,18 +12,11 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
 
   project_name = "docs";
-  name = "mozilla-docs";
   version = fileContents ./VERSION;
-  src_path =
-    "src/" +
-      (replaceStrings ["-"] ["_"]
-        (builtins.substring 8
-          (builtins.stringLength name - 8) name));
 
-  self = mkProject2 {
-    inherit project_name version src_path;
+  self = mkProject3 {
+    inherit project_name version;
 
-    name = "${name}-${version}";
     src = ./.;
 
     buildInputs =
@@ -41,7 +34,7 @@ let
 
     shellHook = ''
       export RELENG_DOCS_VERSION=${version}-dev
-      cd ${src_path}
+      cd ${self.src_path}
     '';
 
     passthru = {
@@ -52,10 +45,10 @@ let
       };
       taskclusterGithubTasks =
         map
-          (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
+          (branch: mkTaskclusterGithubTask { inherit branch; inherit (self) name src_path; })
           [ "master" "testing" "staging" "production" ];
-      update  = writeScript "update-${name}" ''
-        pushd ${src_path}
+      update  = writeScript "update-${self.name}" ''
+        pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \
           -E "pkgconfig zlib libjpeg openjpeg libtiff freetype lcms2 libwebp tcl" \
