@@ -246,6 +246,13 @@ in skipOverrides {
     '';
   };
 
+  "taskcluster-urls" = self: old: {
+    patchPhase = ''
+      # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37
+      sed -i -e "s|/api/|/|" taskcluster/client.py
+    '';
+  };
+
   "whichcraft" = self: old: {
     patchPhase = ''
       echo "" > README.rst
