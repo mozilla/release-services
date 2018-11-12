@@ -33,7 +33,7 @@ class ThreadPoolExecutorResult(ThreadPoolExecutor):
         try:
             for future in concurrent.futures.as_completed(self.futures):
                 future.result()
-        except Exception as e:
+        except Exception:
             for future in self.futures:
                 future.cancel()
             raise

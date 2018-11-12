@@ -48,7 +48,7 @@ def verify_policy_structure(policy: dict) -> None:
         raise KeyError('Policy frequency missing required key')
 
 
-def schedule_nagbot_message(message: str, short_message: str, deadline: datetime, policies: List[dict], uid: str=None) -> str:
+def schedule_nagbot_message(message: str, short_message: str, deadline: datetime, policies: List[dict], uid: str = None) -> str:
     '''
     Instantiates a new message to be sent repeatedly by NagBot
 

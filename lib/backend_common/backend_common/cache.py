@@ -9,7 +9,9 @@ import flask
 import flask_cache
 
 import backend_common.dockerflow
+import cli_common.log
 
+logger = cli_common.log.get_logger(__name__)
 cache = flask_cache.Cache()
 
 
@@ -30,4 +32,5 @@ def app_heartbeat():
         assert cache.cache.delete(cache_key) is True
         assert cache.cache.get(cache_key)
     except Exception as e:
+        logger.exception(e)
         raise backend_common.dockerflow.HeartbeatException('Cannot get/set/delete items to the cache.')

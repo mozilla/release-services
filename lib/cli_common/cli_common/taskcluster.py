@@ -30,7 +30,7 @@ def read_hosts():
     Only reads ipv4 entries to avoid duplicates
     '''
     out = {}
-    regex = re.compile('([\w:\-\.]+)')
+    regex = re.compile(r'([\w:\-\.]+)')
     for line in open('/etc/hosts').readlines():
         if ':' in line:  # only ipv4
             continue
@@ -43,7 +43,7 @@ def read_hosts():
     return out
 
 
-def get_options(service_endpoint, client_id=None, access_token=None):
+def get_options(client_id=None, access_token=None):
     '''
     Build Taskcluster credentials options
     '''
@@ -54,7 +54,8 @@ def get_options(service_endpoint, client_id=None, access_token=None):
             'credentials': {
                 'clientId': client_id,
                 'accessToken': access_token,
-            }
+            },
+            'rootUrl': 'https://taskcluster.net',
         }
 
     else:
@@ -66,14 +67,13 @@ def get_options(service_endpoint, client_id=None, access_token=None):
 
         # Load secrets from TC task context
         # with taskclusterProxy
-        base_url = 'http://{}/{}'.format(
-            hosts['taskcluster'],
-            service_endpoint
-        )
-        logger.info('Taskcluster Proxy enabled', url=base_url)
+        root_url = 'http://{}'.format(hosts['taskcluster'])
+        logger.info('Taskcluster Proxy enabled', url=root_url)
         tc_options = {
-            'baseUrl': base_url
+            'rootUrl': root_url
         }
+
+    tc_options['maxRetries'] = 12
 
     return tc_options
 
@@ -105,7 +105,7 @@ def get_service(service_name, client_id=None, access_token=None):
         access_token = os.environ.get('TASKCLUSTER_ACCESS_TOKEN')
 
     # Instanciate service
-    options = get_options(service_name + '/v1', client_id, access_token)
+    options = get_options(client_id, access_token)
     return getattr(taskcluster, service_name.capitalize())(options)
 
 

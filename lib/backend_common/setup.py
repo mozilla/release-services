@@ -16,8 +16,8 @@ def join_requirements(list1, list2):
     for package in (list1 + list2):
         package_extra = []
         if '[' in package:
-            package_extra += re.search('(?<=\[)[^]]+(?=\])', package).group().split(',')
-            package = re.sub('(?<=\[)[^]]+(?=\])', '', package).replace('[]', '')
+            package_extra += re.search(r'(?<=\[)[^]]+(?=\])', package).group().split(',')
+            package = re.sub(r'(?<=\[)[^]]+(?=\])', '', package).replace('[]', '')
         packages.setdefault(package, [])
         packages[package] += package_extra
 

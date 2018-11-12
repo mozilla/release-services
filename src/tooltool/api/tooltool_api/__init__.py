@@ -26,7 +26,7 @@ def custom_handle_default_exceptions(e: Exception) -> typing.Tuple[int, str]:
     return flask.jsonify(dict(error=error)), error['status']
 
 
-def create_app(config: dict=None) -> flask.Flask:
+def create_app(config: dict = None) -> flask.Flask:
     app = backend_common.create_app(
         project_name=tooltool_api.config.PROJECT_NAME,
         app_name=tooltool_api.config.APP_NAME,

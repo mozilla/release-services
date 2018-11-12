@@ -5,16 +5,15 @@
 
 import datetime
 import functools
-import os
 
 import flask
-import taskcluster
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
 from backend_common.auth import auth
 from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
+from cli_common.taskcluster import get_service
 from shipit_api.config import SCOPE_PREFIX
 from shipit_api.models import Phase
 from shipit_api.models import Release
@@ -24,13 +23,6 @@ from shipit_api.tasks import fetch_actions_json
 from shipit_api.tasks import generate_action_hook
 
 log = get_logger(__name__)
-_tc_params = {
-    'credentials': {
-        'clientId': os.environ.get('TASKCLUSTER_CLIENT_ID'),
-        'accessToken': os.environ.get('TASKCLUSTER_ACCESS_TOKEN')
-    },
-    'maxRetries': 12,
-}
 
 
 def notify_via_irc(message):
@@ -43,14 +35,6 @@ def notify_via_irc(message):
             'channel': channel,
             'message': f'{owners}: {message}',
         })
-
-
-def _queue():
-    return taskcluster.Queue(_tc_params)
-
-
-def _hooks():
-    return taskcluster.Hooks(_tc_params)
 
 
 def validate_user(key, checker):
@@ -162,7 +146,9 @@ def schedule_phase(name, phase):
     if phase.submitted:
         flask.abort(409, 'Already submitted!')
 
-    _queue().createTask(phase.task_id, phase.rendered)
+    queue = get_service('queue')
+    queue.createTask(phase.task_id, phase.rendered)
+
     phase.submitted = True
     phase.completed_by = flask.g.userinfo['email']
     phase.completed = datetime.datetime.utcnow()
@@ -204,7 +190,8 @@ def abandon_release(name):
             for long_param in ('existing_tasks', 'release_history', 'release_partner_config'):
                 del hook['context']['parameters'][long_param]
             log.info('Cancel phase %s by hook %s', phase.name, hook)
-            res = _hooks().triggerHook(hook['hook_group_id'], hook['hook_id'], hook['hook_payload'])
+            hooks = get_service('hooks')
+            res = hooks.triggerHook(hook['hook_group_id'], hook['hook_id'], hook['hook_payload'])
             log.debug('Done: %s', res)
 
         r.status = 'aborted'

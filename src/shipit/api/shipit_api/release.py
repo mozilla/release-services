@@ -7,7 +7,7 @@ import re
 
 # If version has two parts with no trailing specifiers like "rc", we
 # consider it a 'final' release for which we only create a _RELEASE tag.
-FINAL_RELEASE_REGEX = '^\d+\.\d+$'
+FINAL_RELEASE_REGEX = r'^\d+\.\d+$'
 
 
 VERSION_REGEX = re.compile(

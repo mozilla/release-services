@@ -55,7 +55,7 @@ let
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
-          -V 3.5 \
+          -V 3.6 \
           -E "postgresql" \
           -r requirements.txt \
           -r requirements-dev.txt

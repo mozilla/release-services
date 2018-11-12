@@ -89,9 +89,11 @@ in skipOverrides {
 
   "connexion" = self: old: {
     patchPhase = ''
-      sed -i -e "s|setup_requires=\['flake8'\],||" setup.py
-      sed -i -e "s|jsonschema>=2.5.1|jsonschema|" setup.py
-      sed -i -e "s|'pathlib>=1.0.1; python_version < \"3.4\"',||" setup.py
+      sed -i \
+        -e "s|setup_requires=\['flake8'\],||" \
+        -e "s|jsonschema>=2.5.1,<3.0.0|jsonschema|" \
+        -e "s|jsonschema>=2.5.1|jsonschema|" \
+          setup.py
     '';
   };
 
@@ -138,6 +140,12 @@ in skipOverrides {
     '';
   };
 
+  "gunicorn" = self: old: {
+    patchPhase = ''
+      sed -i -e 's|psutil ; platform_python_implementation == "CPython" or sys_platform != "win32"|psutil|' setup.py
+    '';
+  };
+
   "jsonschema" = self: old: {
     patchPhase = ''
       sed -i -e 's|setup_requires=\["vcversioner>=2.16.0.0"\],||' setup.py
@@ -171,6 +179,7 @@ in skipOverrides {
     patchPhase = ''
       sed -i \
         -e "s|setup_requires=\['setuptools-scm'\],||" \
+        -e "s|setup_requires=\[\"setuptools-scm\"\],||" \
         setup.py
     '';
   };
@@ -191,6 +200,7 @@ in skipOverrides {
         -e "s|pluggy>=0.7|pluggy|" \
         -e "s|setup_requires=\['setuptools-scm'\],||" \
         -e "s|setup_requires=\[\"setuptools-scm\"\],||" \
+        -e "s|setup_requires=\[\"setuptools-scm\", |setup_requires=\[|" \
         setup.py
     '';
   };
@@ -231,6 +241,19 @@ in skipOverrides {
   "taskcluster" = self: old: {
     patchPhase = ''
       sed -i -e "s|six>=1.10.0,<1.11|six|" setup.py
+    '';
+  };
+
+  "taskcluster-urls" = self: old: {
+    patchPhase = ''
+      # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37
+      sed -i -e "s|/api/|/|" taskcluster_urls/__init__.py
+    '';
+  };
+
+  "whichcraft" = self: old: {
+    patchPhase = ''
+      echo "" > README.rst
     '';
   };
 
