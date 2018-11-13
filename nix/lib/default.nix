@@ -412,7 +412,8 @@ in rec {
         ) src;
 
   mkYarnFrontend =
-    { src
+    { name
+    , src
     , src_path ? null
     , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
     , extraBuildInputs ? []
@@ -425,9 +426,11 @@ in rec {
     }:
     let
 
-      self = releng_pkgs.pkgs.yarn2nix.mkYarnPackage {
+      self = mkProject {
         # yarn2nix knows how to extract the name/version from package.json
-        inherit src;
+        inherit src name;
+
+        mkDerivation = releng_pkgs.pkgs.yarn2nix.mkYarnPackage;
 
         doCheck = true;
 
@@ -494,6 +497,25 @@ in rec {
       };
     in self;
 
+  mkProject =
+    args @
+    { name
+    , shellHook ? ""
+    , mkDerivation ? stdenv.mkDerivation
+    , ...
+    }:
+    let
+      self = mkDerivation (
+        (releng_pkgs.pkgs.lib.filterAttrs
+          (n: v: n != "mkDerivation")
+          args
+        ) // {
+        shellHook = shellHook + ''
+          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
+        '';
+      });
+      in self;
+
   mkFrontend =
     { name
     , version
@@ -513,7 +535,7 @@ in rec {
     let
       scss_common = ./../../lib/frontend_common/scss;
       frontend_common = ./../../lib/frontend_common;
-      self = stdenv.mkDerivation {
+      self = mkProject {
         name = "${name}-${version}";
 
         src = builtins.filterSource
@@ -770,7 +792,7 @@ in rec {
           )
         );
 
-      self = stdenv.mkDerivation {
+      self = mkProject {
         inherit name passthru;
         buildInputs = [ makeWrapper python.__old.python ];
         buildCommand = ''
@@ -874,7 +896,9 @@ in rec {
         '';
       };
 
-      self = python.mkDerivation {
+      self = mkProject {
+
+        mkDerivation = python.mkDerivation;
 
         namePrefix = "";
         name = "${name}-${version}";

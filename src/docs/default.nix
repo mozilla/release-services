@@ -1,9 +1,9 @@
-{ releng_pkgs }: 
+{ releng_pkgs }:
 
 let
 
   inherit (builtins) readFile concatStringsSep;
-  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask;
+  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask mkProject;
   inherit (releng_pkgs.tools) pypi2nix;
   inherit (releng_pkgs.pkgs) writeScript graphviz-nox;
   inherit (releng_pkgs.pkgs.lib) fileContents replaceStrings;
@@ -19,7 +19,7 @@ let
         (builtins.substring 8
           (builtins.stringLength name - 8) name));
 
-  self = mkDerivation {
+  self = mkProject {
     name = "${name}-${version}";
     src = ./.;
 

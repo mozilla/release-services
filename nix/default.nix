@@ -42,14 +42,14 @@ let
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
 
     "postgresql" =
-      pkgs.stdenv.mkDerivation
+      releng_pkgs.lib.mkProject
         { name = "${pkgs.postgresql.name}-env";
           buildInputs = [ pkgs.postgresql95 ];
           passthru.package = pkgs.postgresql95;
         };
 
     "redis" =
-      pkgs.stdenv.mkDerivation
+      releng_pkgs.lib.mkProject
         { name = "${pkgs.redis.name}-env";
           buildInputs = [ pkgs.redis ];
           passthru.package = pkgs.redis;
