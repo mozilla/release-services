@@ -254,6 +254,7 @@ in skipOverrides {
       echo "from setuptools import setup" > setup.py
       echo "setup()" >> setup.py
     '';
+  };
 
   "taskcluster-urls" = self: old: {
     patchPhase = ''
