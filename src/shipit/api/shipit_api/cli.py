@@ -786,6 +786,11 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
     ),
 )
 @click.option(
+    '--s3-bucket',
+    required=True,
+    type=str,
+    )
+@click.option(
     '--breakpoint-version',
     default=shipit_api.config.BREAKPOINT_VERSION,
     type=int,
@@ -797,6 +802,7 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
 )
 @flask.cli.with_appcontext
 def upload_product_details(data_dir: str,
+                           s3_bucket: str,
                            breakpoint_version: int,
                            keep_temporary_dir: bool):
 
@@ -925,7 +931,23 @@ def upload_product_details(data_dir: str,
             with file_.open('w+') as f:
                 f.write(json.dumps(content, sort_keys=True, indent=4))
 
-        # TODO: sync to s3
+        # sync to s3 make it atomic or close
+        os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
+        os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
+        aws = awscli.clidriver.create_clidriver().main
+        returncode = aws([
+            's3',
+            'sync',
+            '--quiet',
+            '--delete',
+            temp_dir.absolute().as_posix(),
+            's3://' + s3_bucket,
+        ])
+
+        if returncode == 0:
+            click.secho(f'Successfully synced product details to {s3_bucket} S3 bucket.', fg='green')
+        else:
+            click.secho(f'Failed syncing product details to {s3_bucket} S3 bucket.', fg='red')
 
     finally:
         if keep_temporary_dir:
