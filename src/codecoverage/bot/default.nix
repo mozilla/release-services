@@ -1,4 +1,4 @@
-{releng_pkgs }: 
+{releng_pkgs }:
 
 let
 
@@ -10,8 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   rustPlatform = mkRustPlatform {};
-  name = "mozilla-code-coverage-bot";
-  dirname = "code_coverage_bot";
+  project_name = "codecoverage/bot";
 
   # Marco grcov
   grcov = rustPlatform.buildRustPackage rec {
@@ -107,10 +106,9 @@ let
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
   self = mkPython {
-    inherit python name dirname;
+    inherit python project_name;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
-    src_path = "src/codecoverage/bot";
+    src = filterSource ./. { inherit (self) name; };
     buildInputs =
       [ mercurial ] ++
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
@@ -147,7 +145,7 @@ let
         staging = mkBot "staging";
         production = mkBot "production";
       };
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

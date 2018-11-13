@@ -10,13 +10,12 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-please-cli";
-  dirname = "please_cli";
+  project_name = "please_cli";
 
   self = mkPython {
-    inherit python name dirname;
+    inherit python project_name;
     version = fileContents ./please_cli/VERSION;
-    src = filterSource ./. { inherit name; };
+    src = filterSource ./. { inherit (self) name; };
     doCheck = false;
     buildInputs =
       [ makeWrapper ] ++
@@ -38,7 +37,7 @@ let
     '';
     passthru = {
       src_path = "lib/please_cli";
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

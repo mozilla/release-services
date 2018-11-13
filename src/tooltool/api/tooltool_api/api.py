@@ -54,7 +54,7 @@ def get_batch(id: int) -> dict:
     return row.to_dict()
 
 
-def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
+def upload_batch(body: dict, region: typing.Optional[str] = None) -> dict:
     if not body['message']:
         raise werkzeug.exceptions.BadRequest('message must be non-empty')
 
@@ -265,7 +265,7 @@ def patch_file(digest: str, body: dict) -> dict:
     return file.to_dict(include_instances=True)
 
 
-def download_file(digest: str, region: typing.Optional[str]=None) -> werkzeug.Response:
+def download_file(digest: str, region: typing.Optional[str] = None) -> werkzeug.Response:
     logger2 = logger.bind(tooltool_sha512=digest, tooltool_operation='download_file')
 
     S3_REGIONS = flask.current_app.config['S3_REGIONS']  # type: typing.Dict[str, str]

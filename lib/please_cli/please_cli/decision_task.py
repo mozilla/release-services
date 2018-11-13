@@ -392,6 +392,7 @@ def cmd(ctx,
         taskcluster_secret = 'repo:github.com/mozilla-releng/services:pull-request'
 
     taskcluster_queue = cli_common.taskcluster.get_service('queue')
+    taskcluster_notify = cli_common.taskcluster.get_service('notify')
 
     click.echo(' => Retriving taskGroupId ... ', nl=False)
     with click_spinner.spinner():
@@ -402,7 +403,6 @@ def cmd(ctx,
         please_cli.utils.check_result(0, '')
         click.echo('    taskGroupId: ' + task_group_id)
 
-    taskcluster_notify = cli_common.taskcluster.get_service('notify')
     if channel in please_cli.config.DEPLOY_CHANNELS:
         taskcluster_notify.irc(dict(channel='#release-services',
                                     message=f'New deployment on {channel} is about to start: https://tools.taskcluster.net/groups/{task_group_id}'))

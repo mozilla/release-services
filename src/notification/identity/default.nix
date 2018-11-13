@@ -1,5 +1,5 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
@@ -9,14 +9,12 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-notification-identity";
-  dirname = "notification_identity";
-  src_path = "src/notification/identity";
+  project_name = "notification/identity";
 
   self = mkBackend {
-    inherit python name dirname src_path;
+    inherit python project_name;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
+    src = filterSource ./. { inherit (self) name; };
     buildInputs =
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
@@ -24,7 +22,7 @@ let
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);
     passthru = {
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

@@ -14,7 +14,7 @@ let
 
 in mkFrontend {
   inProduction = true;
-  name = "mozilla-releng-frontend";
+  project_name = "releng_frontend";
   inherit nodejs node_modules elm_packages;
   version = fileContents ./VERSION;
   src = ./.;

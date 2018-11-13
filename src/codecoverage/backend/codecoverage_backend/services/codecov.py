@@ -45,6 +45,7 @@ class CodecovCoverage(Coverage):
             try:
                 data = await r.json()
             except Exception as e:
+                logger.exception(e)
                 raise CoverageException('Can\'t parse codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
 
             if r.status != 200:
