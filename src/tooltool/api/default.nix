@@ -9,9 +9,7 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-tooltool-api";
-  dirname = "tooltool_api";
-  src_path = "src/tooltool/api";
+  project_name = "tooltool/api";
   version = fileContents ./VERSION;
 
   mkCronJob = { schedule, command }:
@@ -20,7 +18,7 @@ let
         { name = channel;
           value =
             let
-              hook_name = "${name}_${command}_${channel}";
+              hook_name = "${self.name}_${command}_${channel}";
               hook = mkTaskclusterHook {
                 name = hook_name;
                 owner = "rgarbas@mozilla.com";
@@ -47,10 +45,10 @@ let
         }) ["testing" "staging" "production"]);
 
   self = mkBackend {
-    inherit python name version dirname src_path;
+    inherit python version project_name;
     inStaging = true;
     inProduction = true;
-    src = filterSource ./. { inherit name; };
+    src = filterSource ./. { inherit(self) name; };
     buildInputs =
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
@@ -66,7 +64,7 @@ let
                                 command = "replicate";
                               };
       };
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

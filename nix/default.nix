@@ -41,18 +41,30 @@ let
     gecko-env = import ./gecko_env.nix { inherit releng_pkgs; };
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
 
+
     "postgresql" =
       releng_pkgs.lib.mkProject
-        { name = "${pkgs.postgresql.name}-env";
+        { project_name = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.postgresql.name) 0;
+          version = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.postgresql.name) 1;
+          name = "${pkgs.postgresql.name}-env";
           buildInputs = [ pkgs.postgresql95 ];
-          passthru.package = pkgs.postgresql95;
+          mkDerivation = pkgs.stdenv.mkDerivation;
+          passthru = {
+            package = pkgs.postgresql95;
+          };
         };
 
     "redis" =
       releng_pkgs.lib.mkProject
-        { name = "${pkgs.redis.name}-env";
+        { project_name = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.redis.name) 0;
+          version = builtins.elemAt (pkgs'.lib.splitString "-" pkgs'.redis.name) 1;
+          name = "${pkgs.redis.name}-env";
           buildInputs = [ pkgs.redis ];
-          passthru.package = pkgs.redis;
+          mkDerivation = pkgs.stdenv.mkDerivation;
+          package = pkgs.redis;
+          passthru = {
+            package = pkgs.redis;
+          };
         };
 
     "please-cli" = import ./../lib/please_cli { inherit releng_pkgs; };

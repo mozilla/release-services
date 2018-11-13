@@ -1,5 +1,5 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
@@ -20,14 +20,12 @@ let
   '';
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-mapper-api";
-  dirname = "mapper_api";
-  src_path = "src/mapper/api";
+  project_name = "mapper/api";
 
   self = mkBackend {
-    inherit python name dirname src_path;
+    inherit python project_name;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
+    src = filterSource ./. { inherit (self) name; };
     buildInputs =
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
@@ -36,21 +34,22 @@ let
       (fromRequirementsFile ./requirements.txt python.packages);
     dockerCmd = [
       "gunicorn"
-      "${dirname}.flask:app"
+      "${self.dirname}.flask:app"
       "--worker-class" "gevent"
       "--log-file"
       "-"
     ];
     passthru = {
       migrate = mysql2postgresql {
-        inherit name beforeSQL afterSQL;
+        inherit beforeSQL afterSQL;
+        inherit (self) name;
         config = ''
           only_tables:
            - projects
            - hashes
         '';
       };
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.5 \

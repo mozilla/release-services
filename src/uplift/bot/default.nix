@@ -1,5 +1,5 @@
-{ releng_pkgs 
-}: 
+{ releng_pkgs
+}:
 
 let
 
@@ -10,8 +10,7 @@ let
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-uplift-bot";
-  dirname = "uplift_bot";
+  project_name = "uplift/bot";
 
   mkBot = branch:
     let
@@ -52,11 +51,10 @@ let
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
   self = mkPython {
-    inherit python name dirname;
+    inherit python project_name;
     inProduction = true;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
-    src_path = "src/uplift/bot";
+    src = filterSource ./. { inherit(self) name; };
     buildInputs =
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
@@ -75,7 +73,7 @@ let
         staging = mkBot "staging";
         production = mkBot "production";
       };
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

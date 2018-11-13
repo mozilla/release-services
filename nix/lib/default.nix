@@ -412,9 +412,9 @@ in rec {
         ) src;
 
   mkYarnFrontend =
-    { name
+    { project_name
+    , version
     , src
-    , src_path ? null
     , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
     , extraBuildInputs ? []
     , patchPhase ? ""
@@ -428,7 +428,7 @@ in rec {
 
       self = mkProject {
         # yarn2nix knows how to extract the name/version from package.json
-        inherit src name;
+        inherit src project_name version;
 
         mkDerivation = releng_pkgs.pkgs.yarn2nix.mkYarnPackage;
 
@@ -463,19 +463,13 @@ in rec {
         '' + shellHook;
 
         passthru = {
+          inherit (self) src_path;
 
           deploy = {
             testing = self;
             staging = self;
             production = self;
           };
-
-          src_path =
-            if src_path != null
-              then src_path
-              else
-                "src/" +
-                  (replaceStrings ["-"] ["_"] self.package.name);
 
           taskclusterGithubTasks =
             map (branch: mkTaskclusterGithubTask { inherit (self.package) name; inherit branch; inherit (self) src_path; })
@@ -497,11 +491,23 @@ in rec {
       };
     in self;
 
+  mkProjectModuleName = builtins.replaceStrings ["/" "_"] ["-" "-"];
+  mkProjectDirName = builtins.replaceStrings ["/" ] ["_"];
+  mkProjectSrcPath = project_name: "src/" + project_name;
+  mkProjectFullName = project_name: version: "mozilla-${mkProjectModuleName project_name}-${version}";
+  getOrDefault = item: default: if item != null then item else default;
+
   mkProject =
     args @
-    { name
+    { project_name
+    , version
+    , name ? null
+    , dirname ? null
+    , module_name ? null
+    , src_path ? null
     , shellHook ? ""
     , mkDerivation ? stdenv.mkDerivation
+    , passthru ? {}
     , ...
     }:
     let
@@ -510,14 +516,22 @@ in rec {
           (n: v: n != "mkDerivation")
           args
         ) // {
+        name = getOrDefault name (mkProjectFullName project_name version);
+        dirname = getOrDefault dirname (mkProjectDirName project_name);
+        module_name = getOrDefault module_name (mkProjectModuleName project_name);
+        src_path = getOrDefault src_path (mkProjectSrcPath project_name);
         shellHook = shellHook + ''
-          PS1="\n\[\033[1;32m\][${name}:\w]\$\[\033[0m\] "
+          PS1="\n\[\033[1;32m\][${self.module_name}:\w]\$\[\033[0m\] "
         '';
+        passthru = passthru // {
+          module_name = getOrDefault module_name (mkProjectModuleName project_name);
+          src_path = getOrDefault src_path (mkProjectSrcPath project_name);
+        };
       });
       in self;
 
   mkFrontend =
-    { name
+    { project_name
     , version
     , src
     , src_path ? null
@@ -536,7 +550,7 @@ in rec {
       scss_common = ./../../lib/frontend_common/scss;
       frontend_common = ./../../lib/frontend_common;
       self = mkProject {
-        name = "${name}-${version}";
+        inherit project_name version src_path;
 
         src = builtins.filterSource
           (path: type: baseNameOf path != "elm-stuff"
@@ -631,23 +645,14 @@ in rec {
             production = self;
           };
 
-          src_path =
-            if src_path != null
-              then src_path
-              else
-                "src/" +
-                  (replaceStrings ["-"] ["_"]
-                    (builtins.substring 8
-                      (builtins.stringLength name - 8) name));
-
           taskclusterGithubTasks =
-            map (branch: mkTaskclusterGithubTask { inherit name branch; inherit (self) src_path; })
+            map (branch: mkTaskclusterGithubTask { inherit branch; inherit (self) name src_path; })
                 ([ "master" ] ++ optional inTesting "testing"
                               ++ optional inStaging "staging"
                               ++ optional inProduction "production"
                 );
 
-          update = writeScript "update-${name}" ''
+          update = writeScript "update-${self.name}" ''
             export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
             pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
 
@@ -681,8 +686,8 @@ in rec {
 
   mkBackend =
     args @
-    { name
-    , dirname
+    { project_name
+    , dirname ? null
     , version
     , src
     , python
@@ -693,12 +698,7 @@ in rec {
     , checkPhase ? null
     , postInstall ? ""
     , shellHook ? ""
-    , dockerCmd ? [
-        "gunicorn"
-        "${dirname}.flask:app"
-        "--log-file"
-        "-"
-      ]
+    , dockerCmd ? null
     , dockerEnv ? []
     , dockerContents ? []
     , dockerUser ? "app"
@@ -732,14 +732,13 @@ in rec {
           fi
         '' + postInstall;
 
-
         checkPhase =
           if checkPhase != null
             then checkPhase
             else ''
               export LANG=en_US.UTF-8
               export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
-              export APP_TESTING=${name}
+              export APP_TESTING=${self.name}
 
               echo "################################################################"
               echo "## flake8 ######################################################"
@@ -760,24 +759,32 @@ in rec {
           export CACHE_DIR=$PWD/cache
           export LANG=en_US.UTF-8
           export DEBUG=1
-          export APP_TESTING=${name}
-          export FLASK_APP=${dirname}.flask:app
+          export APP_TESTING=${self.name}
+          export FLASK_APP=${self.dirname}.flask:app
         '' + shellHook;
 
         inherit dockerContents;
         dockerEnv = [
           "APP_SETTINGS=${self}/etc/settings.py"
-          "FLASK_APP=${dirname}.flask:app"
+          "FLASK_APP=${self.dirname}.flask:app"
           "WEB_CONCURRENCY=${builtins.toString gunicornWorkers}"
         ];
-        dockerCmd = dockerCmd;
+        dockerCmd =
+          if dockerCmd != null
+          then dockerCmd
+          else [
+            "gunicorn"
+            "${self.dirname}.flask:app"
+            "--log-file"
+            "-"
+          ];
 
       });
     in self;
 
   mkPythonScript =
-    { name
-    , scriptName ? name
+    { project_name
+    , scriptName ? project_name
     , python
     , script
     , passthru ? {}
@@ -793,7 +800,7 @@ in rec {
         );
 
       self = mkProject {
-        inherit name passthru;
+        inherit project_name passthru;
         buildInputs = [ makeWrapper python.__old.python ];
         buildCommand = ''
           mkdir -p $out/bin
@@ -811,11 +818,12 @@ in rec {
     in self;
 
   mkPython =
-    { name
-    , dirname
+    { project_name
+    , dirname ? null
     , version
     , src
     , python
+    , name ? null
     , src_path ? null
     , buildInputs ? []
     , propagatedBuildInputs ? []
@@ -841,7 +849,7 @@ in rec {
 
       self_docker_config =
           { Env = [
-              "APP_NAME=${name}-${version}"
+              "APP_NAME=${self.name}-${version}"
               "PATH=/bin"
               "LANG=en_US.UTF-8"
               "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
@@ -851,7 +859,8 @@ in rec {
             WorkingDir = "/";
           };
       self_docker = mkDocker {
-        inherit name version;
+        inherit version;
+        inherit (self) name;
         contents = [ busybox self ] ++ dockerContents;
         config = self_docker_config;
       };
@@ -870,7 +879,7 @@ in rec {
       };
 
       self_dockerflow = dockerTools.buildImage {
-        inherit name;
+        inherit (self) name;
         tag = version;
         fromImage = self_docker;
         config = self_docker_config // {
@@ -897,11 +906,11 @@ in rec {
       };
 
       self = mkProject {
+        inherit project_name version dirname src_path name;
 
         mkDerivation = python.mkDerivation;
 
         namePrefix = "";
-        name = "${name}-${version}";
 
         inherit src;
 
@@ -926,14 +935,14 @@ in rec {
           # generate MANIFEST.in to make sure every file is included
           rm -f MANIFEST.in
           cat > MANIFEST.in <<EOF
-          recursive-include ${dirname}/*
+          recursive-include ${self.dirname}/*
 
           include VERSION
-          include ${dirname}/VERSION
-          include ${dirname}/*.ini
-          include ${dirname}/*.json
-          include ${dirname}/*.mako
-          include ${dirname}/*.yml
+          include ${self.dirname}/VERSION
+          include ${self.dirname}/*.ini
+          include ${self.dirname}/*.json
+          include ${self.dirname}/*.mako
+          include ${self.dirname}/*.yml
 
           recursive-exclude * __pycache__
           recursive-exclude * *.py[co]
@@ -976,13 +985,13 @@ in rec {
           find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
 
           mkdir -p $out/etc
-          echo "${name}-${version}" > $out/etc/mozilla-releng-services
+          echo "${self.name}-${version}" > $out/etc/mozilla-releng-services
         '' + postInstall;
 
         shellHook = ''
           export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
           export SECRET_KEY_BASE64=`dd if=/dev/urandom bs=24 count=1 | base64`
-          export APP_NAME="${name}-${version}"
+          export APP_NAME="${self.name}-${version}"
           export LANG=en_US.UTF-8
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
@@ -1000,17 +1009,8 @@ in rec {
         passthru = {
           inherit python;
 
-          src_path =
-            if src_path != null
-              then src_path
-              else
-                "src/" +
-                  (replaceStrings ["-"] ["_"]
-                    (builtins.substring 8
-                      (builtins.stringLength name - 8) name));
-
           taskclusterGithubTasks =
-            map (branch: mkTaskclusterGithubTask { inherit name branch; inherit (self) src_path; })
+            map (branch: mkTaskclusterGithubTask { inherit branch; inherit (self) name src_path; })
                 ([ "master" ] ++ optional inTesting "testing"
                               ++ optional inStaging "staging"
                               ++ optional inProduction "production"

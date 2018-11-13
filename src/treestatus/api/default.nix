@@ -26,15 +26,13 @@ let
   '';
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-treestatus-api";
-  dirname = "treestatus_api";
-  src_path = "src/treestatus/api";
+  project_name = "treestatus/api";
 
   self = mkBackend {
-    inherit python name dirname src_path;
+    inherit python project_name;
     inProduction = true;
     version = fileContents ./VERSION;
-    src = filterSource ./. { inherit name; };
+    src = filterSource ./. { inherit(self) name; };
     buildInputs =
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
@@ -43,7 +41,8 @@ let
       (fromRequirementsFile ./requirements.txt python.packages);
     passthru = {
       migrate = mysql2postgresql {
-        inherit name beforeSQL afterSQL;
+        inherit beforeSQL afterSQL;
+        inherit(self) name;
         config = ''
           only_tables:
            - treestatus_change_trees
@@ -52,7 +51,7 @@ let
            - treestatus_trees
         '';
       };
-      update = writeScript "update-${name}" ''
+      update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \

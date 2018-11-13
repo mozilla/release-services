@@ -14,7 +14,7 @@ let
 
 in mkFrontend {
   inherit nodejs node_modules elm_packages;
-  name = "mozilla-frontend-common-example";
+  project_name = "frontend_common/example";
   version = fileContents ./VERSION;
   src = ./.;
   src_path = "lib/frontend_common/example";
