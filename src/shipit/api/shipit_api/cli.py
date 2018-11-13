@@ -492,20 +492,12 @@ def get_primary_builds(breakpoint_version: int,
 
     builds = dict()
 
-    product_file = f'json/1.0/{product.value}_primary_builds.json'
-    old_builds = typing.cast(PrimaryBuilds, old_product_details[product_file])
+    versions = dict(
+        Product.FIREFOX: get_firefox_versions,
+        Product.THUNDERBIRD: get_thunderbird_versions,
+    ).get(product)(old_product_details)
 
-    for language in old_builds:
-        language_builds = dict()
-
-        for version in old_builds[language]:
-            major_version = int(version.split('.')[0])
-            if major_version >= breakpoint_version:
-                continue
-            language_builds[version] = old_builds[language][version]
-
-        if language_builds:
-            builds[language] = language_builds
+    l10n = get_product_l10n(product, version)
 
     return builds  # TODO: not implemented
 
