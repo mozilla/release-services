@@ -139,6 +139,9 @@ def test_get_chunk():
         ('test-windows10-64-ccov/debug-mochitest-1', 'mochitest-1'),
         ('test-windows10-64-ccov/debug-mochitest-e10s-7', 'mochitest-7'),
         ('test-windows10-64-ccov/debug-cppunit', 'cppunit'),
+        ('build-linux64-ccov/debug', 'build'),
+        ('build-android-test-ccov/opt', 'build'),
+        ('build-win64-ccov/debug', 'build'),
     ]
 
     for (name, chunk) in tests:
@@ -151,6 +154,7 @@ def test_get_suite():
         ('mochitest-7', 'mochitest'),
         ('cppunit', 'cppunit'),
         ('firefox-ui-functional-remote', 'firefox-ui-functional-remote'),
+        ('build', 'build'),
     ]
 
     for (chunk, suite) in tests:
