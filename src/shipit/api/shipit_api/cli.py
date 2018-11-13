@@ -912,8 +912,17 @@ def upload_product_details(data_dir: str,
     product_details.update(get_regions(old_product_details))
     product_details.update(get_l10n(old_product_details))
 
-    # TODO: add 'json/1.0/' infront of each file path
-    # TODO: json_exports.json
+    #  add 'json/1.0/' infront of each file path
+    product_details = {
+        f'json/1.0{file_}': content
+        for file_, content in product_details.items()
+    }
+
+    # create json_exports.json to list all the files
+    product_details['json_exports.json'] = {
+        file_: os.path.basename(file_)
+        for file_ in product_details.keys()
+    }
 
     # create temp directory where generated files will be temporary created
     temp_dir_ = tempfile.mkdtemp(prefix='product-details-')
