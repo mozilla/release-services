@@ -156,6 +156,7 @@ PrimaryBuilds = typing.Dict[str, typing.Dict[str, PrimaryBuild]]
 FirefoxVersions = mypy_extensions.TypedDict('FirefoxVersions', {
     'FIREFOX_NIGHTLY': str,
     'FIREFOX_AURORA': str,
+    'FIREFOX_ESR': str,
     'FIREFOX_ESR_NEXT': str,
     'LATEST_FIREFOX_DEVEL_VERSION': str,
     'FIREFOX_DEVEDITION': str,
@@ -510,6 +511,60 @@ def get_primary_builds(breakpoint_version: int,
     return builds  # TODO: not implemented
 
 
+@flask.cli.with_appcontext
+def get_latest_version(branch: str, product: Product, major_version=None):
+    '''Get latest version
+
+    Get the latest shipped version for a particular branch/product,
+    optionally for a particular major version. The results should be sorted
+    by version, not by date, because we may publish a correction release
+    for old users (this has been done in the past).
+    '''
+    Release = shipit_api.models.Release
+    query = flask.current_app.db.session.query(Release) \
+        .filter(Release.product == product.value) \
+        .filter(Release.branch == branch) \
+        .filter(Release.status == 'shipped')
+    if major_version:
+        # Using cast and split_part is postgresql specific
+        query = query.filter(
+            sqlalchemy.cast(
+                sqlalchemy.func.split_part(Release.version, '.', 1),
+                sqlalchemy.Integer) == major_version)
+    releases = sorted(
+        query.all(),
+        reverse=True,
+        key=lambda r: get_product_mozilla_version(Product(product), r.version))
+    if releases:
+        return releases[0].version
+    else:
+        # TODO: raise
+        return None
+
+
+def get_firefox_esr_version(branch, product, major_version):
+    '''Return latest ESR version
+
+    Get the latest version using CURRENT_ESR major version. Sometimes, when we
+    have 2 overlapping ESR releases we want to point this to the older version,
+    while ESR_NEXT will be pointing to the next release.
+    '''
+    return get_latest_version(branch, product, major_version)
+
+
+def get_firefox_esr_next_version(branch, product, esr_next):
+    '''Next ESR version
+
+    Return an empty string when there is only one ESR release published. If
+    ESR_NEXT is set to a false value, return an empty string. Otherwise get
+    latest version for ESR_NEXT major version.
+    '''
+    if not esr_next:
+        return ''
+    else:
+        return get_latest_version(branch, product, major_version=esr_next)
+
+
 def get_firefox_versions(old_product_details: ProductDetails) -> FirefoxVersions:
     '''All the versions we ship for Firefox for Desktop
 
@@ -529,15 +584,22 @@ def get_firefox_versions(old_product_details: ProductDetails) -> FirefoxVersions
                "LATEST_FIREFOX_VERSION":                 "58.0.2",
            }
     '''
+
     return dict(
-        FIREFOX_NIGHTLY='',
-        FIREFOX_AURORA='',
-        FIREFOX_ESR_NEXT='',
-        LATEST_FIREFOX_DEVEL_VERSION='',
-        FIREFOX_DEVEDITION='',
-        LATEST_FIREFOX_OLDER_VERSION='',
-        LATEST_FIREFOX_RELEASED_DEVEL_VERSION='',
-        LATEST_FIREFOX_VERSION='',
+        FIREFOX_NIGHTLY=shipit_api.config.FIREFOX_NIGHTLY,
+        FIREFOX_AURORA=shipit_api.config.FIREFOX_AURORA,
+        LATEST_FIREFOX_VERSION=get_latest_version(shipit_api.config.RELEASE_BRANCH, Product.FIREFOX),
+        FIREFOX_ESR=get_firefox_esr_version(
+            f'{shipit_api.config.ESR_BRANCH_PREFIX}{shipit_api.config.CURRENT_ESR}',
+            Product.FIREFOX, shipit_api.config.CURRENT_ESR),
+        FIREFOX_ESR_NEXT=get_firefox_esr_next_version(
+            f'{shipit_api.config.ESR_BRANCH_PREFIX}{shipit_api.config.ESR_NEXT}',
+            Product.FIREFOX, shipit_api.config.ESR_NEXT),
+        LATEST_FIREFOX_DEVEL_VERSION=get_latest_version(shipit_api.config.BETA_BRANCH, Product.FIREFOX),
+        LATEST_FIREFOX_RELEASED_DEVEL_VERSION=get_latest_version(
+            shipit_api.config.BETA_BRANCH, Product.FIREFOX),
+        FIREFOX_DEVEDITION=get_latest_version(shipit_api.config.BETA_BRANCH, Product.DEVEDITION),
+        LATEST_FIREFOX_OLDER_VERSION=shipit_api.config.LATEST_FIREFOX_OLDER_VERSION,
     )
 
 
