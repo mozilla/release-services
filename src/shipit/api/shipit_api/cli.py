@@ -16,6 +16,7 @@ import tempfile
 import typing
 
 import aiohttp
+import awscli
 import click
 import flask
 import mohawk
@@ -156,6 +157,7 @@ PrimaryBuilds = typing.Dict[str, typing.Dict[str, PrimaryBuild]]
 FirefoxVersions = mypy_extensions.TypedDict('FirefoxVersions', {
     'FIREFOX_NIGHTLY': str,
     'FIREFOX_AURORA': str,
+    'FIREFOX_ESR': str,
     'FIREFOX_ESR_NEXT': str,
     'LATEST_FIREFOX_DEVEL_VERSION': str,
     'FIREFOX_DEVEDITION': str,
@@ -263,6 +265,12 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
             sqlalchemy.func.split_part(Release.version, '.', 1),
             sqlalchemy.Integer) >= breakpoint_version)
     return query.all()
+
+
+def get_product_l10n(product: Product,
+                     version: str,
+                     ) -> typing.List[str]:
+    return []  # TODO: not implemented
 
 
 def get_product_categories(product: Product,
@@ -486,20 +494,43 @@ def get_primary_builds(breakpoint_version: int,
                }
            }
     '''
-    if Product.DEVEDITION is product or \
-       Product.FENNEC is product:
+
+    if product is Product.FIREFOX:
+        firefox_versions = get_firefox_versions(old_product_details)
+        versions = [
+            firefox_versions['FIREFOX_NIGHTLY'],
+            firefox_versions['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
+            firefox_versions['LATEST_FIREFOX_VERSION'],
+            firefox_versions['FIREFOX_ESR'],
+        ]
+    elif product is Product.THUNDERBIRD:
+        thunderbird_versions = get_thunderbird_versions(old_product_details)
+        versions = [
+            thunderbird_versions['LATEST_THUNDERBIRD_VERSION'],
+            thunderbird_versions['LATEST_THUNDERBIRD_ALPHA_VERSION'],
+            thunderbird_versions['LATEST_THUNDERBIRD_DEVEL_VERSION'],
+            thunderbird_versions['LATEST_THUNDERBIRD_NIGHTLY_VERSION'],
+        ]
+    else:
         raise click.ClickException(f'We don\'t generate product history for "{product.value}" product.')
 
-    builds = dict()
+    builds: PrimaryBuilds = dict()
 
-    versions = dict(
-        Product.FIREFOX: get_firefox_versions,
-        Product.THUNDERBIRD: get_thunderbird_versions,
-    ).get(product)(old_product_details)
+    for version in versions:
+        for l10n in get_product_l10n(product, version):
+            builds[l10n][version] = {
+                'Windows': {
+                    'filesize': 0,
+                },
+                'OS X': {
+                    'filesize': 0,
+                },
+                'Linux': {
+                    'filesize': 0,
+                },
+            }
 
-    l10n = get_product_l10n(product, version)
-
-    return builds  # TODO: not implemented
+    return builds
 
 
 def get_firefox_versions(old_product_details: ProductDetails) -> FirefoxVersions:
@@ -524,6 +555,7 @@ def get_firefox_versions(old_product_details: ProductDetails) -> FirefoxVersions
     return dict(
         FIREFOX_NIGHTLY='',
         FIREFOX_AURORA='',
+        FIREFOX_ESR='',
         FIREFOX_ESR_NEXT='',
         LATEST_FIREFOX_DEVEL_VERSION='',
         FIREFOX_DEVEDITION='',
@@ -791,6 +823,16 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
     type=str,
     )
 @click.option(
+    '--aws-access-key-id',
+    required=True,
+    type=str,
+    )
+@click.option(
+    '--aws-secret-access-key',
+    required=True,
+    type=str,
+    )
+@click.option(
     '--breakpoint-version',
     default=shipit_api.config.BREAKPOINT_VERSION,
     type=int,
@@ -803,6 +845,8 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
 @flask.cli.with_appcontext
 def upload_product_details(data_dir: str,
                            s3_bucket: str,
+                           aws_access_key_id: str,
+                           aws_secret_access_key: str,
                            breakpoint_version: int,
                            keep_temporary_dir: bool):
 
@@ -941,8 +985,8 @@ def upload_product_details(data_dir: str,
                 f.write(json.dumps(content, sort_keys=True, indent=4))
 
         # sync to s3 make it atomic or close
-        os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
-        os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
+        os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
+        os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
         aws = awscli.clidriver.create_clidriver().main
         returncode = aws([
             's3',
