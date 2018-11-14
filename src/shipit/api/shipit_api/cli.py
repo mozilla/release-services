@@ -811,7 +811,7 @@ def get_mobile_details(old_product_details: ProductDetails) -> MobileDetails:
     )
 
 
-def get_mobile_versions(old_product_details: ProductDetails) -> MobileVersions:
+def get_mobile_versions() -> MobileVersions:
     '''This file contains all the versions we ship for Firefox for Android
 
        This function will output to the following files:
@@ -828,6 +828,14 @@ def get_mobile_versions(old_product_details: ProductDetails) -> MobileVersions:
                "ios_version": "9.0",
            }
     '''
+    return dict(
+        ios_beta_version=shipit_api.config.IOS_BETA_VERSION,
+        ios_version=shipit_api.config.IOS_VERSION,
+        nightly_version=shipit_api.config.FIREFOX_NIGHTLY,
+        alpha_version=shipit_api.config.FIREFOX_NIGHTLY,
+        beta_version=get_latest_version(shipit_api.config.BETA_BRANCH, Product.FENNEC),
+        version=get_latest_version(shipit_api.config.RELEASE_BRANCH, Product.FENNEC),
+    )
 
 
 def get_thunderbird_versions(old_product_details: ProductDetails) -> ThunderbirdVersions:
@@ -982,7 +990,7 @@ def upload_product_details(data_dir: str,
                                                                       releases,
                                                                       old_product_details,
                                                                       ),
-        'mobile_versions.json': get_mobile_versions(old_product_details),
+        'mobile_versions.json': get_mobile_versions(),
         'thunderbird.json': get_releases(breakpoint_version,
                                          [Product.THUNDERBIRD],
                                          releases,

@@ -29,3 +29,7 @@ FIREFOX_NIGHTLY = '65.0a1'
 # Aurora has been replaced by Dev Edition, but some 3rd party applications may
 # still rely on this value.
 FIREFOX_AURORA = ''
+
+# IOS versions
+IOS_BETA_VERSION = ''
+IOS_VERSION = '12.1'
