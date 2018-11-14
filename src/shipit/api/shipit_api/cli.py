@@ -250,7 +250,7 @@ def get_old_product_details(directory: str) -> ProductDetails:
 
 
 def get_releases_from_db(db_session: sqlalchemy.orm.Session,
-                         breakpoint_version: int,
+                         breakpoint_version: typing.Optional[int]=None,
                          ) -> typing.List[shipit_api.models.Release]:
     '''
      SELECT *
@@ -259,11 +259,12 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
     '''
     Release = shipit_api.models.Release
     query = db_session.query(Release)
-    # Using cast and split_part is postgresql specific
-    query = query.filter(
-        sqlalchemy.cast(
-            sqlalchemy.func.split_part(Release.version, '.', 1),
-            sqlalchemy.Integer) >= breakpoint_version)
+    if breakpoint_version:
+        # Using cast and split_part is postgresql specific
+        query = query.filter(
+            sqlalchemy.cast(
+                sqlalchemy.func.split_part(Release.version, '.', 1),
+                sqlalchemy.Integer) >= breakpoint_version)
     return query.all()
 
 
@@ -505,7 +506,7 @@ def get_primary_builds(breakpoint_version: int,
             firefox_versions['FIREFOX_ESR'],
         ]
     elif product is Product.THUNDERBIRD:
-        thunderbird_versions = get_thunderbird_versions()
+        thunderbird_versions = get_thunderbird_versions(releases)
         versions = [
             thunderbird_versions['LATEST_THUNDERBIRD_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_ALPHA_VERSION'],
@@ -652,7 +653,10 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
     return regions
 
 
-def get_l10n(old_product_details: ProductDetails) -> ProductDetails:
+def get_l10n(
+        all_releases: typing.List[shipit_api.models.Release],
+        releases: typing.List[shipit_api.models.Release],
+        old_product_details: ProductDetails) -> ProductDetails:
     '''This folder contains the l10n changeset per locale used for each build.
        The translation of our products is done in separate l10n repositories,
        each locale provides a good known version of their translations through
@@ -678,7 +682,20 @@ def get_l10n(old_product_details: ProductDetails) -> ProductDetails:
                "name": "Firefox-58.0-build6",
            }
     '''
-    return dict()
+    ret = {}
+    filtered_releases = [r for r in all_releases if r.status == 'shipped']
+    for release in filtered_releases:
+        old_file_path = f'json/1.0/l10n/{release.name}.json'
+        new_file_path = f'l10n/{release.name}.json'
+        if old_product_details.get(old_file_path):
+            ret[new_file_path] = old_product_details[old_file_path]
+        elif release.name not in [r.name for r in releases]:
+            # this is an old version, and it's not in the old data, ignore
+            pass
+        else:
+            # TODO: very expesive call to HG
+            ret[new_file_path] = dict()
+    return ret
 
 
 def get_languages(old_product_details: ProductDetails) -> Languages:
@@ -1027,7 +1044,7 @@ def upload_product_details(data_dir: str,
         'thunderbird_versions.json': get_thunderbird_versions(releases),
     }
     product_details.update(get_regions(old_product_details))
-    product_details.update(get_l10n(old_product_details))
+    product_details.update(get_l10n(releases, old_product_details))
 
     #  add 'json/1.0/' infront of each file path
     product_details = {
