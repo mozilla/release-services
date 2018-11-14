@@ -565,7 +565,7 @@ def get_firefox_esr_next_version(branch, product, esr_next):
         return get_latest_version(branch, product, major_version=esr_next)
 
 
-def get_firefox_versions(old_product_details: ProductDetails) -> FirefoxVersions:
+def get_firefox_versions() -> FirefoxVersions:
     '''All the versions we ship for Firefox for Desktop
 
        This function will output to the following files:
@@ -916,7 +916,7 @@ def upload_product_details(data_dir: str,
                                                           Product.FIREFOX,
                                                           old_product_details,
                                                           ),
-        'firefox_versions.json': get_firefox_versions(old_product_details),
+        'firefox_versions.json': get_firefox_versions(),
         'languages.json': get_languages(old_product_details),
         'mobile_android.json': get_releases(breakpoint_version,
                                             [Product.FENNEC],
