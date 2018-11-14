@@ -684,12 +684,13 @@ def get_l10n(
     '''
     ret = {}
     filtered_releases = [r for r in all_releases if r.status == 'shipped']
+    new_release_names = [r.name for r in releases]
     for release in filtered_releases:
         old_file_path = f'json/1.0/l10n/{release.name}.json'
         new_file_path = f'l10n/{release.name}.json'
         if old_product_details.get(old_file_path):
             ret[new_file_path] = old_product_details[old_file_path]
-        elif release.name not in [r.name for r in releases]:
+        elif release.name not in new_release_names:
             # this is an old version, and it's not in the old data, ignore
             pass
         else:
@@ -944,6 +945,7 @@ def upload_product_details(data_dir: str,
     # get all the releases from the database from (including)
     # breakpoint_version on
     releases = get_releases_from_db(flask.current_app.db.session, breakpoint_version)
+    all_releases = get_releases_from_db(flask.current_app.db.session)
 
     # combine old and new data
     product_details: ProductDetails = {
@@ -1044,7 +1046,7 @@ def upload_product_details(data_dir: str,
         'thunderbird_versions.json': get_thunderbird_versions(releases),
     }
     product_details.update(get_regions(old_product_details))
-    product_details.update(get_l10n(releases, old_product_details))
+    product_details.update(get_l10n(all_releases, releases, old_product_details))
 
     #  add 'json/1.0/' infront of each file path
     product_details = {
