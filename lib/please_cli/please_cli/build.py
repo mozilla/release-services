@@ -91,6 +91,7 @@ def cmd(project,
         taskcluster_client_id,
         taskcluster_access_token,
         interactive,
+        with_secret=True
         ):
 
     required_secrets = [
@@ -102,27 +103,31 @@ def cmd(project,
             'CACHE_ACCESS_KEY_ID',
             'CACHE_SECRET_ACCESS_KEY',
         ]
+    if with_secret:
+        secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
+                                                     project,
+                                                     required=required_secrets,
+                                                     taskcluster_client_id=taskcluster_client_id,
+                                                     taskcluster_access_token=taskcluster_access_token,
+                                                     )
 
-    secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
-                                                 project,
-                                                 required=required_secrets,
-                                                 taskcluster_client_id=taskcluster_client_id,
-                                                 taskcluster_access_token=taskcluster_access_token,
-                                                 )
-
-    temp_files = []
-    nix_cache_secret_keys = []
-    for secret_key in secrets['NIX_CACHE_SECRET_KEYS']:
-        fd, temp_file = tempfile.mkstemp(text=True)
-        with open(temp_file, 'w') as f:
-            f.write(secret_key)
-        os.close(fd)
-        nix_cache_secret_keys += [
-            '--option',
-            'secret-key-files',
-            temp_file,
-        ]
-        temp_files.append(temp_file)
+        temp_files = []
+        nix_cache_secret_keys = []
+        for secret_key in secrets['NIX_CACHE_SECRET_KEYS']:
+            fd, temp_file = tempfile.mkstemp(text=True)
+            with open(temp_file, 'w') as f:
+                f.write(secret_key)
+            os.close(fd)
+            nix_cache_secret_keys += [
+                '--option',
+                'secret-key-files',
+                temp_file,
+            ]
+            temp_files.append(temp_file)
+    else:
+        secrets = {}
+        temp_files = []
+        nix_cache_secret_keys = []
 
     outputs = []
     for nix_path_attribute in nix_path_attributes:

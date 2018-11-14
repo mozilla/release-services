@@ -57,16 +57,27 @@ def cmd(ctx, project, nix_build,
     for check_title, check_command in checks:
         click.echo(' => {}: '.format(check_title), nl=False)
         with click_spinner.spinner():
-            returncode, output, error = ctx.invoke(please_cli.shell.cmd,
-                                                   project=project,
-                                                   quiet=True,
-                                                   command=check_command,
-                                                   nix_shell=nix_build,
-                                                   taskcluster_secret=taskcluster_secret,
-                                                   taskcluster_client_id=taskcluster_client_id,
-                                                   taskcluster_access_token=taskcluster_access_token,
-                                                   )
-        please_cli.utils.check_result(returncode, output, raise_exception=False)
+            nix_path_attributes = [project]
+            deployments = please_cli.config.PROJECTS_CONFIG[project].get('deploys', [])
+            for deployment in deployments:
+                for channel in deployment['options']:
+                    if 'nix_path_attribute' in deployment['options'][channel]:
+                        nix_path_attributes.append('{}.{}'.format(
+                            project,
+                            deployment['options'][channel]['nix_path_attribute'],
+                        ))
+            nix_path_attributes = list(set(nix_path_attributes))
+
+            ctx.invoke(please_cli.build.cmd,
+               project=project,
+               nix_path_attributes=nix_path_attributes,
+               interactive=False,
+               nix_build=nix_build,
+               taskcluster_secret=taskcluster_secret,
+               taskcluster_client_id=taskcluster_client_id,
+               taskcluster_access_token=taskcluster_access_token,
+               with_secret=False,
+            )
 
 
 if __name__ == "__main__":
