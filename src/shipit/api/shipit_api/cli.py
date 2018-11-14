@@ -250,7 +250,7 @@ def get_old_product_details(directory: str) -> ProductDetails:
 
 
 def get_releases_from_db(db_session: sqlalchemy.orm.Session,
-                         breakpoint_version: typing.Optional[int]=None,
+                         breakpoint_version: typing.Optional(int) = None,
                          ) -> typing.List[shipit_api.models.Release]:
     '''
      SELECT *
@@ -695,7 +695,8 @@ def get_l10n(
             pass
         else:
             # TODO: very expesive call to HG
-            ret[new_file_path] = dict()
+            # ret[new_file_path] = dict()
+            pass
     return ret
 
 
