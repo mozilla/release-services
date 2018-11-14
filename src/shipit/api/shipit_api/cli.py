@@ -466,6 +466,7 @@ def get_release_history(breakpoint_version: int,
 
 def get_primary_builds(breakpoint_version: int,
                        product: Product,
+                       releases: typing.List[shipit_api.models.Release],
                        old_product_details: ProductDetails) -> PrimaryBuilds:
     '''This file contains all the Thunderbird builds we provide per locale. The
        filesize fields have the same value for all lcoales, this is not a bug,
@@ -496,7 +497,7 @@ def get_primary_builds(breakpoint_version: int,
     '''
 
     if product is Product.FIREFOX:
-        firefox_versions = get_firefox_versions()
+        firefox_versions = get_firefox_versions(releases)
         versions = [
             firefox_versions['FIREFOX_NIGHTLY'],
             firefox_versions['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
@@ -533,8 +534,7 @@ def get_primary_builds(breakpoint_version: int,
     return builds
 
 
-@flask.cli.with_appcontext
-def get_latest_version(branch: str, product: Product, major_version=None):
+def get_latest_version(releases: typing.List[shipit_api.models.Release], branch: str, product: Product):
     '''Get latest version
 
     Get the latest shipped version for a particular branch/product,
@@ -542,19 +542,12 @@ def get_latest_version(branch: str, product: Product, major_version=None):
     by version, not by date, because we may publish a correction release
     for old users (this has been done in the past).
     '''
-    Release = shipit_api.models.Release
-    query = flask.current_app.db.session.query(Release) \
-        .filter(Release.product == product.value) \
-        .filter(Release.branch == branch) \
-        .filter(Release.status == 'shipped')
-    if major_version:
-        # Using cast and split_part is postgresql specific
-        query = query.filter(
-            sqlalchemy.cast(
-                sqlalchemy.func.split_part(Release.version, '.', 1),
-                sqlalchemy.Integer) == major_version)
+    filtered_releases = [r for r in releases if
+                         r.product == product.value and
+                         r.branch == branch and
+                         r.status == 'shipped']
     releases = sorted(
-        query.all(),
+        filtered_releases,
         reverse=True,
         key=lambda r: get_product_mozilla_version(Product(product), r.version))
     if releases:
@@ -564,17 +557,17 @@ def get_latest_version(branch: str, product: Product, major_version=None):
         return None
 
 
-def get_firefox_esr_version(branch, product, major_version):
+def get_firefox_esr_version(releases: typing.List[shipit_api.models.Release], branch, product):
     '''Return latest ESR version
 
     Get the latest version using CURRENT_ESR major version. Sometimes, when we
     have 2 overlapping ESR releases we want to point this to the older version,
     while ESR_NEXT will be pointing to the next release.
     '''
-    return get_latest_version(branch, product, major_version)
+    return get_latest_version(releases, branch, product)
 
 
-def get_firefox_esr_next_version(branch, product, esr_next):
+def get_firefox_esr_next_version(releases: typing.List[shipit_api.models.Release], branch, product, esr_next):
     '''Next ESR version
 
     Return an empty string when there is only one ESR release published. If
@@ -584,10 +577,10 @@ def get_firefox_esr_next_version(branch, product, esr_next):
     if not esr_next:
         return ''
     else:
-        return get_latest_version(branch, product, major_version=esr_next)
+        return get_latest_version(releases, branch, product)
 
 
-def get_firefox_versions() -> FirefoxVersions:
+def get_firefox_versions(releases: typing.List[shipit_api.models.Release]) -> FirefoxVersions:
     '''All the versions we ship for Firefox for Desktop
 
        This function will output to the following files:
@@ -610,17 +603,21 @@ def get_firefox_versions() -> FirefoxVersions:
     return dict(
         FIREFOX_NIGHTLY=shipit_api.config.FIREFOX_NIGHTLY,
         FIREFOX_AURORA=shipit_api.config.FIREFOX_AURORA,
-        LATEST_FIREFOX_VERSION=get_latest_version(shipit_api.config.RELEASE_BRANCH, Product.FIREFOX),
+        LATEST_FIREFOX_VERSION=get_latest_version(
+            releases, shipit_api.config.RELEASE_BRANCH, Product.FIREFOX),
         FIREFOX_ESR=get_firefox_esr_version(
+            releases,
             f'{shipit_api.config.ESR_BRANCH_PREFIX}{shipit_api.config.CURRENT_ESR}',
-            Product.FIREFOX, shipit_api.config.CURRENT_ESR),
+            Product.FIREFOX),
         FIREFOX_ESR_NEXT=get_firefox_esr_next_version(
+            releases,
             f'{shipit_api.config.ESR_BRANCH_PREFIX}{shipit_api.config.ESR_NEXT}',
             Product.FIREFOX, shipit_api.config.ESR_NEXT),
-        LATEST_FIREFOX_DEVEL_VERSION=get_latest_version(shipit_api.config.BETA_BRANCH, Product.FIREFOX),
+        LATEST_FIREFOX_DEVEL_VERSION=get_latest_version(
+            releases, shipit_api.config.BETA_BRANCH, Product.FIREFOX),
         LATEST_FIREFOX_RELEASED_DEVEL_VERSION=get_latest_version(
-            shipit_api.config.BETA_BRANCH, Product.FIREFOX),
-        FIREFOX_DEVEDITION=get_latest_version(shipit_api.config.BETA_BRANCH, Product.DEVEDITION),
+            releases, shipit_api.config.BETA_BRANCH, Product.FIREFOX),
+        FIREFOX_DEVEDITION=get_latest_version(releases, shipit_api.config.BETA_BRANCH, Product.DEVEDITION),
         LATEST_FIREFOX_OLDER_VERSION=shipit_api.config.LATEST_FIREFOX_OLDER_VERSION,
     )
 
@@ -811,7 +808,7 @@ def get_mobile_details(old_product_details: ProductDetails) -> MobileDetails:
     )
 
 
-def get_mobile_versions() -> MobileVersions:
+def get_mobile_versions(releases: typing.List[shipit_api.models.Release]) -> MobileVersions:
     '''This file contains all the versions we ship for Firefox for Android
 
        This function will output to the following files:
@@ -833,12 +830,12 @@ def get_mobile_versions() -> MobileVersions:
         ios_version=shipit_api.config.IOS_VERSION,
         nightly_version=shipit_api.config.FIREFOX_NIGHTLY,
         alpha_version=shipit_api.config.FIREFOX_NIGHTLY,
-        beta_version=get_latest_version(shipit_api.config.BETA_BRANCH, Product.FENNEC),
-        version=get_latest_version(shipit_api.config.RELEASE_BRANCH, Product.FENNEC),
+        beta_version=get_latest_version(releases, shipit_api.config.BETA_BRANCH, Product.FENNEC),
+        version=get_latest_version(releases, shipit_api.config.RELEASE_BRANCH, Product.FENNEC),
     )
 
 
-def get_thunderbird_versions() -> ThunderbirdVersions:
+def get_thunderbird_versions(releases: typing.List[shipit_api.models.Release]) -> ThunderbirdVersions:
     '''
 
        This function will output to the following files:
@@ -855,9 +852,11 @@ def get_thunderbird_versions() -> ThunderbirdVersions:
     '''
     return dict(
         LATEST_THUNDERBIRD_VERSION=get_latest_version(
+            releases,
             shipit_api.config.THUNDERBIRD_RELEASE_BRANCH,
             Product.THUNDERBIRD),
         LATEST_THUNDERBIRD_DEVEL_VERSION=get_latest_version(
+            releases,
             shipit_api.config.THUNDERBIRD_BETA_BRANCH,
             Product.THUNDERBIRD),
         LATEST_THUNDERBIRD_NIGHTLY_VERSION=shipit_api.config.LATEST_THUNDERBIRD_NIGHTLY_VERSION,
@@ -966,9 +965,10 @@ def upload_product_details(data_dir: str,
                                                                        ),
         'firefox_primary_builds.json': get_primary_builds(breakpoint_version,
                                                           Product.FIREFOX,
+                                                          releases,
                                                           old_product_details,
                                                           ),
-        'firefox_versions.json': get_firefox_versions(),
+        'firefox_versions.json': get_firefox_versions(releases),
         'languages.json': get_languages(old_product_details),
         'mobile_android.json': get_releases(breakpoint_version,
                                             [Product.FENNEC],
@@ -994,7 +994,7 @@ def upload_product_details(data_dir: str,
                                                                       releases,
                                                                       old_product_details,
                                                                       ),
-        'mobile_versions.json': get_mobile_versions(),
+        'mobile_versions.json': get_mobile_versions(releases),
         'thunderbird.json': get_releases(breakpoint_version,
                                          [Product.THUNDERBIRD],
                                          releases,
@@ -1021,9 +1021,10 @@ def upload_product_details(data_dir: str,
                                                                            ),
         'thunderbird_primary_builds.json': get_primary_builds(breakpoint_version,
                                                               Product.THUNDERBIRD,
+                                                              releases,
                                                               old_product_details,
                                                               ),
-        'thunderbird_versions.json': get_thunderbird_versions(),
+        'thunderbird_versions.json': get_thunderbird_versions(releases),
     }
     product_details.update(get_regions(old_product_details))
     product_details.update(get_l10n(old_product_details))
