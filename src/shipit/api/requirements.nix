@@ -142,8 +142,8 @@ let
     };
 
     "Flask-Cors" = python.mkDerivation {
-      name = "Flask-Cors-3.0.6";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/df/a6/be0d36d487ed5967a130919b2dedbd5324af3a576d322a6b7a02e0230386/Flask-Cors-3.0.6.tar.gz"; sha256 = "ecc016c5b32fa5da813ec8d272941cfddf5f6bba9060c405a70285415cbf24c9"; };
+      name = "Flask-Cors-3.0.7";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/45/b4/1810eb0c69d8432417dd25e3dd581bf0619d5c4f1b0c9f529f392d4aed31/Flask-Cors-3.0.7.tar.gz"; sha256 = "7e90bf225fdf163d11b84b59fb17594d0580a16b97ab4e1146b1fb2737c1cfec"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -313,8 +313,8 @@ let
     };
 
     "SQLAlchemy" = python.mkDerivation {
-      name = "SQLAlchemy-1.2.13";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1e/98/4dba86354d271344e25fa01dc38a0bf0e0ba6407ad2d5e8426496a95b568/SQLAlchemy-1.2.13.tar.gz"; sha256 = "84412de3794acee05630e7788f25e80e81f78eb4837e7b71d0499129f660486a"; };
+      name = "SQLAlchemy-1.2.14";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e2/0a/05b7d13618ad41c108a6c2b886af83bf9bb7e35f8951227abb18b1330745/SQLAlchemy-1.2.14.tar.gz"; sha256 = "9de7c7dabcf06319becdb7e15099c44e5e34ba7062f9ba10bc00e562f5db3d04"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -470,6 +470,28 @@ let
       };
     };
 
+    "awscli" = python.mkDerivation {
+      name = "awscli-1.16.54";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/8d/fe/46ce947ec4b01de1d263e96f2cc638dc3489d02edebd505ea43253c0f48a/awscli-1.16.54.tar.gz"; sha256 = "1bcd84c9af7715130bbb242da1d0d53350f3a8c8d34aa7fb6cad449282ccc8f3"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."PyYAML"
+      self."botocore"
+      self."colorama"
+      self."docutils"
+      self."rsa"
+      self."s3transfer"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://aws.amazon.com/cli/";
+        license = licenses.asl20;
+        description = "Universal Command Line Environment for AWS.";
+      };
+    };
+
     "backcall" = python.mkDerivation {
       name = "backcall-0.1.0";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/84/71/c8ca4f5bb1e08401b916c68003acf0a0655df935d74d93bf3f3364b310e0/backcall-0.1.0.tar.gz"; sha256 = "38ecd85be2c1e78f77fd91700c76e14667dc21e2713b63876c0eb901196e01e4"; };
@@ -516,8 +538,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.40";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/be/5e/8985b22727b0a8f3aa076eb4cde2485e3d30e0e0d8fb3d686b85adf9f641/boto3-1.9.40.tar.gz"; sha256 = "d97f89a8d1a50377cbb7eca15040e65cd1a97d049e7396757fef00d08db9f285"; };
+      name = "boto3-1.9.44";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/55/2e/7b6dc9672b1d24c962863eb761bc3f4ad40d0755592148bb70260d8b78f4/boto3-1.9.44.tar.gz"; sha256 = "4a1ac4afcb73a701c44fbba44ba7a385612c7ee76baf6f4f26da05928fa56e8a"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -535,8 +557,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.40";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ca/06/32ca86578bf7664b49762a10f06a69b4a38d247f94b165fe0fd4684514c7/botocore-1.12.40.tar.gz"; sha256 = "cd01d12bd983c132d53b839097f6d7a9bda0d31d9dd0cb9b86566680efdad24a"; };
+      name = "botocore-1.12.44";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ee/7b/18eb71f13bbba8d20eca52217fd8a29a234595ed0767766a06c0314660d3/botocore-1.12.44.tar.gz"; sha256 = "44908f329d8ae02394559cb68dd09f5c2965bc5ef0b7b21e41dce017684756cd"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -620,6 +642,21 @@ let
       };
     };
 
+    "colorama" = python.mkDerivation {
+      name = "colorama-0.3.7";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/f0/d0/21c6449df0ca9da74859edc40208b3a57df9aca7323118c913e58d442030/colorama-0.3.7.tar.gz"; sha256 = "e043c8d32527607223652021ff648fbb394d5e19cba9f1a698670b338c9d782b"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/tartley/colorama";
+        license = licenses.bsdOriginal;
+        description = "Cross-platform colored terminal text.";
+      };
+    };
+
     "connexion" = python.mkDerivation {
       name = "connexion-2.0.1";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b1/8c/32b736f5848370519b1d3acdd14f80bb7695469cca0039de832592ed7bde/connexion-2.0.1.tar.gz"; sha256 = "94476c76c98e9a4837454ad62eb4b881726c338ae552dc8e7e5e4138452db538"; };
@@ -650,8 +687,8 @@ let
     };
 
     "coverage" = python.mkDerivation {
-      name = "coverage-4.5.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/35/fe/e7df7289d717426093c68d156e0fd9117c8f4872b6588e8a8928a0f68424/coverage-4.5.1.tar.gz"; sha256 = "56e448f051a201c5ebbaa86a5efd0ca90d327204d8b059ab25ad0f35fbfd79f1"; };
+      name = "coverage-4.5.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/fb/af/ce7b0fe063ee0142786ee53ad6197979491ce0785567b6d8be751d2069e8/coverage-4.5.2.tar.gz"; sha256 = "ab235d9fe64833f12d1334d29b558aacedfbca2356dfb9691f2d0d38a8a7bfb4"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1058,6 +1095,7 @@ let
       propagatedBuildInputs = [
       self."Pygments"
       self."backcall"
+      self."colorama"
       self."decorator"
       self."jedi"
       self."nose"
@@ -1127,6 +1165,7 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."colorama"
       self."docopt"
       self."parso"
       self."pytest"
@@ -1337,8 +1376,8 @@ let
     };
 
     "mozilla-version" = python.mkDerivation {
-      name = "mozilla-version-0.3.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/10/67/80fd38cfea55aa3dbe60c8e7ad7c853e8084defab1c9696f4ced2c6476c1/mozilla-version-0.3.0.tar.gz"; sha256 = "97f428f6a87f1a0569e03c39e446eeed87c3ec5d8300319d41e8348ef832e8ea"; };
+      name = "mozilla-version-0.3.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b5/28/40a84747e1ffb992fe44174bedd6b7fbfee49acef2d69fa4c9b7fd503f5e/mozilla-version-0.3.1.tar.gz"; sha256 = "f800c484efee3c52ada9f36ea0a6ca068810e7ee05b8f3a8e0ab6953f272ad86"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1556,8 +1595,8 @@ let
     };
 
     "psycopg2" = python.mkDerivation {
-      name = "psycopg2-2.7.5";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b2/c1/7bf6c464e903ffc4f3f5907c389e5a4199666bf57f6cd6bf46c17912a1f9/psycopg2-2.7.5.tar.gz"; sha256 = "eccf962d41ca46e6326b97c8fe0a6687b58dfc1a5f6540ed071ff1474cea749e"; };
+      name = "psycopg2-2.7.6.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c0/07/93573b97ed61b6fb907c8439bf58f09957564cf7c39612cef36c547e68c6/psycopg2-2.7.6.1.tar.gz"; sha256 = "27959abe64ca1fc6d8cd11a71a1f421d8287831a3262bd4cacd43bbf43cc3c82"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1663,8 +1702,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.10.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ec/d1/8e96334154a20f8bf8924b7a67227a3af30c87cf0d8239f9885fc8bca385/pytest-3.10.0.tar.gz"; sha256 = "a2b5232735dd0b736cbea9c0f09e5070d78fcaba2823a4f6f09d9a81bd19415c"; };
+      name = "pytest-3.10.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b5/96/37011e484665fab8b51add4f707d2aa28f1a06c68dd1c8a50e03551693b3/pytest-3.10.1.tar.gz"; sha256 = "e246cf173c01169b9617fc07264b7b1316e78d7a650055235d6d897bc80d9660"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1672,6 +1711,7 @@ let
       propagatedBuildInputs = [
       self."atomicwrites"
       self."attrs"
+      self."colorama"
       self."more-itertools"
       self."pluggy"
       self."py"
@@ -1872,8 +1912,8 @@ let
     };
 
     "rsa" = python.mkDerivation {
-      name = "rsa-4.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/cb/d0/8f99b91432a60ca4b1cd478fd0bdf28c1901c58e3a9f14f4ba3dba86b57f/rsa-4.0.tar.gz"; sha256 = "1a836406405730121ae9823e19c6e806c62bbad73f890574fff50efa4122c487"; };
+      name = "rsa-3.4.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/14/89/adf8b72371e37f3ca69c6cb8ab6319d009c4a24b04a31399e5bd77d9bb57/rsa-3.4.2.tar.gz"; sha256 = "25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1943,6 +1983,7 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."colorama"
       self."coverage"
       self."pytest"
       self."six"
@@ -1951,25 +1992,6 @@ let
         homepage = "https://www.structlog.org/";
         license = licenses.mit;
         description = "Structured Logging for Python";
-      };
-    };
-
-    "swagger-spec-validator" = python.mkDerivation {
-      name = "swagger-spec-validator-2.4.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/2f/ff/9a25285add264305e8ecb477d11c36608ff6dabe12c39cc9f8621dccbbcb/swagger-spec-validator-2.4.1.tar.gz"; sha256 = "b9618efbfa5446cdf09e72f9d384b869970c63c9a726c981f0abcf2d63a929cb"; };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."PyYAML"
-      self."jsonschema"
-      self."six"
-    ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://github.com/Yelp/swagger_spec_validator";
-        license = licenses.asl20;
-        description = "Validation of Swagger specifications";
       };
     };
 
@@ -2167,7 +2189,7 @@ let
   localOverridesFile = ./requirements_override.nix;
   overrides = import localOverridesFile { inherit pkgs python; };
   commonOverrides = [
-
+    
   ];
   allOverrides =
     (if (builtins.pathExists localOverridesFile)

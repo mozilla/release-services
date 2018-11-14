@@ -16,6 +16,7 @@ import tempfile
 import typing
 
 import aiohttp
+import awscli
 import click
 import flask
 import mohawk
@@ -266,6 +267,12 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
     return query.all()
 
 
+def get_product_l10n(product: Product,
+                     version: str,
+                     ) -> typing.List[str]:
+    return []  # TODO: not implemented
+
+
 def get_product_categories(product: Product,
                            version: str,
                            ) -> typing.List[ProductCategory]:
@@ -487,28 +494,43 @@ def get_primary_builds(breakpoint_version: int,
                }
            }
     '''
-    if Product.DEVEDITION is product or \
-       Product.FENNEC is product:
+
+    if product is Product.FIREFOX:
+        firefox_versions = get_firefox_versions(old_product_details)
+        versions = [
+            firefox_versions['FIREFOX_NIGHTLY'],
+            firefox_versions['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
+            firefox_versions['LATEST_FIREFOX_VERSION'],
+            firefox_versions['FIREFOX_ESR'],
+        ]
+    elif product is Product.THUNDERBIRD:
+        thunderbird_versions = get_thunderbird_versions(old_product_details)
+        versions = [
+            thunderbird_versions['LATEST_THUNDERBIRD_VERSION'],
+            thunderbird_versions['LATEST_THUNDERBIRD_ALPHA_VERSION'],
+            thunderbird_versions['LATEST_THUNDERBIRD_DEVEL_VERSION'],
+            thunderbird_versions['LATEST_THUNDERBIRD_NIGHTLY_VERSION'],
+        ]
+    else:
         raise click.ClickException(f'We don\'t generate product history for "{product.value}" product.')
 
-    builds = dict()
+    builds: PrimaryBuilds = dict()
 
-    product_file = f'json/1.0/{product.value}_primary_builds.json'
-    old_builds = typing.cast(PrimaryBuilds, old_product_details[product_file])
+    for version in versions:
+        for l10n in get_product_l10n(product, version):
+            builds[l10n][version] = {
+                'Windows': {
+                    'filesize': 0,
+                },
+                'OS X': {
+                    'filesize': 0,
+                },
+                'Linux': {
+                    'filesize': 0,
+                },
+            }
 
-    for language in old_builds:
-        language_builds = dict()
-
-        for version in old_builds[language]:
-            major_version = int(version.split('.')[0])
-            if major_version >= breakpoint_version:
-                continue
-            language_builds[version] = old_builds[language][version]
-
-        if language_builds:
-            builds[language] = language_builds
-
-    return builds  # TODO: not implemented
+    return builds
 
 
 @flask.cli.with_appcontext
@@ -856,6 +878,21 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
     ),
 )
 @click.option(
+    '--s3-bucket',
+    required=True,
+    type=str,
+    )
+@click.option(
+    '--aws-access-key-id',
+    required=True,
+    type=str,
+    )
+@click.option(
+    '--aws-secret-access-key',
+    required=True,
+    type=str,
+    )
+@click.option(
     '--breakpoint-version',
     default=shipit_api.config.BREAKPOINT_VERSION,
     type=int,
@@ -867,6 +904,9 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
 )
 @flask.cli.with_appcontext
 def upload_product_details(data_dir: str,
+                           s3_bucket: str,
+                           aws_access_key_id: str,
+                           aws_secret_access_key: str,
                            breakpoint_version: int,
                            keep_temporary_dir: bool):
 
@@ -976,8 +1016,17 @@ def upload_product_details(data_dir: str,
     product_details.update(get_regions(old_product_details))
     product_details.update(get_l10n(old_product_details))
 
-    # TODO: add 'json/1.0/' infront of each file path
-    # TODO: json_exports.json
+    #  add 'json/1.0/' infront of each file path
+    product_details = {
+        f'json/1.0{file_}': content
+        for file_, content in product_details.items()
+    }
+
+    # create json_exports.json to list all the files
+    product_details['json_exports.json'] = {
+        file_: os.path.basename(file_)
+        for file_ in product_details.keys()
+    }
 
     # create temp directory where generated files will be temporary created
     temp_dir_ = tempfile.mkdtemp(prefix='product-details-')
@@ -995,7 +1044,23 @@ def upload_product_details(data_dir: str,
             with file_.open('w+') as f:
                 f.write(json.dumps(content, sort_keys=True, indent=4))
 
-        # TODO: sync to s3
+        # sync to s3 make it atomic or close
+        os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
+        os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
+        aws = awscli.clidriver.create_clidriver().main
+        returncode = aws([
+            's3',
+            'sync',
+            '--quiet',
+            '--delete',
+            temp_dir.absolute().as_posix(),
+            's3://' + s3_bucket,
+        ])
+
+        if returncode == 0:
+            click.secho(f'Successfully synced product details to {s3_bucket} S3 bucket.', fg='green')
+        else:
+            click.secho(f'Failed syncing product details to {s3_bucket} S3 bucket.', fg='red')
 
     finally:
         if keep_temporary_dir:
