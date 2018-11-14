@@ -496,7 +496,7 @@ def get_primary_builds(breakpoint_version: int,
     '''
 
     if product is Product.FIREFOX:
-        firefox_versions = get_firefox_versions(old_product_details)
+        firefox_versions = get_firefox_versions()
         versions = [
             firefox_versions['FIREFOX_NIGHTLY'],
             firefox_versions['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
