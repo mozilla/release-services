@@ -250,7 +250,7 @@ def get_old_product_details(directory: str) -> ProductDetails:
 
 
 def get_releases_from_db(db_session: sqlalchemy.orm.Session,
-                         breakpoint_version: typing.Optional(int) = None,
+                         breakpoint_version: typing.Optional[int],
                          ) -> typing.List[shipit_api.models.Release]:
     '''
      SELECT *
@@ -946,7 +946,7 @@ def upload_product_details(data_dir: str,
     # get all the releases from the database from (including)
     # breakpoint_version on
     releases = get_releases_from_db(flask.current_app.db.session, breakpoint_version)
-    all_releases = get_releases_from_db(flask.current_app.db.session)
+    all_releases = get_releases_from_db(flask.current_app.db.session, None)
 
     # combine old and new data
     product_details: ProductDetails = {
