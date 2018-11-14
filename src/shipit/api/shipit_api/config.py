@@ -17,6 +17,7 @@ CURRENT_ESR = '60'
 ESR_NEXT = ''
 # Pre Firefox version
 LATEST_FIREFOX_OLDER_VERSION = '3.6.28'
+# TODO: move the branch configs to secrets
 RELEASE_BRANCH = 'releases/mozilla-release'
 BETA_BRANCH = 'releases/mozilla-beta'
 ESR_BRANCH_PREFIX = 'releases/mozilla-esr'
@@ -33,3 +34,10 @@ FIREFOX_AURORA = ''
 # IOS versions
 IOS_BETA_VERSION = ''
 IOS_VERSION = '12.1'
+
+# Thunderbird configs
+LATEST_THUNDERBIRD_ALPHA_VERSION = '54.0a2'
+LATEST_THUNDERBIRD_NIGHTLY_VERSION = '65.0a1'
+# TODO: Need to update this every cycle?
+THUNDERBIRD_RELEASE_BRANCH = 'releases/comm-esr60'
+THUNDERBIRD_BETA_BRANCH = 'releases/comm-beta'

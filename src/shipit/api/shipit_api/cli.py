@@ -838,7 +838,7 @@ def get_mobile_versions() -> MobileVersions:
     )
 
 
-def get_thunderbird_versions(old_product_details: ProductDetails) -> ThunderbirdVersions:
+def get_thunderbird_versions() -> ThunderbirdVersions:
     '''
 
        This function will output to the following files:
@@ -854,10 +854,14 @@ def get_thunderbird_versions(old_product_details: ProductDetails) -> Thunderbird
            }
     '''
     return dict(
-        LATEST_THUNDERBIRD_VERSION='52.6.0',
-        LATEST_THUNDERBIRD_ALPHA_VERSION='54.0a2',
-        LATEST_THUNDERBIRD_DEVEL_VERSION='59.0b2',
-        LATEST_THUNDERBIRD_NIGHTLY_VERSION='60.0a1',
+        LATEST_THUNDERBIRD_VERSION=get_latest_version(
+            shipit_api.config.THUNDERBIRD_RELEASE_BRANCH,
+            Product.THUNDERBIRD),
+        LATEST_THUNDERBIRD_DEVEL_VERSION=get_latest_version(
+            shipit_api.config.THUNDERBIRD_BETA_BRANCH,
+            Product.THUNDERBIRD),
+        LATEST_THUNDERBIRD_NIGHTLY_VERSION=shipit_api.config.LATEST_THUNDERBIRD_NIGHTLY_VERSION,
+        LATEST_THUNDERBIRD_ALPHA_VERSION=shipit_api.config.LATEST_THUNDERBIRD_ALPHA_VERSION,
     )
 
 
@@ -1019,7 +1023,7 @@ def upload_product_details(data_dir: str,
                                                               Product.THUNDERBIRD,
                                                               old_product_details,
                                                               ),
-        'thunderbird_versions.json': get_thunderbird_versions(old_product_details),
+        'thunderbird_versions.json': get_thunderbird_versions(),
     }
     product_details.update(get_regions(old_product_details))
     product_details.update(get_l10n(old_product_details))
