@@ -1161,12 +1161,12 @@ def get_taskcluster_headers(request_url,
     required=True,
 )
 def v1_sync(ldap_username,
-                   ldap_password,
-                   taskcluster_client_id,
-                   taskcluster_access_token,
-                   api_from,
-                   api_to,
-                   ):
+            ldap_password,
+            taskcluster_client_id,
+            taskcluster_access_token,
+            api_from,
+            api_to,
+            ):
 
     s = requests.Session()
     s.auth = (ldap_username, ldap_password)
