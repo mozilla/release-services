@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+
 import backend_common
 import cli_common.taskcluster
 import shipit_api.cli
@@ -34,7 +35,5 @@ def create_app(config=None):
     )
 
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
-    app.cli.add_command(shipit_api.cli.upload_product_details, 'upload')
-    app.cli.add_command(shipit_api.cli.download_product_details, 'download')
 
     return app
