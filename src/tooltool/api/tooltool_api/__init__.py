@@ -20,7 +20,6 @@ import tooltool_api.models  # noqa
 def custom_handle_default_exceptions(e: Exception) -> typing.Tuple[int, str]:
     '''Conform structure of errors as before, to make it work with client (tooltool.py).
     '''
-    import cli_common.log
     error = backend_common.api.handle_default_exceptions_raw(e)
     error['name'] = error['title']
     error['description'] = error['detail']
