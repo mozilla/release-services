@@ -12,6 +12,32 @@ info:
 
 paths:
 
+  /product-details:
+    post:
+      summary: Trigger rebuild of product details
+      operationId: shipit_api.api.rebuild_product_details
+      consumes:
+      - "application/json"
+      parameters:
+      - in: body
+        name: options
+        description: Rebuild options
+        required: false
+        schema:
+          type: object
+          properties:
+            breakpoint_version:
+              type: integer
+              required: false
+            clean_working_copy:
+              type: boolean
+              required: false
+      responses:
+        405:
+          description: Invalid input
+        200:
+          description: Product details rebuild triggered.
+
   /sync:
     post:
       summary: Sync release data from Ship-it v1

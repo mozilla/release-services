@@ -14,6 +14,8 @@ from backend_common.auth import auth
 from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
+from shipit_api.config import PROJECT_NAME
+from shipit_api.config import PULSE_ROUTE_REBUILD_PRODUCT_DETAILS
 from shipit_api.config import SCOPE_PREFIX
 from shipit_api.models import Phase
 from shipit_api.models import Release
@@ -229,3 +231,23 @@ def sync_releases(releases):
             session.add(r)
             session.commit()
     return flask.jsonify({'ok': 'ok'})
+
+
+@auth.require_scopes([SCOPE_PREFIX + '/rebuild-product-details'])
+def rebuild_product_details(options):
+    pulse_user = flask.current_app.config['PULSE_USER']
+    exchange = f'exchange/{pulse_user}/{PROJECT_NAME}'
+
+    logger.info(f'Sending pulse message `{options}` to queue `{exchange}` for '
+                f'route `{PULSE_ROUTE_REBUILD_PRODUCT_DETAILS}`.')
+
+    try:
+        flask.current_app.pulse.publish(exchange, route, options)
+    except Exception as e:
+        import traceback
+        msg = 'Can\'t send notification to pulse.'
+        trace = traceback.format_exc()
+        logger.error('{0}\nException:{1}\nTraceback: {2}'.format(msg, e, trace))  # noqa
+
+    return '{}', 200
+
