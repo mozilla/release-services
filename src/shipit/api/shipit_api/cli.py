@@ -250,7 +250,7 @@ def get_old_product_details(directory: str) -> ProductDetails:
 
 
 def get_releases_from_db(db_session: sqlalchemy.orm.Session,
-                         breakpoint_version: typing.Optional[int],
+                         breakpoint_version: typing.Optional[int] = None,
                          ) -> typing.List[shipit_api.models.Release]:
     '''
      SELECT *
@@ -1160,7 +1160,7 @@ def get_taskcluster_headers(request_url,
     '--api-to',
     required=True,
 )
-def shipit_v1_sync(ldap_username,
+def v1_sync(ldap_username,
                    ldap_password,
                    taskcluster_client_id,
                    taskcluster_access_token,
