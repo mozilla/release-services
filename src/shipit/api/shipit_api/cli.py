@@ -657,7 +657,6 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
 
 
 def get_l10n(
-        all_releases: typing.List[shipit_api.models.Release],
         releases: typing.List[shipit_api.models.Release],
         old_product_details: ProductDetails) -> ProductDetails:
     '''This folder contains the l10n changeset per locale used for each build.
@@ -685,22 +684,7 @@ def get_l10n(
                "name": "Firefox-58.0-build6",
            }
     '''
-    ret = {}
-    filtered_releases = [r for r in all_releases if r.status == 'shipped']
-    new_release_names = [r.name for r in releases]
-    for release in filtered_releases:
-        old_file_path = f'json/1.0/l10n/{release.name}.json'
-        new_file_path = f'l10n/{release.name}.json'
-        if old_product_details.get(old_file_path):
-            ret[new_file_path] = old_product_details[old_file_path]
-        elif release.name not in new_release_names:
-            # this is an old version, and it's not in the old data, ignore
-            pass
-        else:
-            # TODO: very expesive call to HG
-            # ret[new_file_path] = dict()
-            pass
-    return ret
+    return dict()
 
 
 def get_languages(old_product_details: ProductDetails) -> Languages:
@@ -1041,7 +1025,7 @@ def upload_product_details(data_dir: str,
         'thunderbird_versions.json': get_thunderbird_versions(releases),
     }
     product_details.update(get_regions(old_product_details))
-    product_details.update(get_l10n(all_releases, releases, old_product_details))
+    product_details.update(get_l10n(releases, old_product_details))
 
     #  add 'json/1.0/' infront of each file path
     product_details = {
