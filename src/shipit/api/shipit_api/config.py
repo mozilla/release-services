@@ -5,9 +5,13 @@
 
 PROJECT_NAME = 'shipit/api'
 APP_NAME = 'shipit_api'
+SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)
+
+# A route key that triggers rebuild of product details.
+# Worker will listen to this route key to trigger the rebuild.
+PULSE_ROUTE_REBUILD_PRODUCT_DETAILS = 'rebuild_product_details'
 
 BREAKPOINT_VERSION = 60
-SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)
 
 # When there is only one ESR release ESR_NEXT is set to '' and ESR_CURRENT is
 # set to current ESR major version.  When we have 2 ESR releases, ESR_CURRENT
