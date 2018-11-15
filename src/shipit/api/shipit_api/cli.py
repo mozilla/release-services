@@ -250,7 +250,7 @@ def get_old_product_details(directory: str) -> ProductDetails:
 
 
 def get_releases_from_db(db_session: sqlalchemy.orm.Session,
-                         breakpoint_version: typing.Optional[int],
+                         breakpoint_version: int,
                          ) -> typing.List[shipit_api.models.Release]:
     '''
      SELECT *
@@ -259,13 +259,17 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
     '''
     Release = shipit_api.models.Release
     query = db_session.query(Release)
-    if breakpoint_version:
-        # Using cast and split_part is postgresql specific
-        query = query.filter(
-            sqlalchemy.cast(
-                sqlalchemy.func.split_part(Release.version, '.', 1),
-                sqlalchemy.Integer) >= breakpoint_version)
+    # Using cast and split_part is postgresql specific
+    query = query.filter(
+        sqlalchemy.cast(
+            sqlalchemy.func.split_part(Release.version, '.', 1),
+            sqlalchemy.Integer) >= breakpoint_version)
     return query.all()
+
+
+def get_shipped_releases(releases: typing.List[shipit_api.models.Release],
+                         ) -> typing.Iterator[shipit_api.models.Release]:
+    return filter(lambda r: r.status == 'shipped', releases)
 
 
 def get_product_l10n(product: Product,
@@ -535,7 +539,8 @@ def get_primary_builds(breakpoint_version: int,
     return builds
 
 
-def get_latest_version(releases: typing.List[shipit_api.models.Release], branch: str, product: Product):
+def get_latest_version(releases: typing.List[shipit_api.models.Release], branch: str, product: Product
+                       ) -> str:
     '''Get latest version
 
     Get the latest shipped version for a particular branch/product,
@@ -543,22 +548,19 @@ def get_latest_version(releases: typing.List[shipit_api.models.Release], branch:
     by version, not by date, because we may publish a correction release
     for old users (this has been done in the past).
     '''
-    filtered_releases = [r for r in releases if
+    shipped_releases = get_shipped_releases(releases)
+    filtered_releases = [r for r in shipped_releases if
                          r.product == product.value and
-                         r.branch == branch and
-                         r.status == 'shipped']
+                         r.branch == branch]
     releases = sorted(
         filtered_releases,
         reverse=True,
         key=lambda r: get_product_mozilla_version(Product(product), r.version))
-    if releases:
-        return releases[0].version
-    else:
-        # TODO: raise
-        return None
+    return releases[0].version
 
 
-def get_firefox_esr_version(releases: typing.List[shipit_api.models.Release], branch, product):
+def get_firefox_esr_version(releases: typing.List[shipit_api.models.Release], branch: str, product: Product
+                            ) -> str:
     '''Return latest ESR version
 
     Get the latest version using CURRENT_ESR major version. Sometimes, when we
@@ -568,7 +570,8 @@ def get_firefox_esr_version(releases: typing.List[shipit_api.models.Release], br
     return get_latest_version(releases, branch, product)
 
 
-def get_firefox_esr_next_version(releases: typing.List[shipit_api.models.Release], branch, product, esr_next):
+def get_firefox_esr_next_version(releases: typing.List[shipit_api.models.Release],
+                                 branch: str, product: Product, esr_next: typing.Optional[str]) -> str:
     '''Next ESR version
 
     Return an empty string when there is only one ESR release published. If
@@ -738,7 +741,7 @@ def get_languages(old_product_details: ProductDetails) -> Languages:
     return typing.cast(Languages, languages)
 
 
-def get_mobile_details(old_product_details: ProductDetails) -> MobileDetails:
+def get_mobile_details(releases: typing.List[shipit_api.models.Release]) -> MobileDetails:
     '''This file contains all the release information for Firefox for Android
        and Firefox for iOS. We are keeping this file around for backward
        compatibility with consumers and only the version numbers are updated
@@ -813,18 +816,10 @@ def get_mobile_details(old_product_details: ProductDetails) -> MobileDetails:
                },
            }
     '''
-    # TODO: not implemented
-    return dict(
-        nightly_version='60.0a1',
-        alpha_version='60.0a1',
-        beta_version='59.0b13',
-        version='58.0.2',
-        ios_beta_version='9.1',
-        ios_version='9.0',
-        builds=[],
-        beta_builds=[],
-        alpha_builds=[],
-    )
+    mobile_versions = get_mobile_versions(releases)
+    mobile_details = json.loads(shipit_api.config.MOBILE_DETAILS_TEMPLATE)
+    mobile_details.update(mobile_versions)
+    return mobile_details
 
 
 def get_mobile_versions(releases: typing.List[shipit_api.models.Release]) -> MobileVersions:
@@ -946,7 +941,6 @@ def upload_product_details(data_dir: str,
     # get all the releases from the database from (including)
     # breakpoint_version on
     releases = get_releases_from_db(flask.current_app.db.session, breakpoint_version)
-    all_releases = get_releases_from_db(flask.current_app.db.session, None)
 
     # combine old and new data
     product_details: ProductDetails = {
@@ -995,7 +989,7 @@ def upload_product_details(data_dir: str,
                                             releases,
                                             old_product_details,
                                             ),
-        'mobile_details.json': get_mobile_details(old_product_details),
+        'mobile_details.json': get_mobile_details(releases),
         'mobile_history_development_releases.json': get_release_history(breakpoint_version,
                                                                         Product.FENNEC,
                                                                         ProductCategory.DEVELOPMENT,
