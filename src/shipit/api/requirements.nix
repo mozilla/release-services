@@ -487,28 +487,6 @@ let
       };
     };
 
-    "awscli" = python.mkDerivation {
-      name = "awscli-1.16.56";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/a8/57/a21f2231b6d40b26b6f772b64217422cfaa8343ff71278346a02fd1fc594/awscli-1.16.56.tar.gz"; sha256 = "c4cc8a3c2e0f7539247e8eb5a0cafcf9b822cac95e31bc5da28f28bb90e1c0a5"; };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."PyYAML"
-      self."botocore"
-      self."colorama"
-      self."docutils"
-      self."rsa"
-      self."s3transfer"
-    ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://aws.amazon.com/cli/";
-        license = licenses.asl20;
-        description = "Universal Command Line Environment for AWS.";
-      };
-    };
-
     "backcall" = python.mkDerivation {
       name = "backcall-0.1.0";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/84/71/c8ca4f5bb1e08401b916c68003acf0a0655df935d74d93bf3f3364b310e0/backcall-0.1.0.tar.gz"; sha256 = "38ecd85be2c1e78f77fd91700c76e14667dc21e2713b63876c0eb901196e01e4"; };
@@ -656,21 +634,6 @@ let
         homepage = "http://github.com/codecov/codecov-python";
         license = "License :: OSI Approved :: Apache Software License";
         description = "Hosted coverage reports for Github, Bitbucket and Gitlab";
-      };
-    };
-
-    "colorama" = python.mkDerivation {
-      name = "colorama-0.3.7";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/f0/d0/21c6449df0ca9da74859edc40208b3a57df9aca7323118c913e58d442030/colorama-0.3.7.tar.gz"; sha256 = "e043c8d32527607223652021ff648fbb394d5e19cba9f1a698670b338c9d782b"; };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/tartley/colorama";
-        license = licenses.bsdOriginal;
-        description = "Cross-platform colored terminal text.";
       };
     };
 
@@ -1112,7 +1075,6 @@ let
       propagatedBuildInputs = [
       self."Pygments"
       self."backcall"
-      self."colorama"
       self."decorator"
       self."jedi"
       self."nose"
@@ -1182,7 +1144,6 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
-      self."colorama"
       self."docopt"
       self."parso"
       self."pytest"
@@ -1728,7 +1689,6 @@ let
       propagatedBuildInputs = [
       self."atomicwrites"
       self."attrs"
-      self."colorama"
       self."more-itertools"
       self."pluggy"
       self."py"
@@ -1929,8 +1889,8 @@ let
     };
 
     "rsa" = python.mkDerivation {
-      name = "rsa-3.4.2";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/14/89/adf8b72371e37f3ca69c6cb8ab6319d009c4a24b04a31399e5bd77d9bb57/rsa-3.4.2.tar.gz"; sha256 = "25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5"; };
+      name = "rsa-4.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/cb/d0/8f99b91432a60ca4b1cd478fd0bdf28c1901c58e3a9f14f4ba3dba86b57f/rsa-4.0.tar.gz"; sha256 = "1a836406405730121ae9823e19c6e806c62bbad73f890574fff50efa4122c487"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -2000,7 +1960,6 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
-      self."colorama"
       self."coverage"
       self."pytest"
       self."six"

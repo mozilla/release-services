@@ -3,6 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import pathlib
+import tempfile
+
 PROJECT_NAME = 'shipit/api'
 APP_NAME = 'shipit_api'
 SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)
@@ -10,6 +13,9 @@ SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)
 # A route key that triggers rebuild of product details.
 # Worker will listen to this route key to trigger the rebuild.
 PULSE_ROUTE_REBUILD_PRODUCT_DETAILS = 'rebuild_product_details'
+
+# A folder where we will keep a checkout of product details
+PRODUCT_DETAILS_DIR = pathlib.Path(tempfile.gettempdir(), 'product-details')
 
 BREAKPOINT_VERSION = 60
 

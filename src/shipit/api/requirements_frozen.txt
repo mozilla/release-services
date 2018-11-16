@@ -6,7 +6,6 @@ arrow==0.12.1
 async-timeout==3.0.1
 atomicwrites==1.2.1
 attrs==18.2.0
-awscli==1.16.56
 backcall==0.1.0
 blinker==1.4
 boto==2.49.0
@@ -17,7 +16,6 @@ chardet==3.0.4
 Click==7.0
 clickclick==1.2.2
 codecov==2.0.15
-colorama==0.3.7
 connexion==2.0.1
 coverage==4.5.2
 coveralls==1.5.1
@@ -101,7 +99,7 @@ raven==6.9.0
 requests==2.20.1
 requests-futures==0.9.8
 responses==0.10.4
-rsa==3.4.2
+rsa==4.0
 s3transfer==0.1.13
 six==1.11.0
 slugid==1.0.7
