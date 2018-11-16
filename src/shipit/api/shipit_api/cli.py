@@ -104,13 +104,15 @@ async def download_product_details(shipit_url: str, download_dir: str):
     '--clean-working-copy',
     is_flag=True,
 )
-def rebuild_product_details(database_url: str,
-                            breakpoint_version: typing.Optional[int],
-                            clean_working_copy: bool,
-                            ):
+@coroutine
+async def rebuild_product_details(database_url: str,
+                                  breakpoint_version: typing.Optional[int],
+                                  clean_working_copy: bool,
+                                  ):
     engine = sqlalchemy.create_engine(database_url)
     session = sqlalchemy.orm.sessionmaker(bind=engine)()
     shipit_api.product_details.rebuild(session, breakpoint_version, clean_working_copy)
+    click.echo('Product details have been rebuilt')
 
 
 def get_taskcluster_headers(request_url,

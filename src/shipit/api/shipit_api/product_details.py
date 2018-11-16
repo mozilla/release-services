@@ -45,36 +45,6 @@ class ProductCategory(enum.Enum):
     ESR = 'esr'
 
 
-def get_product_mozilla_version(product: Product,
-                                version: str,
-                                ) -> typing.Optional[mozilla_version.gecko.GeckoVersion]:
-    klass = {
-        Product.DEVEDITION: mozilla_version.gecko.DeveditionVersion,
-        Product.FIREFOX: mozilla_version.gecko.FirefoxVersion,
-        Product.FENNEC: mozilla_version.gecko.FennecVersion,
-        Product.THUNDERBIRD: mozilla_version.gecko.ThunderbirdVersion,
-    }.get(product)
-
-    if klass:
-        return klass.parse(version)
-    return None
-
-
-def l10n_file(product: Product) -> str:
-    files = {
-        Product.FIREFOX: 'browser/locales/l10n-changesets.json',
-        Product.DEVEDITION: 'browser/locales/l10n-changesets.json',
-        Product.FENNEC: 'mobile/locales/l10n-changesets.json',
-        Product.THUNDERBIRD: 'mail/locales/l10n-changesets.json',
-    }
-    return files[product]
-
-
-def l10n_url(release: shipit_api.models.Release) -> str:
-    return f'{shipit_api.config.HG_PREFIX}/{release.branch}/raw-file/{release.revision}/' \
-            f'{l10n_file(Product(release.product))}'
-
-
 File = str
 ReleaseDetails = mypy_extensions.TypedDict('ReleaseDetails', {
     'category': str,
@@ -88,6 +58,12 @@ ReleaseDetails = mypy_extensions.TypedDict('ReleaseDetails', {
 Releases = mypy_extensions.TypedDict('Releases', {
   'releases': typing.Dict[str, ReleaseDetails],
 })
+L10n = str
+ReleaseL10n = mypy_extensions.TypedDict('ReleaseL10n', {
+    'platforms': typing.List[str],
+    'revision': str,
+})
+ReleaseL10ns = typing.Dict[L10n, ReleaseL10n]
 ReleasesHistory = typing.Dict[str, str]
 PrimaryBuildDetails = mypy_extensions.TypedDict('PrimaryBuildDetails', {
     'filesize': int,
@@ -161,7 +137,6 @@ ThunderbirdVersions = mypy_extensions.TypedDict('ThunderbirdVersions', {
     'LATEST_THUNDERBIRD_DEVEL_VERSION': str,
     'LATEST_THUNDERBIRD_NIGHTLY_VERSION': str,
 })
-
 ProductDetails = typing.Dict[File, typing.Union[
     Releases,
     ReleasesHistory,
@@ -183,23 +158,42 @@ def datetime_or_none(dt: typing.Optional[datetime.datetime]) -> typing.Optional[
     return arrow.get(dt).isoformat()
 
 
+def get_product_mozilla_version(product: Product,
+                                version: str,
+                                ) -> typing.Optional[mozilla_version.gecko.GeckoVersion]:
+    klass = {
+        Product.DEVEDITION: mozilla_version.gecko.DeveditionVersion,
+        Product.FIREFOX: mozilla_version.gecko.FirefoxVersion,
+        Product.FENNEC: mozilla_version.gecko.FennecVersion,
+        Product.THUNDERBIRD: mozilla_version.gecko.ThunderbirdVersion,
+    }.get(product)
+
+    if klass:
+        return klass.parse(version)
+    return None
+
+
 async def fetch_l10n_data(
         session: aiohttp.ClientSession,
         release: shipit_api.models.Release,
-        file_: File,
-        url: str,
-        ) -> typing.Optional[ProductDetails]:
+        ) -> typing.Optional[typing.Tuple[shipit_api.models.Release, typing.Dict]]:
+
+    url_file = {
+        Product.FIREFOX: 'browser/locales/l10n-changesets.json',
+        Product.DEVEDITION: 'browser/locales/l10n-changesets.json',
+        Product.FENNEC: 'mobile/locales/l10n-changesets.json',
+        Product.THUNDERBIRD: 'mail/locales/l10n-changesets.json',
+    }[Product(release.product)]
+    url = f'{shipit_api.config.HG_PREFIX}/{release.branch}/raw-file/{release.revision}/{url_file}'
+
     async with session.get(url) as response:
+        # TODO: i think we should not return None
         if response.status == 404:
             return None
         response.raise_for_status()
-        contents = await response.json()
-        return {file_: {  # type: ignore
-            'locales': {locale: {'changeset': entry['revision']} for locale, entry in contents.items()},
-            'submittedAt': datetime_or_none(release.created),
-            'shippedAt': datetime_or_none(release.completed),
-            'name': release.name,
-        }}
+        changesets = await response.json()
+
+    return (release, changesets)
 
 
 def get_old_product_details(directory: str) -> ProductDetails:
@@ -239,12 +233,6 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
 def get_shipped_releases(releases: typing.List[shipit_api.models.Release],
                          ) -> typing.Iterator[shipit_api.models.Release]:
     return filter(lambda r: r.status == 'shipped', releases)
-
-
-def get_product_l10n(product: Product,
-                     version: str,
-                     ) -> typing.List[str]:
-    return []  # TODO: not implemented
 
 
 def get_product_categories(product: Product,
@@ -435,12 +423,13 @@ def get_release_history(breakpoint_version: int,
 
         history[release.version] = release.completed.strftime('%Y-%m-%d')
 
-    return history  # TODO: not implemented
+    return history
 
 
 def get_primary_builds(breakpoint_version: int,
                        product: Product,
                        releases: typing.List[shipit_api.models.Release],
+                       releases_l10n: typing.Dict[shipit_api.models.Releases, ReleaseL10ns],
                        old_product_details: ProductDetails) -> PrimaryBuilds:
     '''This file contains all the Thunderbird builds we provide per locale. The
        filesize fields have the same value for all lcoales, this is not a bug,
@@ -491,19 +480,23 @@ def get_primary_builds(breakpoint_version: int,
 
     builds: PrimaryBuilds = dict()
 
-    for version in versions:
-        for l10n in get_product_l10n(product, version):
-            builds[l10n][version] = {
-                'Windows': {
-                    'filesize': 0,
-                },
-                'OS X': {
-                    'filesize': 0,
-                },
-                'Linux': {
-                    'filesize': 0,
-                },
-            }
+    for release in releases:
+        if product is not Product(release.product) or \
+           release.version in versions:
+            continue
+        for version in versions:
+            for l10n in releases_l10n[release].keys():
+                builds[l10n][version] = {
+                    'Windows': {
+                        'filesize': 0,
+                    },
+                    'OS X': {
+                        'filesize': 0,
+                    },
+                    'Linux': {
+                        'filesize': 0,
+                    },
+                }
 
     return builds
 
@@ -625,9 +618,10 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
     return regions
 
 
-async def get_l10n(
-        releases: typing.List[shipit_api.models.Release],
-        old_product_details: ProductDetails) -> ProductDetails:
+def get_l10n(releases: typing.List[shipit_api.models.Release],
+             releases_l10n: typing.Dict[shipit_api.models.Releases, ReleaseL10ns],
+             old_product_details: ProductDetails,
+             ) -> ProductDetails:
     '''This folder contains the l10n changeset per locale used for each build.
        The translation of our products is done in separate l10n repositories,
        each locale provides a good known version of their translations through
@@ -654,20 +648,21 @@ async def get_l10n(
            }
     '''
     # populate with old data first, stripping the 'json/1.0/' prefix
-    data = {file_.replace('json/1.0/', ''): content for file_, content in old_product_details.items()
-            if file_.startswith('json/1.0/l10n/')}
+    data = {
+        file_.replace('json/1.0/', ''): content
+        for file_, content in old_product_details.items()
+        if file_.startswith('json/1.0/l10n/')
+    }
 
-    # hg.mozilla.org doesn't like too many connections
-    conn = aiohttp.TCPConnector(limit_per_host=50)
-    async with aiohttp.ClientSession(connector=conn) as session:
-        results = await asyncio.gather(*[
-            fetch_l10n_data(session, release, f'l10n/{release.name}.json', l10n_url(release))
-            for release in releases
-        ])
-    # ignore empty ones
-    valid_results = filter(None, results)
-    for result in valid_results:
-        data.update(result)
+    # TODO: use releases_l10n
+    for (release, release_l10ns) in 
+       {file_: {  # type: ignore
+            'locales': {locale: {'changeset': entry['revision']} for locale, entry in contents.items()},
+            'submittedAt': datetime_or_none(release.created),
+            'shippedAt': datetime_or_none(release.completed),
+            'name': release.name,
+        }}
+
     return data
 
 
@@ -863,11 +858,11 @@ def run_check(*arg, **kw):
     return cli_common.utils.retry(lambda: cli_common.command.run_check(*arg, **kw))
 
 
-def rebuild(db_session: sqlalchemy.orm.Session,
-            git_repo_url: str,
-            breakpoint_version: typing.Optional[int],
-            clean_working_copy: bool = False,
-            ):
+async def rebuild(db_session: sqlalchemy.orm.Session,
+                  git_repo_url: str,
+                  breakpoint_version: typing.Optional[int],
+                  clean_working_copy: bool = False,
+                  ):
 
     # Sometimes we want to work from a clean working copy
     if clean_working_copy and shipit_api.config.PRODUCT_DETAILS_DIR.exists():
@@ -896,6 +891,19 @@ def rebuild(db_session: sqlalchemy.orm.Session,
     # get all the releases from the database from (including)
     # breakpoint_version on
     releases = get_releases_from_db(db_session, breakpoint_version)
+
+    # get all the l10n for each release from the database
+    # use limit_per_host=50 since hg.mozilla.org doesn't like too many connections
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit_per_host=50)) as session:
+        releases_l10n = await asyncio.gather(*[
+            fetch_l10n_data(session, release)
+            for release in releases
+        ])
+    releases_l10n = {
+        release: changeset
+        for (release, changeset) in releases_l10n
+        if changeset is not None
+    }
 
     # combine old and new data
     product_details: ProductDetails = {
@@ -935,6 +943,7 @@ def rebuild(db_session: sqlalchemy.orm.Session,
         'firefox_primary_builds.json': get_primary_builds(breakpoint_version,
                                                           Product.FIREFOX,
                                                           releases,
+                                                          releases_l10n,
                                                           old_product_details,
                                                           ),
         'firefox_versions.json': get_firefox_versions(releases),
@@ -991,13 +1000,14 @@ def rebuild(db_session: sqlalchemy.orm.Session,
         'thunderbird_primary_builds.json': get_primary_builds(breakpoint_version,
                                                               Product.THUNDERBIRD,
                                                               releases,
+                                                              releases_l10n,
                                                               old_product_details,
                                                               ),
         'thunderbird_versions.json': get_thunderbird_versions(releases),
     }
 
     product_details.update(get_regions(old_product_details))
-    product_details.update(get_l10n(releases, old_product_details))
+    product_details.update(get_l10n(releases, releases_l10n, old_product_details))
 
     #  add 'json/1.0/' infront of each file path
     product_details = {
