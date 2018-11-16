@@ -238,16 +238,15 @@ def rebuild_product_details(options):
     pulse_user = flask.current_app.config['PULSE_USER']
     exchange = f'exchange/{pulse_user}/{PROJECT_NAME}'
 
-    logger.info(f'Sending pulse message `{options}` to queue `{exchange}` for '
-                f'route `{PULSE_ROUTE_REBUILD_PRODUCT_DETAILS}`.')
+    log.info(f'Sending pulse message `{options}` to queue `{exchange}` for '
+             f'route `{PULSE_ROUTE_REBUILD_PRODUCT_DETAILS}`.')
 
     try:
-        flask.current_app.pulse.publish(exchange, route, options)
+        flask.current_app.pulse.publish(exchange, PULSE_ROUTE_REBUILD_PRODUCT_DETAILS, options)
     except Exception as e:
         import traceback
         msg = 'Can\'t send notification to pulse.'
         trace = traceback.format_exc()
-        logger.error('{0}\nException:{1}\nTraceback: {2}'.format(msg, e, trace))  # noqa
+        log.error('{0}\nException:{1}\nTraceback: {2}'.format(msg, e, trace))  # noqa
 
     return '{}', 200
-

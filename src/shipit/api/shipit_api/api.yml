@@ -28,10 +28,8 @@ paths:
           properties:
             breakpoint_version:
               type: integer
-              required: false
             clean_working_copy:
               type: boolean
-              required: false
       responses:
         405:
           description: Invalid input
