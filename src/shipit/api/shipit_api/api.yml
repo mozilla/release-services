@@ -35,6 +35,28 @@ paths:
           schema:
             type: object
 
+  /sync_datetime:
+    post:
+      summary: Sync release datetimes from Ship-it v1
+      operationId: shipit_api.api.sync_release_datetimes
+      consumes:
+      - "application/json"
+      parameters:
+      - in: body
+        name: releases
+        description: Releases array
+        required: true
+        schema:
+          type: array
+          items:
+            type: object
+      responses:
+        405:
+          description: Invalid input
+        201:
+          description: Releases synced
+          schema:
+            type: object
 
   /releases:
     post:
@@ -209,6 +231,14 @@ definitions:
       actionTaskId:
         type: string
         description: Action Task ID for the phase. This is also the taskGroupId for the tasks created for this phase.
+      started:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      completed:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
 
   Release:
     type: object
@@ -263,3 +293,11 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Phase'
+      started:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      completed:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
