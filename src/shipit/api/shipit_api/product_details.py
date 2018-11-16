@@ -433,7 +433,7 @@ def get_release_history(breakpoint_version: int,
 def get_primary_builds(breakpoint_version: int,
                        product: Product,
                        releases: typing.List[shipit_api.models.Release],
-                       releases_l10n: typing.Dict[shipit_api.models.Releases, ReleaseL10ns],
+                       releases_l10n: typing.Dict[shipit_api.models.Release, ReleaseL10ns],
                        old_product_details: ProductDetails) -> PrimaryBuilds:
     '''This file contains all the Thunderbird builds we provide per locale. The
        filesize fields have the same value for all lcoales, this is not a bug,
@@ -623,7 +623,7 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
 
 
 def get_l10n(releases: typing.List[shipit_api.models.Release],
-             releases_l10n: typing.Dict[shipit_api.models.Releases, ReleaseL10ns],
+             releases_l10n: typing.Dict[shipit_api.models.Release, ReleaseL10ns],
              old_product_details: ProductDetails,
              ) -> ProductDetails:
     '''This folder contains the l10n changeset per locale used for each build.
