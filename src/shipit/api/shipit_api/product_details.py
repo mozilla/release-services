@@ -151,11 +151,18 @@ ProductDetails = typing.Dict[File, typing.Union[
 ]]
 Products = typing.List[Product]
 
+A = typing.TypeVar('A')
+B = typing.TypeVar('B')
 
-def datetime_or_none(dt: typing.Optional[datetime.datetime]) -> typing.Optional[str]:
-    if dt is None:
-        return None
-    return arrow.get(dt).isoformat()
+
+def with_default(func: typing.Callable[[A], B], a: typing.Optional[A], default: B) -> B:
+    if a is None:
+        return default
+    return func(a)
+
+
+def to_isoformat(d: datetime.datetime) -> str:
+    return arrow.get(d).isoformat()
 
 
 def get_product_mozilla_version(product: Product,
@@ -176,7 +183,7 @@ def get_product_mozilla_version(product: Product,
 async def fetch_l10n_data(
         session: aiohttp.ClientSession,
         release: shipit_api.models.Release,
-        ) -> typing.Optional[typing.Tuple[shipit_api.models.Release, typing.Dict]]:
+        ) -> typing.Tuple[shipit_api.models.Release, ReleaseL10ns]:
 
     url_file = {
         Product.FIREFOX: 'browser/locales/l10n-changesets.json',
@@ -187,9 +194,6 @@ async def fetch_l10n_data(
     url = f'{shipit_api.config.HG_PREFIX}/{release.branch}/raw-file/{release.revision}/{url_file}'
 
     async with session.get(url) as response:
-        # TODO: i think we should not return None
-        if response.status == 404:
-            return None
         response.raise_for_status()
         changesets = await response.json()
 
@@ -608,7 +612,7 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
            }
     '''
     # TODO: can we fetch regions from somewhere else
-    regions = dict()
+    regions: ProductDetails = dict()
     for file_, content in old_product_details.items():
         if not (file_.startswith('json/1.0/regions/')
                 and typeguard.check_type('file_', file_, File)
@@ -648,20 +652,22 @@ def get_l10n(releases: typing.List[shipit_api.models.Release],
            }
     '''
     # populate with old data first, stripping the 'json/1.0/' prefix
-    data = {
+    data: ProductDetails = {
         file_.replace('json/1.0/', ''): content
         for file_, content in old_product_details.items()
         if file_.startswith('json/1.0/l10n/')
     }
 
-    # TODO: use releases_l10n
-    for (release, release_l10ns) in 
-       {file_: {  # type: ignore
-            'locales': {locale: {'changeset': entry['revision']} for locale, entry in contents.items()},
-            'submittedAt': datetime_or_none(release.created),
-            'shippedAt': datetime_or_none(release.completed),
+    for (release, locales) in releases_l10n:
+        data[f'l10n/{release.name}.json'] = {
+            'locales': {
+                locale: dict(changeset=content['revision'])
+                for locale, content in locales.items()
+            },
+            'submittedAt': with_default(to_isoformat, release.created, ''),
+            'shippedAt': with_default(to_isoformat, release.completed, ''),
             'name': release.name,
-        }}
+        }
 
     return data
 
@@ -902,7 +908,6 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     releases_l10n = {
         release: changeset
         for (release, changeset) in releases_l10n
-        if changeset is not None
     }
 
     # combine old and new data
