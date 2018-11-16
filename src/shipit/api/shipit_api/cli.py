@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import asyncio
+import datetime
 import enum
 import functools
 import io
@@ -16,6 +17,7 @@ import tempfile
 import typing
 
 import aiohttp
+import arrow
 import awscli
 import click
 import flask
@@ -131,6 +133,21 @@ def get_product_mozilla_version(product: Product,
     return None
 
 
+def l10n_file(product: Product) -> str:
+    files = {
+        Product.FIREFOX: 'browser/locales/l10n-changesets.json',
+        Product.DEVEDITION: 'browser/locales/l10n-changesets.json',
+        Product.FENNEC: 'mobile/locales/l10n-changesets.json',
+        Product.THUNDERBIRD: 'mail/locales/l10n-changesets.json',
+    }
+    return files[product]
+
+
+def l10n_url(release: shipit_api.models.Release) -> str:
+    return f'{shipit_api.config.HG_PREFIX}/{release.branch}/raw-file/{release.revision}/' \
+            f'{l10n_file(Product(release.product))}'
+
+
 File = str
 ReleaseDetails = mypy_extensions.TypedDict('ReleaseDetails', {
     'category': str,
@@ -231,6 +248,31 @@ ProductDetails = typing.Dict[File, typing.Union[
     ThunderbirdVersions,
 ]]
 Products = typing.List[Product]
+
+
+def datetime_or_none(dt: typing.Optional[datetime.datetime]) -> typing.Optional[str]:
+    if dt is None:
+        return None
+    return arrow.get(dt).isoformat()
+
+
+async def fetch_l10n_data(
+        session: aiohttp.ClientSession,
+        release: shipit_api.models.Release,
+        file_: File,
+        url: str,
+        ) -> typing.Optional[ProductDetails]:
+    async with session.get(url) as response:
+        if response.status == 404:
+            return None
+        response.raise_for_status()
+        contents = await response.json()
+        return {file_: {  # type: ignore
+            'locales': {locale: {'changeset': entry['revision']} for locale, entry in contents.items()},
+            'submittedAt': datetime_or_none(release.created),
+            'shippedAt': datetime_or_none(release.completed),
+            'name': release.name,
+        }}
 
 
 def get_old_product_details(directory: str) -> ProductDetails:
@@ -656,7 +698,7 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
     return regions
 
 
-def get_l10n(
+async def get_l10n(
         releases: typing.List[shipit_api.models.Release],
         old_product_details: ProductDetails) -> ProductDetails:
     '''This folder contains the l10n changeset per locale used for each build.
@@ -684,7 +726,22 @@ def get_l10n(
                "name": "Firefox-58.0-build6",
            }
     '''
-    return dict()
+    # populate with old data first, stripping the 'json/1.0/' prefix
+    data = {file_.replace('json/1.0/', ''): content for file_, content in old_product_details.items()
+            if file_.startswith('json/1.0/l10n/')}
+
+    # hg.mozilla.org doesn't like too many connections
+    conn = aiohttp.TCPConnector(limit_per_host=50)
+    async with aiohttp.ClientSession(connector=conn) as session:
+        results = await asyncio.gather(*[
+            fetch_l10n_data(session, release, f'l10n/{release.name}.json', l10n_url(release))
+            for release in releases
+        ])
+    # ignore empty ones
+    valid_results = filter(None, results)
+    for result in valid_results:
+        data.update(result)
+    return data
 
 
 def get_languages(old_product_details: ProductDetails) -> Languages:
@@ -912,12 +969,13 @@ def get_thunderbird_beta_builds(old_product_details: ProductDetails) -> typing.D
     is_flag=True,
 )
 @flask.cli.with_appcontext
-def upload_product_details(data_dir: str,
-                           s3_bucket: str,
-                           aws_access_key_id: str,
-                           aws_secret_access_key: str,
-                           breakpoint_version: int,
-                           keep_temporary_dir: bool):
+@coroutine
+async def upload_product_details(data_dir: str,
+                                 s3_bucket: str,
+                                 aws_access_key_id: str,
+                                 aws_secret_access_key: str,
+                                 breakpoint_version: int,
+                                 keep_temporary_dir: bool):
 
     # get data from older product-details
     old_product_details = get_old_product_details(data_dir)
@@ -1025,7 +1083,7 @@ def upload_product_details(data_dir: str,
         'thunderbird_versions.json': get_thunderbird_versions(releases),
     }
     product_details.update(get_regions(old_product_details))
-    product_details.update(get_l10n(releases, old_product_details))
+    product_details.update(await get_l10n(releases, old_product_details))
 
     #  add 'json/1.0/' infront of each file path
     product_details = {

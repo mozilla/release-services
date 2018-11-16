@@ -2,6 +2,7 @@
 -e ./../../../lib/backend_common[log,security,cors,api,auth0,db] #egg=mozilla-backend-common
 
 aiohttp
+arrow
 awscli
 colorama<=0.3.7,>=0.2.5 #(from awscli==1.11.85)
 json-e
