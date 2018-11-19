@@ -151,9 +151,11 @@ def schedule_phase(name, phase):
 
     phase.submitted = True
     phase.completed_by = flask.g.userinfo['email']
-    phase.completed = datetime.datetime.utcnow()
+    completed = datetime.datetime.utcnow()
+    phase.completed = completed
     if all([ph.submitted for ph in phase.release.phases]):
         phase.release.status = 'shipped'
+        phase.release.completed = completed
     session.commit()
 
     notify_via_irc(f'Phase {phase.name} was just scheduled '
@@ -246,3 +248,23 @@ def sync_release_datetimes(releases):
             # nothing todo
             pass
     return flask.jsonify({'ok': 'ok'})
+
+
+@auth.require_scopes([SCOPE_PREFIX + '/update_release_status'])
+def update_release_status(name, body):
+    session = flask.g.db.session
+    try:
+        r = session.query(Release).filter(Release.name == name).one()
+    except NoResultFound:
+        flask.abort(404)
+
+    status = body['status']
+    r.status = status
+    if status == 'shipped':
+        r.completed = datetime.datetime.utcnow()
+    session.commit()
+    release = r.json
+
+    notify_via_irc(f'Release {r.product} {r.version} build{r.build_number} status changed to `{status}`.')
+
+    return release
