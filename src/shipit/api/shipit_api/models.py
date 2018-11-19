@@ -64,6 +64,8 @@ class Phase(db.Model):
             'name': self.name,
             'submitted': self.submitted,
             'actionTaskId': self.task_id,
+            'created': self.created or '',
+            'completed': self.completed or '',
         }
 
 
@@ -177,5 +179,7 @@ class Release(db.Model):
             'build_number': self.build_number,
             'release_eta': self.release_eta or '',
             'status': self.status,
+            'created': self.created or '',
+            'completed': self.completed or '',
             'phases': [p.json for p in self.phases],
         }

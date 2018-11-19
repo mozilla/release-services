@@ -231,6 +231,8 @@ def sync_releases(releases):
                 partial_updates=release.get('partials'),
                 status=status,
             )
+            r.created = release['submittedAt']
+            r.completed = release['shippedAt']
             session.add(r)
             session.commit()
     return jsonify({'ok': 'ok'})
@@ -252,4 +254,19 @@ def rebuild_product_details(options):
         trace = traceback.format_exc()
         logger.error('{0}\nException:{1}\nTraceback: {2}'.format(msg, e, trace))  # noqa
 
-    return '{}', 200
+    return flask.jsonify({'ok': 'ok'})
+
+
+@auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
+def sync_release_datetimes(releases):
+    session = flask.g.db.session
+    for release in releases:
+        try:
+            r = session.query(Release).filter(Release.name == release['name']).one()
+            r.created = release['submittedAt']
+            r.completed = release['shippedAt']
+            session.commit()
+        except NoResultFound:
+            # nothing todo
+            pass
+    return flask.jsonify({'ok': 'ok'})
