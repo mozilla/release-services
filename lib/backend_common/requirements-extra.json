@@ -6,7 +6,7 @@
     "api": [
         "Flask",
         "Werkzeug",
-        "connexion",
+        "connexion[swagger-ui]",
         "mozilla-cli-common[log]"
     ],
     "db": [

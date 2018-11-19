@@ -142,8 +142,8 @@ let
     };
 
     "Flask-Cors" = python.mkDerivation {
-      name = "Flask-Cors-3.0.6";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/df/a6/be0d36d487ed5967a130919b2dedbd5324af3a576d322a6b7a02e0230386/Flask-Cors-3.0.6.tar.gz"; sha256 = "ecc016c5b32fa5da813ec8d272941cfddf5f6bba9060c405a70285415cbf24c9"; };
+      name = "Flask-Cors-3.0.7";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/45/b4/1810eb0c69d8432417dd25e3dd581bf0619d5c4f1b0c9f529f392d4aed31/Flask-Cors-3.0.7.tar.gz"; sha256 = "7e90bf225fdf163d11b84b59fb17594d0580a16b97ab4e1146b1fb2737c1cfec"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -313,8 +313,8 @@ let
     };
 
     "SQLAlchemy" = python.mkDerivation {
-      name = "SQLAlchemy-1.2.13";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1e/98/4dba86354d271344e25fa01dc38a0bf0e0ba6407ad2d5e8426496a95b568/SQLAlchemy-1.2.13.tar.gz"; sha256 = "84412de3794acee05630e7788f25e80e81f78eb4837e7b71d0499129f660486a"; };
+      name = "SQLAlchemy-1.2.14";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e2/0a/05b7d13618ad41c108a6c2b886af83bf9bb7e35f8951227abb18b1330745/SQLAlchemy-1.2.14.tar.gz"; sha256 = "9de7c7dabcf06319becdb7e15099c44e5e34ba7062f9ba10bc00e562f5db3d04"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -385,8 +385,8 @@ let
     };
 
     "alembic" = python.mkDerivation {
-      name = "alembic-1.0.2";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c0/f3/e60af9a36ae3b8cafabc7e0834d8df6a2965b3feecf27b9b11352dc05dd4/alembic-1.0.2.tar.gz"; sha256 = "04bcb970ca8659c3607ddd8ffd86cc9d6a99661c9bc590955e8813c66bfa582b"; };
+      name = "alembic-1.0.3";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/6c/44/32656b16e184713417fb55f406bfb1548fd00e3b36918e637ad1f1d98614/alembic-1.0.3.tar.gz"; sha256 = "4b6ff7433247fe80b6ef522ef3763acb959cbdef027d03f76f4cd3c7118c1872"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -516,8 +516,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.40";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/be/5e/8985b22727b0a8f3aa076eb4cde2485e3d30e0e0d8fb3d686b85adf9f641/boto3-1.9.40.tar.gz"; sha256 = "d97f89a8d1a50377cbb7eca15040e65cd1a97d049e7396757fef00d08db9f285"; };
+      name = "boto3-1.9.47";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b6/36/0a386f09b965442bfe2de84cfd44aa4043cc331e181f8ca21c22b18dc045/boto3-1.9.47.tar.gz"; sha256 = "f770cbbb826bf5f989a9260358c8267adaa83e25f8d1c7189f47f16a687b3306"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -535,8 +535,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.40";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ca/06/32ca86578bf7664b49762a10f06a69b4a38d247f94b165fe0fd4684514c7/botocore-1.12.40.tar.gz"; sha256 = "cd01d12bd983c132d53b839097f6d7a9bda0d31d9dd0cb9b86566680efdad24a"; };
+      name = "botocore-1.12.47";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/08/c4/2723c5dcff1723b0595785f4637a97b9bb5ac4c55ddd1a868f6623aec15c/botocore-1.12.47.tar.gz"; sha256 = "f802865c2fdffccc47a9843f4439ce0e36bc4e1bafc18fc9e79623212f7fa468"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -640,6 +640,7 @@ let
       self."pytest-cov"
       self."requests"
       self."six"
+      self."swagger-ui-bundle"
       self."testfixtures"
     ];
       meta = with pkgs.stdenv.lib; {
@@ -650,8 +651,8 @@ let
     };
 
     "coverage" = python.mkDerivation {
-      name = "coverage-4.5.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/35/fe/e7df7289d717426093c68d156e0fd9117c8f4872b6588e8a8928a0f68424/coverage-4.5.1.tar.gz"; sha256 = "56e448f051a201c5ebbaa86a5efd0ca90d327204d8b059ab25ad0f35fbfd79f1"; };
+      name = "coverage-4.5.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/fb/af/ce7b0fe063ee0142786ee53ad6197979491ce0785567b6d8be751d2069e8/coverage-4.5.2.tar.gz"; sha256 = "ab235d9fe64833f12d1334d29b558aacedfbca2356dfb9691f2d0d38a8a7bfb4"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -953,8 +954,8 @@ let
     };
 
     "httplib2" = python.mkDerivation {
-      name = "httplib2-0.11.3";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/fd/ce/aa4a385e3e9fd351737fd2b07edaa56e7a730448465aceda6b35086a0d9b/httplib2-0.11.3.tar.gz"; sha256 = "e71daed9a0e6373642db61166fa70beecc9bf04383477f84671348c02a04cbdf"; };
+      name = "httplib2-0.12.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ce/ed/803905d670b52fa0edfdd135337e545b4496c2ab3a222f1449b7256eb99f/httplib2-0.12.0.tar.gz"; sha256 = "f61fb838a94ce3b349aa32c92fd8430f7e3511afdb18bf9640d647e30c90a6d6"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1539,8 +1540,8 @@ let
     };
 
     "psycopg2" = python.mkDerivation {
-      name = "psycopg2-2.7.5";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b2/c1/7bf6c464e903ffc4f3f5907c389e5a4199666bf57f6cd6bf46c17912a1f9/psycopg2-2.7.5.tar.gz"; sha256 = "eccf962d41ca46e6326b97c8fe0a6687b58dfc1a5f6540ed071ff1474cea749e"; };
+      name = "psycopg2-2.7.6.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c0/07/93573b97ed61b6fb907c8439bf58f09957564cf7c39612cef36c547e68c6/psycopg2-2.7.6.1.tar.gz"; sha256 = "27959abe64ca1fc6d8cd11a71a1f421d8287831a3262bd4cacd43bbf43cc3c82"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1646,8 +1647,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.10.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ec/d1/8e96334154a20f8bf8924b7a67227a3af30c87cf0d8239f9885fc8bca385/pytest-3.10.0.tar.gz"; sha256 = "a2b5232735dd0b736cbea9c0f09e5070d78fcaba2823a4f6f09d9a81bd19415c"; };
+      name = "pytest-4.0.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ec/34/497c3b126966c3b358398084394ea820c63a34d794d708074accf91bcaf3/pytest-4.0.0.tar.gz"; sha256 = "488c842647bbeb350029da10325cb40af0a9c7a2fdda45aeb1dda75b60048ffb"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1833,8 +1834,8 @@ let
     };
 
     "responses" = python.mkDerivation {
-      name = "responses-0.10.3";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b1/b9/5d6cd5b7c07bdf51841ac09518168010a9f836db7066caa18d312480a8a0/responses-0.10.3.tar.gz"; sha256 = "5b99beef28dd177da180604be2e849a16c3a40605bfda7c8d792a9924dd3d60e"; };
+      name = "responses-0.10.4";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/84/b7/a868941426ea5e9f8fd986dbf935c2068cb491d0e4de9fc4764952c9fb99/responses-0.10.4.tar.gz"; sha256 = "16ad4a7a914f20792111157adf09c63a8dc37699c57d1ad20dbc281a4f5743fb"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1934,6 +1935,23 @@ let
         homepage = "https://www.structlog.org/";
         license = licenses.mit;
         description = "Structured Logging for Python";
+      };
+    };
+
+    "swagger-ui-bundle" = python.mkDerivation {
+      name = "swagger-ui-bundle-0.0.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/6f/94/f1ef24ede1ee2ef288c3c492baa5763fe5ff4a946c713e9a4e6e9e4a4eb0/swagger_ui_bundle-0.0.2.tar.gz"; sha256 = "98a418585f62e5e1193cb0f8000292bcb01e6a33bc39e5ba95b642172ef2664e"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Jinja2"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/dtkav/swagger_ui_bundle";
+        license = licenses.asl20;
+        description = "swagger_ui_bundle - swagger-ui files in a pip package";
       };
     };
 
