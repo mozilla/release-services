@@ -238,6 +238,12 @@ in skipOverrides {
     '';
   };
 
+  "swagger-ui-bundle" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['flake8'\],||" setup.py
+    '';
+  };
+
   "taskcluster" = self: old: {
     patchPhase = ''
       sed -i -e "s|six>=1.10.0,<1.11|six|" setup.py

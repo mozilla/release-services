@@ -13,7 +13,7 @@ Jinja2
 SQLAlchemy
 Werkzeug
 boto
-connexion
+connexion[swagger-ui]
 flask-oidc
 flask-talisman
 itsdangerous

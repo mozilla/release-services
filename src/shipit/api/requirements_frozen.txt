@@ -9,8 +9,8 @@ attrs==18.2.0
 backcall==0.1.0
 blinker==1.4
 boto==2.49.0
-boto3==1.9.46
-botocore==1.12.46
+boto3==1.9.47
+botocore==1.12.47
 certifi==2018.10.15
 chardet==3.0.4
 Click==7.0
@@ -105,6 +105,7 @@ six==1.11.0
 slugid==1.0.7
 SQLAlchemy==1.2.14
 structlog==18.2.0
+swagger-ui-bundle==0.0.2
 taskcluster==5.0.0
 taskcluster-urls==10.1.0
 testfixtures==6.3.0

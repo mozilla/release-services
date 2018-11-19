@@ -533,8 +533,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.46";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/48/d2/c0de0f845cc5c2e1bc0f63c707ddfca04f6bdf40acf49ce351823eb9ac7c/boto3-1.9.46.tar.gz"; sha256 = "c6b016e59819a276ce0000477025bd2142776bcd573ae315194eb7bc1e13b711"; };
+      name = "boto3-1.9.47";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b6/36/0a386f09b965442bfe2de84cfd44aa4043cc331e181f8ca21c22b18dc045/boto3-1.9.47.tar.gz"; sha256 = "f770cbbb826bf5f989a9260358c8267adaa83e25f8d1c7189f47f16a687b3306"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -552,8 +552,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.46";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b4/aa/97e9f5582832ebc890b4e4ac7bd6f10c83ed825450f611657e38d1136737/botocore-1.12.46.tar.gz"; sha256 = "aabce87b8f01745712ac4b0504ce8dc119d39e67ffc05ab2ef05b417e3ca0de5"; };
+      name = "botocore-1.12.47";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/08/c4/2723c5dcff1723b0595785f4637a97b9bb5ac4c55ddd1a868f6623aec15c/botocore-1.12.47.tar.gz"; sha256 = "f802865c2fdffccc47a9843f4439ce0e36bc4e1bafc18fc9e79623212f7fa468"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -657,6 +657,7 @@ let
       self."pytest-cov"
       self."requests"
       self."six"
+      self."swagger-ui-bundle"
       self."testfixtures"
     ];
       meta = with pkgs.stdenv.lib; {
@@ -1968,6 +1969,23 @@ let
         homepage = "https://www.structlog.org/";
         license = licenses.mit;
         description = "Structured Logging for Python";
+      };
+    };
+
+    "swagger-ui-bundle" = python.mkDerivation {
+      name = "swagger-ui-bundle-0.0.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/6f/94/f1ef24ede1ee2ef288c3c492baa5763fe5ff4a946c713e9a4e6e9e4a4eb0/swagger_ui_bundle-0.0.2.tar.gz"; sha256 = "98a418585f62e5e1193cb0f8000292bcb01e6a33bc39e5ba95b642172ef2664e"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Jinja2"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/dtkav/swagger_ui_bundle";
+        license = licenses.asl20;
+        description = "swagger_ui_bundle - swagger-ui files in a pip package";
       };
     };
 
