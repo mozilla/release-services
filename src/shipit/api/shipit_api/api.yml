@@ -130,7 +130,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Release'
-
   /releases/{name}:
     get:
       summary: Release info
@@ -158,6 +157,30 @@ paths:
       responses:
         200:
           description: Returns release representation
+          schema:
+            $ref: '#/definitions/Release'
+    patch:
+      summary: Update release status
+      operationId: shipit_api.api.update_release_status
+      consumes:
+      - "application/json"
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      - in: body
+        name: body
+        description: Release status object
+        required: true
+        schema:
+          $ref: '#/definitions/ReleaseStatus'
+      responses:
+        405:
+          description: Invalid input
+        200:
+          description: Release updated
           schema:
             $ref: '#/definitions/Release'
 
@@ -238,6 +261,19 @@ definitions:
       partial_updates:
         type: object
         default: {}
+
+  ReleaseStatus:
+    type: object
+    required:
+      - status
+    properties:
+      status:
+        type: string
+        example: scheduled
+        enum:
+          - scheduled
+          - shipped
+          - aborted
 
   Phase:
     type: object
