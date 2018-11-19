@@ -19,7 +19,12 @@ let
 
   # Mach needs 0.6.7 at least
   # From https://github.com/NixOS/nixpkgs/blob/cdf90258e6bf911db2b56280301014a88c91be65/pkgs/development/tools/rust/cbindgen/default.nix
-  rustPlatform = mkRustPlatform {};
+  rustPlatform = mkRustPlatform {
+    rust = {
+      cargo = rustChannel.cargo;
+      rustc = rustChannel.rust;
+    };
+  };
   rust-cbindgen =  rustPlatform.buildRustPackage rec {
     name = "rust-cbindgen-${version}";
     version = "0.6.7";
@@ -85,7 +90,7 @@ in gecko.overrideDerivation (old: {
     "
 
     # Use updated rust version
-    echo "export PATH=${rustChannel.rust}/bin:${rustChannel.cargo}/bin:\$PATH" >> $geckoenv
+    echo "export PATH=${rust-cbindgen}/bin:${rustChannel.rust}/bin:${rustChannel.cargo}/bin:\$PATH" >> $geckoenv
   '';
   installPhase = ''
     geckoenv=$out/bin/gecko-env
