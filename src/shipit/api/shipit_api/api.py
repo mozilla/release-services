@@ -155,7 +155,7 @@ def schedule_phase(name, phase):
     queue.createTask(phase.task_id, phase.rendered)
 
     phase.submitted = True
-    phase.completed_by = g.userinfo['email']
+    phase.completed_by = flask.g.userinfo['email']
     completed = datetime.datetime.utcnow()
     phase.completed = completed
     if all([ph.submitted for ph in phase.release.phases]):
