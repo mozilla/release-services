@@ -11,12 +11,14 @@ from cli_common.log import get_logger
 logger = get_logger(__name__)
 
 
-CANCELLED_UPLIFT = '''
+FAILED_UPLIFT = '''
 Sorry, Uplift Bot failed to merge these patches onto mozilla-{}:
 
 {}
 
 Please ensure your patches apply cleanly, then request uplift again.
+
+If you see a problem with this automated uplift, please report it here: https://bit.ly/2B0Hdyd
 '''
 
 
@@ -117,7 +119,7 @@ def load_users(analysis):
     return out
 
 
-def cancel_uplift_request(merge_test, read_only=True):
+def cancel_uplift_request(merge_test, read_only=True, comment_only=False):
     '''
     Cancel a patch uplift request
     '''
@@ -144,6 +146,8 @@ def cancel_uplift_request(merge_test, read_only=True):
                 logger.info('Resetting attachment flag:', bz_id=bugid, attachment_id=attachment_id, flag_name=flag_name)
                 if read_only:
                     logger.info('...skipped resetting attachment flag: READ_ONLY')
+                elif comment_only:
+                    logger.info('...skipped resetting attachment flag: COMMENT_ONLY')
                 else:
                     Bugzilla([attachment_id]).put(flag_reset_payload, attachment=True)
 
@@ -160,20 +164,21 @@ def cancel_uplift_request(merge_test, read_only=True):
             merge_result += ':\n{}'.format(result.message)
         merge_results.append(merge_result)
 
-    comment_body = CANCELLED_UPLIFT.format(branch, '\n\n'.join(merge_results))
+    comment_body = FAILED_UPLIFT.format(branch, '\n\n'.join(merge_results))
+    comment_needinfo_flags = [
+        {
+            'name': 'needinfo',
+            'requestee': needinfo,
+            'status': '?',
+            'new': 'true',  # don't remove pre-existing needinfos
+        }
+        for needinfo in needinfos
+    ]
     comment_payload = {
         'comment': {
             'body': comment_body,
         },
-        'flags': [
-             {
-                 'name': 'needinfo',
-                 'requestee': needinfo,
-                 'status': '?',
-                 'new': 'true',  # don't remove pre-existing needinfos
-             }
-             for needinfo in needinfos
-        ],
+        'flags': []
     }
 
     # Post comment and needinfos.
@@ -181,4 +186,8 @@ def cancel_uplift_request(merge_test, read_only=True):
     if read_only:
         logger.info('...skipped posting comment and needinfos: READ_ONLY')
     else:
+        if comment_only:
+            logger.info('...skipped posting needinfos: COMMENT_ONLY')
+        else:
+            comment_payload['flags'] += comment_needinfo_flags
         Bugzilla(bugids=[bugid]).put(comment_payload)

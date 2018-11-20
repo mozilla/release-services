@@ -38,6 +38,7 @@ def main(bugzilla_id,
                               'BUGZILLA_URL',
                               'BUGZILLA_TOKEN',
                               'BUGZILLA_READ_ONLY',
+                              'BUGZILLA_COMMENT_ONLY',
                               'API_URL',
                               'APP_CHANNEL',
                               'UPLIFT_NOTIFICATIONS',
@@ -45,6 +46,7 @@ def main(bugzilla_id,
                           existing=dict(
                               APP_CHANNEL='development',
                               BUGZILLA_READ_ONLY=True,
+                              BUGZILLA_COMMENT_ONLY=False,
                               UPLIFT_NOTIFICATIONS=['babadie@mozilla.com'],
                           ),
                           taskcluster_client_id=taskcluster_client_id,
@@ -71,6 +73,7 @@ def main(bugzilla_id,
         secrets['BUGZILLA_URL'],
         secrets['BUGZILLA_TOKEN'],
         secrets['BUGZILLA_READ_ONLY'],
+        secrets['BUGZILLA_COMMENT_ONLY'],
     )
     bot.use_cache(cache_root)
     if bugzilla_id:

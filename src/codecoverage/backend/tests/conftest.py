@@ -196,8 +196,7 @@ def coverage_changeset_by_file():
     return changeset_by_file_info
 
 
-@pytest.fixture(scope='session')
-def coverage_builds():
+def get_coverage_builds_fixtures():
     paths = glob.glob(os.path.join(FIXTURES_DIR, 'coverage_build_*.json'))
     builds = {'info': {}, 'summary': {}}
     for path in sorted(paths):
@@ -207,6 +206,20 @@ def coverage_builds():
         builds['summary'].update(build_data['summary'])
 
     return builds
+
+
+@pytest.fixture(scope='session')
+def coverage_builds():
+    return get_coverage_builds_fixtures()
+
+
+def mock_coverage_by_changeset_job_success(job_changeset):
+    builds = get_coverage_builds_fixtures()
+
+    for changeset, expected in builds['info'].items():
+        if changeset == job_changeset or changeset[:12] == job_changeset[:12]:
+            return expected
+    raise NotImplementedError('Not implemented return values for changeset %s' % job_changeset)
 
 
 @pytest.fixture
