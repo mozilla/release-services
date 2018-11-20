@@ -196,7 +196,7 @@ def get_product_mozilla_version(product: Product,
 async def fetch_l10n_data(
         session: aiohttp.ClientSession,
         release: shipit_api.models.Release,
-        ) -> typing.Tuple[shipit_api.models.Release, ReleaseL10ns]:
+        ) -> typing.Optional[typing.Tuple[shipit_api.models.Release, ReleaseL10ns]]:
 
     url_file = {
         Product.FIREFOX: 'browser/locales/l10n-changesets.json',
@@ -205,6 +205,21 @@ async def fetch_l10n_data(
         Product.THUNDERBIRD: 'mail/locales/l10n-changesets.json',
     }[Product(release.product)]
     url = f'{shipit_api.config.HG_PREFIX}/{release.branch}/raw-file/{release.revision}/{url_file}'
+
+    # some thunderbird on the betas don't have l10n in the repository
+    if Product(release.product) is Product.THUNDERBIRD and \
+       release.branch == 'releases/comm-beta' and \
+       release.revision in [
+            '3e01e0dc6943',
+            '481fea2011e6',
+            '85cb8f907b18',
+            '92950b2fd2dc',
+            'c614b6e7cf58',
+            'e277e3f0ab13',
+            'efd290b55a35',
+            'f87ba53e04ff',
+            ]:
+        return (release, None)
 
     cache_dir = shipit_api.config.PRODUCT_DETAILS_CACHE_DIR / 'fetch_l10n_data'
     os.makedirs(cache_dir, exist_ok=True)
@@ -255,16 +270,10 @@ def get_releases_from_db(db_session: sqlalchemy.orm.Session,
     Release = shipit_api.models.Release
     query = db_session.query(Release)
     # Using cast and split_part is postgresql specific
-    query = query.filter(
-        sqlalchemy.cast(
-            sqlalchemy.func.split_part(Release.version, '.', 1),
-            sqlalchemy.Integer) >= breakpoint_version)
+    query = query.filter(Release.status == 'shipped')
+    query = query.filter(sqlalchemy.cast(sqlalchemy.func.split_part(Release.version, '.', 1),
+                                         sqlalchemy.Integer) >= breakpoint_version)
     return query.all()
-
-
-def get_shipped_releases(releases: typing.List[shipit_api.models.Release],
-                         ) -> typing.Iterator[shipit_api.models.Release]:
-    return filter(lambda r: r.status == 'shipped', releases)
 
 
 def get_product_categories(product: Product,
@@ -373,14 +382,17 @@ def get_releases(breakpoint_version: int,
             if release.product != product.value:
                 continue
             categories = get_product_categories(Product(release.product), release.version)
+            version = release.version
             for category in categories:
+                if version.endswith('esr'):
+                    version = version[:-len('esr')]
                 details[f'{release.product}-{release.version}'] = dict(
                     category=category.value,
                     product=release.product,
                     build_number=release.build_number,
-                    description=None,  # TODO: we don't have this field anymore
+                    description=None,
                     is_security_driven=False,  # TODO: we don't have this field anymore
-                    version=release.version,
+                    version=version,
                     date=with_default(release.completed,
                                       functools.partial(to_format, format='YYYY-MM-DD'),
                                       default='',
@@ -463,22 +475,25 @@ def get_release_history(breakpoint_version: int,
 
         # skip all releases which don't fit into product category
         if product_category is ProductCategory.MAJOR and \
-           (version.patch_number is not None or version.beta_number is not None):
+           (version.patch_number is not None or version.beta_number is not None or version.is_esr):
             continue
 
         elif product_category is ProductCategory.DEVELOPMENT and \
-             version.beta_number is None:
+             (version.beta_number is None or version.is_esr):
             continue
 
         elif product_category is ProductCategory.STABILITY and \
              (version.beta_number is not None or version.patch_number is None):
             continue
 
+        version = release.version
+        if version.endswith('esr'):
+            version = version[:-len('esr')]
 
-        history[release.version] = with_default(release.completed,
-                                                functools.partial(to_format, format='YYYY-MM-DD'),
-                                                default='',
-                                                )
+        history[version] = with_default(release.completed,
+                                        functools.partial(to_format, format='YYYY-MM-DD'),
+                                        default='',
+                                        )
 
     return history
 
@@ -541,7 +556,7 @@ def get_primary_builds(breakpoint_version: int,
         if product is not Product(release.product) or \
            release.version in versions:
             continue
-        for l10n in releases_l10n[release].keys():
+        for l10n in releases_l10n.get(release, {}).keys():
             builds.setdefault(l10n, dict())
             for version in versions:
                 if version == '':
@@ -585,8 +600,7 @@ def get_latest_version(releases: typing.List[shipit_api.models.Release],
     by version, not by date, because we may publish a correction release
     for old users (this has been done in the past).
     '''
-    shipped_releases = get_shipped_releases(releases)
-    filtered_releases = [r for r in shipped_releases if
+    filtered_releases = [r for r in releases if
                          r.product == product.value and
                          r.branch == branch]
     releases_ = sorted(
@@ -700,14 +714,10 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
                ...
            }
     '''
-    # TODO: can we fetch regions from somewhere else
     regions: ProductDetails = dict()
     for file_, content in old_product_details.items():
-        if not (file_.startswith('json/1.0/regions/')
-                and typeguard.check_type('file_', file_, File)
-                and typeguard.check_type('content', content, Region)):
-            continue
-        regions[file_] = content
+        if file_.startswith('json/1.0/regions/'):
+            regions[file_[len('json/1.0/'):]] = content
     return regions
 
 
@@ -748,6 +758,9 @@ def get_l10n(releases: typing.List[shipit_api.models.Release],
     }
 
     for (release, locales) in releases_l10n.items():
+        # XXX: for some reason we didn't generate l10n for devedition in old_product_details
+        if Product(release.product) is Product.DEVEDITION:
+            continue
         data[f'l10n/{release.name}.json'] = {
             'locales': {
                 locale: dict(changeset=content['revision'])
@@ -786,7 +799,6 @@ def get_languages(old_product_details: ProductDetails) -> Languages:
            }
 
     '''
-    # TODO: can we fetch languages from somewhere else
     languages = old_product_details.get('json/1.0/languages.json')
 
     if languages is None:
@@ -981,18 +993,28 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR.parent,
                   )
 
-    # TODO: make sure checkout is clean
+    # make sure checkout is clean by removing changes to existing files
+    run_check(['git', 'reset', '--hard', 'HEAD'],
+              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              )
+    # make sure checkout is clean by removing files which are new
+    run_check(['git', 'clean', '-xfd'],
+              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              )
 
     # Checkout the branch we are working on
     logger.info(f'Checkout {git_branch} branch.')
     run_check(['git', 'checkout', git_branch],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
               )
-    # TODO:
-    # if breakpoint_version is not provided we should figure it out from product details
+
+    # XXX: we need to implement how to figure out breakpoint_version from old_product_details
+    # if breakpoint_version is not provided we should figure it out from old_product_details
     # and if we can not figure it out we should use shipit_api.config.BREAKPOINT_VERSION
     # breakpoint_version should always be higher then shipit_api.config.BREAKPOINT_VERSION
     if breakpoint_version is None:
+        breakpoint_version = shipit_api.config.BREAKPOINT_VERSION
+    if breakpoint_version <= shipit_api.config.BREAKPOINT_VERSION:
         breakpoint_version = shipit_api.config.BREAKPOINT_VERSION
     logger.info(f'Breakpoint version is {breakpoint_version}')
 
@@ -1016,6 +1038,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     releases_l10n = {
         release: changeset
         for (release, changeset) in releases_l10n
+        if changeset is not None
     }
 
     # combine old and new data
@@ -1128,11 +1151,18 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         for file_, content in product_details.items()
     }
 
+
     # create json_exports.json to list all the files
     product_details['json_exports.json'] = {
         f'/{file_}': os.path.basename(file_)
         for file_ in product_details.keys()
     }
+    product_details['json_exports.json']['/json_exports.json'] = 'json_exports.json'
+
+    # XXX: to make it compatible with old product details we must remove .json from l10n
+    for (file_, content) in product_details['json_exports.json'].items():
+        if file_.startswith('/json/1.0/l10n') and content.endswith('.json'):
+            product_details['json_exports.json'][file_] = content[:-len('.json')]
 
     if shipit_api.config.PRODUCT_DETAILS_NEW_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_NEW_DIR)
@@ -1171,7 +1201,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     run_check(['git', 'config', '--global', 'user.email', 'release-services+robot@mozilla.com'])
     run_check(['git', 'config', '--global', 'user.name', 'Release Services Robot'])
 
-    # TODO: we need a better commmit message, maybe mention what triggered this update
+    # XXX: we need a better commmit message, maybe mention what triggered this update
     commit_message = 'Updating product details'
     run_check(['git', 'commit', '-m', commit_message],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
@@ -1179,5 +1209,3 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     run_check(['git', 'push'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
               )
-
-    # TODO: maybe check that commit landed to github
