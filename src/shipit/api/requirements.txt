@@ -7,7 +7,6 @@ backoff
 json-e
 mohawk
 mozilla-version
-typeguard
 
 # deployment
 gunicorn

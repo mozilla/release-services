@@ -10,8 +10,6 @@ import functools
 import hashlib
 import json
 import os
-
-
 import pathlib
 import re
 import shutil
@@ -24,7 +22,6 @@ import mozilla_version.gecko
 import mypy_extensions
 import sqlalchemy
 import sqlalchemy.orm
-import typeguard
 
 import cli_common.command
 import cli_common.log
@@ -196,7 +193,7 @@ def get_product_mozilla_version(product: Product,
 async def fetch_l10n_data(
         session: aiohttp.ClientSession,
         release: shipit_api.models.Release,
-        ) -> typing.Optional[typing.Tuple[shipit_api.models.Release, ReleaseL10ns]]:
+        ) -> typing.Tuple[shipit_api.models.Release, typing.Optional[ReleaseL10ns]]:
 
     url_file = {
         Product.FIREFOX: 'browser/locales/l10n-changesets.json',
@@ -382,17 +379,17 @@ def get_releases(breakpoint_version: int,
             if release.product != product.value:
                 continue
             categories = get_product_categories(Product(release.product), release.version)
-            version = release.version
+            release_version = release.version
             for category in categories:
-                if version.endswith('esr'):
-                    version = version[:-len('esr')]
+                if release_version.endswith('esr'):
+                    release_version = release_version[:-len('esr')]
                 details[f'{release.product}-{release.version}'] = dict(
                     category=category.value,
                     product=release.product,
                     build_number=release.build_number,
                     description=None,
                     is_security_driven=False,  # TODO: we don't have this field anymore
-                    version=version,
+                    version=release_version,
                     date=with_default(release.completed,
                                       functools.partial(to_format, format='YYYY-MM-DD'),
                                       default='',
@@ -469,31 +466,31 @@ def get_release_history(breakpoint_version: int,
         if release.status != 'shipped':
             continue
 
-        version = get_product_mozilla_version(Product(release.product), release.version)
-        if version.major_number < breakpoint_version:
+        release_version = get_product_mozilla_version(Product(release.product), release.version)
+        if release_version is None or release_version.major_number < breakpoint_version:
             continue
 
         # skip all releases which don't fit into product category
         if product_category is ProductCategory.MAJOR and \
-           (version.patch_number is not None or version.beta_number is not None or version.is_esr):
+                (release_version.patch_number is not None or release_version.beta_number is not None or release_version.is_esr):
             continue
 
         elif product_category is ProductCategory.DEVELOPMENT and \
-             (version.beta_number is None or version.is_esr):
+                (release_version.beta_number is None or release_version.is_esr):
             continue
 
         elif product_category is ProductCategory.STABILITY and \
-             (version.beta_number is not None or version.patch_number is None):
+                (release_version.beta_number is not None or release_version.patch_number is None):
             continue
 
-        version = release.version
-        if version.endswith('esr'):
-            version = version[:-len('esr')]
+        history_version = release.version
+        if history_version.endswith('esr'):
+            history_version = history_version[:-len('esr')]
 
-        history[version] = with_default(release.completed,
-                                        functools.partial(to_format, format='YYYY-MM-DD'),
-                                        default='',
-                                        )
+        history[history_version] = with_default(release.completed,
+                                                functools.partial(to_format, format='YYYY-MM-DD'),
+                                                default='',
+                                                )
 
     return history
 
@@ -1014,8 +1011,6 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     # breakpoint_version should always be higher then shipit_api.config.BREAKPOINT_VERSION
     if breakpoint_version is None:
         breakpoint_version = shipit_api.config.BREAKPOINT_VERSION
-    if breakpoint_version <= shipit_api.config.BREAKPOINT_VERSION:
-        breakpoint_version = shipit_api.config.BREAKPOINT_VERSION
     logger.info(f'Breakpoint version is {breakpoint_version}')
 
     # get data from older product-details
@@ -1151,30 +1146,29 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         for file_, content in product_details.items()
     }
 
-
     # create json_exports.json to list all the files
     product_details['json_exports.json'] = {
         f'/{file_}': os.path.basename(file_)
-        for file_ in product_details.keys()
+        for file_ in (list(product_details.keys()) + ['json_exports.json'])
     }
-    product_details['json_exports.json']['/json_exports.json'] = 'json_exports.json'
 
     # XXX: to make it compatible with old product details we must remove .json from l10n
     for (file_, content) in product_details['json_exports.json'].items():
+        content = typing.cast(str, content)
         if file_.startswith('/json/1.0/l10n') and content.endswith('.json'):
-            product_details['json_exports.json'][file_] = content[:-len('.json')]
+            product_details['json_exports.json'][file_] = content[:-len('.json')]  # noqa
 
     if shipit_api.config.PRODUCT_DETAILS_NEW_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_NEW_DIR)
 
     for (file__, content) in product_details.items():
-        file_ = shipit_api.config.PRODUCT_DETAILS_NEW_DIR / file__
+        new_file = shipit_api.config.PRODUCT_DETAILS_NEW_DIR / file__
 
         # we must ensure that all needed folders exists
-        os.makedirs(file_.parent, exist_ok=True)
+        os.makedirs(new_file.parent, exist_ok=True)
 
         # write content into json file
-        with file_.open('w+') as f:
+        with new_file.open('w+') as f:
             f.write(json.dumps(content, sort_keys=True, indent=4))
 
     for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_NEW_DIR):
