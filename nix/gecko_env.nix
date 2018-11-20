@@ -5,8 +5,8 @@ let
   inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
-  # Rust 1.29.1
-  rustChannel' = rustChannelOf { date = "2018-09-25"; channel = "stable"; };
+  # Rust 1.30.0
+  rustChannel' = rustChannelOf { date = "2018-10-25"; channel = "stable"; };
   rustChannel = { inherit (rustChannel') cargo; rust = rustChannel'.rust.override { targets=["armv7-linux-androideabi"]; }; };
 
   # Add missing gcc libraries needed by clang (see https://github.com/mozilla/release-services/issues/1256)
@@ -19,7 +19,12 @@ let
 
   # Mach needs 0.6.7 at least
   # From https://github.com/NixOS/nixpkgs/blob/cdf90258e6bf911db2b56280301014a88c91be65/pkgs/development/tools/rust/cbindgen/default.nix
-  rustPlatform = mkRustPlatform {};
+  rustPlatform = mkRustPlatform {
+    rust = {
+      cargo = rustChannel.cargo;
+      rustc = rustChannel.rust;
+    };
+  };
   rust-cbindgen =  rustPlatform.buildRustPackage rec {
     name = "rust-cbindgen-${version}";
     version = "0.6.7";
@@ -85,7 +90,7 @@ in gecko.overrideDerivation (old: {
     "
 
     # Use updated rust version
-    echo "export PATH=${rustChannel.rust}/bin:${rustChannel.cargo}/bin:\$PATH" >> $geckoenv
+    echo "export PATH=${rust-cbindgen}/bin:${rustChannel.rust}/bin:${rustChannel.cargo}/bin:\$PATH" >> $geckoenv
   '';
   installPhase = ''
     geckoenv=$out/bin/gecko-env

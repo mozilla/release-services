@@ -170,7 +170,7 @@ class Bot(object):
         # Init report
         self.report = Report(notification_emails)
 
-    def use_bugzilla(self, bugzilla_url, bugzilla_token=None, read_only=True):
+    def use_bugzilla(self, bugzilla_url, bugzilla_token=None, read_only=True, comment_only=False):
         '''
         Setup bugzilla usage (url + token)
         '''
@@ -178,6 +178,7 @@ class Bot(object):
         self.repository = None
         self.bugzilla_url = bugzilla_url
         self.bugzilla_read_only = read_only
+        self.bugzilla_comment_only = comment_only
 
         use_bugzilla(bugzilla_url, bugzilla_token)
         logger.info('Use bugzilla server', url=self.bugzilla_url)
@@ -325,7 +326,7 @@ class Bot(object):
         # Save invalid merge in report, and cancel the uplift request
         if not merge_test.is_valid():
             self.report.add_invalid_merge(merge_test)
-            cancel_uplift_request(merge_test, self.bugzilla_read_only)
+            cancel_uplift_request(merge_test, self.bugzilla_read_only, self.bugzilla_comment_only)
 
     def delete_bug(self, sync):
         '''

@@ -68,12 +68,17 @@ def get_taskcluster_headers(request_url,
     '--api-to',
     required=True,
 )
+@click.option(
+    '--timestamps-only',
+    is_flag=True,
+)
 def shipit_v1_sync(ldap_username,
                    ldap_password,
                    taskcluster_client_id,
                    taskcluster_access_token,
                    api_from,
                    api_to,
+                   timestamps_only,
                    ):
 
     s = requests.Session()
@@ -91,16 +96,19 @@ def shipit_v1_sync(ldap_username,
             r = s.get(f'{api_from}/releases/{release}')
             releases_json.append(r.json())
 
-    click.echo('Syncing release list...', nl=False)
+    api_url = f'{api_to}/sync'
+    if timestamps_only:
+        api_url = f'{api_to}/sync_datetime'
+    click.echo(f'Syncing release list to {api_url}...', nl=False)
     headers = get_taskcluster_headers(
-        f'{api_to}/sync',
+        api_url,
         'post',
         json.dumps(releases_json),
         taskcluster_client_id,
         taskcluster_access_token,
     )
     r = requests.post(
-        f'{api_to}/sync',
+        api_url,
         headers=headers,
         verify=False,
         json=releases_json,
