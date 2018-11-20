@@ -454,11 +454,14 @@ def get_release_history(breakpoint_version: int,
         if product.value != release.product:
             continue
 
+        if release.status != 'shipped':
+            continue
+
         version = get_product_mozilla_version(Product(release.product), release.version)
         if version.major_number < breakpoint_version:
             continue
 
-        # skip all releases which dont fit into product category
+        # skip all releases which don't fit into product category
         if product_category is ProductCategory.MAJOR and \
            (version.patch_number is not None or version.beta_number is not None):
             continue
@@ -470,6 +473,7 @@ def get_release_history(breakpoint_version: int,
         elif product_category is ProductCategory.STABILITY and \
              (version.beta_number is not None or version.patch_number is None):
             continue
+
 
         history[release.version] = with_default(release.completed,
                                                 functools.partial(to_format, format='YYYY-MM-DD'),
