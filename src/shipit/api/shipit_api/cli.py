@@ -12,6 +12,7 @@ import shutil
 import typing
 
 import aiohttp
+import backoff
 import click
 import mohawk
 import requests
@@ -31,20 +32,21 @@ def coroutine(f):
     return functools.update_wrapper(wrapper, f)
 
 
+@backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60)
 async def download_json_file(session, url, file_):
     click.echo(f'=> Downloading {url}')
     async with session.get(url) as response:
         if response.status != 200:
             response.raise_for_status()
 
-        content = await response.text()
+        content = await response.json()
 
         file_dir = os.path.dirname(file_)
         if not os.path.isdir(file_dir):
             os.makedirs(file_dir)
 
         with io.open(file_, 'w+') as f:
-            f.write(content)
+            f.write(json.dumps(content, sort_keys=True, indent=4))
         click.echo(f'=> Downloaded to {file_}')
 
         return (url, file_)
@@ -76,15 +78,16 @@ async def download_product_details(shipit_url: str, download_dir: str):
         async with session.get(f'{shipit_url}/json_exports.json') as response:
             if response.status != 200:
                 response.raise_for_status()
-            json_paths = await response.json()
+            paths = await response.json()
 
         await asyncio.gather(*[
             download_json_file(
                 session,
-                f'{shipit_url}{json_path}',
-                f'{download_dir}{json_path}',
+                f'{shipit_url}{path}',
+                f'{download_dir}{path}',
             )
-            for json_path in json_paths
+            for path in paths
+            if path.endswith('.json')
         ])
 
     click.echo('All files were downloaded successfully!')

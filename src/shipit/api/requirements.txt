@@ -3,6 +3,7 @@
 
 aiohttp
 arrow
+backoff
 json-e
 mohawk
 mozilla-version
