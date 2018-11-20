@@ -155,7 +155,7 @@ def schedule_phase(name, phase):
     queue.createTask(phase.task_id, phase.rendered)
 
     phase.submitted = True
-    phase.completed_by = flask.g.userinfo['email']
+    phase.completed_by = g.userinfo['email']
     completed = datetime.datetime.utcnow()
     phase.completed = completed
     if all([ph.submitted for ph in phase.release.phases]):
@@ -256,12 +256,12 @@ def rebuild_product_details(options):
         trace = traceback.format_exc()
         logger.error('{0}\nException:{1}\nTraceback: {2}'.format(msg, e, trace))  # noqa
 
-    return flask.jsonify({'ok': 'ok'})
+    return jsonify({'ok': 'ok'})
 
 
 @auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
 def sync_release_datetimes(releases):
-    session = flask.g.db.session
+    session = g.db.session
     for release in releases:
         try:
             r = session.query(Release).filter(Release.name == release['name']).one()
@@ -271,16 +271,16 @@ def sync_release_datetimes(releases):
         except NoResultFound:
             # nothing todo
             pass
-    return flask.jsonify({'ok': 'ok'})
+    return jsonify({'ok': 'ok'})
 
 
 @auth.require_scopes([SCOPE_PREFIX + '/update_release_status'])
 def update_release_status(name, body):
-    session = flask.g.db.session
+    session = g.db.session
     try:
         r = session.query(Release).filter(Release.name == name).one()
     except NoResultFound:
-        flask.abort(404)
+        abort(404)
 
     status = body['status']
     r.status = status
