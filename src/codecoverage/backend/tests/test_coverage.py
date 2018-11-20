@@ -4,8 +4,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
+from unittest import mock
 
 import pytest
+from fakeredis import FakeStrictRedis
+from rq import SimpleWorker
 
 
 def test_coverage_supported_extensions_api(client):
@@ -26,6 +29,74 @@ async def test_coverage_latest(coverage_responses):
     assert data['latest_rev'] == '8063b0c54b888fe1f98774b71e1870cc2267f33f'
     assert data['latest_pushid'] == 33743
     assert data['previous_rev'] == '5401938bde37d0e7f1016bbd7694e72bdbf5e9a1'
+
+
+def test_coverage_by_changeset(coverage_builds):
+    from rq import Queue
+    from codecoverage_backend import api
+    from tests.conftest import mock_coverage_by_changeset_job_success
+
+    # patch the queue to be sync to allow it run without workers. http://python-rq.org/docs/testing/
+    with mock.patch('codecoverage_backend.api.q', Queue(connection=FakeStrictRedis(singleton=False))) as q:
+        # patch the mock_coverage_by_changeset
+        with mock.patch('codecoverage_backend.api.coverage_by_changeset_job', mock_coverage_by_changeset_job_success):
+            assert q.is_empty()
+
+            # Get changeset coverage information
+            for changeset, expected in coverage_builds['info'].items():
+                result, code = api.coverage_by_changeset(changeset)
+                assert code == 202
+
+            # test that in the case of exception it will return 500
+            result, code = api.coverage_by_changeset('mozilla test changeset')
+            assert code == 202
+
+            # run simple worker to run all tasks
+            w = SimpleWorker([q], connection=q.connection)
+            w.work(burst=True)
+
+            # Everything should be 200 now
+            for changeset, expected in coverage_builds['info'].items():
+                result, code = api.coverage_by_changeset(changeset)
+                assert result == expected
+                assert code == 200
+
+            # except the incorrect changeset, should be 500
+            result, code = api.coverage_by_changeset('mozilla test changeset')
+            assert code == 500
+
+
+def test_coverage_summary_by_changeset(coverage_builds):
+    from rq import Queue
+    from codecoverage_backend import api
+    from tests.conftest import mock_coverage_by_changeset_job_success
+
+    # patch the queue to be sync to allow it run without workers. http://python-rq.org/docs/testing/
+    with mock.patch('codecoverage_backend.api.q', Queue(connection=FakeStrictRedis(singleton=False))) as q:
+        # patch the mock_coverage_by_changeset
+        with mock.patch('codecoverage_backend.api.coverage_by_changeset_job', mock_coverage_by_changeset_job_success):
+            # Get changeset coverage information
+            for changeset, expected in coverage_builds['summary'].items():
+                result, code = api.coverage_summary_by_changeset(changeset)
+                assert code == 202
+
+            # test that in the case of exception it will return 500
+            result, code = api.coverage_summary_by_changeset('mozilla test changeset')
+            assert code == 202
+
+            # run simple worker to run all tasks
+            w = SimpleWorker([q], connection=q.connection)
+            w.work(burst=True)
+
+            # Everything should be 200 now
+            for changeset, expected in coverage_builds['summary'].items():
+                result, code = api.coverage_summary_by_changeset(changeset)
+                assert result == expected
+                assert code == 200
+
+            # except the incorrect changeset, should be 500
+            result, code = api.coverage_summary_by_changeset('mozilla test changeset')
+            assert code == 500
 
 
 @pytest.mark.asyncio
