@@ -209,6 +209,21 @@ def coverage_builds():
     return builds
 
 
+def mock_coverage_by_changeset_job_success(job_changeset):
+    paths = glob.glob(os.path.join(FIXTURES_DIR, 'coverage_build_*.json'))
+    builds = {'info': {}, 'summary': {}}
+    for path in sorted(paths):
+        with open(path) as f:
+            build_data = json.load(f)
+        builds['info'].update(build_data['info'])
+        builds['summary'].update(build_data['summary'])
+
+    for changeset, expected in builds['info'].items():
+        if changeset == job_changeset or changeset[:12] == job_changeset[:12]:
+            return expected
+    raise NotImplementedError('Not implemented return values for changeset %s' % job_changeset)
+
+
 @pytest.fixture
 def mock_active_data(mock_secrets, aresponses):
     '''
