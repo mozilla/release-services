@@ -93,7 +93,27 @@ async def download_product_details(shipit_url: str, download_dir: str):
 @click.command(name='rebuild-product-details')
 @click.option(
     '--database-url',
-    type=int,
+    type=str,
+    required=True,
+    default='postgresql://127.0.0.1:9000/services',
+)
+@click.option(
+    '--git-repo-url',
+    type=str,
+    required=True,
+    default='https://github.com/mozilla-releng/product-details',
+)
+@click.option(
+    '--channel',
+    type=click.Choice([
+        'development',
+        'master',
+        'testing',
+        'staging',
+        'production',
+    ]),
+    required=True,
+    default=os.environ.get('RELEASE_CHANNEL', 'master'),
 )
 @click.option(
     '--breakpoint-version',
@@ -106,12 +126,22 @@ async def download_product_details(shipit_url: str, download_dir: str):
 )
 @coroutine
 async def rebuild_product_details(database_url: str,
-                                  breakpoint_version: typing.Optional[int],
-                                  clean_working_copy: bool,
+                                  channel: str,
+                                  git_repo_url: str,
+                                  breakpoint_version: typing.Optional[int] = None,
+                                  clean_working_copy: bool = False,
                                   ):
+    if channel == 'development':
+        channel = 'master'
     engine = sqlalchemy.create_engine(database_url)
     session = sqlalchemy.orm.sessionmaker(bind=engine)()
-    shipit_api.product_details.rebuild(session, breakpoint_version, clean_working_copy)
+    click.echo('Product details are building ...')
+    await shipit_api.product_details.rebuild(session,
+                                             channel,
+                                             git_repo_url,
+                                             breakpoint_version,
+                                             clean_working_copy,
+                                             )
     click.echo('Product details have been rebuilt')
 
 

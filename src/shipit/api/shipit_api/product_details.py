@@ -6,6 +6,8 @@
 import asyncio
 import datetime
 import enum
+import functools
+import hashlib
 import json
 import os
 import pathlib
@@ -22,7 +24,9 @@ import sqlalchemy
 import sqlalchemy.orm
 import typeguard
 
+import cli_common.command
 import cli_common.log
+import cli_common.utils
 import shipit_api.config
 import shipit_api.models
 
@@ -66,7 +70,7 @@ ReleaseL10n = mypy_extensions.TypedDict('ReleaseL10n', {
 ReleaseL10ns = typing.Dict[L10n, ReleaseL10n]
 ReleasesHistory = typing.Dict[str, str]
 PrimaryBuildDetails = mypy_extensions.TypedDict('PrimaryBuildDetails', {
-    'filesize': int,
+    'filesize': float,
 })
 PrimaryBuild = mypy_extensions.TypedDict('PrimaryBuild', {
     'Linux': PrimaryBuildDetails,
@@ -155,7 +159,10 @@ A = typing.TypeVar('A')
 B = typing.TypeVar('B')
 
 
-def with_default(func: typing.Callable[[A], B], a: typing.Optional[A], default: B) -> B:
+def with_default(a: typing.Optional[A],
+                 func: typing.Callable[[A], B],
+                 default: B,
+                 ) -> B:
     if a is None:
         return default
     return func(a)
@@ -163,6 +170,10 @@ def with_default(func: typing.Callable[[A], B], a: typing.Optional[A], default: 
 
 def to_isoformat(d: datetime.datetime) -> str:
     return arrow.get(d).isoformat()
+
+
+def to_format(d: datetime.datetime, format: str) -> str:
+    return arrow.get(d).format(format)
 
 
 def get_product_mozilla_version(product: Product,
@@ -193,9 +204,22 @@ async def fetch_l10n_data(
     }[Product(release.product)]
     url = f'{shipit_api.config.HG_PREFIX}/{release.branch}/raw-file/{release.revision}/{url_file}'
 
-    async with session.get(url) as response:
-        response.raise_for_status()
-        changesets = await response.json()
+    cache_dir = shipit_api.config.PRODUCT_DETAILS_CACHE_DIR / 'fetch_l10n_data'
+    os.makedirs(cache_dir, exist_ok=True)
+
+    cache = cache_dir / hashlib.sha256(url.encode('utf-8')).hexdigest()
+    if cache.exists():
+        logger.debug(f'Cache hit for {url}')
+        with cache.open() as f:
+            changesets = json.load(f)
+    else:
+        logger.debug(f'Fetching {url}')
+        async with session.get(url) as response:
+            response.raise_for_status()
+            logger.debug(f'Fetched {url}')
+            changesets = await response.json()
+            with cache.open('w+') as f:
+                f.write(json.dumps(changesets))
 
     return (release, changesets)
 
@@ -209,6 +233,8 @@ def get_old_product_details(directory: str) -> ProductDetails:
     for root_, _, files in os.walk(directory):
         root = pathlib.Path(root_)
         for file__ in files:
+            if not file__.endswith('.json'):
+                continue
             file_ = root / file__
             with file_.open() as f:
                 data[str(file_.relative_to(directory))] = json.load(f)
@@ -351,7 +377,10 @@ def get_releases(breakpoint_version: int,
                     description='',  # XXX: we don't have this field anymore
                     is_security_driven=False,  # XXX: we don't have this field anymore
                     version=release.version,
-                    date=release.completed.strftime('%Y-%m-%d'),
+                    date=with_default(release.completed,
+                                      functools.partial(to_format, format='YYYY-MM-DD'),
+                                      default='',
+                                      ),
                 )
 
     return dict(releases=details)
@@ -425,7 +454,10 @@ def get_release_history(breakpoint_version: int,
         if version < breakpoint_version:
             continue
 
-        history[release.version] = release.completed.strftime('%Y-%m-%d')
+        history[release.version] = with_default(release.completed,
+                                                functools.partial(to_format, format='YYYY-MM-DD'),
+                                                default='',
+                                                )
 
     return history
 
@@ -488,24 +520,42 @@ def get_primary_builds(breakpoint_version: int,
         if product is not Product(release.product) or \
            release.version in versions:
             continue
-        for version in versions:
-            for l10n in releases_l10n[release].keys():
-                builds[l10n][version] = {
-                    'Windows': {
-                        'filesize': 0,
-                    },
-                    'OS X': {
-                        'filesize': 0,
-                    },
-                    'Linux': {
-                        'filesize': 0,
-                    },
-                }
+        for l10n in releases_l10n[release].keys():
+            builds.setdefault(l10n, dict())
+            for version in versions:
+                if version == '':
+                    continue
+                if product is Product.THUNDERBIRD:
+                    builds[l10n][version] = {
+                        'Windows': {
+                            'filesize': 25.1
+                        },
+                        'OS X': {
+                            'filesize': 50.8
+                        },
+                        'Linux': {
+                            'filesize': 31.8
+                        }
+                    }
+                else:
+                    builds[l10n][version] = {
+                        'Windows': {
+                            'filesize': 0,
+                        },
+                        'OS X': {
+                            'filesize': 0,
+                        },
+                        'Linux': {
+                            'filesize': 0,
+                        },
+                    }
 
     return builds
 
 
-def get_latest_version(releases: typing.List[shipit_api.models.Release], branch: str, product: Product
+def get_latest_version(releases: typing.List[shipit_api.models.Release],
+                       branch: str,
+                       product: Product
                        ) -> str:
     '''Get latest version
 
@@ -518,14 +568,19 @@ def get_latest_version(releases: typing.List[shipit_api.models.Release], branch:
     filtered_releases = [r for r in shipped_releases if
                          r.product == product.value and
                          r.branch == branch]
-    releases = sorted(
+    releases_ = sorted(
         filtered_releases,
         reverse=True,
         key=lambda r: get_product_mozilla_version(Product(product), r.version))
-    return releases[0].version
+    if len(releases_) == 0:
+        # XXX: should we fallback to old_product_details?
+        return ''
+    return releases_[0].version
 
 
-def get_firefox_esr_version(releases: typing.List[shipit_api.models.Release], branch: str, product: Product
+def get_firefox_esr_version(releases: typing.List[shipit_api.models.Release],
+                            branch: str,
+                            product: Product
                             ) -> str:
     '''Return latest ESR version
 
@@ -537,7 +592,10 @@ def get_firefox_esr_version(releases: typing.List[shipit_api.models.Release], br
 
 
 def get_firefox_esr_next_version(releases: typing.List[shipit_api.models.Release],
-                                 branch: str, product: Product, esr_next: typing.Optional[str]) -> str:
+                                 branch: str,
+                                 product: Product,
+                                 esr_next: typing.Optional[str],
+                                 ) -> str:
     '''Next ESR version
 
     Return an empty string when there is only one ESR release published. If
@@ -573,21 +631,31 @@ def get_firefox_versions(releases: typing.List[shipit_api.models.Release]) -> Fi
     return dict(
         FIREFOX_NIGHTLY=shipit_api.config.FIREFOX_NIGHTLY,
         FIREFOX_AURORA=shipit_api.config.FIREFOX_AURORA,
-        LATEST_FIREFOX_VERSION=get_latest_version(
-            releases, shipit_api.config.RELEASE_BRANCH, Product.FIREFOX),
-        FIREFOX_ESR=get_firefox_esr_version(
-            releases,
-            f'{shipit_api.config.ESR_BRANCH_PREFIX}{shipit_api.config.CURRENT_ESR}',
-            Product.FIREFOX),
-        FIREFOX_ESR_NEXT=get_firefox_esr_next_version(
-            releases,
-            f'{shipit_api.config.ESR_BRANCH_PREFIX}{shipit_api.config.ESR_NEXT}',
-            Product.FIREFOX, shipit_api.config.ESR_NEXT),
-        LATEST_FIREFOX_DEVEL_VERSION=get_latest_version(
-            releases, shipit_api.config.BETA_BRANCH, Product.FIREFOX),
-        LATEST_FIREFOX_RELEASED_DEVEL_VERSION=get_latest_version(
-            releases, shipit_api.config.BETA_BRANCH, Product.FIREFOX),
-        FIREFOX_DEVEDITION=get_latest_version(releases, shipit_api.config.BETA_BRANCH, Product.DEVEDITION),
+        LATEST_FIREFOX_VERSION=get_latest_version(releases,
+                                                  shipit_api.config.RELEASE_BRANCH,
+                                                  Product.FIREFOX,
+                                                  ),
+        FIREFOX_ESR=get_firefox_esr_version(releases,
+                                            f'{shipit_api.config.ESR_BRANCH_PREFIX}{shipit_api.config.CURRENT_ESR}',
+                                            Product.FIREFOX,
+                                            ),
+        FIREFOX_ESR_NEXT=get_firefox_esr_next_version(releases,
+                                                      f'{shipit_api.config.ESR_BRANCH_PREFIX}{shipit_api.config.ESR_NEXT}',
+                                                      Product.FIREFOX,
+                                                      shipit_api.config.ESR_NEXT,
+                                                      ),
+        LATEST_FIREFOX_DEVEL_VERSION=get_latest_version(releases,
+                                                        shipit_api.config.BETA_BRANCH,
+                                                        Product.FIREFOX,
+                                                        ),
+        LATEST_FIREFOX_RELEASED_DEVEL_VERSION=get_latest_version(releases,
+                                                                 shipit_api.config.BETA_BRANCH,
+                                                                 Product.FIREFOX,
+                                                                 ),
+        FIREFOX_DEVEDITION=get_latest_version(releases,
+                                              shipit_api.config.BETA_BRANCH,
+                                              Product.DEVEDITION,
+                                              ),
         LATEST_FIREFOX_OLDER_VERSION=shipit_api.config.LATEST_FIREFOX_OLDER_VERSION,
     )
 
@@ -658,14 +726,14 @@ def get_l10n(releases: typing.List[shipit_api.models.Release],
         if file_.startswith('json/1.0/l10n/')
     }
 
-    for (release, locales) in releases_l10n:
+    for (release, locales) in releases_l10n.items():
         data[f'l10n/{release.name}.json'] = {
             'locales': {
                 locale: dict(changeset=content['revision'])
                 for locale, content in locales.items()
             },
-            'submittedAt': with_default(to_isoformat, release.created, ''),
-            'shippedAt': with_default(to_isoformat, release.completed, ''),
+            'submittedAt': with_default(release.created, to_isoformat, default=''),
+            'shippedAt': with_default(release.completed, to_isoformat, default=''),
             'name': release.name,
         }
 
@@ -813,8 +881,14 @@ def get_mobile_versions(releases: typing.List[shipit_api.models.Release]) -> Mob
         ios_version=shipit_api.config.IOS_VERSION,
         nightly_version=shipit_api.config.FIREFOX_NIGHTLY,
         alpha_version=shipit_api.config.FIREFOX_NIGHTLY,
-        beta_version=get_latest_version(releases, shipit_api.config.BETA_BRANCH, Product.FENNEC),
-        version=get_latest_version(releases, shipit_api.config.RELEASE_BRANCH, Product.FENNEC),
+        beta_version=get_latest_version(releases,
+                                        shipit_api.config.BETA_BRANCH,
+                                        Product.FENNEC,
+                                        ),
+        version=get_latest_version(releases,
+                                   shipit_api.config.RELEASE_BRANCH,
+                                   Product.FENNEC,
+                                   ),
     )
 
 
@@ -834,14 +908,14 @@ def get_thunderbird_versions(releases: typing.List[shipit_api.models.Release]) -
            }
     '''
     return dict(
-        LATEST_THUNDERBIRD_VERSION=get_latest_version(
-            releases,
-            shipit_api.config.THUNDERBIRD_RELEASE_BRANCH,
-            Product.THUNDERBIRD),
-        LATEST_THUNDERBIRD_DEVEL_VERSION=get_latest_version(
-            releases,
-            shipit_api.config.THUNDERBIRD_BETA_BRANCH,
-            Product.THUNDERBIRD),
+        LATEST_THUNDERBIRD_VERSION=get_latest_version(releases,
+                                                      shipit_api.config.THUNDERBIRD_RELEASE_BRANCH,
+                                                      Product.THUNDERBIRD,
+                                                      ),
+        LATEST_THUNDERBIRD_DEVEL_VERSION=get_latest_version(releases,
+                                                            shipit_api.config.THUNDERBIRD_BETA_BRANCH,
+                                                            Product.THUNDERBIRD,
+                                                            ),
         LATEST_THUNDERBIRD_NIGHTLY_VERSION=shipit_api.config.LATEST_THUNDERBIRD_NIGHTLY_VERSION,
         LATEST_THUNDERBIRD_ALPHA_VERSION=shipit_api.config.LATEST_THUNDERBIRD_ALPHA_VERSION,
     )
@@ -865,6 +939,7 @@ def run_check(*arg, **kw):
 
 
 async def rebuild(db_session: sqlalchemy.orm.Session,
+                  git_branch: str,
                   git_repo_url: str,
                   breakpoint_version: typing.Optional[int],
                   clean_working_copy: bool = False,
@@ -874,7 +949,8 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     if clean_working_copy and shipit_api.config.PRODUCT_DETAILS_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_DIR)
 
-    # Checkout product details or pull from already existing checkout
+    # Clone/pull latest product details
+    logger.info(f'Getting latest product details from {git_repo_url}.')
     if shipit_api.config.PRODUCT_DETAILS_DIR.exists():
         run_check(['git', 'pull'],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
@@ -884,22 +960,33 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR.parent,
                   )
 
+    # TODO: make sure checkout is clean
+
+    # Checkout the branch we are working on
+    logger.info(f'Checkout {git_branch} branch.')
+    run_check(['git', 'checkout', git_branch],
+              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              )
     # TODO:
     # if breakpoint_version is not provided we should figure it out from product details
     # and if we can not figure it out we should use shipit_api.config.BREAKPOINT_VERSION
     # breakpoint_version should always be higher then shipit_api.config.BREAKPOINT_VERSION
     if breakpoint_version is None:
         breakpoint_version = shipit_api.config.BREAKPOINT_VERSION
+    logger.info(f'Breakpoint version is {breakpoint_version}')
 
     # get data from older product-details
+    logger.info(f'Reading old product details from {shipit_api.config.PRODUCT_DETAILS_DIR}')
     old_product_details = get_old_product_details(shipit_api.config.PRODUCT_DETAILS_DIR)
 
     # get all the releases from the database from (including)
     # breakpoint_version on
+    logger.info(f'Getting old releases from the database')
     releases = get_releases_from_db(db_session, breakpoint_version)
 
     # get all the l10n for each release from the database
     # use limit_per_host=50 since hg.mozilla.org doesn't like too many connections
+    logger.info(f'Getting locales from hg.mozilla.org for each release from database')
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit_per_host=50)) as session:
         releases_l10n = await asyncio.gather(*[
             fetch_l10n_data(session, release)
@@ -1016,7 +1103,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
 
     #  add 'json/1.0/' infront of each file path
     product_details = {
-        f'json/1.0{file_}': content
+        f'json/1.0/{file_}': content
         for file_, content in product_details.items()
     }
 
@@ -1026,28 +1113,44 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         for file_ in product_details.keys()
     }
 
-    new_product_details_dir = shipit_api.config.PRODUCT_DETAILS_DIR / 'new'
+    if shipit_api.config.PRODUCT_DETAILS_NEW_DIR.exists():
+        shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_NEW_DIR)
 
     for (file__, content) in product_details.items():
-
-        file_ = new_product_details_dir / file__
+        file_ = shipit_api.config.PRODUCT_DETAILS_NEW_DIR / file__
 
         # we must ensure that all needed folders exists
-        os.makedirs(str(file_.parent))
+        os.makedirs(file_.parent, exist_ok=True)
 
         # write content into json file
         with file_.open('w+') as f:
             f.write(json.dumps(content, sort_keys=True, indent=4))
 
-    # TODO: remove old product_details and move new product_details to old location
+    for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_NEW_DIR):
+        old_item = shipit_api.config.PRODUCT_DETAILS_DIR / item
+        new_item = shipit_api.config.PRODUCT_DETAILS_NEW_DIR / item
+
+        # We remove all top files/folders in PRODUCT_DETAILS_DIR that were
+        # generated in PRODUCT_DETAILS_NEW_DIR
+        if old_item.exists():
+            if old_item.is_dir():
+                shutil.rmtree(old_item)
+            else:
+                os.unlink(old_item)
+
+        # Move new files to be commited
+        shutil.move(new_item, old_item)
 
     # Add, commit and push changes
     run_check(['git', 'add', '.'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
               )
-    # TODO: which user do we configure when we are updating
-    # TODO: we need a better commmit message, maybe mention what triggered this update
 
+    run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
+    run_check(['git', 'config', '--global', 'user.email', 'release-services+robot@mozilla.com'])
+    run_check(['git', 'config', '--global', 'user.name', 'Release Services Robot'])
+
+    # TODO: we need a better commmit message, maybe mention what triggered this update
     commit_message = 'Updating product details'
     run_check(['git', 'commit', '-m', commit_message],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
