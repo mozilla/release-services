@@ -10,6 +10,8 @@ import functools
 import hashlib
 import json
 import os
+
+
 import pathlib
 import re
 import shutil
@@ -44,7 +46,7 @@ class Product(enum.Enum):
 @enum.unique
 class ProductCategory(enum.Enum):
     MAJOR = 'major'
-    DEVELOPMENT = 'development'
+    DEVELOPMENT = 'dev'
     STABILITY = 'stability'
     ESR = 'esr'
 
@@ -54,7 +56,7 @@ ReleaseDetails = mypy_extensions.TypedDict('ReleaseDetails', {
     'category': str,
     'product': str,
     'build_number': int,
-    'description': str,
+    'description': typing.Optional[str],
     'is_security_driven': bool,
     'version': str,
     'date': str,
@@ -368,14 +370,16 @@ def get_releases(breakpoint_version: int,
         # get release history from the database
         #
         for release in releases:
+            if release.product != product.value:
+                continue
             categories = get_product_categories(Product(release.product), release.version)
             for category in categories:
                 details[f'{release.product}-{release.version}'] = dict(
                     category=category.value,
                     product=release.product,
                     build_number=release.build_number,
-                    description='',  # XXX: we don't have this field anymore
-                    is_security_driven=False,  # XXX: we don't have this field anymore
+                    description=None,  # TODO: we don't have this field anymore
+                    is_security_driven=False,  # TODO: we don't have this field anymore
                     version=release.version,
                     date=with_default(release.completed,
                                       functools.partial(to_format, format='YYYY-MM-DD'),
@@ -427,9 +431,9 @@ def get_release_history(breakpoint_version: int,
     #
     # get release history from the JSON files up to breakpoint_version
     #
-    product_file = f'json/1.0/{product.value}_history_{product_category.value}_releases.json'
+    product_file = f'json/1.0/{product.value}_history_{product_category.name.lower()}_releases.json'
     if product is Product.FENNEC:
-        product_file = f'json/1.0/mobile_history_{product_category.value}_releases.json'
+        product_file = f'json/1.0/mobile_history_{product_category.name.lower()}_releases.json'
 
     old_history = typing.cast(ReleasesHistory, old_product_details[product_file])
     for product_with_version in old_history:
@@ -450,8 +454,21 @@ def get_release_history(breakpoint_version: int,
         if product.value != release.product:
             continue
 
-        version = int(release.version.split('.')[0])
-        if version < breakpoint_version:
+        version = get_product_mozilla_version(Product(release.product), release.version)
+        if version.major_number < breakpoint_version:
+            continue
+
+        # skip all releases which dont fit into product category
+        if product_category is ProductCategory.MAJOR and \
+           (version.patch_number is not None or version.beta_number is not None):
+            continue
+
+        elif product_category is ProductCategory.DEVELOPMENT and \
+             version.beta_number is None:
+            continue
+
+        elif product_category is ProductCategory.STABILITY and \
+             (version.beta_number is not None or version.patch_number is None):
             continue
 
         history[release.version] = with_default(release.completed,
@@ -1109,7 +1126,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
 
     # create json_exports.json to list all the files
     product_details['json_exports.json'] = {
-        file_: os.path.basename(file_)
+        f'/{file_}': os.path.basename(file_)
         for file_ in product_details.keys()
     }
 
