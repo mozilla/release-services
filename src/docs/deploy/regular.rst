@@ -72,7 +72,7 @@ Once you verify that the project works on staging, you must check it off in
 tracking Pull Request for this deployment, as shown bellow.
 
 .. image:: step_4_verified_project_on_staging.png
-  
+
 The role of the release manager is that it ensures that all projects are
 verified and tested before deploying to production.
 
@@ -113,7 +113,7 @@ Once you verify that the project works on production, you must check it off in
 tracking Pull Request for this deployment, as shown bellow.
 
 .. image:: step_7_verified_project_on_production.png
-  
+
 The role of the release manager is that it ensures that all projects are
 verified and tested before deploying to production.
 
@@ -154,8 +154,8 @@ A good starting point for writing release notes is:
 This step will take some time (~30-60min) also good Internet connection is
 required.
 
-.. warning:: This step currently doesn't work. Please ping @garbas to do this
-             instead of you (for now).
+.. warning:: This step currently doesn't work on not NixOS platforms. Please
+             ping @garbas/@rail to do this instead of you (for now).
 
 - First we need to create a temporary branch
 - Then apply the tracking Pull Request of deployment to the temporary branch
@@ -168,12 +168,12 @@ required.
     cd release-services
     git checkout -b temp origin/staging
     curl -L https://github.com/mozilla/release-services/pull/<PR_NUMBER>.patch | git am
-    ./please -vv tools base-image \
+    USE_NIX=1 ./please -vv tools base-image \
         --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
         --taskcluster-client-id="..." \
         --taskcluster-access-token="..."
     git branch -D temp
-   
+
 It might happen that push to docker hub will fail since the resulting docker
 image is quite big (~1.5GB). When it fails you can only retrigger the
 ``docker push`` command.
