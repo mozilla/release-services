@@ -374,7 +374,7 @@ PROJECTS_CONFIG = {
                         'dns': 'shizuoka-60622.herokussl.com',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tooltool',
                         'heroku_dyno_type': 'web',
@@ -401,7 +401,7 @@ PROJECTS_CONFIG = {
                         'heroku_command': '/bin/flask worker',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tooltool',
                         'heroku_dyno_type': 'worker',
@@ -427,7 +427,7 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'cron.replicate.production',
                         'name-suffix': '-replicate',
                         'docker_registry': 'index.docker.io',
@@ -453,7 +453,7 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'cron.check_pending_uploads.production',
                         'name-suffix': '-check_pending_uploads',
                         'docker_registry': 'index.docker.io',
