@@ -647,6 +647,99 @@ PROJECTS_CONFIG = {
             },
         ],
     },
+    'bugbug/data': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'staging': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'production': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                },
+            },
+        ],
+    },
+    'bugbug/train': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'staging': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'production': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                },
+            },
+        ],
+    },
+    'bugbug/eval': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'staging': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'production': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                },
+            },
+        ],
+    },
     'pulselistener': {
         'checks': [
             ('Checking code quality', 'flake8'),
