@@ -99,6 +99,7 @@ def cmd(ctx, project, quiet, nix_shell,
                 ]),
                 nix_shell=nix_shell,
                 )
+        please_cli.utils.check_result(result, output)
 
         database_exists = False
         for line in output.split('\n'):
@@ -106,17 +107,6 @@ def cmd(ctx, project, quiet, nix_shell,
             if column1 == dbname:
                 database_exists = True
                 break
-
-        if result != 0:
-            click.secho('ERROR', fg='red')
-            raise click.UsageError(
-                'Could not connect to the database.\n\n'
-                'Please run:\n\n'
-                '    ./please run postgresql\n\n'
-                'in a separate terminal.'
-            )
-
-        please_cli.utils.check_result(result, output)
 
         if not database_exists:
             click.echo(' => Creating `{}` database ` ... '.format(dbname), nl=False)
