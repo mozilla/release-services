@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
-  inherit (releng_pkgs.pkgs) writeScript;
+  inherit (releng_pkgs.pkgs) writeScript git;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
@@ -21,7 +21,12 @@ let
       (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
+      [ git ] ++
       (fromRequirementsFile ./requirements.txt python.packages);
+    postInstall = ''
+      mkdir -p $out/bin
+      ln -s ${git}/bin/git $out/bin/git
+    '';
     passthru = {
       update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}

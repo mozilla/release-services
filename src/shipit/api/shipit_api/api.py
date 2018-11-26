@@ -6,7 +6,10 @@
 import datetime
 import functools
 
-import flask
+from flask import abort
+from flask import current_app
+from flask import g
+from flask import jsonify
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
@@ -14,6 +17,8 @@ from backend_common.auth import auth
 from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
+from shipit_api.config import PROJECT_NAME
+from shipit_api.config import PULSE_ROUTE_REBUILD_PRODUCT_DETAILS
 from shipit_api.config import SCOPE_PREFIX
 from shipit_api.models import Phase
 from shipit_api.models import Release
@@ -22,16 +27,16 @@ from shipit_api.tasks import UnsupportedFlavor
 from shipit_api.tasks import fetch_actions_json
 from shipit_api.tasks import generate_action_hook
 
-log = get_logger(__name__)
+logger = get_logger(__name__)
 
 
 def notify_via_irc(message):
-    owners = flask.current_app.config.get('IRC_NOTIFICATIONS_OWNERS')
-    channel = flask.current_app.config.get('IRC_NOTIFICATIONS_CHANNEL')
+    owners = current_app.config.get('IRC_NOTIFICATIONS_OWNERS')
+    channel = current_app.config.get('IRC_NOTIFICATIONS_CHANNEL')
 
     if owners and channel:
         owners = ': '.join(owners)
-        flask.current_app.notify.irc({
+        current_app.notify.irc({
             'channel': channel,
             'message': f'{owners}: {message}',
         })
@@ -43,7 +48,7 @@ def validate_user(key, checker):
         def decorated(*args, **kwargs):
             has_permissions = False
             try:
-                has_permissions = checker(flask.g.userinfo[key])
+                has_permissions = checker(g.userinfo[key])
             except (AttributeError, KeyError):
                 response_body = {'error': 'missing_userinfo',
                                  'error_description': 'Userinfo is missing'}
@@ -63,7 +68,7 @@ def validate_user(key, checker):
 @validate_user(key='https://sso.mozilla.com/claim/groups',
                checker=lambda xs: 'vpn_cloudops_shipit' in xs)
 def add_release(body):
-    session = flask.g.db.session
+    session = g.db.session
     r = Release(
         product=body['product'],
         version=body['version'],
@@ -76,8 +81,8 @@ def add_release(body):
     )
     try:
         r.generate_phases(
-            partner_urls=flask.current_app.config.get('PARTNERS_URL'),
-            github_token=flask.current_app.config.get('GITHUB_TOKEN'),
+            partner_urls=current_app.config.get('PARTNERS_URL'),
+            github_token=current_app.config.get('GITHUB_TOKEN'),
         )
         session.add(r)
         session.commit()
@@ -92,7 +97,7 @@ def add_release(body):
 
 def list_releases(product=None, branch=None, version=None, build_number=None,
                   status=['scheduled']):
-    session = flask.g.db.session
+    session = g.db.session
     releases = session.query(Release)
     if product:
         releases = releases.filter(Release.product == product)
@@ -110,16 +115,16 @@ def list_releases(product=None, branch=None, version=None, build_number=None,
 
 
 def get_release(name):
-    session = flask.g.db.session
+    session = g.db.session
     try:
         release = session.query(Release).filter(Release.name == name).one()
         return release.json
     except NoResultFound:
-        flask.abort(404)
+        abort(404)
 
 
 def get_phase(name, phase):
-    session = flask.g.db.session
+    session = g.db.session
     try:
         phase = session.query(Phase) \
             .filter(Release.id == Phase.release_id) \
@@ -127,30 +132,30 @@ def get_phase(name, phase):
             .filter(Phase.name == phase).one()
         return phase.json
     except NoResultFound:
-        flask.abort(404)
+        abort(404)
 
 
 @mozilla_accept_token()
 @validate_user(key='https://sso.mozilla.com/claim/groups',
                checker=lambda xs: 'vpn_cloudops_shipit' in xs)
 def schedule_phase(name, phase):
-    session = flask.g.db.session
+    session = g.db.session
     try:
         phase = session.query(Phase) \
             .filter(Release.id == Phase.release_id) \
             .filter(Release.name == name) \
             .filter(Phase.name == phase).one()
     except NoResultFound:
-        flask.abort(404)
+        abort(404)
 
     if phase.submitted:
-        flask.abort(409, 'Already submitted!')
+        abort(409, 'Already submitted!')
 
     queue = get_service('queue')
     queue.createTask(phase.task_id, phase.rendered)
 
     phase.submitted = True
-    phase.completed_by = flask.g.userinfo['email']
+    phase.completed_by = g.userinfo['email']
     completed = datetime.datetime.utcnow()
     phase.completed = completed
     if all([ph.submitted for ph in phase.release.phases]):
@@ -170,7 +175,7 @@ def schedule_phase(name, phase):
 @validate_user(key='https://sso.mozilla.com/claim/groups',
                checker=lambda xs: 'vpn_cloudops_shipit' in xs)
 def abandon_release(name):
-    session = flask.g.db.session
+    session = g.db.session
     try:
         r = session.query(Release).filter(Release.name == name).one()
         # Cancel all submitted task groups first
@@ -178,7 +183,7 @@ def abandon_release(name):
             try:
                 actions = fetch_actions_json(phase.task_id)
             except ActionsJsonNotFound:
-                log.info('Ignoring not completed action task %s', phase.task_id)
+                logger.info('Ignoring not completed action task %s', phase.task_id)
                 continue
 
             hook = generate_action_hook(
@@ -191,16 +196,16 @@ def abandon_release(name):
             # remove
             for long_param in ('existing_tasks', 'release_history', 'release_partner_config'):
                 del hook['context']['parameters'][long_param]
-            log.info('Cancel phase %s by hook %s', phase.name, hook)
+            logger.info('Cancel phase %s by hook %s', phase.name, hook)
             hooks = get_service('hooks')
             res = hooks.triggerHook(hook['hook_group_id'], hook['hook_id'], hook['hook_payload'])
-            log.debug('Done: %s', res)
+            logger.debug('Done: %s', res)
 
         r.status = 'aborted'
         session.commit()
         release = r.json
     except NoResultFound:
-        flask.abort(404)
+        abort(404)
 
     notify_via_irc(f'Release {r.product} {r.version} build{r.build_number} was just canceled.')
 
@@ -209,7 +214,7 @@ def abandon_release(name):
 
 @auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
 def sync_releases(releases):
-    session = flask.g.db.session
+    session = g.db.session
     for release in releases:
         try:
             session.query(Release).filter(Release.name == release['name']).one()
@@ -232,12 +237,30 @@ def sync_releases(releases):
             r.completed = release['shippedAt']
             session.add(r)
             session.commit()
-    return flask.jsonify({'ok': 'ok'})
+    return jsonify({'ok': 'ok'})
+
+
+@auth.require_scopes([SCOPE_PREFIX + '/rebuild-product-details'])
+def rebuild_product_details(options):
+    pulse_user = current_app.config['PULSE_USER']
+    exchange = f'exchange/{pulse_user}/{PROJECT_NAME}'
+
+    logger.info(f'Sending pulse message `{options}` to queue `{exchange}` for '
+                f'route `{PULSE_ROUTE_REBUILD_PRODUCT_DETAILS}`.')
+
+    try:
+        current_app.pulse.publish(exchange, PULSE_ROUTE_REBUILD_PRODUCT_DETAILS, options)
+    except Exception as e:
+        import traceback
+        msg = 'Can\'t send notification to pulse.'
+        trace = traceback.format_exc()
+        logger.error(f'{msg}\nException:{e}\nTraceback: {trace}')
+    return jsonify({'ok': 'ok'})
 
 
 @auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
 def sync_release_datetimes(releases):
-    session = flask.g.db.session
+    session = g.db.session
     for release in releases:
         try:
             r = session.query(Release).filter(Release.name == release['name']).one()
@@ -247,16 +270,16 @@ def sync_release_datetimes(releases):
         except NoResultFound:
             # nothing todo
             pass
-    return flask.jsonify({'ok': 'ok'})
+    return jsonify({'ok': 'ok'})
 
 
 @auth.require_scopes([SCOPE_PREFIX + '/update_release_status'])
 def update_release_status(name, body):
-    session = flask.g.db.session
+    session = g.db.session
     try:
         r = session.query(Release).filter(Release.name == name).one()
     except NoResultFound:
-        flask.abort(404)
+        abort(404)
 
     status = body['status']
     r.status = status
