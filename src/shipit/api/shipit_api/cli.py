@@ -60,25 +60,23 @@ async def download_json_file(session, url, file_):
     '--download-dir',
     required=True,
     type=click.Path(
-        exists=True,
+        exists=False,
         file_okay=False,
         writable=True,
         readable=True,
     ),
 )
 @click.option(
-    '--shipit-url',
+    '--url',
     default='https://ship-it.mozilla.org',
 )
 @coroutine
-async def download_product_details(shipit_url: str, download_dir: str):
-
-    if os.path.isdir(download_dir):
-        shutil.rmtree(download_dir)
-        os.makedirs(download_dir)
+async def download_product_details(url: str, download_dir: str):
+    '''Download product details from `url` to `download_dir`.
+    '''
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(f'{shipit_url}/json_exports.json') as response:
+        async with session.get(f'{url}/json_exports.json') as response:
             if response.status != 200:
                 response.raise_for_status()
             paths = await response.json()
@@ -86,7 +84,7 @@ async def download_product_details(shipit_url: str, download_dir: str):
         await asyncio.gather(*[
             download_json_file(
                 session,
-                f'{shipit_url}{path}',
+                f'{url}{path}',
                 f'{download_dir}{path}',
             )
             for path in paths
