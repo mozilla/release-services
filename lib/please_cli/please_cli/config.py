@@ -330,7 +330,7 @@ PROJECTS_CONFIG = {
                         'dns': 'tokens.staging.mozilla-releng.net.herokudns.com',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tokens',
                         'heroku_dyno_type': 'web',
