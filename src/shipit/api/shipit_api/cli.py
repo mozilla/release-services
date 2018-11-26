@@ -23,13 +23,14 @@ import shipit_api.product_details
 
 
 def coroutine(f):
-    f = asyncio.coroutine(f)
+    coroutine_f = asyncio.coroutine(f)
 
+    @functools.wraps(coroutine_f)
     def wrapper(*args, **kwargs):
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(f(*args, **kwargs))
+        return loop.run_until_complete(coroutine_f(*args, **kwargs))
 
-    return functools.update_wrapper(wrapper, f)
+    return wrapper
 
 
 @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60)
