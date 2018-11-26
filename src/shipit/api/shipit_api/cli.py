@@ -8,7 +8,6 @@ import functools
 import io
 import json
 import os
-import shutil
 import typing
 
 import aiohttp
