@@ -100,14 +100,7 @@ def cmd(ctx, project, quiet, nix_shell,
                 nix_shell=nix_shell,
                 )
 
-        database_exists = False
-        for line in output.split('\n'):
-            column1 = line.split('|')[0].strip()
-            if column1 == dbname:
-                database_exists = True
-                break
-
-        if result != 0:
+        if result != 0 and 'psql: could not connect to server' in output:
             click.secho('ERROR', fg='red')
             raise click.UsageError(
                 'Could not connect to the database.\n\n'
@@ -117,6 +110,13 @@ def cmd(ctx, project, quiet, nix_shell,
             )
 
         please_cli.utils.check_result(result, output)
+
+        database_exists = False
+        for line in output.split('\n'):
+            column1 = line.split('|')[0].strip()
+            if column1 == dbname:
+                database_exists = True
+                break
 
         if not database_exists:
             click.echo(' => Creating `{}` database ` ... '.format(dbname), nl=False)
