@@ -224,6 +224,52 @@ paths:
           schema:
             $ref: '#/definitions/Phase'
 
+  /signoff/{name}/{phase}:
+    get:
+      summary: Get phase signoff requirements and status
+      operationId: shipit_api.api.get_phase_signoff
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      - name: phase
+        in: path
+        required: true
+        type: string
+      responses:
+        200:
+          description: Retruns phase signoff representation
+          schema:
+            $ref: '#/definitions/Signoffs'
+    put:
+      summary: Sign off a phase
+      operationId: shipit_api.api.phase_signoff
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      - name: phase
+        in: path
+        required: true
+        type: string
+      - in: body
+        name: uid
+        description: Signoff UID
+        required: true
+        schema:
+          type: string
+      responses:
+        409:
+          description: Already submitted
+        200:
+          description: Retruns phase signoff representation
+          schema:
+            $ref: '#/definitions/Signoffs'
+
 definitions:
   ReleaseInput:
     type: object
@@ -361,3 +407,43 @@ definitions:
         type: string
         format: dateTime
         example: 2006-08-14T02:34:56-06:00
+
+  Signoffs:
+    type: object
+    required:
+    - signoffs
+    properties:
+      signoffs:
+        type: array
+        items:
+          $ref: '#/definitions/Signoff'
+      deadline:
+        type: string
+        format: datetime
+        description: Deadline of all signoffs
+
+  Signoff:
+    type: object
+    properties:
+      uid:
+        type: string
+        description: Unique identifier
+      name:
+        type: string
+        description: Human readable signoff name
+      description:
+        type: string
+        description: Human readable explpanation of the signogg
+      signed:
+        type: boolean
+        description: Is the signoff signed off
+      scope:
+        type: string
+        description: Permision required to sign the signoff
+      who:
+        type: string
+        description: Person who signed off (Auth0 ID)
+      when:
+        type: string
+        format: datetime
+        description: Timestamp of the signoff
