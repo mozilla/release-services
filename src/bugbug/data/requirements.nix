@@ -1778,6 +1778,23 @@ let
       };
     };
 
+    "spacy_model_en" = python.mkDerivation {
+      name = "en_core_web_sm";
+      src = pkgs.fetchurl { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz"; sha256 = "161298pl6kzc0cgf2g7ji84xbqv8ayrgsrmmg0hxiflwghfj77cx"; };
+      doCheck = commonDoCheck;
+      patchPhase = ''
+        sed -i -e "s|return requirements|return []|" setup.py
+      '';
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      meta = with pkgs.stdenv.lib; {
+        homepage    = "https://github.com/explosion/spacy-models";
+        license     = licenses."cc-by-sa-40";
+        description = "Models for the spaCy NLP library";
+      };
+    };
+
     "structlog" = python.mkDerivation {
       name = "structlog-18.2.0";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e0/83/428997c0fe7f696f8a6db7f33b559e099c3cb19e4f5e30ff9c6a8b25437d/structlog-18.2.0.tar.gz"; sha256 = "e361edb3b9aeaa85cd38a1bc9ddbb60cda8a991fc29de9db26832f6300e81eb4"; };
