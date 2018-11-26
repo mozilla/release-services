@@ -104,11 +104,11 @@ def cmd(project,
         ]
 
     secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
-                                                    project,
-                                                    required=required_secrets,
-                                                    taskcluster_client_id=taskcluster_client_id,
-                                                    taskcluster_access_token=taskcluster_access_token,
-                                                    )
+                                                 project,
+                                                 required=required_secrets,
+                                                 taskcluster_client_id=taskcluster_client_id,
+                                                 taskcluster_access_token=taskcluster_access_token,
+                                                 )
 
     temp_files = []
     nix_cache_secret_keys = []
