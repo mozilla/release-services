@@ -39,8 +39,7 @@ def coroutine(f):
 async def download_json_file(session, url, file_):
     click.echo(f'=> Downloading {url}')
     async with session.get(url) as response:
-        if response.status != 200:
-            response.raise_for_status()
+        response.raise_for_status()
 
         content = await response.json()
 
