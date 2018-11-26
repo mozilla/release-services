@@ -48,36 +48,22 @@ def cmd(ctx, project, nix_build,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
-    ):
-    checks = please_cli.config.PROJECTS_CONFIG.get(project, {}).get('checks')
-
-    if not checks:
-        raise click.ClickException('No checks found for `{}` project.'.format(project))
-
-    for check_title, check_command in checks:
-        click.echo(' => {}: '.format(check_title), nl=False)
-        with click_spinner.spinner():
-            nix_path_attributes = [project]
-            deployments = please_cli.config.PROJECTS_CONFIG[project].get('deploys', [])
-            for deployment in deployments:
-                for channel in deployment['options']:
-                    if 'nix_path_attribute' in deployment['options'][channel]:
-                        nix_path_attributes.append('{}.{}'.format(
-                            project,
-                            deployment['options'][channel]['nix_path_attribute'],
-                        ))
-            nix_path_attributes = list(set(nix_path_attributes))
-
-            ctx.invoke(please_cli.build.cmd,
-               project=project,
-               nix_path_attributes=nix_path_attributes,
-               interactive=False,
-               nix_build=nix_build,
-               taskcluster_secret=taskcluster_secret,
-               taskcluster_client_id=taskcluster_client_id,
-               taskcluster_access_token=taskcluster_access_token,
-               with_secret=False,
-            )
+        ):
+    with click_spinner.spinner():
+        click.echo(f' => Testing project {project} ...', nl=False)
+        outputs = ctx.invoke(please_cli.build.cmd,
+                             project=project,
+                             nix_path_attributes=[project],
+                             interactive=False,
+                             nix_build=nix_build,
+                             taskcluster_secret=taskcluster_secret,
+                             taskcluster_client_id=taskcluster_client_id,
+                             taskcluster_access_token=taskcluster_access_token,
+                             )
+        if len(outputs) == 1:
+            click.secho('DONE', fg='green')
+        else:
+            click.secho('ERROR', fg='red')
 
 
 if __name__ == "__main__":
