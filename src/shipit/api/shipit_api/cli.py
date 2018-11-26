@@ -23,6 +23,8 @@ import shipit_api.product_details
 
 
 def coroutine(f):
+    '''A generic function to create a main asyncio loop
+    '''
     coroutine_f = asyncio.coroutine(f)
 
     @functools.wraps(coroutine_f)
