@@ -1759,9 +1759,6 @@ let
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs;
-      postInstall = ''
-        ln -s ${self."spacy_model_en"}/lib/python3.6/site-packages/en_core_web_sm $out/lib/python3.6/site-packages/spacy/data/en
-      '';
       propagatedBuildInputs = [
       self."cymem"
       self."dill"
@@ -1773,7 +1770,6 @@ let
       self."requests"
       self."thinc"
       self."ujson"
-      self."spacy_model_en"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://spacy.io";
