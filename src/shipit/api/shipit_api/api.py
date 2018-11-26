@@ -254,8 +254,7 @@ def rebuild_product_details(options):
         import traceback
         msg = 'Can\'t send notification to pulse.'
         trace = traceback.format_exc()
-        logger.error('{0}\nException:{1}\nTraceback: {2}'.format(msg, e, trace))  # noqa
-
+        logger.error(f'{msg}\nException:{e}\nTraceback: {trace}')
     return jsonify({'ok': 'ok'})
 
 
