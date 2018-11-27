@@ -86,18 +86,37 @@ export default class NewRelease extends React.Component {
     });
   };
 
+  // Poor man's RC detection. xx.0 is the only pattern that matches RC
+  isRc = (version) => {
+    const parts = version.split('.');
+    if (parts.length !== 2) {
+      return false;
+    }
+    if (parts[1] !== '0') {
+      return false;
+    }
+    return true;
+  };
+
   guessPartialVersions = async () => {
     const { product } = this.state.selectedProduct;
-    const { branch } = this.state.selectedBranch;
+    const { branch, rcBranch } = this.state.selectedBranch;
     const shippedReleases = await getShippedReleases(product, branch);
     const shippedBuilds = shippedReleases.map(r => `${r.version}build${r.build_number}`);
     // take first N releases
     const suggestedBuilds = shippedBuilds.slice(0, 3);
+    // if RC, also add last shipped beta
+    let suggestedRcBuilds = [];
+    if (rcBranch && this.isRc(this.state.version)) {
+      const rcShippedReleases = await getShippedReleases(product, rcBranch);
+      const rcLastBuild = `${rcShippedReleases[0].version}build${rcShippedReleases[0].build_number}`;
+      suggestedRcBuilds = [rcLastBuild];
+    }
 
     this.setState({
-      partialVersions: suggestedBuilds,
+      partialVersions: suggestedBuilds.concat(suggestedRcBuilds),
     });
-  }
+  };
 
   handleSuggestedRev = async (rev) => {
     this.setState({
