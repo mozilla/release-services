@@ -201,14 +201,15 @@ class Release extends React.Component {
   }
 }
 
-const phaseStatus = async (phase, previousPhase) => {
+const phaseStatus = async (phase, idx, phases) => {
   // Use TC status if task is submitted
+  const previousPhase = phases[idx - 1];
   if (phase.submitted) {
     const status = await taskStatus(phase.actionTaskId);
     return status.status.state;
   }
-  // FIrst phase, ready any time
-  if (!previousPhase) {
+  // First phase, ready any time
+  if (idx === 0) {
     return 'ready';
   }
   // Phase is ready only when the previous one is submitted and the task is completed
@@ -217,6 +218,18 @@ const phaseStatus = async (phase, previousPhase) => {
     const status = await taskStatus(previousPhase.actionTaskId);
     if (status.status.state === 'completed') {
       return 'ready';
+    }
+  }
+  // Special case for Firefox RC.
+  // push_firefox can be scheduled even if ship_firefox_rc (the previous phase)
+  // is not ready. We still need to be sure that promote_firefox_rc is ready
+  if (phase.name === 'push_firefox' && previousPhase.name === 'ship_firefox_rc') {
+    const promoteFirefoxRCPhase = phases[0];
+    if (promoteFirefoxRCPhase.submitted) {
+      const status = await taskStatus(promoteFirefoxRCPhase.actionTaskId);
+      if (status.status.state === 'completed') {
+        return 'ready';
+      }
     }
   }
   return 'blocked';
@@ -237,7 +250,7 @@ class TaskProgress extends React.Component {
   syncPhases = async () => {
     const { phases } = this.props;
     const phasesWithStatus = await Promise.all(phases.map(async (phase, idx, arr) => {
-      const status = await phaseStatus(phase, arr[idx - 1]);
+      const status = await phaseStatus(phase, idx, arr);
       return { ...phase, status };
     }));
     this.setState({ phasesWithStatus });

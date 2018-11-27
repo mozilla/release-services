@@ -81,10 +81,6 @@ PROJECTS_CONFIG = {
         },
     },
     'notification/policy': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8006,
@@ -125,10 +121,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'notification/identity': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8007,
@@ -254,10 +246,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'mapper/api': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8004,
@@ -298,10 +286,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'tokens/api': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8003,
@@ -330,7 +314,7 @@ PROJECTS_CONFIG = {
                         'dns': 'tokens.staging.mozilla-releng.net.herokudns.com',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tokens',
                         'heroku_dyno_type': 'web',
@@ -342,10 +326,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'tooltool/api': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8002,
@@ -464,10 +444,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'treestatus/api': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8000,
@@ -511,10 +487,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/bot': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -542,10 +514,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/bot': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -573,10 +541,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/backend': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -617,10 +581,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/crawler': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -648,10 +608,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'pulselistener': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'requires': [],
         'deploys': [
             {
@@ -680,10 +636,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'staticanalysis/bot': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -719,10 +671,6 @@ PROJECTS_CONFIG = {
             },
         },
         'requires': [],
-        'checks': [
-            ('Checking code quality', 'yarn lint'),
-            ('Running tests', 'yarn test'),
-        ],
         'deploys': [
             {
                 'target': 'S3',
@@ -776,10 +724,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/backend': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -820,10 +764,6 @@ PROJECTS_CONFIG = {
         ],
     },
     'shipit/api': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
         'run': 'FLASK',
         'run_options': {
             'port': 8015,
@@ -872,10 +812,6 @@ PROJECTS_CONFIG = {
         },
         'requires': [
             'shipit/api',
-        ],
-        'checks': [
-            ('Checking code quality', 'yarn lint'),
-            ('Running tests', 'yarn test'),
         ],
         'deploys': [
             {
