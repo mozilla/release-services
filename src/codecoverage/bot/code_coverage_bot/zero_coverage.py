@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import collections
 import json
 import os
 from datetime import datetime
@@ -85,7 +86,51 @@ class ZeroCov(object):
 
         return res
 
-    def generate(self, artifacts, hgrev, gitrev, out_dir='.'):
+    def generate_zero_coverage_some_platform_only(self, report, hgrev, gitrev, out_dir='.'):
+        '''
+        :param report: dictionary with key platform name, and value is report generated
+                       using ZeroCov.generate for that platform
+        :param hgrev: hg revision, must be same for all reports
+        :param gitrev: git revision, must be same for all reports
+        :param out_dir: directory to output the json result
+        '''
+
+        platforms = ['linux', 'windows']
+
+        git_revision = set([report[platform]['github_revision'] for platform in platforms])
+        hg_revision = set([report[platform]['hg_revision'] for platform in platforms])
+        if len(git_revision) != 1 and len(hg_revision) != 1:
+            raise Exception('Git revision and Hg revision must be the same')
+
+        uncovered_file_name = collections.defaultdict(lambda: set())
+        all_files = {}
+
+        for platform in platforms:
+            for file in report[platform]['files']:
+                if file['uncovered'] is False:
+                    continue
+                uncovered_file_name[file['name']].add(platform)
+
+                all_files[file['name']] = file
+
+        zero_coverage_info = []
+        for fname, info in all_files.items():
+            covered = list(set(platforms) - uncovered_file_name[fname])
+            uncovered = list(uncovered_file_name[fname])
+
+            info.update({'covered_platform': covered,
+                         'uncovered_platform': uncovered})
+            zero_coverage_info.append(info)
+
+        zero_coverage_report = {'github_revision': gitrev,
+                                'hg_revision': hgrev,
+                                'files': zero_coverage_info}
+
+        os.makedirs(os.path.join(out_dir, 'zero_coverage_some_platform_functions'), exist_ok=True)
+        with open(os.path.join(out_dir, 'zero_coverage_some_platform_functions_report.json'), 'w') as f:
+            json.dump(zero_coverage_report, f)
+
+    def generate(self, artifacts, hgrev, gitrev, out_dir='.', return_result=False):
         report = grcov.report(artifacts, out_format='coveralls+', source_dir=self.repo_dir)
         report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
 
@@ -117,7 +162,8 @@ class ZeroCov(object):
             if all_lines_uncovered or (len(sf['functions']) > 1 and all_functions_uncovered):
                 zero_coverage_files.add(name)
 
-        os.makedirs(os.path.join(out_dir, 'zero_coverage_functions'), exist_ok=True)
+        if return_result is False:
+            os.makedirs(os.path.join(out_dir, 'zero_coverage_functions'), exist_ok=True)
 
         filesinfo = self.get_fileinfo(zero_coverage_functions.keys())
 
@@ -133,5 +179,8 @@ class ZeroCov(object):
                                 'hg_revision': hgrev,
                                 'files': zero_coverage_info}
 
-        with open(os.path.join(out_dir, 'zero_coverage_report.json'), 'w') as f:
-            json.dump(zero_coverage_report, f)
+        if return_result is False:
+            with open(os.path.join(out_dir, 'zero_coverage_report.json'), 'w') as f:
+                json.dump(zero_coverage_report, f)
+        else:
+            return zero_coverage_report
