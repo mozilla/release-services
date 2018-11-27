@@ -329,7 +329,7 @@ in skipOverrides {
 
   "spacy" = self: old: {
     postInstall = ''
-      ln -s ${self."spacy_model_en"}/lib/python3.6/site-packages/en_core_web_sm $out/lib/python3.6/site-packages/spacy/data/en
+      ln -s ${self."spacy_model_en"}/lib/${python.__old.python.libPrefix}/site-packages/en_core_web_sm $out/lib/${python.__old.python.libPrefix}/site-packages/spacy/data/en
     '';
     propagatedBuildInputs = old.propagatedBuildInputs ++ [ self."spacy_model_en" ];
   };
