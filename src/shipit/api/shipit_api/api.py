@@ -291,3 +291,13 @@ def update_release_status(name, body):
     notify_via_irc(f'Release {r.product} {r.version} build{r.build_number} status changed to `{status}`.')
 
     return release
+
+
+@mozilla_accept_token()
+def get_phase_signoff(name, phase):
+    pass
+
+
+@mozilla_accept_token()
+def phase_signoff(name, phase, body):
+    pass
