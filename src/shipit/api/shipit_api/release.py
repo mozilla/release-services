@@ -66,7 +66,7 @@ def bump_version(version):
         parts['patch'] = 1
     if not parts['point']:
         parts['point'] = '.'
-    return '{major_minor}{point}{patch}{esr}'.format(**parts)
+    return f'{parts["major_minor"]}{parts["point"]}{parts["patch"]}{parts["esr"]}'
 
 
 def get_beta_num(version):
