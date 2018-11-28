@@ -235,6 +235,16 @@ const phaseStatus = async (phase, idx, phases) => {
   return 'blocked';
 };
 
+const phaseSignOffs = async (releaseName, phaseName) => {
+  const url = `${SHIPIT_API_URL}/signoff/${releaseName}/${phaseName}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    return [];
+  }
+  const signoffs = await response.json();
+  return signoffs;
+};
+
 class TaskProgress extends React.Component {
   constructor(...args) {
     super(...args);
@@ -248,10 +258,13 @@ class TaskProgress extends React.Component {
   }
 
   syncPhases = async () => {
-    const { phases } = this.props;
+    const { releaseName, phases } = this.props;
+    console.log(releaseName);
     const phasesWithStatus = await Promise.all(phases.map(async (phase, idx, arr) => {
       const status = await phaseStatus(phase, idx, arr);
-      return { ...phase, status };
+      const signoffs = await phaseSignOffs(releaseName, phase.name);
+      console.log(signoffs);
+      return { ...phase, status, signoffs };
     }));
     this.setState({ phasesWithStatus });
   };
@@ -263,7 +276,7 @@ class TaskProgress extends React.Component {
     return (
       <ProgressBar style={{ height: '40px', padding: '3px' }}>
         {phasesWithStatus.map(({
-          name, submitted, actionTaskId, status,
+          name, submitted, actionTaskId, status, signoffs,
         }) => (
           <ProgressBar
             key={name}
@@ -275,6 +288,7 @@ class TaskProgress extends React.Component {
               name={name}
               submitted={submitted}
               status={status}
+              signoffs={signoffs}
               taskGroupUrl={`${config.TASKCLUSTER_TOOLS_URL}/groups/${actionTaskId}`}
               url={`${SHIPIT_API_URL}/releases/${releaseName}/${name}`}
             />}
@@ -330,6 +344,20 @@ class TaskLabel extends React.PureComponent {
     }
   };
 
+  renderSignoffs = () => {
+    const { signoffs } = this.props.signoffs;
+    if (signoffs.length === 0) {
+      return <div>No signoffs required</div>;
+    }
+    return (
+      <div>
+        <ol>
+          {signoffs.map(s => <ul key={s.uid}>{s.name} - {s.description}</ul>)}
+        </ol>
+      </div>
+    );
+  };
+
   renderBody = () => {
     const { submitted, errorMsg } = this.state;
     if (errorMsg) {
@@ -344,12 +372,14 @@ class TaskLabel extends React.PureComponent {
         <div>
           <h4>Are you sure?</h4>
           <p>Action will be scheduled</p>
+          {this.renderSignoffs()}
         </div>
       );
     }
     return (
       <div>
         Action task has been submitted.
+        {this.renderSignoffs()}
       </div>
     );
   };
