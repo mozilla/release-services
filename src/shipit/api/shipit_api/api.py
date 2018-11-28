@@ -6,6 +6,7 @@
 import datetime
 import functools
 
+import flask
 from flask import abort
 from flask import current_app
 from flask import g
@@ -313,12 +314,12 @@ def phase_signoff(name, phase, uid):
     try:
         signoff = session.query(Signoff) \
             .filter(Signoff.uid == uid).one()
+
         if signoff.signed:
-            abort(409)
-        phase_obj = session.query(Phase) \
-            .filter(Release.id == Phase.release_id) \
-            .filter(Release.name == name) \
-            .filter(Phase.name == phase).one()
+            response_body = {'error': 'already_signed_off',
+                             'error_description': 'Already signed off'}
+            abort(flask.Response(response_body, 409))
+
         who = g.userinfo['email']
         try:
             # TODO: temporarily use LDAP groups instead of scopes
@@ -329,8 +330,14 @@ def phase_signoff(name, phase, uid):
             abort(401)
 
         # Prevent the same user signing off for multiple signoffs
+        phase_obj = session.query(Phase) \
+            .filter(Release.id == Phase.release_id) \
+            .filter(Release.name == name) \
+            .filter(Phase.name == phase).one()
         if who in [s.completed_by for s in phase_obj.signoffs]:
-            abort(400)
+            response_body = {'error': 'attemp_to_sign_off_twice',
+                             'error_description': f'Already signed off by {who}'}
+            abort(flask.Response(response_body, 409))
 
         signoff.completed = datetime.datetime.utcnow()
         signoff.signed = True
