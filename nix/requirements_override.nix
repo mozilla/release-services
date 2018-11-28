@@ -254,6 +254,18 @@ in skipOverrides {
     '';
   };
 
+  "typeguard" = self: old: {
+    configurePhase = ''
+      export LANG=en_US.UTF-8
+      export LC_ALL=en_US.UTF-8
+      ${if pkgs.stdenv.isLinux then "export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive;" else ""}
+    '';
+    patchPhase = ''
+      echo "from setuptools import setup" > setup.py
+      echo "setup()" >> setup.py
+    '';
+  };
+
   "taskcluster-urls" = self: old: {
     patchPhase = ''
       # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37

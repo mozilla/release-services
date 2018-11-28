@@ -105,15 +105,16 @@ in rec {
   mkDocker =
     { name
     , version
+    , fromImage ? null
     , config ? {}
     , contents ? []
     , runAsRoot ? null
+    , diskSize ? 2048
     }:
     dockerTools.buildImage {
       name = name;
       tag = version;
-      fromImage = null;
-      inherit contents config runAsRoot;
+      inherit contents config runAsRoot diskSize fromImage;
     };
 
     mkTaskclusterMergeEnv =
@@ -878,9 +879,8 @@ in rec {
             else "unknown";
       };
 
-      self_dockerflow = dockerTools.buildImage {
-        inherit (self) name;
-        tag = version;
+      self_dockerflow = mkDocker {
+        inherit (self) name version;
         fromImage = self_docker;
         config = self_docker_config // {
             User = dockerUser;
@@ -901,7 +901,6 @@ in rec {
           EOF
           echo "/app/version.json content:"
           cat /app/version.json
-
         '';
       };
 

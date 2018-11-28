@@ -421,6 +421,23 @@ let
       };
     };
 
+    "arrow" = python.mkDerivation {
+      name = "arrow-0.12.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e0/86/4eb5228a43042e9a80fe8c84093a8a36f5db34a3767ebd5e1e7729864e7b/arrow-0.12.1.tar.gz"; sha256 = "a558d3b7b6ce7ffc74206a86c147052de23d3d4ef0e17c210dd478c53575c4cd"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."python-dateutil"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/crsmithdev/arrow/";
+        license = licenses.asl20;
+        description = "Better dates and times for Python";
+      };
+    };
+
     "async-timeout" = python.mkDerivation {
       name = "async-timeout-3.0.1";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/a1/78/aae1545aba6e87e23ecab8d212b58bb70e72164b67eb090b81bb17ad38e3/async-timeout-3.0.1.tar.gz"; sha256 = "0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f"; };
@@ -485,6 +502,21 @@ let
       };
     };
 
+    "backoff" = python.mkDerivation {
+      name = "backoff-1.6.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e7/00/1aa1ffe4668ddee7a381144bcf953835500387301a3202465e023ea44bcb/backoff-1.6.0.tar.gz"; sha256 = "e3df718a774c456a516f7c88516e47a9f2d02aa562943cdfa274c439e9dbbfde"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/litl/backoff";
+        license = licenses.mit;
+        description = "Function decoration for backoff and retry";
+      };
+    };
+
     "blinker" = python.mkDerivation {
       name = "blinker-1.4";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1b/51/e2a9f3b757eb802f61dc1f2b09c8c99f6eb01cf06416c0671253536517b6/blinker-1.4.tar.gz"; sha256 = "471aee25f3992bd325afa3772f1063dbdbbca947a041b8b89466dc00d606f8b6"; };
@@ -516,8 +548,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.47";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b6/36/0a386f09b965442bfe2de84cfd44aa4043cc331e181f8ca21c22b18dc045/boto3-1.9.47.tar.gz"; sha256 = "f770cbbb826bf5f989a9260358c8267adaa83e25f8d1c7189f47f16a687b3306"; };
+      name = "boto3-1.9.48";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/78/43/434120c81c42e1571c51879c55c73cdd447a858ae5e2c06f8bcb1839ddc5/boto3-1.9.48.tar.gz"; sha256 = "b8a6d9beff31492bd135709d5fbfbe902931c2a6708c4ccbe01f704924f182b8"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -535,8 +567,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.47";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/08/c4/2723c5dcff1723b0595785f4637a97b9bb5ac4c55ddd1a868f6623aec15c/botocore-1.12.47.tar.gz"; sha256 = "f802865c2fdffccc47a9843f4439ce0e36bc4e1bafc18fc9e79623212f7fa468"; };
+      name = "botocore-1.12.48";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/6c/aa/526aca9aebab9a0eee34dc080319e061feb9d6b227b62c8230d62eb2601e/botocore-1.12.48.tar.gz"; sha256 = "7140e51ab0a7aa3b7fa9cf5fefa663e0cd097098fcbd51b12ff8884c8d967754"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1337,9 +1369,26 @@ let
       };
     };
 
+    "mozilla-version" = python.mkDerivation {
+      name = "mozilla-version-0.3.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b5/28/40a84747e1ffb992fe44174bedd6b7fbfee49acef2d69fa4c9b7fd503f5e/mozilla-version-0.3.1.tar.gz"; sha256 = "f800c484efee3c52ada9f36ea0a6ca068810e7ee05b8f3a8e0ab6953f272ad86"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."attrs"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/mozilla-releng/mozilla-version";
+        license = "MPL2";
+        description = "Process Firefox versions numbers. Tells whether they are valid or not, whether they are nightlies or regular releases, whether this version precedes that other.    ";
+      };
+    };
+
     "multidict" = python.mkDerivation {
-      name = "multidict-4.4.2";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b3/5f/5c29cde8511c95fad045b9ecaf2e76f0da18761e8363a82594f5a58c2ced/multidict-4.4.2.tar.gz"; sha256 = "3c11e92c3dfc321014e22fb442bc9eb70e01af30d6ce442026b0c35723448c66"; };
+      name = "multidict-4.5.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/70/b0/f6ce77f952b773eea2926ffacd031f9e95eeabd531dce999dceb8841fffc/multidict-4.5.0.tar.gz"; sha256 = "3fa7944194cc96319cbbd53a1e0fb6dfe1e437efb75117828c35ce5b30d9d0c9"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -2044,6 +2093,24 @@ let
         homepage = "https://github.com/python/typed_ast";
         license = licenses.asl20;
         description = "a fork of Python 2 and 3 ast modules with type comment support";
+      };
+    };
+
+    "typeguard" = python.mkDerivation {
+      name = "typeguard-2.2.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/27/e4/e1def692e2c21dfcdc32456993af00fb75dc9ac4e8258f2d697374241a52/typeguard-2.2.2.tar.gz"; sha256 = "b8ddc6e2e60bd64b7003f9a685a09ba387b74adf2f6bea7534a76d61892f573e"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."pytest"
+      self."pytest-cov"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "Run-time type checker for Python";
       };
     };
 

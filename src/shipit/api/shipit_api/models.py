@@ -80,7 +80,7 @@ class Release(db.Model):
     revision = sa.Column(sa.String, nullable=False)
     build_number = sa.Column(sa.Integer, nullable=False)
     release_eta = sa.Column(sa.DateTime)
-    status = sa.Column(sa.String)
+    status = sa.Column(sa.String)  # TODO: move to Enum: shipped, abandoned, scheduled
     phases = sqlalchemy.orm.relationship('Phase', order_by=Phase.id, back_populates='release')
 
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
@@ -88,9 +88,7 @@ class Release(db.Model):
 
     def __init__(self, product, version, branch, revision, build_number,
                  release_eta, partial_updates, status):
-        self.name = '{product}-{version}-build{build_number}'.format(
-            product=product.capitalize(), version=version, build_number=build_number
-        )
+        self.name = f'{product.capitalize()}-{version}-build{build_number}'
         self.product = product
         self.version = version
         self.branch = branch
