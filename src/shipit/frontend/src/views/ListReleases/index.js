@@ -259,11 +259,9 @@ class TaskProgress extends React.Component {
 
   syncPhases = async () => {
     const { releaseName, phases } = this.props;
-    console.log(releaseName);
     const phasesWithStatus = await Promise.all(phases.map(async (phase, idx, arr) => {
       const status = await phaseStatus(phase, idx, arr);
       const signoffs = await phaseSignOffs(releaseName, phase.name);
-      console.log(signoffs);
       return { ...phase, status, signoffs };
     }));
     this.setState({ phasesWithStatus });
