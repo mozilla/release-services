@@ -424,6 +424,11 @@ definitions:
 
   Signoff:
     type: object
+    required:
+      - uid
+      - name
+      - description
+      - scope
     properties:
       uid:
         type: string
@@ -437,13 +442,15 @@ definitions:
       signed:
         type: boolean
         description: Is the signoff signed off
+        default: false
       scope:
         type: string
         description: Permision required to sign the signoff
-      who:
+      completed_by:
         type: string
         description: Person who signed off (Auth0 ID)
-      when:
+        default: ''
+      completed:
         type: string
         format: datetime
         description: Timestamp of the signoff

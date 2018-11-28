@@ -8,9 +8,11 @@ import datetime
 import json
 from functools import lru_cache
 
+import slugid
 import sqlalchemy as sa
 import sqlalchemy.orm
 
+import shipit_api.config
 from backend_common.db import db
 from cli_common.log import get_logger
 from shipit_api.release import bump_version
@@ -23,6 +25,38 @@ from shipit_api.tasks import generate_action_task
 from shipit_api.tasks import render_action_task
 
 log = get_logger(__name__)
+
+
+class Signoff(db.Model):
+    __tablename__ = 'shipit_api_signoffs'
+    id = sa.Column(sa.Integer, primary_key=True)
+    uid = sa.Column(sa.String, nullable=False, unique=True)
+    name = sa.Column(sa.String, nullable=False)
+    description = sa.Column(sa.Text)
+    scope = sa.Column(sa.String, nullable=False)
+    completed = sa.Column(sa.DateTime)
+    completed_by = sa.Column(sa.String)
+    signed = sa.Column(sa.Boolean, default=False)
+    phase_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_api_phases.id'))
+    phase = sqlalchemy.orm.relationship('Phase', back_populates='signoffs')
+
+    def __init__(self, uid, name, description, scope):
+        self.uid = uid
+        self.name = name
+        self.description = description
+        self.scope = scope
+
+    @property
+    def json(self):
+        return dict(
+            uid=self.uid,
+            name=self.name,
+            description=self.description,
+            scope=self.scope,
+            completed=self.completed or '',
+            completed_by=self.completed_by or '',
+            signed=self.signed,
+        )
 
 
 class Phase(db.Model):
@@ -38,6 +72,7 @@ class Phase(db.Model):
     completed_by = sa.Column(sa.String)
     release_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_api_releases.id'))
     release = sqlalchemy.orm.relationship('Release', back_populates='phases')
+    signoffs = sqlalchemy.orm.relationship('Signoff', order_by=Signoff.id, back_populates='phase')
 
     def __init__(self, name, task_id, task, context, submitted=False):
         self.name = name
@@ -104,6 +139,19 @@ class Release(db.Model):
     def project(self):
         return self.branch.split('/')[-1]
 
+    @staticmethod
+    def phase_signoffs(branch, product, phase):
+        return [
+            Signoff(
+                uid=slugid.nice().decode('utf-8'),
+                name=req['name'],
+                description=req['description'],
+                scope=req['scope']
+            )
+            for req in
+            shipit_api.config.SIGNOFFS.get(branch, {}).get(product, {}).get(phase, [])
+        ]
+
     def generate_phases(self, partner_urls=None, github_token=None):
         blob = []
         phases = []
@@ -146,7 +194,10 @@ class Release(db.Model):
             })
             if phase['in_previous_graph_ids']:
                 previous_graph_ids.append(action_task_id)
-            phases.append(Phase(phase['name'], action_task_id, json.dumps(action_task), json.dumps(context)))
+            phase_obj = Phase(
+                phase['name'], action_task_id, json.dumps(action_task), json.dumps(context))
+            phase_obj.signoffs = self.phase_signoffs(self.branch, self.product, phase['name'])
+            phases.append(phase_obj)
         self.phases = phases
 
     @property
