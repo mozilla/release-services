@@ -193,6 +193,10 @@ in skipOverrides {
   };
 
   "pytest" = self: old: {
+    propagatedBuildInputs =
+      builtins.filter
+        (x: !pkgs.lib.hasSuffix "requests" (builtins.parseDrvName x.name).name)
+        old.propagatedBuildInputs;
     patchPhase = ''
       sed -i \
         -e "s|py>=1.5.0|py|" \
@@ -289,5 +293,66 @@ in skipOverrides {
            sha256 = "1q0gpknxymm3qg4mb1459ka4ralqa1bndyfv3g3pn4sj7rixv05f";
          })
       ];
+  };
+
+  "numpy" = self: old: {
+    preConfigure = ''
+      sed -i 's/-faltivec//' numpy/distutils/system_info.py
+    '';
+    preBuild = ''
+      echo "Creating site.cfg file..."
+      cat << EOF > site.cfg
+      [openblas]
+      include_dirs = ${pkgs.openblasCompat}/include
+      library_dirs = ${pkgs.openblasCompat}/lib
+      EOF
+    '';
+    passthru = {
+      blas = pkgs.openblasCompat;
+    };
+  };
+
+  "scipy" = self: old: {
+    prePatch = ''
+      rm scipy/linalg/tests/test_lapack.py
+    '';
+    preConfigure = ''
+      sed -i '0,/from numpy.distutils.core/s//import setuptools;from numpy.distutils.core/' setup.py
+    '';
+    preBuild = ''
+      echo "Creating site.cfg file..."
+      cat << EOF > site.cfg
+      [openblas]
+      include_dirs = ${pkgs.openblasCompat}/include
+      library_dirs = ${pkgs.openblasCompat}/lib
+      EOF
+    '';
+    setupPyBuildFlags = [ "--fcompiler='gnu95'" ];
+    passthru = {
+      blas = pkgs.openblasCompat;
+    };
+  };
+
+  "bugbug" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|spacy==2.0.16|spacy==2.0.12|" requirements.txt
+    '';
+  };
+
+  "spacy" = self: old: {
+    postInstall = ''
+      ln -s ${self."en-core-web-sm"}/lib/${python.__old.python.libPrefix}/site-packages/en_core_web_sm $out/lib/${python.__old.python.libPrefix}/site-packages/spacy/data/en
+    '';
+    propagatedBuildInputs = old.propagatedBuildInputs ++ [ self."en-core-web-sm" ];
+  };
+
+  "en-core-web-sm" = self: old: {
+    propagatedBuildInputs =
+      builtins.filter
+        (x: (builtins.parseDrvName x.name).name != "${python.__old.python.libPrefix}-${python.__old.python.libPrefix}-spacy")
+        old.propagatedBuildInputs;
+    patchPhase = ''
+      sed -i -e "s|return requirements|return []|" setup.py
+    '';
   };
 }

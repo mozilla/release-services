@@ -1,0 +1,8 @@
+-e ./../../../lib/cli_common[taskcluster,mercurial,log] #egg=mozilla-cli-common
+
+spacy==2.0.12  # pypi2nix fails with newer versions
+thinc==6.10.3  # pypi2nix fails with newer versions
+murmurhash==0.28.0  # pypi2nix fails with newer versions
+pyOpenSSL==18.0.0
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz#egg=en-core-web-sm
+https://github.com/marco-c/bugbug/archive/b5d33dea7e6a7249602c1d1b58f26bb4e1e77183.tar.gz#egg=bugbug
