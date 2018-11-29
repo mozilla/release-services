@@ -121,8 +121,8 @@ let
     };
 
     "Pygments" = python.mkDerivation {
-      name = "Pygments-2.2.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/71/2a/2e4e77803a8bd6408a2903340ac498cb0a2181811af7c9ec92cb70b0308a/Pygments-2.2.0.tar.gz"; sha256 = "dbae1046def0efb574852fab9e90209b23f556367b5a320c0bcb871c77c3e8cc"; };
+      name = "Pygments-2.3.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/63/a2/91c31c4831853dedca2a08a0f94d788fc26a48f7281c99a303769ad2721b/Pygments-2.3.0.tar.gz"; sha256 = "82666aac15622bd7bb685a4ee7f6625dd716da3ef7473620c192c0168aae64fc"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -252,8 +252,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.41";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/30/d5/11da1f3252ea9c15bef62b198cd4a3591eba2c235032157d1b22962ad3f1/boto3-1.9.41.tar.gz"; sha256 = "0bbf50cb0d0da43904f4843e2406feab2fca3e636640c22216354880d6941ff3"; };
+      name = "boto3-1.9.55";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/cf/04/2962e09cdc172c0f794d6e6e13cc6654ad99d5bbe94866e1168b34281660/boto3-1.9.55.tar.gz"; sha256 = "31bbb80088ff6d2fd92ffe56086d7bc2a5d395ee05ed5bad1c726e76d697f79e"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -271,8 +271,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.41";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/a3/0d/926b0127aee8ec9fb0fb29bd8bb676f2651c5f839e00a11e5f4a2a110161/botocore-1.12.41.tar.gz"; sha256 = "280d8a8d88c9416f92128d175495498144e72022c8019efaab3dd2a6f4cea78e"; };
+      name = "botocore-1.12.55";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/8b/cc/53f161e914f1846c51542f373984752e61005b3171e93dbb4c6f79c3cbc4/botocore-1.12.55.tar.gz"; sha256 = "19e031ee798815344082b103a2e485e83b1cc5fe1ffa6bcfd5613c5f1f892109"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -371,8 +371,8 @@ let
     };
 
     "coverage" = python.mkDerivation {
-      name = "coverage-4.5.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/35/fe/e7df7289d717426093c68d156e0fd9117c8f4872b6588e8a8928a0f68424/coverage-4.5.1.tar.gz"; sha256 = "56e448f051a201c5ebbaa86a5efd0ca90d327204d8b059ab25ad0f35fbfd79f1"; };
+      name = "coverage-4.5.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/fb/af/ce7b0fe063ee0142786ee53ad6197979491ce0785567b6d8be751d2069e8/coverage-4.5.2.tar.gz"; sha256 = "ab235d9fe64833f12d1334d29b558aacedfbca2356dfb9691f2d0d38a8a7bfb4"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -406,8 +406,8 @@ let
     };
 
     "cryptography" = python.mkDerivation {
-      name = "cryptography-2.3.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/22/21/233e38f74188db94e8451ef6385754a98f3cad9b59bedf3a8e8b14988be4/cryptography-2.3.1.tar.gz"; sha256 = "8d10113ca826a4c29d5b85b2c4e045ffa8bad74fb525ee0eceb1d38d4c70dfd6"; };
+      name = "cryptography-2.4.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/f3/39/d3904df7c56f8654691c4ae1bdb270c1c9220d6da79bd3b1fbad91afd0e1/cryptography-2.4.2.tar.gz"; sha256 = "05a6052c6a9f17ff78ba78f8e6eb1d777d25db3b763343a1ae89a7a8670386dd"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -654,8 +654,8 @@ let
     };
 
     "google-auth" = python.mkDerivation {
-      name = "google-auth-1.5.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/7e/cd/dae5c39974b040741215ed346263152c93af21a22dc124c7ad451fbee417/google-auth-1.5.1.tar.gz"; sha256 = "9ca363facbf2622d9ba828017536ccca2e0f58bd15e659b52f312172f8815530"; };
+      name = "google-auth-1.6.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/17/07/3d60e212bff8d734fcf5dd400eee751b8652eaefd0c4d90cd50af92e1d96/google-auth-1.6.1.tar.gz"; sha256 = "b08a27888e9d1c17a891b3688aacc9c6f2019d7f6c5a2e73588e6bb9a2c0fa98"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -692,8 +692,8 @@ let
     };
 
     "httplib2" = python.mkDerivation {
-      name = "httplib2-0.11.3";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/fd/ce/aa4a385e3e9fd351737fd2b07edaa56e7a730448465aceda6b35086a0d9b/httplib2-0.11.3.tar.gz"; sha256 = "e71daed9a0e6373642db61166fa70beecc9bf04383477f84671348c02a04cbdf"; };
+      name = "httplib2-0.12.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ce/ed/803905d670b52fa0edfdd135337e545b4496c2ab3a222f1449b7256eb99f/httplib2-0.12.0.tar.gz"; sha256 = "f61fb838a94ce3b349aa32c92fd8430f7e3511afdb18bf9640d647e30c90a6d6"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -863,8 +863,8 @@ let
     };
 
     "libmozdata" = python.mkDerivation {
-      name = "libmozdata-0.1.43";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b2/6e/9910883d2f964cbdedcee9ae6cc0fd07c93911c75073595d97f1b865ee90/libmozdata-0.1.43.tar.gz"; sha256 = "2010fcb61de7f9c82a261100b2575f4045d2592a227d0bf4f1d051d2e96077ab"; };
+      name = "libmozdata-0.1.44";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/22/3a/2db404e77f7c8a0bb5d34a2053c5a37a1c14a732ecd81f409f7593ae537c/libmozdata-0.1.44.tar.gz"; sha256 = "c5c676565cd3e6cda190a980155b3614061cc45c1e39d67bfe9148b98d2f3ba4"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -983,8 +983,8 @@ let
     };
 
     "multidict" = python.mkDerivation {
-      name = "multidict-4.4.2";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b3/5f/5c29cde8511c95fad045b9ecaf2e76f0da18761e8363a82594f5a58c2ced/multidict-4.4.2.tar.gz"; sha256 = "3c11e92c3dfc321014e22fb442bc9eb70e01af30d6ce442026b0c35723448c66"; };
+      name = "multidict-4.5.2";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/7f/8f/b3c8c5b062309e854ce5b726fc101195fbaa881d306ffa5c2ba19efa3af2/multidict-4.5.2.tar.gz"; sha256 = "024b8129695a952ebd93373e45b5d341dbb87c17ce49637b34000093f243dd4f"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1067,8 +1067,8 @@ let
     };
 
     "pdbpp" = python.mkDerivation {
-      name = "pdbpp-0.9.2";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e6/cc/8bf81f5e53daa4a90d696fa430c2f4e709656e2bf953686bd15c0746616f/pdbpp-0.9.2.tar.gz"; sha256 = "dde77326e4ea41439c243ed065826d53539530eeabd1b6615aae15cfbb9fda05"; };
+      name = "pdbpp-0.9.3";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c6/cb/d972cdce044da7ba0c4ae8c272a33f5eb5c9929337c90590b163e98c7ee2/pdbpp-0.9.3.tar.gz"; sha256 = "535085916fcfb768690ba0aeab2967c2a2163a0a60e5b703776846873e171399"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1277,8 +1277,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.10.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ec/d1/8e96334154a20f8bf8924b7a67227a3af30c87cf0d8239f9885fc8bca385/pytest-3.10.0.tar.gz"; sha256 = "a2b5232735dd0b736cbea9c0f09e5070d78fcaba2823a4f6f09d9a81bd19415c"; };
+      name = "pytest-4.0.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/24/f1/0e378fa418d9ac15d2d28296be916a55e351a6ffeb74105fe333c15ea58a/pytest-4.0.1.tar.gz"; sha256 = "1d131cc532be0023ef8ae265e2a779938d0619bb6c2510f52987ffcba7fa1ee4"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1289,6 +1289,7 @@ let
       self."more-itertools"
       self."pluggy"
       self."py"
+      self."requests"
       self."six"
     ];
       meta = with pkgs.stdenv.lib; {
@@ -1427,8 +1428,8 @@ let
     };
 
     "responses" = python.mkDerivation {
-      name = "responses-0.10.3";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b1/b9/5d6cd5b7c07bdf51841ac09518168010a9f836db7066caa18d312480a8a0/responses-0.10.3.tar.gz"; sha256 = "5b99beef28dd177da180604be2e849a16c3a40605bfda7c8d792a9924dd3d60e"; };
+      name = "responses-0.10.4";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/84/b7/a868941426ea5e9f8fd986dbf935c2068cb491d0e4de9fc4764952c9fb99/responses-0.10.4.tar.gz"; sha256 = "16ad4a7a914f20792111157adf09c63a8dc37699c57d1ad20dbc281a4f5743fb"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
