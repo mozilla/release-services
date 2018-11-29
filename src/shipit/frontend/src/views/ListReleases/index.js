@@ -289,7 +289,6 @@ class TaskProgress extends React.Component {
               signoffs={signoffs}
               releaseName={releaseName}
               taskGroupUrl={`${config.TASKCLUSTER_TOOLS_URL}/groups/${actionTaskId}`}
-              url={`${SHIPIT_API_URL}/releases/${releaseName}/${name}`}
             />}
           />
         ))}
@@ -350,9 +349,11 @@ class TaskLabel extends React.PureComponent {
 
   schedulePhase = async () => {
     const { accessToken } = this.context.authController.getUserSession();
+    const { releaseName, name } = this.props;
+    const headers = { Authorization: `Bearer ${accessToken}` };
+    const url = `${SHIPIT_API_URL}/releases/${releaseName}/${name}`;
     try {
-      const headers = { Authorization: `Bearer ${accessToken}` };
-      const response = await fetch(this.props.url, { method: 'PUT', headers });
+      const response = await fetch(url, { method: 'PUT', headers });
       if (!response.ok) {
         this.setState({ errorMsg: 'Auth failure!' });
         return;
