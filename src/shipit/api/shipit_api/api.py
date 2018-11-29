@@ -6,7 +6,6 @@
 import datetime
 import functools
 
-import flask
 from flask import abort
 from flask import current_app
 from flask import g
@@ -320,16 +319,14 @@ def phase_signoff(name, phase, uid):
             .filter(Signoff.uid == uid).one()
 
         if signoff.signed:
-            response_body = {'error': 'already_signed_off',
-                             'error_description': 'Already signed off'}
-            abort(flask.Response(response_body, 409))
+            abort(409, 'Already signed off')
 
         who = g.userinfo['email']
         try:
             # TODO: temporarily use LDAP groups instead of scopes
             groups = g.userinfo['https://sso.mozilla.com/claim/groups']
             if signoff.permissions not in groups:
-                abort(401)
+                abort(401, f'{signoff.permissions} not in your LDAP groups ({groups}).')
         except KeyError:
             abort(401)
 
@@ -339,9 +336,7 @@ def phase_signoff(name, phase, uid):
             .filter(Release.name == name) \
             .filter(Phase.name == phase).one()
         if who in [s.completed_by for s in phase_obj.signoffs]:
-            response_body = {'error': 'attemp_to_sign_off_twice',
-                             'error_description': f'Already signed off by {who}'}
-            abort(flask.Response(response_body, 409))
+            abort(409, f'Already signed off by {who}')
 
         signoff.completed = datetime.datetime.utcnow()
         signoff.signed = True
