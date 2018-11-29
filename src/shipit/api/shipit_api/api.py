@@ -153,6 +153,10 @@ def schedule_phase(name, phase):
     if phase.submitted:
         abort(409, 'Already submitted!')
 
+    for signoff in phase.signoffs:
+        if not signoff.signed:
+            abort(400, 'Pending signoffs')
+
     queue = get_service('queue')
     queue.createTask(phase.task_id, phase.rendered)
 
@@ -349,6 +353,8 @@ def phase_signoff(name, phase, uid):
         r = phase_obj.release
         notify_via_irc(
             f'{phase} of {r.product} {r.version} build{r.build_number} signed off by {who}.')
+        if all([s.signed for s in phase_obj.signoffs]):
+            schedule_phase(name, phase)
         return dict(signoffs=signoffs)
 
     except NoResultFound:

@@ -428,7 +428,7 @@ definitions:
       - uid
       - name
       - description
-      - scope
+      - permissions
     properties:
       uid:
         type: string
@@ -443,7 +443,7 @@ definitions:
         type: boolean
         description: Is the signoff signed off
         default: false
-      scope:
+      permissions:
         type: string
         description: Permision required to sign the signoff
       completed_by:
