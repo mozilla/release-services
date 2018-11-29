@@ -341,8 +341,18 @@ in skipOverrides {
 
   "spacy" = self: old: {
     postInstall = ''
-      ln -s ${self."spacy_model_en"}/lib/${python.__old.python.libPrefix}/site-packages/en_core_web_sm $out/lib/${python.__old.python.libPrefix}/site-packages/spacy/data/en
+      ln -s ${self."en-core-web-sm"}/lib/${python.__old.python.libPrefix}/site-packages/en_core_web_sm $out/lib/${python.__old.python.libPrefix}/site-packages/spacy/data/en
     '';
-    propagatedBuildInputs = old.propagatedBuildInputs ++ [ self."spacy_model_en" ];
+    propagatedBuildInputs = old.propagatedBuildInputs ++ [ self."en-core-web-sm" ];
+  };
+
+  "en-core-web-sm" = self: old: {
+    propagatedBuildInputs =
+      builtins.filter
+        (x: (builtins.parseDrvName x.name).name != "${python.__old.python.libPrefix}-${python.__old.python.libPrefix}-spacy")
+        old.propagatedBuildInputs;
+    patchPhase = ''
+      sed -i -e "s|return requirements|return []|" setup.py
+    '';
   };
 }

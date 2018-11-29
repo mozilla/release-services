@@ -252,8 +252,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.50";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/da/b4/854abfaf97f5708203d2a6abf3072170aa0e213a2c9fe0c8aad2070ff5e9/boto3-1.9.50.tar.gz"; sha256 = "177e9dd53db5028bb43050da20cc7956287889fc172e5e6275a634e42a10beeb"; };
+      name = "boto3-1.9.53";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ae/82/68133d4b84d9e3e42385a3011f96863a5d9c4a282706ed1e83b2e1248006/boto3-1.9.53.tar.gz"; sha256 = "8cea616c3c01208c64b2d05795df468dc1d8a0feddc1624558a71af9a710950c"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -271,8 +271,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.50";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/83/79/cfba55c9dd2aec96911e93ba13b99b58af39f75518be2112ec9c8a749662/botocore-1.12.50.tar.gz"; sha256 = "eeaa190f50ee05a56225ee78c64cb8bf0c3bf090ec605ca6c2f325aa3826a347"; };
+      name = "botocore-1.12.53";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ee/76/f0012d68bd662ec2d1a61bc56b53552e512f17e6b06bdc03cb394429298e/botocore-1.12.53.tar.gz"; sha256 = "32f2e602a70813ecd1a7fc3eb288fcf1dee91ec4163a0107fec1a2fe880d1de0"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -561,6 +561,23 @@ let
         homepage = "https://github.com/elastic/elasticsearch-py";
         license = licenses.asl20;
         description = "Python client for Elasticsearch";
+      };
+    };
+
+    "en-core-web-sm" = python.mkDerivation {
+      name = "en-core-web-sm-2.0.0";
+      src = pkgs.fetchurl { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz"; sha256 = "9d9d231d7c9cbad82178b566fdb25768e3d5098af23ce11e03ec4f432f4a2298"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."spacy"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://explosion.ai";
+        license = "CC BY-SA 3.0";
+        description = "English multi-task CNN trained on OntoNotes, with GloVe vectors trained on Common Crawl. Assigns word vectors, context-specific token vectors, POS tags, dependency parse and named entities.";
       };
     };
 
@@ -1775,23 +1792,6 @@ let
         homepage = "https://spacy.io";
         license = licenses.mit;
         description = "Industrial-strength Natural Language Processing (NLP) with Python and Cython";
-      };
-    };
-
-    "spacy_model_en" = python.mkDerivation {
-      name = "en_core_web_sm";
-      src = pkgs.fetchurl { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz"; sha256 = "161298pl6kzc0cgf2g7ji84xbqv8ayrgsrmmg0hxiflwghfj77cx"; };
-      doCheck = commonDoCheck;
-      patchPhase = ''
-        sed -i -e "s|return requirements|return []|" setup.py
-      '';
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      meta = with pkgs.stdenv.lib; {
-        homepage    = "https://github.com/explosion/spacy-models";
-        license     = licenses."cc-by-sa-40";
-        description = "Models for the spaCy NLP library";
       };
     };
 
