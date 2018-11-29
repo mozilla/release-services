@@ -67,8 +67,7 @@ def get_trust_domain(project):
 
 
 def find_decision_task_id(project, revision):
-    decision_task_route = '{trust_domain}.v2.{project}.revision.{revision}.taskgraph.decision'.format(
-        trust_domain=get_trust_domain(project), project=project, revision=revision)
+    decision_task_route = f'{get_trust_domain(project)}.v2.{project}.revision.{revision}.taskgraph.decision'
     index = get_service('index')
     return index.findTask(decision_task_route)['taskId']
 
@@ -96,14 +95,13 @@ def find_action(name, actions):
 
 def extract_our_flavors(avail_flavors, product, version, partial_updates):
     if is_rc(version, partial_updates):
-        product_key = '{}_rc'.format(product)
+        product_key = f'{product}_rc'
     else:
         product_key = product
     # sanity check
     all_flavors = set([fl['name'] for fl in SUPPORTED_FLAVORS[product_key]])
     if not set(avail_flavors).issuperset(all_flavors):
-        description = 'Some flavors are not in actions.json: {}.'.format(
-            all_flavors.difference(set(avail_flavors)))
+        description = f'Some flavors are not in actions.json: {all_flavors.difference(set(avail_flavors))}.'
         raise UnsupportedFlavor(description=description)
     return SUPPORTED_FLAVORS[product_key]
 
