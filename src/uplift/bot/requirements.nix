@@ -1277,8 +1277,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-4.0.1";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/24/f1/0e378fa418d9ac15d2d28296be916a55e351a6ffeb74105fe333c15ea58a/pytest-4.0.1.tar.gz"; sha256 = "1d131cc532be0023ef8ae265e2a779938d0619bb6c2510f52987ffcba7fa1ee4"; };
+      name = "pytest-3.10.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ec/d1/8e96334154a20f8bf8924b7a67227a3af30c87cf0d8239f9885fc8bca385/pytest-3.10.0.tar.gz"; sha256 = "a2b5232735dd0b736cbea9c0f09e5070d78fcaba2823a4f6f09d9a81bd19415c"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1289,7 +1289,6 @@ let
       self."more-itertools"
       self."pluggy"
       self."py"
-      self."requests"
       self."six"
     ];
       meta = with pkgs.stdenv.lib; {
