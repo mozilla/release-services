@@ -33,18 +33,18 @@ class Signoff(db.Model):
     uid = sa.Column(sa.String, nullable=False, unique=True)
     name = sa.Column(sa.String, nullable=False)
     description = sa.Column(sa.Text)
-    scope = sa.Column(sa.String, nullable=False)
+    permissions = sa.Column(sa.String, nullable=False)
     completed = sa.Column(sa.DateTime)
     completed_by = sa.Column(sa.String)
     signed = sa.Column(sa.Boolean, default=False)
     phase_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_api_phases.id'))
     phase = sqlalchemy.orm.relationship('Phase', back_populates='signoffs')
 
-    def __init__(self, uid, name, description, scope):
+    def __init__(self, uid, name, description, permissions):
         self.uid = uid
         self.name = name
         self.description = description
-        self.scope = scope
+        self.permissions = permissions
 
     @property
     def json(self):
@@ -52,7 +52,7 @@ class Signoff(db.Model):
             uid=self.uid,
             name=self.name,
             description=self.description,
-            scope=self.scope,
+            permissions=self.permissions,
             completed=self.completed or '',
             completed_by=self.completed_by or '',
             signed=self.signed,
@@ -146,7 +146,7 @@ class Release(db.Model):
                 uid=slugid.nice().decode('utf-8'),
                 name=req['name'],
                 description=req['description'],
-                scope=req['scope']
+                permissions=req['permissions']
             )
             for req in
             shipit_api.config.SIGNOFFS.get(branch, {}).get(product, {}).get(phase, [])

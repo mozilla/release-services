@@ -424,13 +424,13 @@ SIGNOFFS = {
                     'name': 'Ship Fennec (relman)',
                     'description': 'Publish Firefox for Android to Play Store',
                     # TODO: this group includes releng/relman/qa/etc, need to split or switch to real scopes
-                    'scope': 'vpn_cloudops_shipit',
+                    'permissions': 'vpn_cloudops_shipit',
                 },
                 {
                     'name': 'Ship Fennec (releng)',
                     'description': 'Publish Firefox for Android to Play Store',
                     # XXX: stands for the LDAP group for now
-                    'scope': 'releng',
+                    'permissions': 'releng',
                 },
             ],
         },

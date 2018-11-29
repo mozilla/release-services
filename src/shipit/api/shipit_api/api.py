@@ -324,7 +324,7 @@ def phase_signoff(name, phase, uid):
         try:
             # TODO: temporarily use LDAP groups instead of scopes
             groups = g.userinfo['https://sso.mozilla.com/claim/groups']
-            if signoff.scope not in groups:
+            if signoff.permissions not in groups:
                 abort(401)
         except KeyError:
             abort(401)
