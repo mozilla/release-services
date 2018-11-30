@@ -157,10 +157,10 @@ class CodeCov(object):
             reports = {
                 'linux': zc.generate(
                     self.artifactsHandler.get(platform='linux'),
-                    self.revision, self.github_revision, return_result=True),
+                    self.revision, self.github_revision, writeout_result=False),
                 'windows': zc.generate(
                     self.artifactsHandler.get(platform='windows'),
-                    self.revision, self.github_revision, return_result=True)
+                    self.revision, self.github_revision, writeout_result=False)
             }
             zc.generate_zero_coverage_some_platform_only(reports, self.revision, self.github_revision)
 

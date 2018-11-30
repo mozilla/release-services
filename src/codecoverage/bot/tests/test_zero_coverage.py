@@ -11,6 +11,7 @@ from code_coverage_bot.zero_coverage import ZeroCov
 def test_zero_coverage_some_platform(tmpdir,
                                      grcov_artifact, grcov_uncovered_artifact,
                                      jsvm_artifact, jsvm_uncovered_artifact,
+                                     jsvm_uncovered_linux_artifact,
                                      grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact,
                                      fake_hg_repo_with_contents):
     tmp_path = tmpdir.strpath
@@ -22,11 +23,12 @@ def test_zero_coverage_some_platform(tmpdir,
         'linux': ZeroCov(fake_hg_repo_with_contents).generate([
                 jsvm_artifact, jsvm_uncovered_artifact,
                 jsvm_uncovered_function_artifact
-            ], hgrev, gitrev, out_dir=tmp_path, return_result=True),
+            ], hgrev, gitrev, out_dir=tmp_path, writeout_result=True),
         'windows': ZeroCov(fake_hg_repo_with_contents).generate([
+                jsvm_uncovered_linux_artifact,
                 grcov_artifact, grcov_uncovered_artifact,
                 grcov_uncovered_function_artifact
-            ], hgrev, gitrev, out_dir=tmp_path, return_result=True)
+            ], hgrev, gitrev, out_dir=tmp_path, writeout_result=True)
     }
 
     ZeroCov(fake_hg_repo_with_contents).generate_zero_coverage_some_platform_only(
@@ -48,15 +50,18 @@ def test_zero_coverage_some_platform(tmpdir,
     today = pytz.utc.localize(today)
     today = today.strftime(ZeroCov.DATE_FORMAT)
 
+    # result shouldnt include jsvm and grcov because they are not covered on all platform where the file exist
     expected_zero_coverage_functions = [
-        {'funcs': 1, 'name': 'mozglue/build/dummy.cpp', 'uncovered': True,
-         'size': 1, 'commits': 2,
-         'first_push_date': today, 'last_push_date': today,
-         'covered_platforms': ['linux'], 'uncovered_platforms': ['windows']},
-        {'funcs': 1, 'name': 'toolkit/components/osfile/osfile-win.jsm', 'uncovered': True,
-         'size': 4, 'commits': 2,
-         'first_push_date': today, 'last_push_date': today,
-         'covered_platforms': ['windows'], 'uncovered_platforms': ['linux']},
+        {
+            'size': 2,
+            'first_push_date': '2018-11-30',
+            'last_push_date': '2018-11-30',
+            'commits': 2,
+            'name': 'toolkit/components/osfile/osfile.jsm',
+            'funcs': 1,
+            'covered_platforms': ['linux'],
+            'uncovered_platforms': ['windows']
+        }
     ]
     assert len(zero_coverage_functions) == len(expected_zero_coverage_functions)
     while len(expected_zero_coverage_functions):
@@ -72,9 +77,9 @@ def test_zero_coverage_some_platform(tmpdir,
         assert found_item['last_push_date'] == exp_item['last_push_date']
         assert found_item['size'] == exp_item['size']
         assert found_item['commits'] == exp_item['commits']
-        assert found_item['uncovered'] == exp_item['uncovered']
         assert found_item['covered_platforms'] == exp_item['covered_platforms']
         assert found_item['uncovered_platforms'] == exp_item['uncovered_platforms']
+        assert 'uncovered' not in found_item
 
 
 def test_zero_coverage(tmpdir,

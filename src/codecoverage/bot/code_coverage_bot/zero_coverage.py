@@ -109,18 +109,22 @@ class ZeroCov(object):
 
         for platform in platforms:
             for file_info in reports[platform]['files']:
-                uncovered_map[file_info['name']].add(platform)
-
                 all_files[file_info['name']] = file_info
                 platform_files[platform].add(file_info['name'])
 
+                if file_info['uncovered'] is True:
+                    uncovered_map[file_info['name']].add(platform)
+
         zero_coverage_info = []
         for fname, info in all_files.items():
-            platform_file_exist = {x for x in platforms if fname in platform_files[x]}
+            # skip covered files
+            if not uncovered_map[fname]:
+                continue
 
+            # skip file that is uncovered on all platform where file exist
+            platform_file_exist = {x for x in platforms if fname in platform_files[x]}
             covered = list(platform_file_exist - uncovered_map[fname])
-            if len(covered) == 0:
-                # skip file that is uncovered on all platform where file exist
+            if not covered:
                 continue
 
             uncovered = list(uncovered_map[fname])
@@ -128,6 +132,7 @@ class ZeroCov(object):
                 'covered_platforms': covered,
                 'uncovered_platforms': uncovered,
             })
+            del info['uncovered']
             zero_coverage_info.append(info)
 
         zero_coverage_report = {

@@ -135,6 +135,12 @@ def jsvm_artifact():
 
 
 @pytest.fixture(scope='session')
+def jsvm_uncovered_linux_artifact():
+    with generate_coverage_artifact('jsvm_uncovered_file_linux.info') as f:
+        yield f
+
+
+@pytest.fixture(scope='session')
 def grcov_existing_file_artifact():
     with generate_coverage_artifact('grcov_existing_file.info') as f:
         yield f
