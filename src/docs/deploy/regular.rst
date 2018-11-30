@@ -162,7 +162,7 @@ required.
 - And then we build new base image
 - At the end we can get rid of temporary branch
 
-Generate the docker image using locally runnong docker daemon:
+Generate the docker image using locally running docker daemon:
 
 .. code-block:: console
 
