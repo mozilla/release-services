@@ -106,7 +106,8 @@ def cmd_tools(ctx):
 
 
 cmd.add_command(cmd_tools, "tools")
-cmd_tools.add_command(please_cli.base_image.cmd, "base-image")
+cmd_tools.add_command(please_cli.base_image.build, "build-base-image")
+cmd_tools.add_command(please_cli.base_image.push, "push-base-image")
 cmd_tools.add_command(please_cli.build.cmd, "build")
 cmd_tools.add_command(please_cli.build.cmd_docker, "docker")
 cmd_tools.add_command(please_cli.shell.cmd_docker_shell, "docker-shell")

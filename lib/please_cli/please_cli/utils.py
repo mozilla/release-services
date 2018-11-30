@@ -163,11 +163,7 @@ def push_docker_image(registry, username, password, image, repo, tag,
                       interactive=False):
     dest = f'docker://{registry}/{repo}:{tag}'
     with authfile(registry, username, password) as auth_file:
-        command = ['skopeo', 'copy',
-                   '--authfile', auth_file,
-                   'docker-archive://{}'.format(image),
-                   dest
-                  ]
+        command = ['skopeo', 'copy', '--authfile', auth_file, image, dest]
         result, output, error = cli_common.command.run(
             command,
             stream=True,

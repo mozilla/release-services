@@ -33,18 +33,6 @@ log = cli_common.log.get_logger(__name__)
     help='Path to docker command (default: docker).',
     )
 @click.option(
-    '--docker-username',
-    required=False,
-    default=None,
-    help='https://hub.docker.com username',
-    )
-@click.option(
-    '--docker-password',
-    required=False,
-    default=None,
-    help='https://hub.docker.com password',
-    )
-@click.option(
     '--docker-repo',
     required=True,
     default=please_cli.config.DOCKER_BASE_REPO,
@@ -70,40 +58,28 @@ log = cli_common.log.get_logger(__name__)
     default=[],
     help='Public key for nix cache',
     )
-@click.option(
-    '--dont-push',
-    is_flag=True,
-    help='Push to docker registry',
-    )
 @cli_common.cli.taskcluster_options
-def cmd(docker_username,
-        docker_password,
-        docker,
-        docker_repo,
-        docker_tag,
-        nix_cache_public_keys,
-        nix_cache_public_urls,
+def build(docker,
+          docker_repo,
+          docker_tag,
+          nix_cache_public_keys,
+          nix_cache_public_urls,
+          taskcluster_secret,
+          taskcluster_client_id,
+          taskcluster_access_token,
+          ):
+
+    secrets = cli_common.taskcluster.get_secrets(
         taskcluster_secret,
-        taskcluster_client_id,
-        taskcluster_access_token,
-        dont_push,
-        ):
+        None,
+        required=[
+            'NIX_CACHE_PUBLIC_KEYS',
+            'NIX_CACHE_PUBLIC_URLS',
+        ],
+        taskcluster_client_id=taskcluster_client_id,
+        taskcluster_access_token=taskcluster_access_token,
+    )
 
-    secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
-                                                 None,
-                                                 required=[
-                                                     'DOCKER_USERNAME',
-                                                     'DOCKER_PASSWORD',
-                                                     'NIX_CACHE_PUBLIC_KEYS',
-                                                     'NIX_CACHE_PUBLIC_URLS',
-                                                 ],
-                                                 taskcluster_client_id=taskcluster_client_id,
-                                                 taskcluster_access_token=taskcluster_access_token,
-                                                 )
-
-
-    docker_username = docker_username or secrets['DOCKER_USERNAME']
-    docker_password = docker_password or secrets['DOCKER_PASSWORD']
     nix_cache_public_keys = nix_cache_public_keys or secrets['NIX_CACHE_PUBLIC_KEYS']
     nix_cache_public_urls = nix_cache_public_urls or secrets['NIX_CACHE_PUBLIC_URLS']
 
@@ -130,18 +106,13 @@ def cmd(docker_username,
        'sha256' not in nix_json:
         raise click.ClickException('`nix/nix.json` is not of correct format.')
 
-
     try:
-        click.echo(' => Creating Dockerfile ... ', nl=False)
-        with click_spinner.spinner():
-            shutil.copyfile(docker_file, temp_docker_file)
-        please_cli.utils.check_result(0, '')
+        shutil.copyfile(docker_file, temp_docker_file)
 
         click.echo(' => Building base docker image ... ', nl=False)
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(
                 [
-                    # 'sudo',
                     docker,
                     'build',
                     '--no-cache',
@@ -155,8 +126,7 @@ def cmd(docker_username,
                     '--build-arg', 'NIX_SHA256=' + nix_json['sha256'],
                     '--build-arg', 'NIX_CACHE_PUBLIC_KEYS=' + ' '.join(nix_cache_public_keys),
                     '--build-arg', 'NIX_CACHE_PUBLIC_URLS=' + ' '.join(nix_cache_public_urls),
-                    '-t',
-                    f'{docker_repo}:{docker_tag}',
+                    '-t', f'{docker_repo}:{docker_tag}',
                     please_cli.config.ROOT_DIR,
                 ],
                 stream=True,
@@ -165,42 +135,74 @@ def cmd(docker_username,
             )
         please_cli.utils.check_result(result, output)
 
-        if not dont_push:
-
-            click.echo(' => Logging into hub.docker.com ... ', nl=False)
-            with click_spinner.spinner():
-                result, output, error = cli_common.command.run(
-                    [
-                        # 'sudo',
-                        docker,
-                        'login',
-                        '--username', docker_username,
-                        '--password', docker_password,
-                    ],
-                    stream=True,
-                    stderr=subprocess.STDOUT,
-                    log_command=False,
-                )
-            please_cli.utils.check_result(result, output)
-
-            click.echo(' => Pushing base docker image ... ', nl=False)
-            with click_spinner.spinner():
-                result, output, error = cli_common.command.run(
-                    [
-                        # 'sudo',
-                        docker,
-                        'push',
-                        '{}:{}'.format(docker_repo, docker_tag),
-                    ],
-                    stream=True,
-                    stderr=subprocess.STDOUT,
-                )
-            please_cli.utils.check_result(result, output)
-
     finally:
         if os.path.exists(temp_docker_file):
             os.unlink(temp_docker_file)
 
 
-if __name__ == "__main__":
-    cmd()
+@click.command(
+    cls=please_cli.utils.ClickCustomCommand,
+    short_help="Push base docker image.",
+    epilog="Happy hacking!",
+    )
+@click.option(
+    '--docker-registry',
+    required=True,
+    help='Docker registry.',
+    default=please_cli.config.DOCKER_BASE_REGISTRY,
+    )
+@click.option(
+    '--docker-repo',
+    required=True,
+    help='Docker repository.',
+    default=please_cli.config.DOCKER_BASE_REPO,
+    )
+@click.option(
+    '--docker-username',
+    help='Docker username.',
+    )
+@click.option(
+    '--docker-password',
+    help='Docker password.',
+    )
+@click.option(
+    '--docker-tag',
+    required=True,
+    help='Tag of base image.',
+    default=please_cli.config.DOCKER_BASE_TAG,
+    )
+@cli_common.cli.taskcluster_options
+def push(docker_registry,
+         docker_repo,
+         docker_username,
+         docker_password,
+         docker_tag,
+         taskcluster_secret,
+         taskcluster_client_id,
+         taskcluster_access_token,
+         ):
+
+    secrets = cli_common.taskcluster.get_secrets(
+        taskcluster_secret,
+        None,
+        required=[
+            'DOCKER_USERNAME',
+            'DOCKER_PASSWORD',
+        ],
+        taskcluster_client_id=taskcluster_client_id,
+        taskcluster_access_token=taskcluster_access_token,
+        )
+
+    docker_username = docker_username or secrets['DOCKER_USERNAME']
+    docker_password = docker_password or secrets['DOCKER_PASSWORD']
+    image_reference = f'docker-daemon:{docker_repo}:{docker_tag}'
+    click.echo(' => Logging into hub.docker.com ... ', nl=False)
+    with click_spinner.spinner():
+        please_cli.utils.push_docker_image(
+            registry=docker_registry,
+            username=docker_username,
+            password=docker_password,
+            image=image_reference,
+            repo=docker_repo,
+            tag=docker_tag,
+        )
