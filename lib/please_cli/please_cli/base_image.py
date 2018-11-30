@@ -196,7 +196,7 @@ def push(docker_registry,
     docker_username = docker_username or secrets['DOCKER_USERNAME']
     docker_password = docker_password or secrets['DOCKER_PASSWORD']
     image_reference = f'docker-daemon:{docker_repo}:{docker_tag}'
-    click.echo(' => Logging into hub.docker.com ... ', nl=False)
+    click.echo(' => Pushing the image to the registry ... ', nl=False)
     with click_spinner.spinner():
         please_cli.utils.push_docker_image(
             registry=docker_registry,
