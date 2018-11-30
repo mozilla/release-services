@@ -52,11 +52,11 @@ def test_zero_coverage_some_platform(tmpdir,
         {'funcs': 1, 'name': 'mozglue/build/dummy.cpp', 'uncovered': True,
          'size': 1, 'commits': 2,
          'first_push_date': today, 'last_push_date': today,
-         'covered_platform': ['linux'], 'uncovered_platform': ['windows']},
+         'covered_platforms': ['linux'], 'uncovered_platforms': ['windows']},
         {'funcs': 1, 'name': 'toolkit/components/osfile/osfile-win.jsm', 'uncovered': True,
          'size': 4, 'commits': 2,
          'first_push_date': today, 'last_push_date': today,
-         'covered_platform': ['windows'], 'uncovered_platform': ['linux']},
+         'covered_platforms': ['windows'], 'uncovered_platforms': ['linux']},
     ]
     assert len(zero_coverage_functions) == len(expected_zero_coverage_functions)
     while len(expected_zero_coverage_functions):
@@ -73,8 +73,8 @@ def test_zero_coverage_some_platform(tmpdir,
         assert found_item['size'] == exp_item['size']
         assert found_item['commits'] == exp_item['commits']
         assert found_item['uncovered'] == exp_item['uncovered']
-        assert found_item['covered_platform'] == exp_item['covered_platform']
-        assert found_item['uncovered_platform'] == exp_item['uncovered_platform']
+        assert found_item['covered_platforms'] == exp_item['covered_platforms']
+        assert found_item['uncovered_platforms'] == exp_item['uncovered_platforms']
 
 
 def test_zero_coverage(tmpdir,
