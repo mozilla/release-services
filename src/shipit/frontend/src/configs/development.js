@@ -20,13 +20,6 @@ module.exports = {
           repo: 'https://hg.mozilla.org/projects/maple',
           enableReleaseEta: true,
         },
-        {
-          prettyName: 'Try',
-          project: 'try',
-          branch: 'try',
-          repo: 'https://hg.mozilla.org/try',
-          enableReleaseEta: false,
-        },
       ],
       enablePartials: true,
     },
@@ -43,13 +36,6 @@ module.exports = {
           repo: 'https://hg.mozilla.org/projects/maple',
           enableReleaseEta: false,
         },
-        {
-          prettyName: 'Try',
-          project: 'try',
-          branch: 'try',
-          repo: 'https://hg.mozilla.org/try',
-          enableReleaseEta: false,
-        },
       ],
       enablePartials: false,
     },
@@ -63,13 +49,6 @@ module.exports = {
           project: 'maple',
           branch: 'projects/maple',
           repo: 'https://hg.mozilla.org/projects/maple',
-          enableReleaseEta: false,
-        },
-        {
-          prettyName: 'Try',
-          project: 'try',
-          branch: 'try',
-          repo: 'https://hg.mozilla.org/try',
           enableReleaseEta: false,
         },
       ],
@@ -93,3 +72,4 @@ module.exports = {
     },
   ],
 };
+

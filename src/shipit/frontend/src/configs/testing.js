@@ -29,7 +29,6 @@ module.exports = {
         },
       ],
       enablePartials: true,
-      channel: 'beta',
     },
     {
       product: 'fennec',
@@ -53,7 +52,6 @@ module.exports = {
         },
       ],
       enablePartials: false,
-      channel: 'beta',
     },
     {
       product: 'devedition',
@@ -76,7 +74,6 @@ module.exports = {
         },
       ],
       enablePartials: true,
-      channel: 'beta',
     },
     {
       product: 'thunderbird',
@@ -93,7 +90,6 @@ module.exports = {
       ],
       // TODO
       enablePartials: false,
-      channel: 'beta',
     },
   ],
 };
