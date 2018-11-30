@@ -154,15 +154,11 @@ class CodeCov(object):
             zc.generate(self.artifactsHandler.get(), self.revision, self.github_revision)
 
             logger.info('Generating zero coverage on some platform but not on another reports')
-            reports = {
-                'linux': zc.generate(
-                    self.artifactsHandler.get(platform='linux'),
-                    self.revision, self.github_revision, writeout_result=False),
-                'windows': zc.generate(
-                    self.artifactsHandler.get(platform='windows'),
-                    self.revision, self.github_revision, writeout_result=False)
+            platforms_artifacts = {
+                'linux': self.artifactsHandler.get(platform='linux'),
+                'windows': self.artifactsHandler.get(platform='windows'),
             }
-            zc.generate_zero_coverage_some_platform_only(reports, self.revision, self.github_revision)
+            zc.generate_zero_coverage_some_platform_only(platforms_artifacts, self.revision, self.github_revision)
 
             logger.info('Generating chunk mapping')
             chunk_mapping.generate(self.repo_dir, self.revision, self.artifactsHandler)

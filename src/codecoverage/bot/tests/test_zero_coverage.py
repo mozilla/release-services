@@ -9,30 +9,33 @@ from code_coverage_bot.zero_coverage import ZeroCov
 
 
 def test_zero_coverage_some_platform(tmpdir,
-                                     grcov_artifact, grcov_uncovered_artifact,
-                                     jsvm_artifact, jsvm_uncovered_artifact,
-                                     jsvm_uncovered_linux_artifact,
-                                     grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact,
+                                     file1_covered_artifact,
+                                     file1_uncovered_artifact,
+                                     file2_covered_artifact,
+                                     file2_uncovered_artifact,
+                                     grcov_uncovered_artifact,
+                                     jsvm_uncovered_artifact,
                                      fake_hg_repo_with_contents):
     tmp_path = tmpdir.strpath
 
     hgrev = '314159265358'
     gitrev = '271828182845'
 
-    report = {
-        'linux': ZeroCov(fake_hg_repo_with_contents).generate([
-                jsvm_artifact, jsvm_uncovered_artifact,
-                jsvm_uncovered_function_artifact
-            ], hgrev, gitrev, out_dir=tmp_path, writeout_result=True),
-        'windows': ZeroCov(fake_hg_repo_with_contents).generate([
-                jsvm_uncovered_linux_artifact,
-                grcov_artifact, grcov_uncovered_artifact,
-                grcov_uncovered_function_artifact
-            ], hgrev, gitrev, out_dir=tmp_path, writeout_result=True)
+    platform_artifacts = {
+        'linux': [
+                jsvm_uncovered_artifact,
+                file1_covered_artifact,
+                file2_uncovered_artifact,
+            ],
+        'windows': [
+                grcov_uncovered_artifact,
+                file1_uncovered_artifact,
+                file2_covered_artifact,
+            ]
     }
 
     ZeroCov(fake_hg_repo_with_contents).generate_zero_coverage_some_platform_only(
-        report,
+        platform_artifacts,
         hgrev,
         gitrev,
         out_dir=tmp_path
@@ -53,16 +56,27 @@ def test_zero_coverage_some_platform(tmpdir,
     # result shouldnt include jsvm and grcov because they are not covered on all platform where the file exist
     expected_zero_coverage_functions = [
         {
-            'size': 2,
+            'name': 'file1.jsm',
+            'size': 7,
             'first_push_date': '2018-11-30',
             'last_push_date': '2018-11-30',
             'commits': 2,
-            'name': 'toolkit/components/osfile/osfile.jsm',
             'funcs': 1,
             'covered_platforms': ['linux'],
             'uncovered_platforms': ['windows']
-        }
+        },
+        {
+            'name': 'file2.jsm',
+            'size': 8,
+            'first_push_date': '2018-11-30',
+            'last_push_date': '2018-11-30',
+            'commits': 2,
+            'funcs': 1,
+            'covered_platforms': ['windows'],
+            'uncovered_platforms': ['linux']
+        },
     ]
+
     assert len(zero_coverage_functions) == len(expected_zero_coverage_functions)
     while len(expected_zero_coverage_functions):
         exp_item = expected_zero_coverage_functions.pop()

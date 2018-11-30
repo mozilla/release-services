@@ -86,10 +86,9 @@ class ZeroCov(object):
 
         return res
 
-    def generate_zero_coverage_some_platform_only(self, reports, hgrev, gitrev, out_dir='.'):
+    def generate_zero_coverage_some_platform_only(self, platforms_artifacts, hgrev, gitrev, out_dir='.'):
         '''
-        :param reports: dictionary with key platform name, and value is report generated
-                       using ZeroCov.generate for that platform
+        :param platforms_artifacts: dictionary with key platform name, and value is list of artifacts
         :param hgrev: hg revision, must be same for all reports
         :param gitrev: git revision, must be same for all reports
         :param out_dir: directory to output the json result
@@ -97,26 +96,32 @@ class ZeroCov(object):
 
         platforms = ['linux', 'windows']
 
-        git_revision = set([reports[platform]['github_revision'] for platform in platforms])
-        hg_revision = set([reports[platform]['hg_revision'] for platform in platforms])
-
-        assert len(git_revision) == 1 and len(hg_revision) == 1, 'Git revision and mercurial revision must be the same'
-
         # mapping file_name -> set of platforms uncovered
         uncovered_map = collections.defaultdict(lambda: set())
         platform_files = collections.defaultdict(lambda: set())
-        all_files = {}
+        zero_coverage_files = {}
 
         for platform in platforms:
-            for file_info in reports[platform]['files']:
-                all_files[file_info['name']] = file_info
-                platform_files[platform].add(file_info['name'])
+            assert platform in platforms_artifacts
+
+            artifacts = platforms_artifacts[platform]
+
+            # to get all files in the artifacts
+            report = grcov.report(artifacts, out_format='coveralls+', source_dir=self.repo_dir)
+            report = json.loads(report.decode('utf-8'))
+            platform_files[platform] = {x['name'] for x in report['source_files']}
+
+            # to get zero coverage files
+            zero_coverage_report = self.generate(artifacts, hgrev, gitrev, out_dir=out_dir, writeout_result=False)
+            for file_info in zero_coverage_report['files']:
+                zero_coverage_files[file_info['name']] = file_info
 
                 if file_info['uncovered'] is True:
                     uncovered_map[file_info['name']].add(platform)
 
+        # for each zero coverage files, check if the file exist on other platform but is covered
         zero_coverage_info = []
-        for fname, info in all_files.items():
+        for fname, info in zero_coverage_files.items():
             # skip covered files
             if not uncovered_map[fname]:
                 continue

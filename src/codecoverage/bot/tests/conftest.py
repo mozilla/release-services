@@ -135,8 +135,26 @@ def jsvm_artifact():
 
 
 @pytest.fixture(scope='session')
-def jsvm_uncovered_linux_artifact():
-    with generate_coverage_artifact('jsvm_uncovered_file_linux.info') as f:
+def file1_covered_artifact():
+    with generate_coverage_artifact('file1_covered.info') as f:
+        yield f
+
+
+@pytest.fixture(scope='session')
+def file1_uncovered_artifact():
+    with generate_coverage_artifact('file1_uncovered.info') as f:
+        yield f
+
+
+@pytest.fixture(scope='session')
+def file2_covered_artifact():
+    with generate_coverage_artifact('file2_covered.info') as f:
+        yield f
+
+
+@pytest.fixture(scope='session')
+def file2_uncovered_artifact():
+    with generate_coverage_artifact('file2_uncovered.info') as f:
         yield f
 
 
@@ -234,6 +252,10 @@ def fake_hg_repo_with_contents(fake_hg_repo):
          'size': 5},
         {'name': 'code_coverage_bot/cli.py',
          'size': 6},
+        {'name': 'file1.jsm',
+         'size': 7},
+        {'name': 'file2.jsm',
+         'size': 8},
     ]
 
     for c in '?!':
