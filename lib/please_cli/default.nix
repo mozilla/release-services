@@ -41,6 +41,8 @@ let
         pushd lib/${project_name}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.7 \
+          -e pytest-runner \
+          -e setuptools-scm \
           -r requirements.txt \
           -r requirements-dev.txt
         popd
