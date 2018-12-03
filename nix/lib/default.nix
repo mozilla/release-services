@@ -117,110 +117,158 @@ in rec {
       inherit contents config runAsRoot diskSize fromImage;
     };
 
-    mkTaskclusterMergeEnv =
-      { env
-      }:
-      {
-        "$merge" = [
-          env
-          {
-            "$if" = "firedBy == 'triggerHook'";
-            "then" = { "$eval" = "payload"; };
-            "else" = {};
-          }
-        ];
+  mkDockerflow =
+    { name
+    , version
+    , fromImage
+    , User ? "app"
+    , UserId ? 10001
+    , Group ? "app"
+    , GroupId ? 10001
+    , Cmd ? []
+    , src
+    , githubCommit ? builtins.getEnv "GITHUB_COMMIT"
+    , taskGroupId ? builtins.getEnv "TASK_GROUP_ID"
+    , defaultConfig ? {}
+    }:
+    let
+      version_json = {
+        inherit  version;
+        source = "https://github.com/mozilla/release-services";
+        commit = githubCommit;
+        build =
+          if taskGroupId != ""
+            then "https://tools.taskcluster.net/groups/${taskGroupId}"
+            else "unknown";
       };
-
-    mkTaskclusterTaskMetadata =
-      { name
-      , description ? ""
-      , owner
-      , source ? "https://github.com/mozilla/release-services"
-      }:
-      { inherit name description owner source; };
-
-    mkTaskclusterTaskPayload =
-      { image
-      , command
-      , maxRunTime ? 3600
-      , features ? { taskclusterProxy = true; }
-      , capabilities ? { privileged = true; }
-      , artifacts ? {}
-      , env ? {}
-      , cache ? {}
-      }:
-      { inherit env image features capabilities maxRunTime command artifacts cache; };
-
-    mkTaskclusterTask =
-      { extra ? {}
-      , created ? "0 seconds"
-      , expires ? "1 month"
-      , deadline ? "1 hour"
-      , metadata ? {}
-      , payload ? {}
-      , priority ? "normal"
-      , provisionerId ? "aws-provisioner-v1"
-      , retries ? 5
-      , routes ? []
-      , schedulerId ? "-"
-      , scopes ? []
-      , tags ? {}
-      , workerType ? "releng-svc"
-      }:
-      { inherit extra priority provisionerId retries routes schedulerId scopes
-           tags workerType;
-        payload = mkTaskclusterTaskPayload payload;
-        metadata = mkTaskclusterTaskMetadata metadata;
-        created = { "$fromNow" = created; };
-        deadline = { "$fromNow" = deadline; };
-        expires = { "$fromNow" = expires; };
+    in mkDocker {
+      inherit name version fromImage;
+      config = defaultConfig // {
+        inherit User Cmd;
       };
+      runAsRoot = (if User == null then "" else ''
+        #!${stdenv.shell}
+        ${dockerTools.shadowSetup}
+        groupadd --gid ${toString GroupId} ${Group}
+        useradd --gid ${Group} --uid ${toString UserId} --home-dir /app ${User}
+        # gunicorn requires /tmp, /var/tmp, or /usr/tmp
+        mkdir -p --mode=1777 /tmp
+        mkdir -p /app
+        cp -a ${src}/. /app/
+      '') + ''
+        cp -a ${src}/* /app
+        cat > /app/version.json  <<EOF
+        ${builtins.toJSON version_json}
+        EOF
+        echo "/app/version.json content:"
+        cat /app/version.json
+      '';
+    };
 
-    mkTaskclusterHook =
-      { name
-      , description ? ""
-      , owner
-      , emailOnError ? true
-      , schedule ? []
-      , created ? "0 seconds"
-      , expires ? "1 month"
-      , deadline ? "1 hour"
-      , taskImage
-      , taskCommand
-      , taskArtifacts ? {}
-      , taskEnv ? {}
-      , taskCapabilities ? { privileged = true; }
-      , taskRoutes ? []
-      , scopes ? []
-      , cache ? {}
-      , maxRunTime ? 3600
-      , workerType ? "releng-svc"
-      }:
-      { inherit schedule;
-        metadata = { inherit name description owner emailOnError; };
-        task = mkTaskclusterTask ({
-          created = created;
-          deadline = deadline;
-          expires = expires;
-          metadata = { inherit name description owner; };
-          payload = mkTaskclusterTaskPayload {
-            image = taskImage;
-            command = taskCommand;
-            maxRunTime = maxRunTime;
-            artifacts = taskArtifacts;
-            env = taskEnv;
-            cache = cache;
-            capabilities = taskCapabilities;
-          };
-          routes = taskRoutes;
-          scopes = scopes;
-          workerType = workerType;
-        });
-        triggerSchema = {
-          type = "object";
-          additionalProperties = true;
+  mkTaskclusterMergeEnv =
+    { env
+    }:
+    {
+      "$merge" = [
+        env
+        {
+          "$if" = "firedBy == 'triggerHook'";
+          "then" = { "$eval" = "payload"; };
+          "else" = {};
+        }
+      ];
+    };
+
+  mkTaskclusterTaskMetadata =
+    { name
+    , description ? ""
+    , owner
+    , source ? "https://github.com/mozilla/release-services"
+    }:
+    { inherit name description owner source; };
+
+  mkTaskclusterTaskPayload =
+    { image
+    , command
+    , maxRunTime ? 3600
+    , features ? { taskclusterProxy = true; }
+    , capabilities ? { privileged = true; }
+    , artifacts ? {}
+    , env ? {}
+    , cache ? {}
+    }:
+    { inherit env image features capabilities maxRunTime command artifacts cache; };
+
+  mkTaskclusterTask =
+    { extra ? {}
+    , created ? "0 seconds"
+    , expires ? "1 month"
+    , deadline ? "1 hour"
+    , metadata ? {}
+    , payload ? {}
+    , priority ? "normal"
+    , provisionerId ? "aws-provisioner-v1"
+    , retries ? 5
+    , routes ? []
+    , schedulerId ? "-"
+    , scopes ? []
+    , tags ? {}
+    , workerType ? "releng-svc"
+    }:
+    { inherit extra priority provisionerId retries routes schedulerId scopes
+         tags workerType;
+      payload = mkTaskclusterTaskPayload payload;
+      metadata = mkTaskclusterTaskMetadata metadata;
+      created = { "$fromNow" = created; };
+      deadline = { "$fromNow" = deadline; };
+      expires = { "$fromNow" = expires; };
+    };
+
+  mkTaskclusterHook =
+    { name
+    , description ? ""
+    , owner
+    , emailOnError ? true
+    , schedule ? []
+    , created ? "0 seconds"
+    , expires ? "1 month"
+    , deadline ? "1 hour"
+    , taskImage
+    , taskCommand
+    , taskArtifacts ? {}
+    , taskEnv ? {}
+    , taskCapabilities ? { privileged = true; }
+    , taskRoutes ? []
+    , scopes ? []
+    , cache ? {}
+    , maxRunTime ? 3600
+    , workerType ? "releng-svc"
+    }:
+    { inherit schedule;
+      metadata = { inherit name description owner emailOnError; };
+      task = mkTaskclusterTask ({
+        created = created;
+        deadline = deadline;
+        expires = expires;
+        metadata = { inherit name description owner; };
+        payload = mkTaskclusterTaskPayload {
+          image = taskImage;
+          command = taskCommand;
+          maxRunTime = maxRunTime;
+          artifacts = taskArtifacts;
+          env = taskEnv;
+          cache = cache;
+          capabilities = taskCapabilities;
         };
+        routes = taskRoutes;
+        scopes = scopes;
+        workerType = workerType;
+      });
+      triggerSchema = {
+        type = "object";
+        additionalProperties = true;
       };
+    };
 
   mkTaskclusterGithubTask =
     { name
@@ -496,7 +544,7 @@ in rec {
   mkProjectDirName = builtins.replaceStrings ["/" ] ["_"];
   mkProjectSrcPath = project_name: "src/" + project_name;
   mkProjectFullName = project_name: version: "mozilla-${mkProjectModuleName project_name}-${version}";
-  getOrDefault = item: default: if item != null then item else default;
+  withDefault = item: default: if item != null then item else default;
 
   mkProject =
     args @
@@ -512,24 +560,32 @@ in rec {
     , ...
     }:
     let
-      self = mkDerivation (
-        (releng_pkgs.pkgs.lib.filterAttrs
-          (n: v: n != "mkDerivation")
-          args
-        ) // {
-        name = getOrDefault name (mkProjectFullName project_name version);
-        dirname = getOrDefault dirname (mkProjectDirName project_name);
-        module_name = getOrDefault module_name (mkProjectModuleName project_name);
-        src_path = getOrDefault src_path (mkProjectSrcPath project_name);
+      argsToSkip = [
+        "project_name"
+        "version"
+        "name"
+        "dirname"
+        "module_name"
+        "src_path"
+        "mkDerivation"
+      ];
+      args' = releng_pkgs.pkgs.lib.filterAttrs (n: v: ! builtins.elem n argsToSkip) args;
+      self = mkDerivation (args' // {
+        name = withDefault name (mkProjectFullName project_name version);
+        #dirname = withDefault dirname (mkProjectDirName project_name);
+        #module_name = withDefault module_name (mkProjectModuleName project_name);
+        #src_path = withDefault src_path (mkProjectSrcPath project_name);
         shellHook = shellHook + ''
           PS1="\n\[\033[1;32m\][${self.module_name}:\w]\$\[\033[0m\] "
         '';
         passthru = passthru // {
-          module_name = getOrDefault module_name (mkProjectModuleName project_name);
-          src_path = getOrDefault src_path (mkProjectSrcPath project_name);
+          inherit version;
+          dirname = withDefault dirname (mkProjectDirName project_name);
+          module_name = withDefault module_name (mkProjectModuleName project_name);
+          src_path = withDefault src_path (mkProjectSrcPath project_name);
         };
       });
-      in self;
+    in self;
 
   mkFrontend =
     { project_name
@@ -687,30 +743,16 @@ in rec {
 
   mkBackend =
     args @
-    { project_name
-    , dirname ? null
-    , version
-    , src
+    { buildInputs ? []
     , python
-    , src_path ? null
-    , buildInputs ? []
-    , propagatedBuildInputs ? []
-    , doCheck ? true
-    , checkPhase ? null
     , postInstall ? ""
+    , checkPhase ? null
     , shellHook ? ""
-    , dockerCmd ? null
-    , dockerEnv ? []
     , dockerContents ? []
-    , dockerUser ? "app"
-    , dockerUserId ? 10001
-    , dockerGroup ? "app"
-    , dockerGroupId ? 10001
-    , passthru ? {}
-    , inTesting ? true
-    , inStaging ? true
-    , inProduction ? false
     , gunicornWorkers ? 3
+    , dockerCmd ? null
+    , passthru_config ? {}
+    , ...
     }:
     let
       self = mkPython (args // {
@@ -733,26 +775,23 @@ in rec {
           fi
         '' + postInstall;
 
-        checkPhase =
-          if checkPhase != null
-            then checkPhase
-            else ''
-              export LANG=en_US.UTF-8
-              export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
-              export APP_TESTING=${self.name}
+        checkPhase = withDefault checkPhase ''
+          export LANG=en_US.UTF-8
+          export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+          export APP_TESTING=${self.name}
 
-              echo "################################################################"
-              echo "## flake8 ######################################################"
-              echo "################################################################"
-              flake8 -v --mypy-config=setup.cfg
-              echo "################################################################"
+          echo "################################################################"
+          echo "## flake8 ######################################################"
+          echo "################################################################"
+          flake8 -v --mypy-config=setup.cfg
+          echo "################################################################"
 
-              echo "################################################################"
-              echo "## pytest ######################################################"
-              echo "################################################################"
-              pytest tests/ -vvv
-              echo "################################################################"
-            '';
+          echo "################################################################"
+          echo "## pytest ######################################################"
+          echo "################################################################"
+          pytest tests/ -vvv
+          echo "################################################################"
+        '';
 
         shellHook = ''
           export CACHE_DEFAULT_TIMEOUT=3600
@@ -765,148 +804,78 @@ in rec {
         '' + shellHook;
 
         inherit dockerContents;
+
         dockerEnv = [
           "APP_SETTINGS=${self}/etc/settings.py"
           "FLASK_APP=${self.dirname}.flask:app"
           "WEB_CONCURRENCY=${builtins.toString gunicornWorkers}"
         ];
-        dockerCmd =
-          if dockerCmd != null
-          then dockerCmd
-          else [
-            "gunicorn"
-            "${self.dirname}.flask:app"
-            "--log-file"
-            "-"
-          ];
 
+        dockerCmd = withDefault dockerCmd [ "gunicorn"
+                                            "${self.dirname}.flask:app"
+                                            "--log-file"
+                                            "-"
+                                          ];
+
+        passthru_config = { inherit buildInputs
+                                    python
+                                    postInstall
+                                    checkPhase
+                                    shellHook
+                                    dockerContents
+                                    gunicornWorkers
+                                    dockerCmd;
+                          } // passthru_config;
       });
     in self;
 
-  mkPythonScript =
-    { project_name
-    , scriptName ? project_name
-    , python
-    , script
-    , passthru ? {}
-    }:
-    let
-
-      python_path =
-        "${python.__old.python}/${python.__old.python.sitePackages}:" +
-        (builtins.concatStringsSep ":"
-          (map (pkg: "${pkg}/${python.__old.python.sitePackages}")
-               (builtins.attrValues python.packages)
-          )
-        );
-
-      self = mkProject {
-        inherit project_name passthru;
-        buildInputs = [ makeWrapper python.__old.python ];
-        buildCommand = ''
-          mkdir -p $out/bin
-          cp ${script} $out/bin/${scriptName}
-          chmod +x $out/bin/${scriptName}
-          echo "${python.__old.python}"
-          patchShebangs $out/bin/${scriptName}
-          wrapProgram $out/bin/${scriptName}\
-            --set PYTHONPATH "${python_path}" \
-            --set LANG "en_US.UTF-8" \
-            --set LOCALE_ARCHIVE ${glibcLocales}/lib/locale/locale-archive
-        '';
-      };
-
-    in self;
-
   mkPython =
-    { project_name
-    , dirname ? null
-    , version
-    , src
+    args @
+    { version
     , python
-    , name ? null
-    , src_path ? null
+    , src
     , buildInputs ? []
     , propagatedBuildInputs ? []
-    , doCheck ? true
-    , checkPhase ? null
     , prePatch ? ""
     , postPatch ? ""
+    , doCheck ? true
+    , checkPhase ? null
     , postInstall ? ""
     , shellHook ? ""
-    , dockerCmd ? []
-    , dockerEnv ? []
+    , inTesting ? true
+    , inStaging ? true
+    , inProduction ? false
     , dockerContents ? []
+    , dockerEnv ? []
+    , dockerCmd ? []
     , dockerUser ? "app"
     , dockerUserId ? 10001
     , dockerGroup ? "app"
     , dockerGroupId ? 10001
     , passthru ? {}
-    , inTesting ? true
-    , inStaging ? true
-    , inProduction ? false
+    , passthru_config ? {}
+    , ...
     }:
     let
 
-      self_docker_config =
-          { Env = [
-              "APP_NAME=${self.name}-${version}"
-              "PATH=/bin"
-              "LANG=en_US.UTF-8"
-              "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
-              "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-            ] ++ dockerEnv;
-            Cmd = dockerCmd;
-            WorkingDir = "/";
-          };
-      self_docker = mkDocker {
-        inherit version;
-        inherit (self) name;
-        contents = [ busybox self ] ++ dockerContents;
-        config = self_docker_config;
-      };
-
-      githubCommit = builtins.getEnv "GITHUB_COMMIT";
-      taskGroupId = builtins.getEnv "TASK_GROUP_ID";
-
-      version_json = {
-        inherit version;
-        source = "https://github.com/mozilla/release-services";
-        commit = githubCommit;
-        build =
-          if taskGroupId != ""
-            then "https://tools.taskcluster.net/groups/${taskGroupId}"
-            else "unknown";
-      };
-
-      self_dockerflow = mkDocker {
-        inherit (self) name version;
-        fromImage = self_docker;
-        config = self_docker_config // {
-            User = dockerUser;
-        };
-        runAsRoot = (if dockerUser == null then "" else ''
-          #!${stdenv.shell}
-          ${dockerTools.shadowSetup}
-          groupadd --gid ${toString dockerGroupId} ${dockerGroup}
-          useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
-          # gunicorn requires /tmp, /var/tmp, or /usr/tmp
-          mkdir -p --mode=1777 /tmp
-          mkdir -p /app
-          cp -a ${self.src}/. /app/
-        '') + ''
-          cp -a ${self.src}/* /app
-          cat > /app/version.json  <<EOF
-          ${builtins.toJSON version_json}
-          EOF
-          echo "/app/version.json content:"
-          cat /app/version.json
-        '';
-      };
-
-      self = mkProject {
-        inherit project_name version dirname src_path name;
-
+      argsToSkip = [
+        "python"
+        "prePatch"
+        "postPatch"
+        "inTesting"
+        "inStaging"
+        "inProduction"
+        "dockerContents"
+        "dockerEnv"
+        "dockerCmd"
+        "dockerUser"
+        "dockerUserId"
+        "dockerGroup"
+        "dockerGroupId"
+        "passthru_config"
+      ];
+      args' = releng_pkgs.pkgs.lib.filterAttrs (n: v: ! builtins.elem n argsToSkip) args;
+      self = mkProject (args' // {
         mkDerivation = python.mkDerivation;
 
         namePrefix = "";
@@ -950,25 +919,22 @@ in rec {
 
         inherit doCheck;
 
-        checkPhase =
-          if checkPhase != null
-            then checkPhase
-            else ''
-              export LANG=en_US.UTF-8
-              export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+        checkPhase = withDefault checkPhase ''
+          export LANG=en_US.UTF-8
+          export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
-              echo "################################################################"
-              echo "## flake8 ######################################################"
-              echo "################################################################"
-              flake8 -v
-              echo "################################################################"
+          echo "################################################################"
+          echo "## flake8 ######################################################"
+          echo "################################################################"
+          flake8 -v
+          echo "################################################################"
 
-              echo "################################################################"
-              echo "## pytest ######################################################"
-              echo "################################################################"
-              pytest tests/ -vvv -s
-              echo "################################################################"
-            '';
+          echo "################################################################"
+          echo "## pytest ######################################################"
+          echo "################################################################"
+          pytest tests/ -vvv -s
+          echo "################################################################"
+        '';
 
         postInstall = ''
           mkdir -p $out/bin
@@ -984,13 +950,13 @@ in rec {
           find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
 
           mkdir -p $out/etc
-          echo "${self.name}-${version}" > $out/etc/mozilla-releng-services
+          echo "${self.name}-${self.version}" > $out/etc/mozilla-releng-services
         '' + postInstall;
 
         shellHook = ''
           export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
           export SECRET_KEY_BASE64=`dd if=/dev/urandom bs=24 count=1 | base64`
-          export APP_NAME="${self.name}-${version}"
+          export APP_NAME="${self.name}-${self.version}"
           export LANG=en_US.UTF-8
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
@@ -1015,11 +981,61 @@ in rec {
                               ++ optional inProduction "production"
                 );
 
-          docker = self_docker;
-          dockerflow = self_dockerflow;
+          docker = mkDocker {
+            inherit version;
+            inherit (self) name;
+            contents = [ busybox self ] ++ dockerContents;
+            config = self.docker_default_config;
+          };
 
+          dockerflow = mkDockerflow {
+            inherit version src;
+            inherit (self) name;
+            fromImage = self.docker;
+            User = dockerUser;
+            UserId = dockerUserId;
+            Group = dockerGroup;
+            GroupId = dockerGroupId;
+            Cmd = dockerCmd;
+            defaultConfig = self.docker_default_config;
+          };
+
+          docker_default_config =
+            { Env = [
+                "APP_NAME=${self.name}-${self.version}"
+                "PATH=/bin"
+                "LANG=en_US.UTF-8"
+                "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
+                "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+              ] ++ dockerEnv;
+              Cmd = dockerCmd;
+              WorkingDir = "/";
+            };
+
+          config = { inherit version
+                             python
+                             src
+                             buildInputs
+                             propagatedBuildInputs
+                             prePatch
+                             postPatch
+                             doCheck
+                             checkPhase
+                             postInstall
+                             shellHook
+                             inTesting
+                             inStaging
+                             inProduction
+                             dockerContents
+                             dockerEnv
+                             dockerCmd
+                             dockerUser
+                             dockerUserId
+                             dockerGroup
+                             dockerGroupId;
+                   } // passthru_config;
         } // passthru;
-      };
+      });
     in self;
 
   updateFromGitHub = { owner, repo, path, branch }:

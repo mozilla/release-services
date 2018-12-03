@@ -10,6 +10,7 @@ import cli_common.taskcluster
 import shipit_api.cli
 import shipit_api.config
 import shipit_api.models  # noqa
+import shipit_api.worker
 
 
 def create_app(config=None):
@@ -35,5 +36,6 @@ def create_app(config=None):
     )
 
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
+    app.cli.add_command(shipit_api.worker.cmd, 'worker')
 
     return app
