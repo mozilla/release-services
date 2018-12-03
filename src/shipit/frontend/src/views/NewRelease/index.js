@@ -188,7 +188,9 @@ export default class NewRelease extends React.Component {
   submitRelease = async () => {
     this.setState({ inProgress: true });
     const { product } = this.state.selectedProduct;
-    const { branch } = this.state.selectedBranch;
+    const {
+        branch, repo, rcBranch, rcBranchVersionPattern, rcRepo,
+    } = this.state.selectedBranch;
     const releaseObj = {
       product,
       branch,
@@ -201,17 +203,27 @@ export default class NewRelease extends React.Component {
     if (this.state.selectedProduct.enablePartials) {
       const partialUpdates = await Promise.all(this.state.partialVersions.map(async (ver) => {
         const [version, buildNumber] = ver.split('build');
-        const shippedReleases = await getShippedReleases(product, branch, version, buildNumber);
+        let partialBranch = branch;
+        let partialRepo = repo;
+        // override the branch in case this is an RC and the version matches the (beta) pattern
+        if (this.isRc(releaseObj.version) && rcBranch && rcBranchVersionPattern.test(version)) {
+          partialBranch = rcBranch;
+          partialRepo = rcRepo;
+        }
+        const shippedReleases = await getShippedReleases(
+          product, partialBranch, version,
+          buildNumber,
+        );
         if (shippedReleases.length !== 1) {
           this.setState({
             inProgress: false,
-            errorMsg: `More than one release entries for ${product} ${branch} ${version} build ${buildNumber}`,
+            errorMsg: `Cannot obtain proper information for ${product} ${partialBranch} ${version} build ${buildNumber}`,
           });
           return null;
         }
         const { revision } = shippedReleases[0];
         const locales = await getLocales(
-          this.state.selectedBranch.repo, revision,
+          partialRepo, revision,
           this.state.selectedProduct.appName,
         );
         return [
