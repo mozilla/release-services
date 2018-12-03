@@ -38,9 +38,9 @@ let
     passthru = {
       src_path = "lib/please_cli";
       update = writeScript "update-${self.name}" ''
-        pushd ${self.src_path}
+        pushd lib/${project_name}
         ${pypi2nix}/bin/pypi2nix -v \
-          -V 3.6 \
+          -V 3.7 \
           -r requirements.txt \
           -r requirements-dev.txt
         popd

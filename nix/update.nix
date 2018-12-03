@@ -26,7 +26,7 @@ let
 
   packages =
     if pkg == null
-      then 
+      then
         ((releng_pkgs.lib.packagesWith "update" releng_pkgs.apps) ++
          (releng_pkgs.lib.packagesWith "update" releng_pkgs.tools))
     else if (builtins.substring 0 6 pkg) == "tools."
