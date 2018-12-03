@@ -72,7 +72,7 @@ Once you verify that the project works on staging, you must check it off in
 tracking Pull Request for this deployment, as shown bellow.
 
 .. image:: step_4_verified_project_on_staging.png
-  
+
 The role of the release manager is that it ensures that all projects are
 verified and tested before deploying to production.
 
@@ -113,7 +113,7 @@ Once you verify that the project works on production, you must check it off in
 tracking Pull Request for this deployment, as shown bellow.
 
 .. image:: step_7_verified_project_on_production.png
-  
+
 The role of the release manager is that it ensures that all projects are
 verified and tested before deploying to production.
 
@@ -162,25 +162,28 @@ required.
 - And then we build new base image
 - At the end we can get rid of temporary branch
 
+Generate the docker image using locally running docker daemon:
+
 .. code-block:: console
 
     git clone git@github.com/mozilla/release-services.git
     cd release-services
     git checkout -b temp origin/staging
     curl -L https://github.com/mozilla/release-services/pull/<PR_NUMBER>.patch | git am
-    ./please -vv tools base-image \
+    ./please -vv tools build-base-image
         --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
         --taskcluster-client-id="..." \
         --taskcluster-access-token="..."
     git branch -D temp
-   
-It might happen that push to docker hub will fail since the resulting docker
-image is quite big (~1.5GB). When it fails you can only retrigger the
-``docker push`` command.
+
+Push the image to the registry (docker hub):
 
 .. code-block:: console
 
-    docker push mozillareleng/services:base-$(cat ./VERSION)
+    ./please -vv tools push-base-image \
+        --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
+        --taskcluster-client-id="..." \
+        --taskcluster-access-token="..."
 
 
 9. Bump version

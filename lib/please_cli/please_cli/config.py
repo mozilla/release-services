@@ -40,6 +40,7 @@ TMP_DIR = os.path.join(ROOT_DIR, 'tmp')
 CHANNELS = ['master', 'testing', 'staging', 'production']
 DEPLOY_CHANNELS = ['testing', 'staging', 'production']
 
+DOCKER_BASE_REGISTRY = 'index.docker.io'
 DOCKER_BASE_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-' + VERSION
 
