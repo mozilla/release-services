@@ -3,8 +3,8 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
-  inherit (releng_pkgs.pkgs) writeScript git;
+  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource mkDocker mkDockerflow;
+  inherit (releng_pkgs.pkgs) writeScript git busybox;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
@@ -28,6 +28,18 @@ let
       ln -s ${git}/bin/git $out/bin/git
     '';
     passthru = {
+      worker_docker = mkDocker {
+        inherit (self.config) version;
+        inherit (self) name;
+        contents = [ busybox self ] ++ self.config.dockerContents;
+        config = self.docker_default_config;
+      };
+      worker_dockerflow = mkDockerflow {
+        inherit (self.config) version src;
+        inherit (self) name;
+        fromImage = self.worker_docker;
+        Cmd = ["flask" "worker"];
+      };
       update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \

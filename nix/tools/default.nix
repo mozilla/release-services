@@ -2,7 +2,6 @@
 
 let
   inherit (releng_pkgs.pkgs) writeScript stdenv makeWrapper;
-  inherit (releng_pkgs.lib) mkPythonScript;
 in {
 
   pypi2nix = import ./pypi2nix.nix { inherit releng_pkgs; } // {

@@ -893,6 +893,29 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'worker_dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'nix_path_attribute': 'worker_dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
+                    },
+                    'production': {
+                        'enable': True,
+                        'nix_path_attribute': 'worker_dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
+                    },
+                },
+            },
         ],
     },
     'shipit/frontend': {
