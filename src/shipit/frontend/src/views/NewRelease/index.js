@@ -189,7 +189,7 @@ export default class NewRelease extends React.Component {
     this.setState({ inProgress: true });
     const { product } = this.state.selectedProduct;
     const {
-        branch, repo, rcBranch, rcBranchVersionPattern, rcRepo,
+      branch, repo, rcBranch, rcBranchVersionPattern, rcRepo,
     } = this.state.selectedBranch;
     const releaseObj = {
       product,
