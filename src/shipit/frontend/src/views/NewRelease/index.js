@@ -100,11 +100,11 @@ export default class NewRelease extends React.Component {
 
   guessPartialVersions = async () => {
     const { product } = this.state.selectedProduct;
-    const { branch, rcBranch } = this.state.selectedBranch;
+    const { branch, rcBranch, numberOfPartials } = this.state.selectedBranch;
     const shippedReleases = await getShippedReleases(product, branch);
     const shippedBuilds = shippedReleases.map(r => `${r.version}build${r.build_number}`);
     // take first N releases
-    const suggestedBuilds = shippedBuilds.slice(0, 3);
+    const suggestedBuilds = shippedBuilds.slice(0, numberOfPartials || 3);
     // if RC, also add last shipped beta
     let suggestedRcBuilds = [];
     if (rcBranch && this.isRc(this.state.version)) {
