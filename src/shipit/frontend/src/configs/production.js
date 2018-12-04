@@ -27,6 +27,8 @@ module.exports = {
           repo: 'https://hg.mozilla.org/releases/mozilla-release',
           enableReleaseEta: true,
           rcBranch: 'releases/mozilla-beta',
+          rcBranchVersionPattern: /b/,
+          rcRepo: 'https://hg.mozilla.org/releases/mozilla-beta',
         },
         {
           prettyName: 'ESR60',
