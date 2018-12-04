@@ -29,6 +29,7 @@ module.exports = {
           rcBranch: 'releases/mozilla-beta',
           rcBranchVersionPattern: /b/,
           rcRepo: 'https://hg.mozilla.org/releases/mozilla-beta',
+          numberOfPartials: 4,
         },
         {
           prettyName: 'ESR60',
@@ -36,6 +37,7 @@ module.exports = {
           branch: 'releases/mozilla-esr60',
           repo: 'https://hg.mozilla.org/releases/mozilla-esr60',
           enableReleaseEta: true,
+          numberOfPartials: 5,
         },
       ],
       enablePartials: true,
