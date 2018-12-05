@@ -52,8 +52,12 @@ let
       update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
-          -V 3.5 \
-          -E "postgresql" \
+          -V 3.7 \
+          -O ../../../nix/requirements_override.nix \
+          -E postgresql \
+          -e vcversioner \
+          -e pytest-runner \
+          -e setuptools-scm \
           -r requirements.txt \
           -r requirements-dev.txt
         popd
