@@ -345,9 +345,9 @@ def phase_signoff(name, phase, uid):
             # TODO: temporarily use LDAP groups instead of scopes
             groups = g.userinfo['https://sso.mozilla.com/claim/groups']
             if signoff.permissions not in groups:
-                abort(401, f'{signoff.permissions} not in your LDAP groups ({groups}).')
+                abort(401, f'Required LDAP group: `{signoff.permissions}`')
         except KeyError:
-            abort(401)
+            abort(401, 'Auth failure')
 
         # Prevent the same user signing off for multiple signoffs
         phase_obj = session.query(Phase) \
@@ -372,4 +372,4 @@ def phase_signoff(name, phase, uid):
         return dict(signoffs=signoffs)
 
     except NoResultFound:
-        abort(404)
+        abort(404, 'Sign off does not exist')

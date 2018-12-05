@@ -337,7 +337,8 @@ class TaskLabel extends React.PureComponent {
     try {
       const response = await fetch(url, { method: 'PUT', headers, body });
       if (!response.ok) {
-        this.setState({ errorMsg: 'Auth failure!' });
+        const err = await response.json();
+        this.setState({ errorMsg: `Error: ${err.detail}` });
         return;
       }
       this.setState({ submitted: true });
@@ -355,7 +356,8 @@ class TaskLabel extends React.PureComponent {
     try {
       const response = await fetch(url, { method: 'PUT', headers });
       if (!response.ok) {
-        this.setState({ errorMsg: 'Auth failure!' });
+        const err = await response.json();
+        this.setState({ errorMsg: `Error: ${err.detail}` });
         return;
       }
       this.setState({ submitted: true });
