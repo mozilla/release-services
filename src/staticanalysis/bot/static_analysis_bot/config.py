@@ -20,6 +20,7 @@ PROJECT_NAME = 'static-analysis-bot'
 CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_UNIFIED = b'https://hg.mozilla.org/mozilla-unified'
+TASKCLUSTER_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 
 logger = get_logger(__name__)

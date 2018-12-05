@@ -49,9 +49,9 @@ class PhabricatorReporter(Reporter):
         issues = list(filter(lambda i: i.is_publishable() and i.ANALYZER in self.analyzers, issues))
         analyzers_available = set(i.ANALYZER for i in issues).intersection(self.analyzers)
         patches = {
-            analyzer: url
-            for analyzer, url in revision.improvement_patches.items()
-            if analyzer in analyzers_available
+            patch.analyzer: patch.url
+            for patch in revision.improvement_patches
+            if patch.analyzer in analyzers_available
         }
 
         if issues:

@@ -36,8 +36,8 @@ class DebugReporter(Reporter):
                 'Issue {}'.format('publishable' if issue.is_publishable() else 'silent'),
                 issue=str(issue),
             )
-        for analyzer, url in revision.improvement_patches.items():
-            logger.info('Patch from {} as {}'.format(analyzer, url))
+        for patch in revision.improvement_patches:
+            logger.info('Patch from {} as {}'.format(patch.analyzer, patch.url))
 
         # Output json report in public directory
         report = {

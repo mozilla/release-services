@@ -66,8 +66,8 @@ class MailReporter(Reporter):
         if revision.improvement_patches:
             content += '## Improvement patches:\n\n{}\n\n'.format(
                 '\n'.join(
-                    EMAIL_HEADER_PATCH.format(analyzer, url)
-                    for analyzer, url in revision.improvement_patches.items()
+                    EMAIL_HEADER_PATCH.format(patch.analyzer, patch.url)
+                    for patch in revision.improvement_patches
                 )
             )
         content += '\n\n'.join([i.as_markdown() for i in issues])

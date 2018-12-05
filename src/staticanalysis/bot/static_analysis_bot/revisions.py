@@ -3,12 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import hashlib
 import io
 import os
 import re
 from collections import OrderedDict
+from datetime import datetime
+from datetime import timedelta
+from pprint import pprint
 
 import hglib
+import requests
 from parsepatch.patch import Patch
 
 from cli_common import log
@@ -16,6 +21,7 @@ from cli_common.phabricator import PhabricatorAPI
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
+from static_analysis_bot.config import TASKCLUSTER_DATE_FORMAT
 from static_analysis_bot.config import settings
 
 logger = log.get_logger(__name__)
@@ -32,6 +38,66 @@ def revision_available(repo, revision):
         return False
 
 
+class ImprovementPatch(object):
+    '''
+    An improvement patch built by the bot
+    '''
+    def __init__(self, analyzer_name, patch_name, content):
+        # Build name from analyzer and revision
+        self.analyzer = analyzer_name
+        self.name = '{}-{}.diff'.format(analyzer_name, patch_name)
+        self.path = os.path.join(settings.taskcluster.results_dir, self.name)
+        self.content = content
+        self.url = None
+
+    def write(self):
+        with open(self.path, 'w') as f:
+            length = f.write(self.content)
+            logger.info('Improvement patch saved', path=self.path, length=length)
+
+    def publish(self, queue_service, days_ttl=30):
+        '''
+        Push through Taskcluster API to setup the content-type header
+        so it displays nicely in browsers
+        '''
+        assert not settings.taskcluster.local, 'Only publish on online Taskcluster tasks'
+        sha256 = hashlib.sha256(self.content.encode('utf-8')).hexdigest()
+
+        # Request new artifact creation
+        expires = datetime.utcnow() + timedelta(days=days_ttl - 1, hours=23)
+        payload = (
+            settings.taskcluster.task_id,
+            settings.taskcluster.run_id,
+            'public/patch/{}'.format(self.name),
+            {
+                'storageType': 'blob',
+                'expires': expires.strftime(TASKCLUSTER_DATE_FORMAT),
+                'contentType': 'text/plain; charset=utf-8',  # Displays instead of download
+                'contentSha256': sha256,
+                'contentLength': len(self.content),
+            }
+        )
+        pprint(payload)
+        resp = queue_service.createArtifact(*payload)
+
+        pprint(resp)
+
+        # Push the artifact on storage service
+        push = requests.put(
+            url=resp['putUrl'],
+            headers={
+                'Content-Type': resp['contentType'],
+            },
+            data=self.content,
+        )
+        print(push)
+        push.raise_for_status()
+        print(push.content)
+
+        # Build diff download url
+        self.url = settings.build_artifact_url(self.path)
+
+
 class Revision(object):
     '''
     A common DCM revision
@@ -40,7 +106,7 @@ class Revision(object):
         self.files = []
         self.lines = {}
         self.patch = None
-        self.improvement_patches = {}
+        self.improvement_patches = []
 
     def analyze_patch(self):
         '''
@@ -116,16 +182,9 @@ class Revision(object):
         '''
         assert isinstance(content, str)
         assert len(content) > 0
-
-        # Build name from analyzer and revision
-        diff_name = '{}-{}.diff'.format(analyzer_name, repr(self))
-        diff_path = os.path.join(settings.taskcluster.results_dir, diff_name)
-        with open(diff_path, 'w') as f:
-            length = f.write(content)
-            logger.info('Improvement patch saved', path=diff_path, length=length)
-
-        # Build diff download url
-        self.improvement_patches[analyzer_name] = settings.build_artifact_url(diff_path)
+        self.improvement_patches.append(
+            ImprovementPatch(analyzer_name, repr(self), content)
+        )
 
 
 class PhabricatorRevision(Revision):
