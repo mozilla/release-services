@@ -18,7 +18,7 @@ from cli_common.log import get_logger
 logger = get_logger(__name__)
 
 TASKCLUSTER_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
-
+TASKCLUSTER_ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/{path}'
 
 with open(taskcluster._client_importer.__file__) as f:
     TASKCLUSTER_SERVICES = [
@@ -224,4 +224,5 @@ def create_blob_artifact(queue_service, task_id, run_id, path, content, content_
     push.raise_for_status()
 
     # Build the absolute url
-    return f'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/{path}'
+    # TODO: use f-string once all project are on python 3.6
+    return TASKCLUSTER_ARTIFACT_URL.format(task_id=task_id, run_id=run_id, path=path)
