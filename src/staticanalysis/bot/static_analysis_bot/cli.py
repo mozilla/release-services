@@ -107,13 +107,6 @@ def main(source,
         taskcluster_access_token,
     )
 
-    # TRASHME
-    from static_analysis_bot.revisions import ImprovementPatch
-    p = ImprovementPatch('test', 'mypatch', 'Hello World.')
-    p.publish(queue_service)
-
-    return
-
     # Load Phabricator API
     phabricator_api = PhabricatorAPI(**secrets['PHABRICATOR'])
     if 'phabricator' in reporters:
