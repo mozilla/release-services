@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.7 -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -C /home/rok/dev/mozilla/services/lib/please_cli/../../tmp/pypi2nix -V 3.7 -O ../../nix/requirements_override.nix -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -136,7 +136,11 @@ let
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+        self."Jinja2"
+        self."pytest"
+        self."pytest-cov"
+      ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://logbook.pocoo.org/";
         license = licenses.bsdOriginal;
@@ -315,10 +319,10 @@ let
     };
 
     "awscli" = python.mkDerivation {
-      name = "awscli-1.16.67";
+      name = "awscli-1.16.69";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/58/7e/327521add7f23d223fec675c56f8e2a9851299fab8b650cc97380ea742e4/awscli-1.16.67.tar.gz";
-        sha256 = "7d34d3adef43e27cc2c7b945239455d48e5f5ac2b9494c9c9ca881cef2bfa7ee";
+        url = "https://files.pythonhosted.org/packages/0a/38/2259fac6aabd36af05ebdb3f80a363a3ed2d0274fd0749b5a44287f0ca04/awscli-1.16.69.tar.gz";
+        sha256 = "d071fdbbeb8d06e9972404c6f966cad25aee750575882999156ca05401b5455b";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -360,10 +364,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.57";
+      name = "boto3-1.9.59";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/0d/2d/1d1fdb432082b0cca309be1c7bae847f7f951dcc48cd7fd03a7e0cf98990/boto3-1.9.57.tar.gz";
-        sha256 = "0a0c0f0859a2be56b23823f8c1d50abf3c89d7d4d054019f24de69eeee9ad75c";
+        url = "https://files.pythonhosted.org/packages/8d/93/8395000623748648009b0b40a980b68deb72446b01598e1dbbe64b2a5ee1/boto3-1.9.59.tar.gz";
+        sha256 = "1bb0505de52201ed2f3bafe3b4b1539971a4b08ff048b9d804f6e04f017701fb";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -382,10 +386,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.57";
+      name = "botocore-1.12.59";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/d9/53/cfb5634ded1c72f06bad0718ae13e3cd4116cdc12a198a6d8deb255a6315/botocore-1.12.57.tar.gz";
-        sha256 = "9dac7753d81e8a725b9a169fd63b43d2a3caeceb51de3fafd5e5bd10e25589cb";
+        url = "https://files.pythonhosted.org/packages/f5/1a/b50e770e7aadee4cf259782e4e7460d0ebe2613b5bacc0c1a8f4379d7766/botocore-1.12.59.tar.gz";
+        sha256 = "bcc4ae773091ed632eaf4a6d5bc46c6409659ce138158ec11904a931b21bd8f8";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -553,6 +557,7 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
+        self."PyYAML"
         self."coverage"
         self."docopt"
         self."requests"
@@ -951,7 +956,18 @@ let
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+        self."Click"
+        self."Logbook"
+        self."aioamqp"
+        self."mozdef-client"
+        self."python-dateutil"
+        self."python-hglib"
+        self."raven"
+        self."requests"
+        self."structlog"
+        self."taskcluster"
+      ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/mozilla/release-services";
         license = licenses.mpl20;
@@ -1166,6 +1182,7 @@ let
         self."more-itertools"
         self."pluggy"
         self."py"
+        self."requests"
         self."six"
       ];
       meta = with pkgs.stdenv.lib; {
@@ -1208,7 +1225,9 @@ let
       buildInputs = commonBuildInputs ++ [
         self."setuptools-scm"
       ];
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+        self."pytest"
+      ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/pytest-dev/pytest-runner";
         license = "UNKNOWN";
@@ -1558,7 +1577,10 @@ let
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+        self."certifi"
+        self."idna"
+      ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://urllib3.readthedocs.io/";
         license = licenses.mit;
@@ -1626,7 +1648,7 @@ let
   localOverridesFile = ./requirements_override.nix;
   localOverrides = import localOverridesFile { inherit pkgs python; };
   commonOverrides = [
-    
+        (import ../../nix/requirements_override.nix { inherit pkgs python ; })
   ];
   paramOverrides = [
     (overrides { inherit pkgs python; })
