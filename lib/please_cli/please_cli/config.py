@@ -40,6 +40,7 @@ TMP_DIR = os.path.join(ROOT_DIR, 'tmp')
 CHANNELS = ['master', 'testing', 'staging', 'production']
 DEPLOY_CHANNELS = ['testing', 'staging', 'production']
 
+DOCKER_BASE_REGISTRY = 'index.docker.io'
 DOCKER_BASE_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-' + VERSION
 
@@ -607,6 +608,99 @@ PROJECTS_CONFIG = {
             },
         ],
     },
+    'bugbug/data': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'staging': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'production': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                },
+            },
+        ],
+    },
+    'bugbug/train': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'staging': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'production': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                },
+            },
+        ],
+    },
+    'bugbug/eval': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'deploy.testing',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'staging': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.staging',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                    'production': {
+                        'enable': False,
+                        'nix_path_attribute': 'deploy.production',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                    },
+                },
+            },
+        ],
+    },
     'pulselistener': {
         'requires': [],
         'deploys': [
@@ -795,6 +889,29 @@ PROJECTS_CONFIG = {
                         # 'url': 'https://api.shipit.mozilla-releng.net',
                         'url': 'https://shipit-api.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
+                    },
+                },
+            },
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'worker_dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'nix_path_attribute': 'worker_dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/shipitbackend',
+                    },
+                    'production': {
+                        'enable': True,
+                        'nix_path_attribute': 'worker_dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
                     },

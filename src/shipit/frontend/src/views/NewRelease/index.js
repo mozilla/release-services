@@ -86,18 +86,37 @@ export default class NewRelease extends React.Component {
     });
   };
 
+  // Poor man's RC detection. xx.0 is the only pattern that matches RC
+  isRc = (version) => {
+    const parts = version.split('.');
+    if (parts.length !== 2) {
+      return false;
+    }
+    if (parts[1] !== '0') {
+      return false;
+    }
+    return true;
+  };
+
   guessPartialVersions = async () => {
     const { product } = this.state.selectedProduct;
-    const { branch } = this.state.selectedBranch;
+    const { branch, rcBranch, numberOfPartials } = this.state.selectedBranch;
     const shippedReleases = await getShippedReleases(product, branch);
     const shippedBuilds = shippedReleases.map(r => `${r.version}build${r.build_number}`);
     // take first N releases
-    const suggestedBuilds = shippedBuilds.slice(0, 3);
+    const suggestedBuilds = shippedBuilds.slice(0, numberOfPartials || 3);
+    // if RC, also add last shipped beta
+    let suggestedRcBuilds = [];
+    if (rcBranch && this.isRc(this.state.version)) {
+      const rcShippedReleases = await getShippedReleases(product, rcBranch);
+      const rcLastBuild = `${rcShippedReleases[0].version}build${rcShippedReleases[0].build_number}`;
+      suggestedRcBuilds = [rcLastBuild];
+    }
 
     this.setState({
-      partialVersions: suggestedBuilds,
+      partialVersions: suggestedBuilds.concat(suggestedRcBuilds),
     });
-  }
+  };
 
   handleSuggestedRev = async (rev) => {
     this.setState({
@@ -169,7 +188,9 @@ export default class NewRelease extends React.Component {
   submitRelease = async () => {
     this.setState({ inProgress: true });
     const { product } = this.state.selectedProduct;
-    const { branch } = this.state.selectedBranch;
+    const {
+      branch, repo, rcBranch, rcBranchVersionPattern, rcRepo,
+    } = this.state.selectedBranch;
     const releaseObj = {
       product,
       branch,
@@ -182,17 +203,27 @@ export default class NewRelease extends React.Component {
     if (this.state.selectedProduct.enablePartials) {
       const partialUpdates = await Promise.all(this.state.partialVersions.map(async (ver) => {
         const [version, buildNumber] = ver.split('build');
-        const shippedReleases = await getShippedReleases(product, branch, version, buildNumber);
+        let partialBranch = branch;
+        let partialRepo = repo;
+        // override the branch in case this is an RC and the version matches the (beta) pattern
+        if (this.isRc(releaseObj.version) && rcBranch && rcBranchVersionPattern.test(version)) {
+          partialBranch = rcBranch;
+          partialRepo = rcRepo;
+        }
+        const shippedReleases = await getShippedReleases(
+          product, partialBranch, version,
+          buildNumber,
+        );
         if (shippedReleases.length !== 1) {
           this.setState({
             inProgress: false,
-            errorMsg: `More than one release entries for ${product} ${branch} ${version} build ${buildNumber}`,
+            errorMsg: `Cannot obtain proper information for ${product} ${partialBranch} ${version} build ${buildNumber}`,
           });
           return null;
         }
         const { revision } = shippedReleases[0];
         const locales = await getLocales(
-          this.state.selectedBranch.repo, revision,
+          partialRepo, revision,
           this.state.selectedProduct.appName,
         );
         return [

@@ -10,6 +10,7 @@ from flask import abort
 from flask import current_app
 from flask import g
 from flask import jsonify
+from mozilla_version.gecko import FirefoxVersion
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
@@ -29,6 +30,21 @@ from shipit_api.tasks import fetch_actions_json
 from shipit_api.tasks import generate_action_hook
 
 logger = get_logger(__name__)
+
+
+def good_version(release):
+    '''Can the version be parsed by mozilla_version
+
+    Some ancient versions cannot be parsed by the mozilla_version module. This
+    function helps to skip the versions that are not supported.
+    Example versions that cannot be parsed:
+    1.1, 1.1b1, 2.0.0.1
+    '''
+    try:
+        FirefoxVersion.parse(release['version'])
+        return True
+    except ValueError:
+        return False
 
 
 def notify_via_irc(message):
@@ -112,7 +128,10 @@ def list_releases(product=None, branch=None, version=None, build_number=None,
         raise BadRequest(description='Filtering by build_number without version'
                          ' is not supported.')
     releases = releases.filter(Release.status.in_(status))
-    return [r.json for r in releases.all()]
+    releases = [r.json for r in releases.all()]
+    # filter out not parsable releases, like 1.1, 1.1b1, etc
+    releases = filter(good_version, releases)
+    return sorted(releases, key=lambda r: FirefoxVersion.parse(r['version']))
 
 
 def get_release(name):
