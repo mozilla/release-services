@@ -83,23 +83,26 @@ class ImprovementPatch(object):
         )
         pprint(payload)
         resp = queue_service.createArtifact(*payload)
+        assert resp['storageType'] == 'blob', 'Not a blob storage'
+        assert len(resp['requests']) == 1, 'Should only get one request'
+        request = resp['requests'][0]
+        assert request['method'] == 'PUT', 'Should get a PUT request'
 
         pprint(resp)
 
         # Push the artifact on storage service
         push = requests.put(
-            url=resp['putUrl'],
-            headers={
-                'Content-Type': resp['contentType'],
-            },
+            url=request['url'],
+            headers=request['headers'],
             data=self.content,
         )
         print(push)
         push.raise_for_status()
         print(push.content)
+        print(push.headers)
 
         # Build diff download url
-        self.url = settings.build_artifact_url(self.path)
+        # self.url = settings.build_artifact_url(self.path)
 
 
 class Revision(object):
