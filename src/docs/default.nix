@@ -49,9 +49,21 @@ let
           [ "master" "testing" "staging" "production" ];
       update  = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
-        ${pypi2nix}/bin/pypi2nix -v \
-          -V 3.6 \
-          -E "pkgconfig zlib libjpeg openjpeg libtiff freetype lcms2 libwebp tcl" \
+        cache_dir=$PWD/../../../tmp/pypi2nix
+        mkdir -p $cache_dir
+        eval ${pypi2nix}/bin/pypi2nix -v \
+          -C $cache_dir \
+          -V 3.7 \
+          -O ../../nix/requirements_override.nix \
+          -E pkgconfig \
+          -E zlib \
+          -E libjpeg \
+          -E openjpeg \
+          -E libtiff \
+          -E freetype \
+          -E lcms2 \
+          -E libwebp \
+          -E tcl \
           -r requirements.txt
         popd
       '';
