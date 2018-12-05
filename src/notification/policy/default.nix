@@ -30,7 +30,7 @@ let
           -C $cache_dir \
           -V 3.7 \
           -O ../../../nix/requirements_override.nix \
-          -E "postgresql" \
+          -E postgresql \
           -e vcversioner \
           -e pytest-runner \
           -e setuptools-scm \
