@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProgressBar, Button, Modal, Collapse, FormGroup, Radio } from 'react-bootstrap';
+import { ProgressBar, Button, Modal, Collapse, FormGroup, Radio, ControlLabel } from 'react-bootstrap';
 import { object } from 'prop-types';
 import ReactInterval from 'react-interval';
 import { Queue } from 'taskcluster-client-web';
@@ -388,6 +388,7 @@ class TaskLabel extends React.PureComponent {
     }
     return (
       <div>
+        <ControlLabel>Sign off as</ControlLabel>
         <FormGroup>
           {signoffs.map(s => (
             <Radio
