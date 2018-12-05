@@ -5,7 +5,7 @@ aiohttp
 async-lru
 cachetools
 datadog
-redis
+redis<3 # due to fakeredis
 rq
 gunicorn
 elasticsearch-async
