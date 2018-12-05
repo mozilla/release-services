@@ -14,6 +14,7 @@ import hglib
 from cli_common.command import run_check
 from cli_common.log import get_logger
 from cli_common.phabricator import PhabricatorAPI
+from cli_common.taskcluster import TASKCLUSTER_DATE_FORMAT
 from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import CLANG_TIDY
 from static_analysis_bot import INFER
@@ -24,7 +25,6 @@ from static_analysis_bot.clang import setup as setup_clang
 from static_analysis_bot.clang.format import ClangFormat
 from static_analysis_bot.clang.tidy import ClangTidy
 from static_analysis_bot.config import REPO_UNIFIED
-from static_analysis_bot.config import TASKCLUSTER_DATE_FORMAT
 from static_analysis_bot.config import Publication
 from static_analysis_bot.config import settings
 from static_analysis_bot.infer import setup as setup_infer

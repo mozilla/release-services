@@ -3,25 +3,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import hashlib
 import io
 import os
 import re
 from collections import OrderedDict
-from datetime import datetime
 from datetime import timedelta
-from pprint import pprint
 
 import hglib
-import requests
 from parsepatch.patch import Patch
 
 from cli_common import log
 from cli_common.phabricator import PhabricatorAPI
+from cli_common.taskcluster import create_blob_artifact
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
-from static_analysis_bot.config import TASKCLUSTER_DATE_FORMAT
 from static_analysis_bot.config import settings
 
 logger = log.get_logger(__name__)
@@ -54,6 +50,9 @@ class ImprovementPatch(object):
         return '{}: {}'.format(self.analyzer, self.url or self.path or self.name)
 
     def write(self):
+        '''
+        Write patch on local FS, for dev & tests only
+        '''
         self.path = os.path.join(settings.taskcluster.results_dir, self.name)
         with open(self.path, 'w') as f:
             length = f.write(self.content)
@@ -65,44 +64,16 @@ class ImprovementPatch(object):
         so it displays nicely in browsers
         '''
         assert not settings.taskcluster.local, 'Only publish on online Taskcluster tasks'
-        sha256 = hashlib.sha256(self.content.encode('utf-8')).hexdigest()
-
-        # Request new artifact creation
-        expires = datetime.utcnow() + timedelta(days=days_ttl - 1, hours=23)
-        payload = (
-            settings.taskcluster.task_id,
-            settings.taskcluster.run_id,
-            'public/patch/{}'.format(self.name),
-            {
-                'storageType': 'blob',
-                'expires': expires.strftime(TASKCLUSTER_DATE_FORMAT),
-                'contentType': 'text/plain; charset=utf-8',  # Displays instead of download
-                'contentSha256': sha256,
-                'contentLength': len(self.content),
-            }
+        self.url = create_blob_artifact(
+            queue_service,
+            task_id=settings.taskcluster.task_id,
+            run_id=settings.taskcluster.run_id,
+            path='public/patch/{}'.format(self.name),
+            content=self.content,
+            content_type='text/plain; charset=utf-8',  # Displays instead of download):
+            ttl=timedelta(days=days_ttl - 1, hours=23),
         )
-        pprint(payload)
-        resp = queue_service.createArtifact(*payload)
-        assert resp['storageType'] == 'blob', 'Not a blob storage'
-        assert len(resp['requests']) == 1, 'Should only get one request'
-        request = resp['requests'][0]
-        assert request['method'] == 'PUT', 'Should get a PUT request'
-
-        pprint(resp)
-
-        # Push the artifact on storage service
-        push = requests.put(
-            url=request['url'],
-            headers=request['headers'],
-            data=self.content,
-        )
-        print(push)
-        push.raise_for_status()
-        print(push.content)
-        print(push.headers)
-
-        # Build diff download url
-        # self.url = settings.build_artifact_url(self.path)
+        logger.info('Improvement patch published', url=self.url)
 
 
 class Revision(object):
