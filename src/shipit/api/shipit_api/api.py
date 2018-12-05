@@ -364,11 +364,14 @@ def phase_signoff(name, phase, uid):
         session.commit()
         signoffs = [s.json for s in phase_obj.signoffs]
 
+        # Schedule the phase when all signoffs are done
+        if all([s.signed for s in phase_obj.signoffs]):
+            schedule_phase(name, phase)
+
         r = phase_obj.release
         notify_via_irc(
             f'{phase} of {r.product} {r.version} build{r.build_number} signed off by {who}.')
-        if all([s.signed for s in phase_obj.signoffs]):
-            schedule_phase(name, phase)
+
         return dict(signoffs=signoffs)
 
     except NoResultFound:
