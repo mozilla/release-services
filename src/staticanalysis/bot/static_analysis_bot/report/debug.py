@@ -37,7 +37,7 @@ class DebugReporter(Reporter):
                 issue=str(issue),
             )
         for patch in revision.improvement_patches:
-            logger.info('Patch from {} as {}'.format(patch.analyzer, patch.url))
+            logger.info('Patch {}'.format(patch))
 
         # Output json report in public directory
         report = {
@@ -48,8 +48,8 @@ class DebugReporter(Reporter):
                 for issue in issues
             ],
             'patches': {
-                analyzer: url
-                for analyzer, url in revision.improvement_patches.items()
+                patch.analyzer: patch.url or patch.path
+                for patch in revision.improvement_patches
             },
         }
         with open(self.report_path, 'w') as f:

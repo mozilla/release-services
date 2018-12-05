@@ -100,7 +100,7 @@ class Reporter(object):
             for cls, items in groups
         ])
 
-    def build_comment(self, issues, bug_report_url, patches={}, max_comments=None):
+    def build_comment(self, issues, bug_report_url, patches=[], max_comments=None):
         '''
         Build a Markdown comment about published issues
         '''
@@ -136,10 +136,10 @@ class Reporter(object):
             defects='\n'.join(defects),
             analyzers='\n'.join(analyzers),
         )
-        for analyzer, url in patches.items():
+        for patch in patches:
             comment += COMMENT_DIFF_DOWNLOAD.format(
-                analyzer=analyzer,
-                url=url,
+                analyzer=patch.analyzer,
+                url=patch.url or patch.path,
             )
         comment += BUG_REPORT.format(bug_report_url=bug_report_url)
 

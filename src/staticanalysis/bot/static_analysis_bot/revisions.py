@@ -46,11 +46,15 @@ class ImprovementPatch(object):
         # Build name from analyzer and revision
         self.analyzer = analyzer_name
         self.name = '{}-{}.diff'.format(analyzer_name, patch_name)
-        self.path = os.path.join(settings.taskcluster.results_dir, self.name)
         self.content = content
         self.url = None
+        self.path = None
+
+    def __str__(self):
+        return '{}: {}'.format(self.analyzer, self.url or self.path or self.name)
 
     def write(self):
+        self.path = os.path.join(settings.taskcluster.results_dir, self.name)
         with open(self.path, 'w') as f:
             length = f.write(self.content)
             logger.info('Improvement patch saved', path=self.path, length=length)
