@@ -221,7 +221,7 @@ To start developing ``treestatus`` you would need to:
    - :ref:`db <develop-flask-db-extension>` (convinience utilities how to work
      with `SQLAlchemy`_),
    - :ref:`cache <develop-flask-cache-extension>` (integration with
-     Flask-Cache),
+     Flask-Caching),
    - :ref:`pulse <develop-flask-pulse-extension>` (convinience utilities to
      work with Pulse_)
 
