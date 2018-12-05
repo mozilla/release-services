@@ -51,7 +51,10 @@ let
       };
       update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
-        ${pypi2nix}/bin/pypi2nix -v \
+        cache_dir=$PWD/../../../tmp/pypi2nix
+        mkdir -p $cache_dir
+        eval ${pypi2nix}/bin/pypi2nix -v \
+          -C $cache_dir \
           -V 3.7 \
           -O ../../../nix/requirements_override.nix \
           -E postgresql \

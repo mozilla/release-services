@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.7 -O ../../nix/requirements_override.nix -E postgresql -e vcversioner -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -C /home/rok/dev/mozilla/services/src/mapper/api/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E postgresql -e vcversioner -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -564,10 +564,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.58";
+      name = "boto3-1.9.59";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/6c/9a/dfbb1ebcb34541292e670e1c9afac9bf971ab768eb917cb17a838665d3cc/boto3-1.9.58.tar.gz";
-        sha256 = "308a1029a1c6a79e28bfba54315a83c875c5ac970b7dbf2d8242faaac16836b7";
+        url = "https://files.pythonhosted.org/packages/8d/93/8395000623748648009b0b40a980b68deb72446b01598e1dbbe64b2a5ee1/boto3-1.9.59.tar.gz";
+        sha256 = "1bb0505de52201ed2f3bafe3b4b1539971a4b08ff048b9d804f6e04f017701fb";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -586,10 +586,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.58";
+      name = "botocore-1.12.59";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/ec/7c/e5081e2199ad87f447b30a784a873524788ffa12328d9f819e4df9d27d9d/botocore-1.12.58.tar.gz";
-        sha256 = "3ecfc578a9268aab38149c29bcc69c74a6e72b38db61f55226acf2b95296ab35";
+        url = "https://files.pythonhosted.org/packages/f5/1a/b50e770e7aadee4cf259782e4e7460d0ebe2613b5bacc0c1a8f4379d7766/botocore-1.12.59.tar.gz";
+        sha256 = "bcc4ae773091ed632eaf4a6d5bc46c6409659ce138158ec11904a931b21bd8f8";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2088,10 +2088,10 @@ let
     };
 
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-5.0.0";
+      name = "taskcluster-6.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/74/9f/42ad92011c43074b3f3cb21c3e1d1bba695aa768b59113e8f63afbb64491/taskcluster-5.0.0.tar.gz";
-        sha256 = "ca8a70239d1bead7e097905d9e7fda9a02fc0fda4f51b41d324575097753885d";
+        url = "https://files.pythonhosted.org/packages/06/6a/66bf42549bb69618159b0515c3001b9b8c21bbb5b28f16fcb14cfeef3318/taskcluster-6.0.0.tar.gz";
+        sha256 = "48ecd4898c7928deddfb34cb1cfe2b2505c68416e6c503f8a7f3dd0572425e96";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2114,10 +2114,10 @@ let
     };
 
     "taskcluster-urls" = python.mkDerivation {
-      name = "taskcluster-urls-10.1.0";
+      name = "taskcluster-urls-11.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/30/e7/dec333d28f7a34dace5bcb7cd78deeb97e5efa61f75309ae230d8881f401/taskcluster-urls-10.1.0.tar.gz";
-        sha256 = "a572a8a5f2db1cef3d36d1b2b7d7bdba97d66c1f9b61e45bd2dce32e41d03e34";
+        url = "https://files.pythonhosted.org/packages/69/c1/1f0efd104c7bd6dbb42a7d0c7f1f5f4be05c108e873add8f466e6de9f387/taskcluster-urls-11.0.0.tar.gz";
+        sha256 = "18dcaa9c2412d34ff6c78faca33f0dd8f2384e3f00a98d5832c62d6d664741f0";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
