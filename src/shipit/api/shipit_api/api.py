@@ -336,43 +336,46 @@ def phase_signoff(name, phase, uid):
     try:
         signoff = session.query(Signoff) \
             .filter(Signoff.uid == uid).one()
+    except NoResultFound:
+        abort(404, 'Sign off does not exist')
 
-        if signoff.signed:
-            abort(409, 'Already signed off')
+    if signoff.signed:
+        abort(409, 'Already signed off')
 
-        who = g.userinfo['email']
-        try:
-            # TODO: temporarily use LDAP groups instead of scopes
-            groups = g.userinfo['https://sso.mozilla.com/claim/groups']
-            if signoff.permissions not in groups:
-                abort(401, f'Required LDAP group: `{signoff.permissions}`')
-        except KeyError:
-            abort(401, 'Auth failure')
+    who = g.userinfo['email']
+    try:
+        # TODO: temporarily use LDAP groups instead of scopes
+        groups = g.userinfo['https://sso.mozilla.com/claim/groups']
+        if signoff.permissions not in groups:
+            abort(401, f'Required LDAP group: `{signoff.permissions}`')
+    except KeyError:
+        abort(401, 'Auth failure')
 
+    try:
         # Prevent the same user signing off for multiple signoffs
         phase_obj = session.query(Phase) \
             .filter(Release.id == Phase.release_id) \
             .filter(Release.name == name) \
             .filter(Phase.name == phase).one()
-        if who in [s.completed_by for s in phase_obj.signoffs]:
-            abort(409, f'Already signed off by {who}')
-
-        signoff.completed = datetime.datetime.utcnow()
-        signoff.signed = True
-        signoff.completed_by = who
-
-        session.commit()
-        signoffs = [s.json for s in phase_obj.signoffs]
-
-        # Schedule the phase when all signoffs are done
-        if all([s.signed for s in phase_obj.signoffs]):
-            schedule_phase(name, phase)
-
-        r = phase_obj.release
-        notify_via_irc(
-            f'{phase} of {r.product} {r.version} build{r.build_number} signed off by {who}.')
-
-        return dict(signoffs=signoffs)
-
     except NoResultFound:
-        abort(404, 'Sign off does not exist')
+        abort(404, 'Phase not found')
+
+    if who in [s.completed_by for s in phase_obj.signoffs]:
+        abort(409, f'Already signed off by {who}')
+
+    signoff.completed = datetime.datetime.utcnow()
+    signoff.signed = True
+    signoff.completed_by = who
+
+    session.commit()
+    signoffs = [s.json for s in phase_obj.signoffs]
+
+    # Schedule the phase when all signoffs are done
+    if all([s.signed for s in phase_obj.signoffs]):
+        schedule_phase(name, phase)
+
+    r = phase_obj.release
+    notify_via_irc(
+        f'{phase} of {r.product} {r.version} build{r.build_number} signed off by {who}.')
+
+    return dict(signoffs=signoffs)
