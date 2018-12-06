@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProgressBar, Button, Modal, Collapse } from 'react-bootstrap';
+import { ProgressBar, Button, Modal, Collapse, FormGroup, Radio, ControlLabel } from 'react-bootstrap';
 import { object } from 'prop-types';
 import ReactInterval from 'react-interval';
 import { Queue } from 'taskcluster-client-web';
@@ -235,6 +235,16 @@ const phaseStatus = async (phase, idx, phases) => {
   return 'blocked';
 };
 
+const phaseSignOffs = async (releaseName, phaseName) => {
+  const url = `${SHIPIT_API_URL}/signoff/${releaseName}/${phaseName}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    return [];
+  }
+  const signoffs = await response.json();
+  return signoffs;
+};
+
 class TaskProgress extends React.Component {
   constructor(...args) {
     super(...args);
@@ -248,10 +258,11 @@ class TaskProgress extends React.Component {
   }
 
   syncPhases = async () => {
-    const { phases } = this.props;
+    const { releaseName, phases } = this.props;
     const phasesWithStatus = await Promise.all(phases.map(async (phase, idx, arr) => {
       const status = await phaseStatus(phase, idx, arr);
-      return { ...phase, status };
+      const signoffs = await phaseSignOffs(releaseName, phase.name);
+      return { ...phase, status, signoffs };
     }));
     this.setState({ phasesWithStatus });
   };
@@ -263,7 +274,7 @@ class TaskProgress extends React.Component {
     return (
       <ProgressBar style={{ height: '40px', padding: '3px' }}>
         {phasesWithStatus.map(({
-          name, submitted, actionTaskId, status,
+          name, submitted, actionTaskId, status, signoffs,
         }) => (
           <ProgressBar
             key={name}
@@ -275,8 +286,9 @@ class TaskProgress extends React.Component {
               name={name}
               submitted={submitted}
               status={status}
+              signoffs={signoffs}
+              releaseName={releaseName}
               taskGroupUrl={`${config.TASKCLUSTER_TOOLS_URL}/groups/${actionTaskId}`}
-              url={`${SHIPIT_API_URL}/releases/${releaseName}/${name}`}
             />}
           />
         ))}
@@ -296,6 +308,7 @@ class TaskLabel extends React.PureComponent {
       showModal: false,
       submitted: props.submitted,
       errorMsg: null,
+      selectedSignoff: null,
     };
   }
 
@@ -307,20 +320,25 @@ class TaskLabel extends React.PureComponent {
     this.setState({
       showModal: false,
       errorMsg: null,
+      selectedSignoff: null,
     });
   };
 
-  doEet = async () => {
-    if (!this.context.authController.userSession) {
-      this.setState({ errorMsg: 'Login required!' });
-      return;
-    }
+  signOff = async () => {
     const { accessToken } = this.context.authController.getUserSession();
-    const headers = { Authorization: `Bearer ${accessToken}` };
+    const { releaseName, name } = this.props;
+    const { selectedSignoff } = this.state;
+    const url = `${SHIPIT_API_URL}/signoff/${releaseName}/${name}`;
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    const body = JSON.stringify(selectedSignoff);
     try {
-      const response = await fetch(this.props.url, { method: 'PUT', headers });
+      const response = await fetch(url, { method: 'PUT', headers, body });
       if (!response.ok) {
-        this.setState({ errorMsg: 'Auth failure!' });
+        const err = await response.json();
+        this.setState({ errorMsg: `Error: ${err.detail}` });
         return;
       }
       this.setState({ submitted: true });
@@ -328,6 +346,63 @@ class TaskLabel extends React.PureComponent {
       this.setState({ errorMsg: 'Server issues!' });
       throw e;
     }
+  };
+
+  schedulePhase = async () => {
+    const { accessToken } = this.context.authController.getUserSession();
+    const { releaseName, name } = this.props;
+    const headers = { Authorization: `Bearer ${accessToken}` };
+    const url = `${SHIPIT_API_URL}/releases/${releaseName}/${name}`;
+    try {
+      const response = await fetch(url, { method: 'PUT', headers });
+      if (!response.ok) {
+        const err = await response.json();
+        this.setState({ errorMsg: `Error: ${err.detail}` });
+        return;
+      }
+      this.setState({ submitted: true });
+    } catch (e) {
+      this.setState({ errorMsg: 'Server issues!' });
+      throw e;
+    }
+  };
+
+  doEet = async () => {
+    if (!this.context.authController.userSession) {
+      this.setState({ errorMsg: 'Login required!' });
+      return;
+    }
+    const { selectedSignoff } = this.state;
+    if (selectedSignoff) {
+      await this.signOff();
+    } else {
+      await this.schedulePhase();
+    }
+  };
+
+
+  renderSignoffs = () => {
+    const { signoffs } = this.props.signoffs;
+    if (signoffs.length === 0) {
+      return <div>No signoffs required</div>;
+    }
+    return (
+      <div>
+        <ControlLabel>Sign off as</ControlLabel>
+        <FormGroup>
+          {signoffs.map(s => (
+            <Radio
+              key={s.uid}
+              name="signoff"
+              disabled={s.signed}
+              onClick={() => this.setState({ selectedSignoff: s.uid })}
+            >
+              {s.name} - {s.description}
+            </Radio>
+          ))}
+        </FormGroup>
+      </div>
+    );
   };
 
   renderBody = () => {
@@ -344,6 +419,7 @@ class TaskLabel extends React.PureComponent {
         <div>
           <h4>Are you sure?</h4>
           <p>Action will be scheduled</p>
+          {this.renderSignoffs()}
         </div>
       );
     }
