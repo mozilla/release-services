@@ -4,10 +4,6 @@ let
 
   inherit (pkgs.lib) fileContents;
 
-  endsWith = ending: text:
-    let textLength = builtins.stringLength text;
-    in ending == builtins.substring (textLength - (builtins.stringLength ending)) textLength text;
-
   skipOverrides = overrides: self: super:
     let
       overridesNames = builtins.attrNames overrides;
@@ -58,14 +54,14 @@ in skipOverrides {
   "cryptography" = self: old: {
     propagatedBuildInputs =
       builtins.filter
-        (x: ! (endsWith "-flake8" (builtins.parseDrvName x.name).name))
+        (x: ! (pkgs.lib.hasSuffix "-flake8" (builtins.parseDrvName x.name).name))
         old.propagatedBuildInputs;
   };
 
   "en-core-web-sm" = self: old: {
     propagatedBuildInputs =
       builtins.filter
-        (x: ! (endsWith "-spacy" (builtins.parseDrvName x.name).name))
+        (x: ! (pkgs.lib.hasSuffix "-spacy" (builtins.parseDrvName x.name).name))
         old.propagatedBuildInputs;
     patchPhase = ''
       sed -i -e "s|return requirements|return []|" setup.py
