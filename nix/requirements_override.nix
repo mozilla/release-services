@@ -38,18 +38,16 @@ in skipOverrides {
   "mozilla-cli-common" = import cli_common_path { inherit pkgs; };
   "mozilla-backend-common" = import backend_common_path { inherit pkgs; };
 
-  # XXX: Maybe
-
-  # "RBTools" = self: old: {
-  #   patches = [
-  #        (pkgs.fetchurl {
-  #          url = "https://github.com/La0/rbtools/commit/60a96a29c26fd1a546bb66a5860e2b6b36649d58.diff";
-  #          sha256 = "1q0gpknxymm3qg4mb1459ka4ralqa1bndyfv3g3pn4sj7rixv05f";
-  #        })
-  #     ];
-  # };
-
   # -- in alphabetic order --
+
+  "RBTools" = self: old: {
+    patches = [
+         (pkgs.fetchurl {
+           url = "https://github.com/La0/rbtools/commit/60a96a29c26fd1a546bb66a5860e2b6b36649d58.diff";
+           sha256 = "1q0gpknxymm3qg4mb1459ka4ralqa1bndyfv3g3pn4sj7rixv05f";
+         })
+      ];
+  };
 
   "cryptography" = self: old: {
     propagatedBuildInputs =
