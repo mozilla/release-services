@@ -15,4 +15,3 @@ pytest-cov
 
 # develop
 pdbpp
-ipdb
