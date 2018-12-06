@@ -5,6 +5,7 @@
 
 from cli_common import log
 from cli_common.phabricator import PhabricatorAPI
+from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.report.base import Reporter
@@ -56,8 +57,9 @@ class PhabricatorReporter(Reporter):
             inlines = list(filter(None, [
                 self.comment_inline(revision, issue, existing_comments)
                 for issue in issues
+                if issue.ANALYZER != CLANG_FORMAT
             ]))
-            if not inlines:
+            if not inlines and not patches:
                 logger.info('No new comments found, skipping Phabricator publication')
                 return
             logger.info('Added inline comments', ids=[i['id'] for i in inlines])
