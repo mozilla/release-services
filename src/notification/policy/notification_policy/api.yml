@@ -166,7 +166,8 @@ paths:
                       description: Notification channel used to notify.
                       type: string
                       enum:
-                        {{ CHANNELS }}
+                      - EMAIL
+                      - IRC
 
                     targets:
                       description: Identity who the notification was sent to.
@@ -200,7 +201,9 @@ definitions:
       urgency:
         type: string
         enum:
-          {{ URGENCY_LEVELS }}
+        - LOW
+        - NORMAL
+        - HIGH
         description: Urgency level of notification.
 
       start_timestamp:

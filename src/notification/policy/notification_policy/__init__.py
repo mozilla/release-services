@@ -4,9 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+
 import backend_common
 import cli_common.taskcluster
-from backend_common.notifications import CHANNELS, URGENCY_LEVELS
 import notification_policy.config
 import notification_policy.models  # noqa
 
@@ -33,10 +33,5 @@ def create_app(config=None):
         app.config.get('TASKCLUSTER_ACCESS_TOKEN')
     )
 
-    # TODO: add predefined api.yml
-    app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'),
-                     arguments={
-                         'CHANNELS': CHANNELS,
-                         'URGENCY_LEVELS': URGENCY_LEVELS,
-                     })
+    app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
     return app

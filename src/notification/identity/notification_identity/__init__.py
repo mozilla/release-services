@@ -5,7 +5,6 @@
 
 import os
 
-from backend_common.notifications import CHANNELS, URGENCY_LEVELS
 import backend_common
 import notification_identity.config
 import notification_identity.models  # noqa
@@ -25,10 +24,5 @@ def create_app(config=None):
             'db',
         ],
     )
-    # TODO: add predefined api.yml
-    app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'),
-                     arguments={
-                        'CHANNELS': CHANNELS,
-                        'URGENCY_LEVELS': URGENCY_LEVELS,
-                     })
+    app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
     return app
