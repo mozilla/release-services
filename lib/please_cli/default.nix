@@ -38,9 +38,15 @@ let
     passthru = {
       src_path = "lib/please_cli";
       update = writeScript "update-${self.name}" ''
-        pushd ${self.src_path}
-        ${pypi2nix}/bin/pypi2nix -v \
-          -V 3.6 \
+        pushd lib/${project_name}
+        cache_dir=$PWD/../../tmp/pypi2nix
+        mkdir -p $cache_dir
+        eval ${pypi2nix}/bin/pypi2nix -v \
+          -C $cache_dir \
+          -V 3.7 \
+          -O ../../nix/requirements_override.nix \
+          -e pytest-runner \
+          -e setuptools-scm \
           -r requirements.txt \
           -r requirements-dev.txt
         popd

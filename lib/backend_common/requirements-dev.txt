@@ -4,7 +4,7 @@ inotify  # needed by gunicorn for faster/better reload
 
 # tests dependencies
 Flask
-Flask-Cache
+Flask-Caching
 Flask-Cors
 Flask-Login
 Flask-Migrate

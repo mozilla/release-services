@@ -3,7 +3,7 @@
 
 aiohttp
 arrow
-backoff
+backoff==1.6.0  # all later versions require poetry which is not supported (yet) by pypi2nix
 json-e
 mohawk
 mozilla-version

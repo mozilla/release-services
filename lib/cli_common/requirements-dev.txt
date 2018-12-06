@@ -17,7 +17,6 @@ responses
 
 # develop
 pdbpp
-ipdb
 
 # tests dependencies
 Logbook
