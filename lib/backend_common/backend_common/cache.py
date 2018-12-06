@@ -6,13 +6,13 @@
 import uuid
 
 import flask
-import flask_cache
+import flask_caching
 
 import backend_common.dockerflow
 import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
-cache = flask_cache.Cache()
+cache = flask_caching.Cache()
 
 
 def init_app(app):

@@ -256,7 +256,7 @@ def _stream_mapfile(query) -> typing.Tuple[str, int, dict]:
 
 def _check_well_formed_sha(vcs: str,
                            sha: str,
-                           exact_length: typing.Optional[int]=40
+                           exact_length: typing.Optional[int] = 40
                            ) -> None:
     '''Helper method to check for a well-formed SHA.
     Args:
@@ -349,7 +349,7 @@ def _add_hash(session, git_commit: str, hg_changeset: str, project: str) -> None
 def _insert_many(project: str,
                  body: typing.Union[bytes, str],
                  session,
-                 ignore_dups: bool=False,
+                 ignore_dups: bool = False,
                  ) -> dict:
     '''Update the database with many git-hg mappings.
     Args:
