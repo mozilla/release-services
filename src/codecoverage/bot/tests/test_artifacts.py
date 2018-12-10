@@ -26,10 +26,14 @@ def FAKE_ARTIFACTS_DIR(tmpdir):
         open(os.path.join(tmpdir.strpath, f), 'w')
     return tmpdir.strpath
 
+
 def test_generate_path(FAKE_ARTIFACTS_DIR):
     a = ArtifactsHandler([], parent_dir=FAKE_ARTIFACTS_DIR)
-    artifact = {'name':'code-coverage-jsvm.info'}
-    assert a.parent_dir + '/linux_xpcshell-3_code-coverage-jsvm.info' == a.generate_path('linux','xpcshell-3',artifact)
+    artifact = {'name': 'code-coverage-jsvm.info'}
+    artifact2 = {'name': 'code-coverage-grcov.zip'}
+    assert a.parent_dir + '/linux_xpcshell-3_code-coverage-jsvm.info' == a.generate_path('linux', 'xpcshell-3', artifact)
+    assert a.parent_dir + '/windows_cppunit_code-coverage-grcov.zip' == a.generate_path('windows', 'cppunit', artifact2)
+
 
 def test_get_chunks(FAKE_ARTIFACTS_DIR):
     a = ArtifactsHandler([], parent_dir=FAKE_ARTIFACTS_DIR)
