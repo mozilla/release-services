@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 silent() {
-  out=`$@ 2>&1` || echo $out
+  out=$("$@" 2>&1) || echo "$out"
 }
 
 ln -s ../../nix/requirements_override.nix ./
