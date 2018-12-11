@@ -134,7 +134,7 @@ class PhabricatorAPI(object):
         '''
         Find details of a differential revision
         '''
-        assert rev_phid is not None or rev_id is not None
+        assert (rev_phid is not None) ^ (rev_id is not None), 'One and only one of rev_phid or rev_id should be passed'
 
         constraints = {}
         if rev_id is not None:
