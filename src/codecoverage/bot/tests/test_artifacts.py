@@ -30,7 +30,7 @@ def FAKE_ARTIFACTS_DIR(tmpdir):
 def test_generate_path(FAKE_ARTIFACTS_DIR):
     a = ArtifactsHandler([], parent_dir=FAKE_ARTIFACTS_DIR)
     artifact_jsvm = {'name': 'code-coverage-jsvm.info'}
-    artifact_grcov = {'name': 'code-coverage-grcov.zip'}  
+    artifact_grcov = {'name': 'code-coverage-grcov.zip'}
     assert os.path.join(a.parent_dir, 'linux_xpcshell-3_code-coverage-jsvm.info') == a.generate_path('linux', 'xpcshell-3', artifact_jsvm)
     assert os.path.join(a.parent_dir, 'windows_cppunit_code-coverage-grcov.zip') == a.generate_path('windows', 'cppunit', artifact_grcov)
 
