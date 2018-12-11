@@ -130,15 +130,21 @@ class PhabricatorAPI(object):
             diffID=diff_id,
         )
 
-    def load_revision(self, phid):
+    def load_revision(self, rev_phid=None, rev_id=None):
         '''
         Find details of a differential revision
         '''
+        assert (rev_phid is not None) ^ (rev_id is not None), 'One and only one of rev_phid or rev_id should be passed'
+
+        constraints = {}
+        if rev_id is not None:
+            constraints['ids'] = [rev_id, ]
+        if rev_phid is not None:
+            constraints['phids'] = [rev_phid, ]
+
         out = self.request(
             'differential.revision.search',
-            constraints={
-                'phids': [phid, ],
-            },
+            constraints=constraints,
         )
 
         data = out['data']

@@ -14,7 +14,6 @@ class PhabricatorUploader(object):
     def __init__(self, repo_dir, revision):
         self.repo_dir = repo_dir
         self.revision = revision
-        self.phabricator = PhabricatorAPI(secrets[secrets.PHABRICATOR_TOKEN], secrets[secrets.PHABRICATOR_URL])
 
     def _find_coverage(self, report, path):
         return next((sf['coverage'] for sf in report['source_files'] if sf['name'] == path), None)
@@ -123,6 +122,18 @@ class PhabricatorUploader(object):
     def upload(self, report):
         results = self.generate(report)
 
-        for revision_id, coverage in results.items():
-            # TODO: Actually upload coverage data to Phabricator.
-            logger.info('{} coverage: {}'.format(revision_id, coverage))
+        if secrets[secrets.PHABRICATOR_ENABLED]:
+            phabricator = PhabricatorAPI(secrets[secrets.PHABRICATOR_TOKEN], secrets[secrets.PHABRICATOR_URL])
+        else:
+            phabricator = None
+
+        for rev_id, coverage in results.items():
+            logger.info('{} coverage: {}'.format(rev_id, coverage))
+
+            if not phabricator or not coverage:
+                continue
+
+            rev_data = phabricator.load_revision(rev_id=rev_id)
+            phabricator.upload_coverage_results(rev_data['fields']['diffPHID'], coverage)
+            # XXX: This is only necessary until https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
+            phabricator.upload_lint_results(rev_data['fields']['diffPHID'], 'pass', [])
