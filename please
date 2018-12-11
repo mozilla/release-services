@@ -20,6 +20,12 @@ if [ -f /.dockerenv ]; then
   . /etc/nix/profile.sh;
 fi
 
+# Detect OSX
+SHASUM="sha256sum"
+if uname -a | grep -q Darwin; then
+    SHASUM="shasum -a 256"
+fi
+
 if [ "$USE_NIX" = "1" ]; then
   drv=`nix-instantiate nix/default.nix -A please-cli` 2> /dev/null
   nix_store_file=`cat $drv | cut -c17-91`
@@ -37,7 +43,7 @@ if [ "$USE_NIX" = "1" ]; then
 else
   if [ "$USE_DOCKER" = "1" ]; then
     DOCKER_HASH="`pwd``git rev-parse --abbrev-ref HEAD`"
-    DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`-`echo -n $DOCKER_HASH | sha256sum | cut -d ' ' -f 1`"
+    DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`-`echo -n $DOCKER_HASH | $SHASUM | cut -d ' ' -f 1`"
     if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
       if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
         docker run \
