@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import json
 import os
 import shutil
+import urllib.parse
 
 import responses
 
@@ -34,7 +36,7 @@ def commit(hg, diff_rev=None):
 
 
 @responses.activate
-def test_upload_simple(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_simple(mock_secrets, mock_phabricator, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
@@ -56,9 +58,51 @@ def test_upload_simple(mock_secrets, mock_phabricator, fake_hg_repo):
     assert set(results[1].keys()) == set(['file'])
     assert results[1]['file'] == 'NUCCCCU'
 
+    phabricator.upload({
+        'source_files': [{
+            'name': 'file',
+            'coverage': [None, 0, 1, 1, 1, 1, 0],
+        }]
+    })
+
+    assert len(responses.calls) >= 3
+
+    call = responses.calls[-5]
+    assert call.request.url == 'http://phabricator.test/api/differential.revision.search'
+    params = json.loads(urllib.parse.parse_qs(call.request.body)['params'][0])
+    assert params['constraints']['ids'] == [1]
+
+    call = responses.calls[-4]
+    assert call.request.url == 'http://phabricator.test/api/harbormaster.queryautotargets'
+    params = json.loads(urllib.parse.parse_qs(call.request.body)['params'][0])
+    assert params['objectPHID'] == 'PHID-DIFF-test'
+    assert params['targetKeys'] == ['arcanist.unit']
+
+    call = responses.calls[-3]
+    assert call.request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
+    params = json.loads(urllib.parse.parse_qs(call.request.body)['params'][0])
+    assert params['buildTargetPHID'] == 'PHID-HMBT-test'
+    assert params['type'] == 'pass'
+    assert params['unit'] == [{'name': 'Aggregate coverage information', 'result': 'pass', 'coverage': {'file': 'NUCCCCU'}}]
+    assert params['lint'] == []
+
+    call = responses.calls[-2]
+    assert call.request.url == 'http://phabricator.test/api/harbormaster.queryautotargets'
+    params = json.loads(urllib.parse.parse_qs(call.request.body)['params'][0])
+    assert params['objectPHID'] == 'PHID-DIFF-test'
+    assert params['targetKeys'] == ['arcanist.lint']
+
+    call = responses.calls[-1]
+    assert call.request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
+    params = json.loads(urllib.parse.parse_qs(call.request.body)['params'][0])
+    assert params['buildTargetPHID'] == 'PHID-HMBT-test-lint'
+    assert params['type'] == 'pass'
+    assert params['unit'] == []
+    assert params['lint'] == []
+
 
 @responses.activate
-def test_upload_file_with_no_coverage(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_file_with_no_coverage(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
@@ -78,7 +122,7 @@ def test_upload_file_with_no_coverage(mock_secrets, mock_phabricator, fake_hg_re
 
 
 @responses.activate
-def test_upload_one_commit_without_differential(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_one_commit_without_differential(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
@@ -100,7 +144,7 @@ def test_upload_one_commit_without_differential(mock_secrets, mock_phabricator, 
 
 
 @responses.activate
-def test_upload_two_commits_two_files(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_two_commits_two_files(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file1_commit1', '1\n2\n3\n4\n5\n6\n7\n')
@@ -137,7 +181,7 @@ def test_upload_two_commits_two_files(mock_secrets, mock_phabricator, fake_hg_re
 
 
 @responses.activate
-def test_upload_changesets_overwriting(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_changesets_overwriting(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
@@ -166,7 +210,7 @@ def test_upload_changesets_overwriting(mock_secrets, mock_phabricator, fake_hg_r
 
 
 @responses.activate
-def test_upload_changesets_displacing(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_changesets_displacing(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
@@ -195,7 +239,7 @@ def test_upload_changesets_displacing(mock_secrets, mock_phabricator, fake_hg_re
 
 
 @responses.activate
-def test_upload_changesets_reducing_size(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_changesets_reducing_size(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
@@ -224,7 +268,7 @@ def test_upload_changesets_reducing_size(mock_secrets, mock_phabricator, fake_hg
 
 
 @responses.activate
-def test_upload_changesets_overwriting_one_commit_without_differential(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_changesets_overwriting_one_commit_without_differential(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
@@ -251,7 +295,7 @@ def test_upload_changesets_overwriting_one_commit_without_differential(mock_secr
 
 
 @responses.activate
-def test_removed_file(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_removed_file(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')
@@ -274,7 +318,7 @@ def test_removed_file(mock_secrets, mock_phabricator, fake_hg_repo):
 
 
 @responses.activate
-def test_backout_removed_file(mock_secrets, mock_phabricator, fake_hg_repo):
+def test_backout_removed_file(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n5\n6\n7\n')

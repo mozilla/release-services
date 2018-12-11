@@ -170,6 +170,7 @@ def mock_secrets():
     secrets.update({
         'CODECOV_REPO': 'marco-c/gecko-dev',
         'CODECOV_ACCESS_TOKEN': 'XXX',
+        'PHABRICATOR_ENABLED': True,
         'PHABRICATOR_URL': 'http://phabricator.test/api/',
         'PHABRICATOR_TOKEN': 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
     })
@@ -263,6 +264,41 @@ def mock_phabricator():
         responses.POST,
         'http://phabricator.test/api/user.whoami',
         body=_response('auth'),
+        content_type='application/json',
+    )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/differential.revision.search',
+        body=_response('revision_search'),
+        content_type='application/json',
+    )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/harbormaster.queryautotargets',
+        body=_response('harbormaster_queryautotargets'),
+        content_type='application/json',
+    )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/harbormaster.sendmessage',
+        body=_response('harbormaster_sendmessage'),
+        content_type='application/json',
+    )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/harbormaster.queryautotargets',
+        body=_response('harbormaster_queryautotargets_lint'),
+        content_type='application/json',
+    )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/harbormaster.sendmessage',
+        body=_response('harbormaster_sendmessage_lint'),
         content_type='application/json',
     )
 
