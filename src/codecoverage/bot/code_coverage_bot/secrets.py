@@ -18,6 +18,7 @@ class Secrets(dict):
     EMAIL_ADDRESSES = 'EMAIL_ADDRESSES'
     APP_CHANNEL = 'APP_CHANNEL'
     BACKEND_HOST = 'BACKEND_HOST'
+    PHABRICATOR_ENABLED = 'PHABRICATOR_ENABLED'
     PHABRICATOR_URL = 'PHABRICATOR_URL'
     PHABRICATOR_TOKEN = 'PHABRICATOR_TOKEN'
 
@@ -32,6 +33,7 @@ class Secrets(dict):
                 Secrets.CODECOV_REPO,
                 Secrets.CODECOV_TOKEN,
                 Secrets.CODECOV_ACCESS_TOKEN,
+                Secrets.PHABRICATOR_ENABLED,
                 Secrets.PHABRICATOR_URL,
                 Secrets.PHABRICATOR_TOKEN,
             ),
