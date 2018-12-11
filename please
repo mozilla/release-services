@@ -22,8 +22,7 @@ fi
 
 # Detect OSX
 SHASUM="sha256sum"
-uname -a | grep -q Darwin
-if [ $? -eq 0 ] ; then
+if uname -a | grep -q Darwin; then
     SHASUM="shasum -a 256"
 fi
 
