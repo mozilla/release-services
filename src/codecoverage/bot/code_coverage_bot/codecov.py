@@ -129,13 +129,13 @@ class CodeCov(object):
             )
             logger.info('Report generated successfully')
 
-            with ThreadPoolExecutorResult(max_workers=2) as executor:
-                executor.submit(uploader.coveralls, output)
-                executor.submit(uploader.codecov, output, commit_sha)
-
             logger.info('Upload changeset coverage data to Phabricator')
             phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
             phabricatorUploader.upload(json.loads(output))
+
+            with ThreadPoolExecutorResult(max_workers=2) as executor:
+                executor.submit(uploader.coveralls, output)
+                executor.submit(uploader.codecov, output, commit_sha)
 
             logger.info('Waiting for build to be ingested by Codecov...')
             # Wait until the build has been ingested by Codecov.
