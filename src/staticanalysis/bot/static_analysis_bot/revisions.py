@@ -71,7 +71,7 @@ class ImprovementPatch(object):
             path='public/patch/{}'.format(self.name),
             content=self.content,
             content_type='text/plain; charset=utf-8',  # Displays instead of download):
-            ttl=timedelta(days=days_ttl - 1, hours=23),
+            ttl=timedelta(days=days_ttl - 1),
         )
         logger.info('Improvement patch published', url=self.url)
 
