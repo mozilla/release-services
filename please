@@ -6,7 +6,7 @@ set -eu
 #set -x
 
 silent() {
-  out=`$@ 2>&1` || echo $out
+  out=$("$@" 2>&1) || echo "$out"
 }
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -20,14 +20,21 @@ if [ -f /.dockerenv ]; then
   . /etc/nix/profile.sh;
 fi
 
+# Detect OSX
+SHASUM="sha256sum"
+if uname -a | grep -q Darwin; then
+    SHASUM="shasum -a 256"
+fi
+
 if [ "$USE_NIX" = "1" ]; then
-  drv=`nix-instantiate nix/default.nix -A please-cli` 2> /dev/null
-  nix_store_file=`cat $drv | cut -c17-91`
+  drv=$(nix-instantiate nix/default.nix -A please-cli) 2> /dev/null
+  nix_store_file=$(cut -c17-91 < "$drv")
   building_please_cli=0
-  if [ ! -e $nix_store_file ]; then
+  if [ ! -e "$nix_store_file" ]; then
     building_please_cli=1
-    echo -n " => Building please command (this might take a minute or two the first time) ... ";
+    printf " => Building please command (this might take a minute or two the first time) ... ";
   fi
+
   silent nix-build nix/default.nix -A please-cli -o result-please-cli;
   if [ "$building_please_cli" = "1" ]; then
     echo "${GREEN}DONE${NC}";
@@ -36,24 +43,24 @@ if [ "$USE_NIX" = "1" ]; then
 
 else
   if [ "$USE_DOCKER" = "1" ]; then
-    DOCKER_HASH="`pwd``git rev-parse --abbrev-ref HEAD`"
-    DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`-`echo -n $DOCKER_HASH | sha256sum | cut -d ' ' -f 1`"
-    if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
-      if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
+    DOCKER_HASH="$(pwd)$(git rev-parse --abbrev-ref HEAD)"
+    DOCKER_NAME="mozilla-releng-services-v$(cat ./VERSION)-$(printf "%s" "$DOCKER_HASH" | $SHASUM | cut -d ' ' -f 1)"
+    if [ ! "$(docker ps -q -f name="$DOCKER_NAME")" ]; then
+      if [ ! "$(docker ps -qa -f name="$DOCKER_NAME")" ]; then
         docker run \
             --privileged \
             -td \
-            --name $DOCKER_NAME \
+            --name "$DOCKER_NAME" \
             --volume="$(pwd)":/app \
             --volume=/var/run/docker.sock:/var/run/docker.sock \
             --workdir=/app \
             --network="host" \
-            mozillareleng/services:base-`cat ./VERSION`
+            "mozillareleng/services:base-$(cat ./VERSION)"
       else
-        docker start $DOCKER_NAME
+        docker start "$DOCKER_NAME"
       fi
    fi
-   docker exec --tty --interactive --privileged $DOCKER_NAME ./please $@
+   docker exec --tty --interactive --privileged "$DOCKER_NAME" ./please "$@"
    # TODO: stop old docker instances
   else
     # TODO: better error message and point to documentation

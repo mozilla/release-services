@@ -127,7 +127,7 @@ for n in $(seq 1 10); do
 		-d /var/empty \
 		-g "$GROUP" \
 		-G "$GROUP" \
-		-M -N -r -s "$(which nologin)" \
+		-M -N -r -s "$(command -v nologin)" \
     "$username";
 done
 

@@ -3,7 +3,8 @@
 # Heavily cribbed from the equivalent NixOS login script.
 # This should work better with multi-user nix setups.
 
-export USER=`whoami`
+USER=$(whoami)
+export USER
 export NIXPKGS_CONFIG="/etc/nix/nixpkgs-config.nix"
 export NIX_OTHER_STORES="/run/nix/remote-stores/\*/nix"
 export NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/$USER"
@@ -13,7 +14,7 @@ fi
 export PATH="$HOME/.nix-profile/bin:$HOME/.nix-profile/sbin:/nix/var/nix/profiles/default/bin:/nix/var/nix/profiles/default/sbin:$PATH"
 
 # Use the nix daemon for multi-user builds
-if [ "$USER" != root -o ! -w /nix/var/nix/db ]; then
+if [ "$USER" != root ] || [ ! -w /nix/var/nix/db ]; then
   export NIX_REMOTE=daemon
 fi
 
@@ -42,7 +43,7 @@ if [ -w "$HOME" ]; then
   fi
 
   # Set up a default Nix expression from which to install stuff.
-  if [ ! -e "$HOME/.nix-defexpr" -o -L "$HOME/.nix-defexpr" ]; then
+  if [ ! -e "$HOME/.nix-defexpr" ] || [ -L "$HOME/.nix-defexpr" ]; then
     rm -f "$HOME/.nix-defexpr"
     mkdir "$HOME/.nix-defexpr"
     if [ "$USER" != root ]; then
@@ -65,5 +66,5 @@ if [ -w "$HOME" ]; then
 
   # Make sure nix-channel --update works
   SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
-  CURL_CA_BUNDLE=$SSL_CERT_FILE
+  export CURL_CA_BUNDLE=$SSL_CERT_FILE
 fi
