@@ -18,8 +18,8 @@ Code analysis found 1 defect in this patch:
 You can run this analysis locally with:
  - `./mach static-analysis check path/to/file.cpp` (C/C++)
 
-If you see a problem in this automated review, please report it here: https://bit.ly/2IyNRy2
-'''
+If you see a problem in this automated review, [please report it here](https://github.com/mozilla/release-services/issues/new?title=Problem%20with%20an%20automated%20review:%20SUMMARY&labels=app:staticanalysis/bot&body=**Phabricator%20URL:**%20https://phabricator.services.mozilla.com/D%E2%80%A6%0A%0A**Problem:**%20%E2%80%A6).
+'''  # noqa
 
 VALID_CLANG_FORMAT_MESSAGE = '''
 Code analysis found 1 defect in this patch:
@@ -30,7 +30,7 @@ You can run this analysis locally with:
 
 For your convenience, [here is a patch]({results}/clang-format-PHID-DIFF-abcdef.diff) that fixes all the clang-format defects (use it in your repository with `hg import` or `git apply`)
 
-If you see a problem in this automated review, please report it here: https://bit.ly/2IyNRy2
+If you see a problem in this automated review, [please report it here](https://github.com/mozilla/release-services/issues/new?title=Problem%20with%20an%20automated%20review:%20SUMMARY&labels=app:staticanalysis/bot&body=**Phabricator%20URL:**%20https://phabricator.services.mozilla.com/D%E2%80%A6%0A%0A**Problem:**%20%E2%80%A6).
 '''  # noqa
 
 

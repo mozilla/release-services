@@ -11,7 +11,7 @@ from static_analysis_bot import stats
 from static_analysis_bot.report.base import Reporter
 from static_analysis_bot.revisions import PhabricatorRevision
 
-BUG_REPORT_URL = 'https://bit.ly/2IyNRy2'
+BUG_REPORT_URL = 'https://github.com/mozilla/release-services/issues/new?title=Problem%20with%20an%20automated%20review:%20SUMMARY&labels=app:staticanalysis/bot&body=**Phabricator%20URL:**%20https://phabricator.services.mozilla.com/D%E2%80%A6%0A%0A**Problem:**%20%E2%80%A6'  # noqa
 
 logger = log.get_logger(__name__)
 
