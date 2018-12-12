@@ -45,7 +45,7 @@ def test_list_analysis_valid(client, bugs, header_user):
     assert analysis['id'] == 1
     assert analysis['name'] == 'Dev'
     assert_query_strings(
-        analysis['parameters'],
+        analysis['parameters_pending'],
         'j1=OR&o5=substring&f12=CP&o3=substring&f0=OP&v3=approval-mozilla-dev%3F&j9=OR&o2=substring&f10=requestees.login_name&f11=CP&f4=flagtypes.name&f2=flagtypes.name&f9=OP&f3=flagtypes.name&query_format=advanced&f7=CP&f1=OP&f8=OP&f6=CP&known_name=approval-mozilla-dev&query_based_on=approval-mozilla-dev&o4=substring&f5=flagtypes.name&o10=substring'  # noqa
     )
     assert analysis['bugs'] == []
@@ -67,7 +67,7 @@ def test_fetch_analysis(client, bugs, header_user):
     assert analysis['version'] == 1
     assert analysis['name'] == 'Dev'
     assert_query_strings(
-        analysis['parameters'],
+        analysis['parameters_pending'],
         'j1=OR&o5=substring&f12=CP&o3=substring&f0=OP&v3=approval-mozilla-dev%3F&j9=OR&o2=substring&f10=requestees.login_name&f11=CP&f4=flagtypes.name&f2=flagtypes.name&f9=OP&f3=flagtypes.name&query_format=advanced&f7=CP&f1=OP&f8=OP&f6=CP&known_name=approval-mozilla-dev&query_based_on=approval-mozilla-dev&o4=substring&f5=flagtypes.name&o10=substring'  # noqa
     )
     assert len(analysis['bugs']) == 3
@@ -113,27 +113,49 @@ def test_fetch_analysis(client, bugs, header_user):
     }
 
 
-def test_analysis_query_strings():
+def test_analysis_qs_pending():
     '''
     Check Bugzilla parameters building
+    for pending uplift requests
     '''
     from uplift_backend.models import BugAnalysis
 
     assert_query_strings(
-        BugAnalysis(name='aurora', version=52).build_parameters(),
+        BugAnalysis(name='aurora', version=52).build_parameters_pending(),
         'o5=substring&j9=OR&o2=substring&f12=CP&o4=substring&known_name=approval-mozilla-aurora&f10=requestees.login_name&f1=OP&o3=substring&f0=OP&f8=OP&v3=approval-mozilla-aurora%3F&query_based_on=approval-mozilla-aurora&f9=OP&f4=flagtypes.name&query_format=advanced&o10=substring&j1=OR&f3=flagtypes.name&f2=flagtypes.name&f11=CP&f5=flagtypes.name&f6=CP&f7=CP'  # noqa
     )
     assert_query_strings(
-        BugAnalysis(name='beta', version=51).build_parameters(),
+        BugAnalysis(name='beta', version=51).build_parameters_pending(),
         'o5=substring&f10=requestees.login_name&f1=OP&j9=OR&o3=substring&f0=OP&f8=OP&v3=approval-mozilla-beta%3F&query_based_on=approval-mozilla-beta&o2=substring&f9=OP&f4=flagtypes.name&query_format=advanced&o10=substring&f12=CP&j1=OR&f3=flagtypes.name&f2=flagtypes.name&o4=substring&f11=CP&f5=flagtypes.name&f6=CP&f7=CP&known_name=approval-mozilla-beta'  # noqa
     )
     assert_query_strings(
-        BugAnalysis(name='release', version=50).build_parameters(),
+        BugAnalysis(name='release', version=50).build_parameters_pending(),
         'o5=substring&j9=OR&o2=substring&f12=CP&o4=substring&known_name=approval-mozilla-release&f10=requestees.login_name&f1=OP&o3=substring&f0=OP&f8=OP&v3=approval-mozilla-release%3F&query_based_on=approval-mozilla-release&f9=OP&f4=flagtypes.name&query_format=advanced&o10=substring&j1=OR&f3=flagtypes.name&f2=flagtypes.name&f11=CP&f5=flagtypes.name&f6=CP&f7=CP'  # noqa
     )
     assert_query_strings(
-        BugAnalysis(name='esr', version=45).build_parameters(),
+        BugAnalysis(name='esr', version=45).build_parameters_pending(),
         'o5=substring&f10=requestees.login_name&f1=OP&j9=OR&o3=substring&f0=OP&f8=OP&v3=approval-mozilla-esr45%3F&query_based_on=approval-esr45&o2=substring&f9=OP&f4=flagtypes.name&query_format=advanced&o10=substring&f12=CP&j1=OR&f3=flagtypes.name&f2=flagtypes.name&o4=substring&f11=CP&f5=flagtypes.name&f6=CP&f7=CP&known_name=approval-esr45'  # noqa
+    )
+
+
+def test_analysis_qs_approved():
+    '''
+    Check Bugzilla parameters building
+    for approved uplift requests
+    '''
+    from uplift_backend.models import BugAnalysis
+
+    assert_query_strings(
+        BugAnalysis(name='beta', version=58).build_parameters_approved(),
+        'v10=fixed%20verified&f12=CP&f14=CP&f10=cf_status_firefox59&f1=OP&o7=nowordssubstr&o3=equals&f8=CP&v3=approval-mozilla-beta%2B&f9=OP&v7=fixed%20verified%20wontfix%20unaffected%20disabled&o10=anywordssubstr&query_format=advanced&f3=flagtypes.name&f2=OP&f5=CP&f6=OP&f7=cf_status_firefox58'  # noqa
+    )
+    assert_query_strings(
+        BugAnalysis(name='release', version=57).build_parameters_approved(),
+        'f10=cf_status_firefox59&f1=OP&o7=nowordssubstr&o3=equals&f8=CP&v3=approval-mozilla-release%2B&v10=fixed%20verified&resolution=FIXED&f9=OP&v7=fixed%20verified%20wontfix%20unaffected%20disabled&f12=CP&o10=anywordssubstr&query_format=advanced&f3=flagtypes.name&f2=OP&bug_status=RESOLVED&bug_status=VERIFIED&f14=CP&f5=CP&f6=OP&f7=cf_status_firefox57'  # noqa
+    )
+    assert_query_strings(
+        BugAnalysis(name='esr', version=52).build_parameters_approved(),
+        'order=cf_last_resolved&field0-0-0=flagtypes.name&type0-0-0=equals&value0-0-0=approval-mozilla-esr52%2B&field0-1-0=cf_status_firefox_esr52&type0-1-0=nowordssubstr&value0-1-0=fixed%20verified%20wontfix%20unaffected%20disabled'  # noqa
     )
 
 

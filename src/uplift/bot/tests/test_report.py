@@ -18,10 +18,10 @@ def test_mail(mock_taskcluster_credentials):
     def _check_email(request):
         payload = json.loads(request.body)
 
-        assert payload['subject'] == '[test] Uplift bot detected 2 merge failures to beta, esr52'
+        assert payload['subject'] == '[test] Uplift bot detected 0 push & 2 merge failures to beta, esr52'
         assert payload['address'] == 'test@mozilla.com'
         assert payload['template'] == 'fullscreen'
-        assert payload['content'].startswith('# Failed automated merge test')
+        assert payload['content'].startswith('# Pushed branches')
 
         return (200, {}, '')  # ack
 
@@ -33,6 +33,6 @@ def test_mail(mock_taskcluster_credentials):
     )
 
     report = Report(['test@mozilla.com'])
-    report.add_invalid_merge(MergeTest('123456', 'beta', []))
-    report.add_invalid_merge(MergeTest('123456', 'esr52', []))
+    report.add_invalid_merge(MergeTest('123456', 'beta', '?', []))
+    report.add_invalid_merge(MergeTest('123456', 'esr52', '?', []))
     report.send('test')

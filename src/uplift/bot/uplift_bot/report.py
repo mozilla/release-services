@@ -25,12 +25,14 @@ class Report(object):
         '''
         self.merges.add(merge_test)
 
-    def send(self, app_channel):
+    def send(self, app_channel, pushed_tests=[]):
         '''
         Build and send report using Taskcluster notification service
         '''
+        assert isinstance(pushed_tests, list)
+
         # Skip sending when there are no failed merges
-        if not self.merges:
+        if not self.merges and not pushed_tests:
             logger.info('Nothing to report.')
             return
 
@@ -40,7 +42,7 @@ class Report(object):
         def _commit_report(revision, result):
             fail_fmt = ' * Merge failed for commit `{}` (parent `{}`)\n\n```\n{}```'  # noqa
             default_fmt = ' * Merge {} for commit `{}`'
-            if result.status == 'failed':
+            if result.status.value == 'failed':
                 return fail_fmt.format(
                     _str(revision),
                     _str(result.parent),
@@ -51,12 +53,22 @@ class Report(object):
                 return default_fmt.format(result.status, _str(revision))
 
         # Build markdown output
+        # List pushed branches
+        mail = [
+            '# Pushed branches',
+            ''
+        ]
+        for test in pushed_tests:
+            mail.append('* {}'.format(test.branch_rebased))
+
         # Sorting failed merge tests by bugzilla id & branch
-        subject = '[{}] Uplift bot detected {} merge failures'.format(
+        subject = '[{}] Uplift bot detected {} push & {} merge failures'.format(
             app_channel,
+            len(pushed_tests),
             len(self.merges),
         )
-        mail = [
+        mail += [
+            '',
             '# Failed automated merge test',
             ''
         ]

@@ -40,10 +40,11 @@ def use_bugzilla(bugzilla_url, bugzilla_token=None):
         BugzillaUser.TOKEN = bugzilla_token
 
 
-def list_bugs(query):
+def list_bugs(self, query, limit=None):
     '''
     List all the bugs from a Bugzilla query
     '''
+
     def _bughandler(bug, data):
         bugid = bug['id']
         data[bugid] = bug
@@ -54,10 +55,11 @@ def list_bugs(query):
     bugs, attachments = {}, {}
 
     bz = Bugzilla(query,
+                  bugdata=bugs,
                   bughandler=_bughandler,
                   attachmenthandler=_attachmenthandler,
-                  bugdata=bugs,
-                  attachmentdata=attachments)
+                  attachmentdata=attachments,
+                  )
     bz.get_data().wait()
 
     # Map attachments on bugs

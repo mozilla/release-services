@@ -21,8 +21,16 @@ from uplift_bot.sync import Bot
     default=config.DEFAULT_CACHE,
     help='Cache for repository clones.',
 )
+@click.option(
+    '--uplift-status',
+    type=click.Choice(config.UPLIFT_STATUS),
+    multiple=True,
+    default=config.UPLIFT_STATUS,
+    help='Filter execution to approved and/or pending uplifts',
+)
 def main(bugzilla_id,
          cache_root,
+         uplift_status,
          taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
@@ -42,12 +50,14 @@ def main(bugzilla_id,
                               'API_URL',
                               'APP_CHANNEL',
                               'UPLIFT_NOTIFICATIONS',
+                              'MERCURIAL_REMOTE',
                           ),
                           existing=dict(
                               APP_CHANNEL='development',
                               BUGZILLA_READ_ONLY=True,
                               BUGZILLA_COMMENT_ONLY=False,
                               UPLIFT_NOTIFICATIONS=['babadie@mozilla.com'],
+                              MERCURIAL_REMOTE=None,
                           ),
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
@@ -76,10 +86,12 @@ def main(bugzilla_id,
         secrets['BUGZILLA_COMMENT_ONLY'],
     )
     bot.use_cache(cache_root)
+    if secrets['MERCURIAL_REMOTE']:
+        bot.use_mercurial_remote(**secrets['MERCURIAL_REMOTE'])
     if bugzilla_id:
         bot.run(only=[bugzilla_id, ])
     else:
-        bot.run()
+        bot.run(uplift_status=uplift_status)
 
 
 if __name__ == '__main__':

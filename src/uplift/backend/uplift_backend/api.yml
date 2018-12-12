@@ -181,7 +181,8 @@ definitions:
       - name
       - version
       - count
-      - parameters
+      - parameters_pending
+      - parameters_approved
     properties:
       id:
         type: integer
@@ -191,7 +192,9 @@ definitions:
         type: integer
       count:
         type: integer
-      parameters:
+      parameters_pending:
+        type: string
+      parameters_approved:
         type: string
       bugs:
         type: array
