@@ -275,7 +275,7 @@ def get_task(task_group_id,
       'source /etc/nix/profile.sh',
       'mkdir -p /tmp/app',
       'cd /tmp/app',
-      'git clone https://github.com/mozilla/release-services/archive/{github_commit}.tar.gz',
+      'wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla/release-services/archive/{github_commit}.tar.gz',
       'tar zxf {github_commit}.tar.gz',
       'cd release-services-{github_commit}',
       command
