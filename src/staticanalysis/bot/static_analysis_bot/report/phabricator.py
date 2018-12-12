@@ -47,9 +47,17 @@ class PhabricatorReporter(Reporter):
 
         # Use only publishable issues and patches
         # and avoid publishing a non related patch from an anlyzer partly activated (allowed paths)
-        issues = list(filter(lambda i: i.is_publishable() and i.ANALYZER in self.analyzers, issues))
+        issues = [
+            issue
+            for issue in issues
+            if issue.is_publishable() and issue.ANALYZER in self.analyzers
+        ]
         analyzers_available = set(i.ANALYZER for i in issues).intersection(self.analyzers)
-        patches = list(filter(lambda p: p.analyzer in analyzers_available, revision.improvement_patches))
+        patches = [
+            patch
+            for patch in revision.improvement_patches
+            if patch.analyzer in analyzers_available
+        ]
 
         if issues:
 

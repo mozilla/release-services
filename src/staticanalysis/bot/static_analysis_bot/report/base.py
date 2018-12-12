@@ -33,7 +33,6 @@ Code analysis found {defects_total} in this patch{extras_comments}:
 {defects}
 
 You can run this analysis locally with:
-
 {analyzers}
 '''
 BUG_REPORT = '''
