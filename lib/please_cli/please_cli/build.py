@@ -1,24 +1,24 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-from __future__ import absolute_import
 
 import os
 import subprocess
 import tempfile
 
+import click
+import click_spinner
+
 import cli_common.cli
 import cli_common.command
 import cli_common.taskcluster
-import click
-import click_spinner
 import please_cli.config
 import please_cli.utils
 
 
 @click.command(
-    short_help="Build a project.",
+    short_help='Build a project.',
 )
 @cli_common.cli.taskcluster_options
 @click.argument(
@@ -192,7 +192,7 @@ def cmd(project,
 
 
 @click.command(
-    short_help="Build the docker image of a project.",
+    short_help='Build the docker image of a project.',
 )
 @cli_common.cli.taskcluster_options
 @click.argument(
@@ -222,14 +222,14 @@ def cmd(project,
     default=True,
     )
 def cmd_docker(project,
-        nix_build,
-        taskcluster_secret,
-        taskcluster_client_id,
-        taskcluster_access_token,
-        docker,
-        interactive,
-        load_image,
-    ):
+               nix_build,
+               taskcluster_secret,
+               taskcluster_client_id,
+               taskcluster_access_token,
+               docker,
+               interactive,
+               load_image,
+               ):
 
     image_path = please_cli.config.TMP_DIR + '/result-docker-{project}'.format(project=project)
 
@@ -296,5 +296,5 @@ def cmd_docker(project,
     click.echo(' => Image loaded')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmd()

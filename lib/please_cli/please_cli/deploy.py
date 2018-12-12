@@ -1,7 +1,7 @@
-# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-from __future__ import absolute_import
 
 import io
 import json
@@ -11,17 +11,17 @@ import tempfile
 import urllib
 
 import awscli.clidriver
-import cli_common.cli
-import cli_common.log
-import cli_common.taskcluster
 import click
 import click_spinner
-import please_cli.build
-import please_cli.config
-import please_cli.utils
 import requests
 import taskcluster.exceptions
 
+import cli_common.cli
+import cli_common.log
+import cli_common.taskcluster
+import please_cli.build
+import please_cli.config
+import please_cli.utils
 
 log = cli_common.log.get_logger(__name__)
 
@@ -610,15 +610,15 @@ def cmd_DOCKERHUB(ctx,
         docker_password = secrets['DOCKER_PASSWORD']
 
     project_paths = ctx.invoke(please_cli.build.cmd,
-               project=project,
-               nix_path_attributes=[nix_path_attribute],
-               nix_build=nix_build,
-               nix=nix,
-               taskcluster_secret=taskcluster_secret,
-               taskcluster_client_id=taskcluster_client_id,
-               taskcluster_access_token=taskcluster_access_token,
-               interactive=interactive,
-               )
+                               project=project,
+                               nix_path_attributes=[nix_path_attribute],
+                               nix_build=nix_build,
+                               nix=nix,
+                               taskcluster_secret=taskcluster_secret,
+                               taskcluster_client_id=taskcluster_client_id,
+                               taskcluster_access_token=taskcluster_access_token,
+                               interactive=interactive,
+                               )
 
     for project_path in project_paths:
         project_path = os.path.realpath(project_path)

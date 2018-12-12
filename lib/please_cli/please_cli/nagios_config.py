@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import click
+
 import please_cli.config
 
 NAGIOS_TEMPLATE = ''''%s' => {
@@ -30,7 +30,6 @@ def cmd(channel):
         channels = please_cli.config.CHANNELS
     else:
         channels = [channel]
-
 
     for project_name in sorted(please_cli.config.PROJECTS):
         deployments = please_cli.config.PROJECTS_CONFIG.get(project_name, dict()).get('deploys', [])

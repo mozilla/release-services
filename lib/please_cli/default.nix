@@ -16,13 +16,15 @@ let
     inherit python project_name;
     version = fileContents ./please_cli/VERSION;
     src = filterSource ./. { inherit (self) name; };
+    src_path = "lib/${project_name}";
     doCheck = false;
     buildInputs =
       [ makeWrapper ] ++
-      fromRequirementsFile ./requirements-dev.txt python.packages;
+      (fromRequirementsFile ./../cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       [ skopeo ] ++
-      fromRequirementsFile ./requirements.txt python.packages;
+      (fromRequirementsFile ./requirements.txt python.packages);
     prePatch= ''
       rm -f please_cli/VERSION
       cp ${./../../VERSION} please_cli/VERSION

@@ -19,6 +19,7 @@ let
     writeText;
 
   inherit (releng_pkgs.pkgs.lib)
+    fileContents
     flatten
     inNixShell
     optional
@@ -926,6 +927,7 @@ in rec {
                             then "update-${self.name}"
                             else "update-${channel}-${self.name}";
                    hook_name = "${self.name}_update_${channel}";
+                   version = fileContents ./../../VERSION;
                    hook =
                      mkTaskclusterHook
                        { name = hook_name;
@@ -940,7 +942,7 @@ in rec {
                            [ "secrets:get:repo:github.com/mozilla-releng/services:branch:${channel}"
                              "queue:create-task:aws-provisioner-v1/releng-svc"
                            ];
-                         taskImage = "mozillareleng/services";
+                         taskImage = "mozillareleng/services:base-${version}";
                          taskCapabilities = { privileged = true; };
                          taskCommand = [
                            "./please" "-v"

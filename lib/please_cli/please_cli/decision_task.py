@@ -1,20 +1,18 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import datetime
 import json
 
+import click
+import click_spinner
 import slugid
 
 import cli_common.taskcluster
-import click
-import click_spinner
 import please_cli.config
 import please_cli.utils
-
 
 PROJECTS = list(set(please_cli.config.PROJECTS) - set(please_cli.config.DEV_PROJECTS))
 
@@ -322,29 +320,29 @@ def get_task(task_group_id,
 @click.command()
 @click.option(
     '--github-commit',
-    envvar="GITHUB_HEAD_SHA",
+    envvar='GITHUB_HEAD_SHA',
     required=True,
     )
 @click.option(
     '--channel',
     type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BRANCH",
+    envvar='GITHUB_BRANCH',
     required=True,
     )
 @click.option(
     '--owner',
-    envvar="GITHUB_HEAD_USER_EMAIL",
+    envvar='GITHUB_HEAD_USER_EMAIL',
     required=True,
     )
 @click.option(
     '--pull-request',
-    envvar="GITHUB_PULL_REQUEST",
+    envvar='GITHUB_PULL_REQUEST',
     default=None,
     required=False,
     )
 @click.option(
     '--task-id',
-    envvar="TASK_ID",
+    envvar='TASK_ID',
     required=True,
     )
 @click.option(
@@ -387,8 +385,8 @@ def cmd(ctx,
         taskcluster_access_token,
         dry_run,
         ):
-    """A tool to be ran on each commit.
-    """
+    '''A tool to be ran on each commit.
+    '''
 
     taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
     if pull_request is not None:
@@ -410,13 +408,13 @@ def cmd(ctx,
         taskcluster_notify.irc(dict(channel='#release-services',
                                     message=f'New deployment on {channel} is about to start: https://tools.taskcluster.net/groups/{task_group_id}'))
 
-    message = ("release-services team is about to release a new version of mozilla/release-services "
-               "(*.mozilla-releng.net, *.moz.tools).\ Any alerts coming up soon will be best directed "
-               "to #release-services IRC channel. Automated message (such as this) will be send "
-               "once deployment is done. Thank you.")
+    message = ('release-services team is about to release a new version of mozilla/release-services '
+               '(*.mozilla-releng.net, *.moz.tools). Any alerts coming up soon will be best directed '
+               'to #release-services IRC channel. Automated message (such as this) will be send '
+               'once deployment is done. Thank you.')
 
-    """This message will only be sent when channel is production.
-    """
+    '''This message will only be sent when channel is production.
+    '''
     if channel is 'production':
         for msgChannel in ['#ci', '#moc']:
                 taskcluster_notify.irc(dict(channel=msgChannel, message=message))
@@ -598,7 +596,7 @@ def cmd(ctx,
             click.echo('    dependencies:')
             deps = []
             for dep in task['dependencies']:
-                depName = "0. Decision task"
+                depName = '0. Decision task'
                 if dep in tasks2:
                     depName = tasks2[dep]['metadata']['name']
                     deps.append('      - %s [taskId: %s]' % (depName, dep))
@@ -609,5 +607,5 @@ def cmd(ctx,
             taskcluster_queue.createTask(task_id, task)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmd()

@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
+import os
 import subprocess
+import tempfile
 
 import click
 import click_spinner
@@ -14,7 +15,6 @@ import cli_common.log
 import cli_common.utils
 import please_cli.config
 import please_cli.utils
-
 
 logger = cli_common.log.get_logger(__name__)
 
@@ -36,8 +36,8 @@ def run_check(*arg, **kw):
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Update Nix dependencies for a PROJECT.",
-    epilog="Happy hacking!",
+    short_help='Update Nix dependencies for a PROJECT.',
+    epilog='Happy hacking!',
     help=CMD_HELP,
     )
 @click.argument(
@@ -46,7 +46,7 @@ def run_check(*arg, **kw):
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
-    '--push-to-branch',
+    '--branch-to-push',
     required=False,
     type=str,
     default=None,
@@ -58,6 +58,20 @@ def run_check(*arg, **kw):
     type=str,
     default=None,
     help='Git url of release-services repository.',
+    )
+@click.option(
+    '--git-user-email',
+    required=False,
+    type=str,
+    default='release-services+robot@mozilla.com',
+    help='Git user email.',
+    )
+@click.option(
+    '--git-user-name',
+    required=False,
+    type=str,
+    default='Release Services Robot',
+    help='Git user name.',
     )
 @click.option(
     '--nix-shell',
@@ -77,7 +91,10 @@ def run_check(*arg, **kw):
 @click.pass_context
 def cmd(ctx,
         project,
-        push_to_branch,
+        branch_to_push,
+        git_url,
+        git_user_email,
+        git_user_name,
         nix_shell,
         git,
         taskcluster_secret,
@@ -85,11 +102,15 @@ def cmd(ctx,
         taskcluster_access_token,
         ):
 
-    if push_to_branch is None:
-        return run_update(project, nix_shell os.getcwd())
+    # if no branch is provided we assume we don't want to push changed anywhere
+    # we just run the update
+    if branch_to_push is None:
+        return run_update(project, nix_shell, os.getcwd())
 
-    root_dir = tempfile.mktemp(prefix="release-services-")
+    # a directory where we will cloned release-services
+    root_dir = tempfile.mktemp(prefix='release-services-')
 
+    # if git_url is not provided we look to secrets for a value
     if git_url is None:
         secrets = cli_common.taskcluster.get_secrets(
             taskcluster_secret,
@@ -103,25 +124,29 @@ def cmd(ctx,
         git_url = secrets['UPDATE_GITHUB_URL']
 
     # install and setup git
+    logger.info('Installing and configuring git')
     run_check(['nix-env', '-f', '/etc/nix/nixpkgs', '-iA', 'git'])
     run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
-    run_check(['git', 'config', '--global', 'user.email', 'release-services+robot@mozilla.com'])
-    run_check(['git', 'config', '--global', 'user.name', 'Release Services Robot'])
+    run_check(['git', 'config', '--global', 'user.email', git_user_email])
+    run_check(['git', 'config', '--global', 'user.name', git_user_name])
 
     # clone release services
-    run_check(['git', 'clone', git_url, root_dir)
+    logger.info('Cloning release services')
+    run_check(['git', 'clone', '--depth', '1', git_url, root_dir])
 
     # run update on checkout
     run_update(project, nix_shell, root_dir)
 
-    # add
+    # add, commit and push changed to an update branch
+    logger.info('Add, commit and push changed to an update branch.')
     commit_message = f'{project}: Dependencies update.'
     run_check(['git', 'add', '.'], cwd=root_dir)
-    run_check(['git', 'commit', '-m', commit_message],, cwd=root_dir)
-    run_check(['git', 'push', '-f', 'origin', f'master:{push_to_branch}'], cwd=root_dir)
+    run_check(['git', 'commit', '-m', commit_message], cwd=root_dir)
+    run_check(['git', 'push', '-f', 'origin', f'master:{branch_to_push}'], cwd=root_dir)
 
 
 def run_update(project, nix_shell, root_dir):
+    logger.info('Running dependency update.')
     command = [
         nix_shell,
         please_cli.config.ROOT_DIR + '/nix/update.nix',
@@ -141,5 +166,5 @@ def run_update(project, nix_shell, root_dir):
     please_cli.utils.check_result(returncode, output, raise_exception=False)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmd()

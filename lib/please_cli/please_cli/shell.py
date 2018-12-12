@@ -1,14 +1,16 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import pathlib
 import os
+import pathlib
 import subprocess
+
+import click
 
 import cli_common.cli
 import cli_common.log
-import click
 import please_cli.config
 import please_cli.utils
 
@@ -50,8 +52,8 @@ EXAMPLES:
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Enter development environment of an PROJECT.",
-    epilog="Happy hacking!",
+    short_help='Enter development environment of an PROJECT.',
+    epilog='Happy hacking!',
     help=CMD_HELP,
     )
 @click.argument(
@@ -90,7 +92,7 @@ def cmd(project, zsh, quiet, command, nix_shell,
         ):
 
     project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
-    run_type = project_config.get('run')
+    # run_type = project_config.get('run')
     run_options = project_config.get('run_options', {})
 
     TMP_DIR = pathlib.Path(please_cli.config.TMP_DIR)
@@ -98,7 +100,7 @@ def cmd(project, zsh, quiet, command, nix_shell,
     CERTS_DIR = TMP_DIR / 'certs'
 
     ROOT_NIX_FILE = ROOT_DIR / 'nix' / 'default.nix'
-    CA_CERT_FILE =  CERTS_DIR / 'ca.crt'
+    CA_CERT_FILE = CERTS_DIR / 'ca.crt'
     SERVER_CERT_FILE = CERTS_DIR / 'server.crt'
     SERVER_KEY_FILE = CERTS_DIR / 'server.key'
 
@@ -174,5 +176,5 @@ def cmd_docker_shell():
     os.execl('/bin/bash', '/bin/bash')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmd()

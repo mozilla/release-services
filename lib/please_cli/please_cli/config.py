@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -44,10 +45,10 @@ DOCKER_BASE_REGISTRY = 'index.docker.io'
 DOCKER_BASE_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-' + VERSION
 
-NIX_BIN_DIR = os.environ.get("NIX_BIN_DIR", "")  # must end with /
-OPENSSL_BIN_DIR = os.environ.get("OPENSSL_BIN_DIR", "")  # must end with /
-OPENSSL_ETC_DIR = os.environ.get("OPENSSL_ETC_DIR", "")  # must end with /
-POSTGRESQL_BIN_DIR = os.environ.get("POSTGRESQL_BIN_DIR", "")  # must end with /
+NIX_BIN_DIR = os.environ.get('NIX_BIN_DIR', '')  # must end with /
+OPENSSL_BIN_DIR = os.environ.get('OPENSSL_BIN_DIR', '')  # must end with /
+OPENSSL_ETC_DIR = os.environ.get('OPENSSL_ETC_DIR', '')  # must end with /
+POSTGRESQL_BIN_DIR = os.environ.get('POSTGRESQL_BIN_DIR', '')  # must end with /
 
 IN_DOCKER = False
 with open('/proc/1/cgroup', 'rt') as ifh:
