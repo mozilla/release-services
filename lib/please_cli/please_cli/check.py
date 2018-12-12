@@ -44,7 +44,9 @@ PROJECTS:
     )
 @cli_common.cli.taskcluster_options
 @click.pass_context
-def cmd(ctx, project, nix_build,
+def cmd(ctx,
+        project,
+        nix_build,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,

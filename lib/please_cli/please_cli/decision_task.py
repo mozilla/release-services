@@ -268,15 +268,18 @@ def get_task(task_group_id,
         priority = 'very-high'
     now = datetime.datetime.utcnow()
     command = (' && '.join([
+      # debug
       'ls -la /etc/services',
+      'env',
+      # cleanup
+      'rm -rf /home/app/.cache/nix',
+      # setup
       'source /etc/nix/profile.sh',
       'mkdir -p /tmp/app',
       'cd /tmp/app',
-      'wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla/release-services/archive/{github_commit}.tar.gz',
+      'git clone https://github.com/mozilla/release-services/archive/{github_commit}.tar.gz',
       'tar zxf {github_commit}.tar.gz',
       'cd release-services-{github_commit}',
-      'env',
-      'rm -rf /home/app/.cache/nix',
       command
     ])).format(github_commit=github_commit)
     return {
@@ -454,6 +457,20 @@ def cmd(ctx,
                     'deploys' not in please_cli.config.PROJECTS_CONFIG[project_name]:
                 continue
 
+            # update hook for each project
+            projects_to_deploy.append((
+                project_name,
+                [],
+                'TASKCLUSTER_HOOK',
+                {
+                    'enable': True,
+                    'docker_registry': 'index.docker.io',
+                    'docker_repo': 'mozillareleng/services',
+                    'name-suffix': '-update-dependencies',
+                    'nix_path_attribute': f'updateHook.{channel}',
+                },
+            ))
+
             for deploy in please_cli.config.PROJECTS_CONFIG[project_name]['deploys']:
                 for deploy_channel in deploy['options']:
                     if channel == deploy_channel:
@@ -534,6 +551,7 @@ def cmd(ctx,
 
             if not enable:
                 continue
+
             project_uuid = slugid.nice().decode('utf-8')
             project_task = get_deploy_task(
                 index,
