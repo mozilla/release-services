@@ -557,12 +557,14 @@ in rec {
                            "/bin/bash"
                            "-c"
                            (builtins.concatStringsSep " && " [
-                              "nix-env -f /etc/nix/nixpkgs -iA git"
-                              "mkdir -p /tmp"
-                              "git clone --depth 1 https://github.com/mozilla/release-services.git app"
-                              "cd app"
-                              "git checkout -b ${branch} ${github_commit}"
-                              "./please -v tools update-dependencies --push-to-branch=${branch}"
+                             "source /etc/nix/profile.sh"
+                             "nix-env -f /etc/nix/nixpkgs -iA git"
+                             "mkdir -p /tmp"
+                             "cd /tmp"
+                             "git clone --depth 1 https://github.com/mozilla/release-services.git app"
+                             "cd app"
+                             "git checkout -b ${branch} ${github_commit}"
+                             "./please -v tools update-dependencies ${project_name} --branch-to-push=${branch}"
                            ])
                          ];
                          workerType = "releng-svc";

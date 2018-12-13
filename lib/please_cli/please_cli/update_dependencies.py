@@ -129,6 +129,9 @@ def cmd(ctx,
     run_check(['git', 'config', 'user.email', git_user_email])
     run_check(['git', 'config', 'user.name', git_user_name])
 
+    logger.info('Cloning release-services')
+    run_check(['git', 'clone', git_url, root_dir])
+
     # run update on checkout
     run_update(project, nix_shell, root_dir)
 
