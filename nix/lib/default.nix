@@ -552,7 +552,7 @@ in rec {
                              "docker-worker:capability:privileged"
                              "queue:route:notify.irc-channel.#release-services"
                            ];
-                         taskRoutes 
+                         taskRoutes =
                            [ "notify.irc-channel.#release-services.on-failed"
                              "notify.irc-channel.#release-services.on-exception"
                            ];
