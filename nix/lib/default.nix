@@ -564,7 +564,7 @@ in rec {
                              "wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla/release-services/archive/${github_commit}.tar.gz"
                              "tar zxf ${github_commit}.tar.gz"
                              "cd release-services-${github_commit}"
-                             "./please -v tools update-dependencies ${project_name} --branch-to-push=${branch} --taskcluster-secret='repo:github.com/mozilla-releng/services:branch:${branch}'",
+                             "./please -v tools update-dependencies ${project_name} --branch-to-push=${branch} --taskcluster-secret='repo:github.com/mozilla-releng/services:branch:${branch}'"
                            ])
                          ];
                          workerType = "releng-svc";
