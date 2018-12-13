@@ -121,7 +121,7 @@ def cmd(ctx,
             taskcluster_client_id=taskcluster_client_id,
             taskcluster_access_token=taskcluster_access_token,
         )
-        git_url = secrets['UPDATE_GITHUB_URL']
+        git_url = secrets['UPDATE_GIT_URL']
 
     # install and setup git
     logger.info('Installing and configuring git')

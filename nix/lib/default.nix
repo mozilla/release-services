@@ -548,6 +548,7 @@ in rec {
                          scopes =
                            [ "secrets:get:repo:github.com/mozilla-releng/services:branch:${channel}"
                              "queue:create-task:aws-provisioner-v1/releng-svc"
+                             "docker-worker:capability:privileged"
                            ];
                          taskImage = "mozillareleng/services:base-${version}";
                          taskCapabilities = { privileged = true; };
