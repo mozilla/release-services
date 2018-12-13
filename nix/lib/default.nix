@@ -522,7 +522,7 @@ in rec {
           PS1="\n\[\033[1;32m\][${self.project_name}:\w]\$\[\033[0m\] "
         '';
         passthru = passthru // {
-          inherit version;
+          inherit version project_name;
           dirname = withDefault dirname (mkProjectDirName project_name);
           module_name = withDefault module_name (mkProjectModuleName project_name);
           src_path = withDefault src_path (mkProjectSrcPath project_name);
@@ -535,6 +535,7 @@ in rec {
                             else "update-${channel}-${self.module_name}";
                    hook_name = "${self.module_name}-update-${channel}";
                    version = fileContents ./../../VERSION;
+                   github_commit = builtins.getEnv "GITHUB_HEAD_SHA";
                    hook =
                      mkTaskclusterHook
                        { name = hook_name;
@@ -553,10 +554,16 @@ in rec {
                          taskImage = "mozillareleng/services:base-${version}";
                          taskCapabilities = { privileged = true; };
                          taskCommand = [
-                           "./please" "-v"
-                           "tools"
-                           "update-dependencies"
-                           "--push-to-branch=${branch}"
+                           "/bin/bash"
+                           "-c"
+                           (builtins.concatStringsSep " && " [
+                              "nix-env -f /etc/nix/nixpkgs -iA git"
+                              "mkdir -p /tmp"
+                              "git clone --depth 1 https://github.com/mozilla/release-services.git app"
+                              "cd app"
+                              "git checkout -b ${branch} ${github_commit}"
+                              "./please -v tools update-dependencies --push-to-branch=${branch}"
+                           ])
                          ];
                          workerType = "releng-svc";
                        };

@@ -123,16 +123,11 @@ def cmd(ctx,
         )
         git_url = secrets['UPDATE_GIT_URL']
 
-    # install and setup git
-    logger.info('Installing and configuring git')
-    run_check(['nix-env', '-f', '/etc/nix/nixpkgs', '-iA', 'git'])
-    run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
-    run_check(['git', 'config', '--global', 'user.email', git_user_email])
-    run_check(['git', 'config', '--global', 'user.name', git_user_name])
-
-    # clone release services
-    logger.info('Cloning release services')
-    run_check(['git', 'clone', '--depth', '1', git_url, root_dir])
+    # Setup git
+    logger.info('Configuring git')
+    run_check(['git', 'config', 'http.postBuffer', '12M'])
+    run_check(['git', 'config', 'user.email', git_user_email])
+    run_check(['git', 'config', 'user.name', git_user_name])
 
     # run update on checkout
     run_update(project, nix_shell, root_dir)
@@ -142,7 +137,7 @@ def cmd(ctx,
     commit_message = f'{project}: Dependencies update.'
     run_check(['git', 'add', '.'], cwd=root_dir)
     run_check(['git', 'commit', '-m', commit_message], cwd=root_dir)
-    run_check(['git', 'push', '-f', 'origin', f'master:{branch_to_push}'], cwd=root_dir)
+    run_check(['git', 'push', '-f', git_url, f'HEAD:{branch_to_push}'], cwd=root_dir)
 
 
 def run_update(project, nix_shell, root_dir):
