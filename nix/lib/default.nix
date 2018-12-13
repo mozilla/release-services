@@ -535,7 +535,7 @@ in rec {
                             else "update-${channel}-${self.module_name}";
                    hook_name = "${self.module_name}-update-${channel}";
                    version = fileContents ./../../VERSION;
-                   github_commit = builtins.getEnv "GITHUB_HEAD_SHA";
+                   github_commit = builtins.getEnv "GITHUB_COMMIT";
                    hook =
                      mkTaskclusterHook
                        { name = hook_name;
