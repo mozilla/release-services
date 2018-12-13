@@ -26,8 +26,10 @@ tasks:
         env: true
         events:
           - pull_request.*
-        branches:
-          - master
+        excludeBranches:
+          - production
+          - staging
+          - testing
     provisionerId: "aws-provisioner-v1"
     workerType: "releng-svc"
     priority: high
