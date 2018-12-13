@@ -51,6 +51,8 @@ def test_is_esr(version, result):
 @pytest.mark.parametrize('version, partial_updates, result', (
     ('57.0', {'56.0b1': [], '55.0': []}, True),
     ('57.0', {'56.0': [], '55.0': []}, True),
+    ('64.0', None, True),
+    ('64.0.1', None, False),
     ('56.0b3', None, False),
     ('41.0esr', None, False),
 ))
