@@ -235,6 +235,7 @@ in rec {
     , created ? "0 seconds"
     , expires ? "1 month"
     , deadline ? "1 hour"
+    , taskExtra ? {}
     , taskImage
     , taskCommand
     , taskArtifacts ? {}
@@ -265,6 +266,7 @@ in rec {
         routes = taskRoutes;
         scopes = scopes;
         workerType = workerType;
+        extra = taskExtra;
       });
       triggerSchema = {
         type = "object";
@@ -548,7 +550,17 @@ in rec {
                            [ "secrets:get:repo:github.com/mozilla-releng/services:branch:${channel}"
                              "queue:create-task:aws-provisioner-v1/releng-svc"
                              "docker-worker:capability:privileged"
+                             "queue:route:notify.irc-channel.#release-services"
                            ];
+                         taskRoutes 
+                           [ "notify.irc-channel.#release-services.on-failed"
+                             "notify.irc-channel.#release-services.on-exception"
+                           ];
+                         taskExtra = {
+                           notify = {
+                             ircChannelMessage = "Update hook for project ${project_name} failed: https://tools.taskcluster.net/tasks/\${status.taskId}";
+                           };
+                         };
                          taskImage = "mozillareleng/services:base-${version}";
                          taskCapabilities = { privileged = true; };
                          taskCommand = [
