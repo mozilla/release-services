@@ -518,11 +518,8 @@ in rec {
       args' = releng_pkgs.pkgs.lib.filterAttrs (n: v: ! builtins.elem n argsToSkip) args;
       self = mkDerivation (args' // {
         name = withDefault name (mkProjectFullName project_name version);
-        #dirname = withDefault dirname (mkProjectDirName project_name);
-        #module_name = withDefault module_name (mkProjectModuleName project_name);
-        #src_path = withDefault src_path (mkProjectSrcPath project_name);
         shellHook = shellHook + ''
-          PS1="\n\[\033[1;32m\][${self.module_name}:\w]\$\[\033[0m\] "
+          PS1="\n\[\033[1;32m\][${self.project_name}:\w]\$\[\033[0m\] "
         '';
         passthru = passthru // {
           inherit version;
@@ -534,9 +531,9 @@ in rec {
               (channel:
                  let
                    branch = if channel == "production"
-                            then "update-${self.name}"
-                            else "update-${channel}-${self.name}";
-                   hook_name = "${self.name}_update_${channel}";
+                            then "update-${self.module_name}"
+                            else "update-${channel}-${self.module_name}";
+                   hook_name = "${self.module_name}-update-${channel}";
                    version = fileContents ./../../VERSION;
                    hook =
                      mkTaskclusterHook
