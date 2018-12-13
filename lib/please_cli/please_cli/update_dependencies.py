@@ -123,14 +123,14 @@ def cmd(ctx,
         )
         git_url = secrets['UPDATE_GIT_URL']
 
-    # Setup git
-    logger.info('Configuring git')
-    run_check(['git', 'config', 'http.postBuffer', '12M'])
-    run_check(['git', 'config', 'user.email', git_user_email])
-    run_check(['git', 'config', 'user.name', git_user_name])
-
     logger.info('Cloning release-services')
     run_check(['git', 'clone', git_url, root_dir])
+
+    # Setup git
+    logger.info('Configuring git')
+    run_check(['git', 'config', 'http.postBuffer', '12M'], cwd=root_dir)
+    run_check(['git', 'config', 'user.email', git_user_email], cwd=root_dir)
+    run_check(['git', 'config', 'user.name', git_user_name], cwd=root_dir)
 
     # run update on checkout
     run_update(project, nix_shell, root_dir)
