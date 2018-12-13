@@ -83,6 +83,7 @@ PROJECTS_CONFIG = {
         },
     },
     'notification/policy': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8006,
@@ -123,6 +124,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'notification/identity': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8007,
@@ -163,6 +165,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'docs': {
+        'update': True,
         'run': 'SPHINX',
         'run_options': {
             'schema': 'http',
@@ -195,6 +198,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'releng-frontend': {
+        'update': False,
         'run': 'ELM',
         'run_options': {
             'port': 8010,
@@ -248,6 +252,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'mapper/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8004,
@@ -288,6 +293,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'tokens/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8003,
@@ -328,6 +334,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'tooltool/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8002,
@@ -446,6 +453,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'treestatus/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8000,
@@ -543,6 +551,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/backend': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -758,6 +767,7 @@ PROJECTS_CONFIG = {
         ]
     },
     'staticanalysis/frontend': {
+        'update': False,
         'run': 'NEUTRINO',
         'run_options': {
             'port': 8010,
@@ -819,6 +829,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/backend': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -859,6 +870,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'shipit/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8015,
@@ -921,6 +933,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'shipit/frontend': {
+        'update': False,
         'run': 'NEUTRINO',
         'run_options': {
             'port': 8010,
