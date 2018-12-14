@@ -164,6 +164,13 @@ class Revision(object):
             ImprovementPatch(analyzer_name, repr(self), content)
         )
 
+    def empty(self):
+        '''
+        Empty temporary data in BEFORE mode
+        * improvement patches removed
+        '''
+        self.improvement_patches = []
+
 
 class PhabricatorRevision(Revision):
     '''
