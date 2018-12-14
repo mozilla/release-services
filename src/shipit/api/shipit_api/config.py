@@ -429,7 +429,145 @@ SIGNOFFS = {
                 {
                     'name': '[releng] Ship Fennec',
                     'description': 'Publish Firefox for Android to Play Store',
-                    # XXX: stands for the LDAP group for now
+                    'permissions': 'releng',
+                },
+            ]
+        }
+    },
+    'releases/mozilla-beta': {
+        'fennec': {
+            'ship_fennec': [
+                {
+                    'name': '[anyone] Ship Fennec signoff 1',
+                    'description': 'Publish Firefox for Android to Play Store',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[anyone] Ship Fennec signoff 2',
+                    'description': 'Publish Firefox for Android to Play Store',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+            ]
+        },
+        'firefox': {
+            'ship_firefox': [
+                {
+                    'name': '[anyone] Ship Firefox signoff 1',
+                    'description': 'Publish Firefox to beta users',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[anyone] Ship Firefox signoff 2',
+                    'description': 'Publish Firefox to beta users',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+            ]
+        },
+        'devedition': {
+            'ship_devedition': [
+                {
+                    'name': '[anyone] Ship Firefox Dev Edition signoff 1',
+                    'description': 'Publish Firefox Dev Edition to users',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[anyone] Ship Firefox Dev Edition signoff 2',
+                    'description': 'Publish Firefox Dev Edition to users',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+            ]
+        },
+    },
+    'releases/mozilla-release': {
+        'fennec': {
+            'ship_fennec_rc': [
+                {
+                    'name': '[relman] Ship Fennec RC',
+                    'description': 'Publish Firefox for Android to Play Store',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[releng] Ship Fennec RC',
+                    'description': 'Publish Firefox for Android to Play Store',
+                    'permissions': 'releng',
+                },
+            ],
+            'ship_fennec': [
+                {
+                    'name': '[relman] Ship Fennec',
+                    'description': 'Publish Firefox for Android to Play Store',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[releng] Ship Fennec',
+                    'description': 'Publish Firefox for Android to Play Store',
+                    'permissions': 'releng',
+                },
+            ],
+        },
+        'firefox': {
+            'ship_firefox_rc': [
+                {
+                    'name': '[relman] Ship Firefox RC',
+                    'description': 'Publish Firefox RC to beta users',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[releng] Ship Firefox RC',
+                    'description': 'Publish Firefox RC to beta users',
+                    'permissions': 'releng',
+                },
+            ],
+            'push_firefox': [
+                {
+                    'name': '[relman] Push to CDNs',
+                    'description': 'Push Firefox to CDNs',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[releng] Push to CDNs',
+                    'description': 'Push Firefox to CDNs',
+                    'permissions': 'releng',
+                },
+            ],
+            'ship_firefox': [
+                {
+                    'name': '[relman] Ship Firefox',
+                    'description': 'Publish Firefox to users',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[releng] Ship Firefox',
+                    'description': 'Publish Firefox to users',
+                    'permissions': 'releng',
+                },
+            ],
+        },
+    },
+    # TODO: use pattern matching for ESR?
+    'releases/mozilla-esr60': {
+        'firefox': {
+            'push_firefox': [
+                {
+                    'name': '[relman] Push to CDNs',
+                    'description': 'Push Firefox ESR to CDNs',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[releng] Push to CDNs',
+                    'description': 'Push Firefox ESR to CDNs',
+                    'permissions': 'releng',
+                },
+            ],
+            'ship_firefox': [
+                {
+                    'name': '[relman] Ship Firefox ESR',
+                    'description': 'Publish Firefox ESR to users',
+                    'permissions': 'vpn_cloudops_shipit',
+                },
+                {
+                    'name': '[releng] Ship Firefox ESR',
+                    'description': 'Publish Firefox ESR to users',
                     'permissions': 'releng',
                 },
             ],
