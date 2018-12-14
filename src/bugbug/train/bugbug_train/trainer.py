@@ -7,8 +7,9 @@ from datetime import datetime
 from datetime import timedelta
 from urllib.request import urlretrieve
 
-from bugbug import labels
-from bugbug import train
+from bugbug.models.bug import BugModel
+from bugbug.models.regression import RegressionModel
+from bugbug.models.tracking import TrackingModel
 
 from bugbug_train.secrets import secrets
 from cli_common.log import get_logger
@@ -29,33 +30,40 @@ class Trainer(object):
 
         self.index_service = get_service('index', client_id, access_token)
 
+    def decompress_file(self, path):
+        with lzma.open('{}.xz'.format(path), 'rb') as input_f:
+            with open(path, 'wb') as output_f:
+                shutil.copyfileobj(input_f, output_f)
+
     def compress_file(self, path):
         with open(path, 'rb') as input_f:
             with lzma.open('{}.xz'.format(path), 'wb') as output_f:
                 shutil.copyfileobj(input_f, output_f)
 
     def train_bug(self):
-        classes = labels.get_bugbug_labels(kind='bug', augmentation=True)
-        train.train(classes, model='bug.model')
-        self.compress_file('bug.model')
+        model = BugModel()
+        model.train()
+        self.compress_file('bugmodel')
 
     def train_regression(self):
-        classes = labels.get_bugbug_labels(kind='regression', augmentation=True)
-        train.train(classes, model='regression.model')
-        self.compress_file('regression.model')
+        model = RegressionModel()
+        model.train()
+        self.compress_file('regressionmodel')
 
     def train_tracking(self):
-        classes = labels.get_tracking_labels()
-        train.train(classes, model='tracking.model')
-        self.compress_file('tracking.model')
+        model = TrackingModel()
+        model.train()
+        self.compress_file('trackingmodel')
 
     def go(self):
         # Download datasets that were built by bugbug_data.
         os.makedirs('data', exist_ok=True)
         with ThreadPoolExecutorResult(max_workers=2) as executor:
-            executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_data.latest/artifacts/public/bugs.json.xz', 'data/bugs.json.xz'))  # noqa
+            f1 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_data.latest/artifacts/public/bugs.json.xz', 'data/bugs.json.xz'))  # noqa
+            f1.add_done_callback(lambda f: self.decompress_file('data/bugs.json'))
 
-            executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_data.latest/artifacts/public/commits.json.xz', 'data/commits.json.xz'))  # noqa
+            f2 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_data.latest/artifacts/public/commits.json.xz', 'data/commits.json.xz'))  # noqa
+            f2.add_done_callback(lambda f: self.decompress_file('data/commits.json'))
 
         # Train classifier for bug-vs-nonbug.
         self.train_bug()
