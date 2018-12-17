@@ -216,7 +216,7 @@ class Workflow(object):
                 logger.info('Detected {} issue(s) before patch'.format(len(before_patch)))
                 stats.api.increment('analysis.issues.before', len(before_patch))
 
-                revision.empty()
+                revision.reset()
                 self.hg.revert(settings.repo_dir.encode('utf-8'), all=True)
                 logger.info('Reverted all uncommitted changes in repo', rev=self.hg.identify())
 

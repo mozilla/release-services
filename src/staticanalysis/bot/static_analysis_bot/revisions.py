@@ -164,10 +164,10 @@ class Revision(object):
             ImprovementPatch(analyzer_name, repr(self), content)
         )
 
-    def empty(self):
+    def reset(self):
         '''
-        Empty temporary data in BEFORE mode
-        * improvement patches removed
+        Reset temporary data in BEFORE mode
+        * improvement patches
         '''
         self.improvement_patches = []
 
