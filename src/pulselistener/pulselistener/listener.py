@@ -116,24 +116,11 @@ class HookCodeCoverage(PulseHook):
             'project-releng',
             configuration['hookId'],
             'exchange/taskcluster-queue/v1/task-group-resolved',
-            '*.*.gecko-level-3._'
+            '#'
         )
 
     def is_coverage_task(self, task):
         return any(task['task']['metadata']['name'].startswith(s) for s in ['build-linux64-ccov', 'build-win64-ccov'])
-
-    def is_mozilla_central_task(self, task):
-        if 'GECKO_HEAD_REPOSITORY' not in task['task']['payload']['env']:
-            logger.warn('Received groupResolved notification for a task without GECKO_HEAD_REPOSITORY', task_id=task['status']['taskId'])
-            return False
-
-        repo = task['task']['payload']['env']['GECKO_HEAD_REPOSITORY']
-
-        if repo != 'https://hg.mozilla.org/mozilla-central':
-            logger.warn('Received groupResolved notification for a non-mozilla-central coverage task', repo=repo)
-            return False
-
-        return True
 
     def get_build_task_in_group(self, group_id):
         if group_id in self.triggered_groups:
@@ -184,12 +171,16 @@ class HookCodeCoverage(PulseHook):
         if build_task is None:
             return None
 
-        if not self.is_mozilla_central_task(build_task):
+        repository = build_task['task']['payload']['env']['GECKO_HEAD_REPOSITORY']
+
+        if repository not in ['https://hg.mozilla.org/mozilla-central', 'https://hg.mozilla.org/try']:
+            logger.warn('Received groupResolved notification for a coverage task in an unexpected branch', repository=repository)
             return None
 
-        logger.info('Received groupResolved notification for coverage builds', revision=build_task['task']['payload']['env']['GECKO_HEAD_REV'], group=taskGroupId)  # noqa
+        logger.info('Received groupResolved notification for coverage builds', repository=repository, revision=build_task['task']['payload']['env']['GECKO_HEAD_REV'], group=taskGroupId)  # noqa
 
         return [{
+            'REPOSITORY': repository,
             'REVISION': build_task['task']['payload']['env']['GECKO_HEAD_REV'],
         }]
 
