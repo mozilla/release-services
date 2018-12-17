@@ -222,5 +222,17 @@ def create_blob_artifact(queue_service, task_id, run_id, path, content, content_
     )
     push.raise_for_status()
 
+    # Mark artifact as completed
+    queue_service.completeArtifact(
+        task_id,
+        run_id,
+        path,
+        {
+            'etags': [
+                push.headers['ETag'],
+            ],
+        }
+    )
+
     # Build the absolute url
     return f'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/{path}'
