@@ -18,7 +18,7 @@ class PhabricatorUploader(object):
     def _find_coverage(self, report, path):
         return next((sf['coverage'] for sf in report['source_files'] if sf['name'] == path), None)
 
-    def _parse_revision_id(self, desc):
+    def parse_revision_id(self, desc):
         PHABRICATOR_REVISION_REGEX = 'Differential Revision: https://phabricator.services.mozilla.com/D([0-9]+)'
         match = re.search(PHABRICATOR_REVISION_REGEX, desc)
         if not match:
@@ -84,7 +84,7 @@ class PhabricatorUploader(object):
 
             for changeset in changesets:
                 # Retrieve the revision ID for this changeset.
-                revision_id = self._parse_revision_id(changeset['desc'])
+                revision_id = self.parse_revision_id(changeset['desc'])
                 if revision_id is None:
                     continue
 
