@@ -38,7 +38,7 @@ def get_task(branch, revision, platform):
         return task['taskId']
     else:
         if task['code'] == 'ResourceNotFound':
-            raise TaskclusterException('Code coverage build failed and was not indexed.')
+            return None
         else:
             raise TaskclusterException('Unknown TaskCluster index error.')
 
