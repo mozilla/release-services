@@ -107,21 +107,6 @@ def main(source,
         taskcluster_access_token,
     )
 
-    # TRASHME, this is a TEST
-    from cli_common.taskcluster import create_blob_artifact
-    from datetime import timedelta
-    url = create_blob_artifact(
-        queue_service,
-        settings.taskcluster.task_id,
-        settings.taskcluster.run_id,
-        'public/test.txt',
-        'This is a test.',
-        'text/plain',
-        timedelta(days=1),
-    )
-    print(url)
-    return
-
     # Load Phabricator API
     phabricator_api = PhabricatorAPI(**secrets['PHABRICATOR'])
     if 'phabricator' in reporters:
