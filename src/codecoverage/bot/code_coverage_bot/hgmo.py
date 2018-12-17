@@ -96,3 +96,8 @@ class HGMO(object):
             return None
 
         return annotate_data['annotate']
+
+    def get_automation_relevance_changesets(self, changeset):
+        r = requests.get('{}/json-automationrelevance/{}'.format(self.server_address, changeset))
+        r.raise_for_status()
+        return r.json()
