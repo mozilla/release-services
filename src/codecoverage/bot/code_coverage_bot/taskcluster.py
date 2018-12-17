@@ -20,7 +20,7 @@ def get_task(branch, revision, platform):
     if platform == 'linux':
         platform_name = 'linux64-ccov-debug'
         product = 'firefox'
-    elif platform == 'win':
+    elif platform == 'windows':
         platform_name = 'win64-ccov-debug'
         product = 'firefox'
     elif platform == 'android-test':
