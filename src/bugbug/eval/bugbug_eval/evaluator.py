@@ -9,7 +9,9 @@ from datetime import timedelta
 from urllib.request import urlretrieve
 
 from bugbug import bugzilla
-from bugbug import classify
+from bugbug.models.bug import BugModel
+from bugbug.models.regression import RegressionModel
+from bugbug.models.tracking import TrackingModel
 
 from bugbug_eval.secrets import secrets
 from cli_common.log import get_logger
@@ -53,14 +55,14 @@ class Evaluator(object):
     def eval_bug(self):
         results = {}
 
-        classify.init('bug.model')
+        model = BugModel.load('bugmodel')
         for bug in bugzilla.get_bugs():
             if self.is_regression(bug):
                 results[bug['id']] = True
             elif self.is_feature(bug):
                 results[bug['id']] = False
             else:
-                results[bug['id']] = True if classify.classify(bug)[0] == 1 else False
+                results[bug['id']] = True if model.classify(bug)[0] == 1 else False
 
         with open('bug.json', 'w') as f:
             json.dump(results, f)
@@ -68,14 +70,14 @@ class Evaluator(object):
     def eval_regression(self):
         results = {}
 
-        classify.init('regression.model')
+        model = RegressionModel.load('regressionmodel')
         for bug in bugzilla.get_bugs():
             if self.is_regression(bug):
                 results[bug['id']] = True
             elif self.is_feature(bug):
                 results[bug['id']] = False
             else:
-                results[bug['id']] = True if classify.classify(bug)[0] == 1 else False
+                results[bug['id']] = True if model.classify(bug)[0] == 1 else False
 
         with open('regression.json', 'w') as f:
             json.dump(results, f)
@@ -83,12 +85,12 @@ class Evaluator(object):
     def eval_tracking(self):
         results = []
 
-        classify.init('tracking.model')
+        model = TrackingModel.load('trackingmodel')
         for bug in bugzilla.get_bugs():
             if self.is_tracking_decision_made(bug):
                 continue
 
-            if classify.classify(bug)[0] == 1:
+            if model.classify(bug)[0] == 1:
                 results.append(bug['id'])
 
         with open('tracking.json', 'w') as f:
@@ -97,14 +99,14 @@ class Evaluator(object):
     def go(self):
         # Download models that were trained by bugbug_train.
         with ThreadPoolExecutorResult(max_workers=3) as executor:
-            f1 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_train.latest/artifacts/public/bug.model.xz', 'bug.model.xz'))  # noqa
-            f1.add_done_callback(lambda f: self.decompress_file('bug.model'))
+            f1 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_train.latest/artifacts/public/bugmodel.xz', 'bugmodel.xz'))  # noqa
+            f1.add_done_callback(lambda f: self.decompress_file('bugmodel'))
 
-            f2 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_train.latest/artifacts/public/regression.model.xz', 'regression.model.xz'))  # noqa
-            f2.add_done_callback(lambda f: self.decompress_file('regression.model'))
+            f2 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_train.latest/artifacts/public/regressionmodel.xz', 'regressionmodel.xz'))  # noqa
+            f2.add_done_callback(lambda f: self.decompress_file('regressionmodel'))
 
-            f3 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_train.latest/artifacts/public/tracking.model.xz', 'tracking.model.xz'))  # noqa
-            f3.add_done_callback(lambda f: self.decompress_file('tracking.model'))
+            f3 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_train.latest/artifacts/public/trackingmodel.xz', 'trackingmodel.xz'))  # noqa
+            f3.add_done_callback(lambda f: self.decompress_file('trackingmodel'))
 
         # Download bugs from the last week that we want to analyze.
         bugzilla.set_token(secrets[secrets.BUGZILLA_TOKEN])
