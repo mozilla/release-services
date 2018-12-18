@@ -501,6 +501,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/bot': {
+        'update': True,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -528,6 +529,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/bot': {
+        'update': True,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -596,6 +598,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/crawler': {
+        'update': True,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -623,6 +626,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'bugbug/data': {
+        'update': True,
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -654,6 +658,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'bugbug/train': {
+        'update': True,
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -685,6 +690,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'bugbug/eval': {
+        'update': True,
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -716,6 +722,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'pulselistener': {
+        'update': True,
         'requires': [],
         'deploys': [
             {
@@ -744,6 +751,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'staticanalysis/bot': {
+        'update': True,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
