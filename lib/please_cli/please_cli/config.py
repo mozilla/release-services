@@ -67,8 +67,11 @@ PROJECTS += DEV_PROJECTS
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
-    'common/naming': {},
+    'common/naming': {
+        'update': True,
+    },
     'postgresql': {
+        'update': False,
         'run': 'POSTGRESQL',
         'run_options': {
             'port': 9000,
@@ -76,6 +79,7 @@ PROJECTS_CONFIG = {
         },
     },
     'redis': {
+        'update': False,
         'run': 'REDIS',
         'run_options': {
             'port': 6379,
