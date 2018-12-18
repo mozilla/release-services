@@ -51,9 +51,10 @@ def is_rc(version, partial_updates):
         # The assumption that "shipping to beta channel" always
         # implies other RC behaviour is bound to break at some
         # point, but this works for now.
-        for version in partial_updates:
-            if is_beta(version):
-                return True
+        if partial_updates:
+            for version in partial_updates:
+                if is_beta(version):
+                    return True
     return False
 
 
