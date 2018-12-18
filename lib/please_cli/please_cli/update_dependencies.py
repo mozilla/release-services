@@ -108,39 +108,40 @@ def cmd(ctx,
         return run_update(project, nix_shell, os.getcwd())
 
     # a directory where we will cloned release-services
-    root_dir = tempfile.mktemp(prefix='release-services-')
+    with tempfile.TemporaryDirectory(prefix='release-services-') as root_dir:
 
-    # if git_url is not provided we look to secrets for a value
-    if git_url is None:
-        secrets = cli_common.taskcluster.get_secrets(
-            taskcluster_secret,
-            project,
-            required=[
-                'UPDATE_GIT_URL',
-            ],
-            taskcluster_client_id=taskcluster_client_id,
-            taskcluster_access_token=taskcluster_access_token,
-        )
-        git_url = secrets['UPDATE_GIT_URL']
+        # if git_url is not provided we look to secrets for a value
+        if git_url is None:
+            logger.info(f'Trying to get repository url from secrets ({taskcluster_secret}).')
+            secrets = cli_common.taskcluster.get_secrets(
+                taskcluster_secret,
+                project,
+                required=[
+                    'UPDATE_GIT_URL',
+                ],
+                taskcluster_client_id=taskcluster_client_id,
+                taskcluster_access_token=taskcluster_access_token,
+            )
+            git_url = secrets['UPDATE_GIT_URL']
 
-    logger.info('Cloning release-services')
-    run_check(['git', 'clone', git_url, root_dir])
+        logger.info('Cloning release-services')
+        run_check(['git', 'clone', git_url, root_dir])
 
-    # Setup git
-    logger.info('Configuring git')
-    run_check(['git', 'config', 'http.postBuffer', '12M'], cwd=root_dir)
-    run_check(['git', 'config', 'user.email', git_user_email], cwd=root_dir)
-    run_check(['git', 'config', 'user.name', git_user_name], cwd=root_dir)
+        # Setup git
+        logger.info('Configuring git')
+        run_check(['git', 'config', 'http.postBuffer', '12M'], cwd=root_dir)
+        run_check(['git', 'config', 'user.email', git_user_email], cwd=root_dir)
+        run_check(['git', 'config', 'user.name', git_user_name], cwd=root_dir)
 
-    # run update on checkout
-    run_update(project, nix_shell, root_dir)
+        # run update on checkout
+        run_update(project, nix_shell, root_dir)
 
-    # add, commit and push changed to an update branch
-    logger.info('Add, commit and push changed to an update branch.')
-    commit_message = f'{project}: Dependencies update.'
-    run_check(['git', 'add', '.'], cwd=root_dir)
-    run_check(['git', 'commit', '-m', commit_message], cwd=root_dir)
-    run_check(['git', 'push', '-f', git_url, f'HEAD:{branch_to_push}'], cwd=root_dir)
+        # add, commit and push changed to an update branch
+        logger.info('Add, commit and push changed to an update branch.')
+        commit_message = f'{project}: Dependencies update.'
+        run_check(['git', 'add', '.'], cwd=root_dir)
+        run_check(['git', 'commit', '-m', commit_message], cwd=root_dir)
+        run_check(['git', 'push', '-f', git_url, f'HEAD:{branch_to_push}'], cwd=root_dir)
 
 
 def run_update(project, nix_shell, root_dir):
