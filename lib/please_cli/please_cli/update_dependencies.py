@@ -87,6 +87,10 @@ def run_check(*arg, **kw):
     default='git',
     help='Path to git command (default: git).',
     )
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
+    )
 @cli_common.cli.taskcluster_options
 @click.pass_context
 def cmd(ctx,
@@ -97,6 +101,7 @@ def cmd(ctx,
         git_user_name,
         nix_shell,
         git,
+        interactive,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
@@ -105,7 +110,7 @@ def cmd(ctx,
     # if no branch is provided we assume we don't want to push changed anywhere
     # we just run the update
     if branch_to_push is None:
-        return run_update(project, nix_shell, os.getcwd())
+        return run_update(project, nix_shell, os.getcwd(), interactive)
 
     # a directory where we will cloned release-services
     with tempfile.TemporaryDirectory(prefix='release-services-') as root_dir:
@@ -134,7 +139,7 @@ def cmd(ctx,
         run_check(['git', 'config', 'user.name', git_user_name], cwd=root_dir)
 
         # run update on checkout
-        run_update(project, nix_shell, root_dir)
+        run_update(project, nix_shell, root_dir, interactive)
 
         # add, commit and push changed to an update branch
         logger.info('Add, commit and push changed to an update branch.')
@@ -144,7 +149,7 @@ def cmd(ctx,
         run_check(['git', 'push', '-f', git_url, f'HEAD:{branch_to_push}'], cwd=root_dir)
 
 
-def run_update(project, nix_shell, root_dir):
+def run_update(project, nix_shell, root_dir, interactive):
     logger.info('Running dependency update.')
     command = [
         nix_shell,
@@ -162,7 +167,12 @@ def run_update(project, nix_shell, root_dir):
             stderr=subprocess.STDOUT,
             cwd=root_dir,
         )
-    please_cli.utils.check_result(returncode, output, raise_exception=False)
+    please_cli.utils.check_result(
+        returncode,
+        output,
+        raise_exception=False,
+        ask_for_details=interactive,
+    )
 
 
 if __name__ == '__main__':

@@ -45,6 +45,10 @@ import please_cli.utils
         please_cli.config.OPENSSL_ETC_DIR + 'openssl.cnf',
         ),
     )
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
+    )
 def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
 
     if not os.path.isdir(certificates_dir):

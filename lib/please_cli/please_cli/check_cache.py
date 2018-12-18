@@ -52,7 +52,17 @@ class Derive:
     envvar='GITHUB_BRANCH',
     required=True,
     )
-def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=True):
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
+    )
+def cmd(project,
+        cache_urls,
+        nix_instantiate,
+        channel,
+        indent=0,
+        interactive=True,
+        ):
     '''Command to check if project is already in cache.
     '''
 
@@ -123,7 +133,7 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
             success_message='EXISTS',
             error_message='NOT EXISTS',
             raise_exception=False,
-            ask_for_details=False,
+            ask_for_details=interactive,
         )
 
     return project_exists, channel_derivations[project].nix_hash
