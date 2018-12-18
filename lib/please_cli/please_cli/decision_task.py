@@ -424,16 +424,15 @@ def cmd(ctx,
     project_hashes = dict()
     for project in sorted(PROJECTS):
         click.echo('     => ' + project)
-        project_exists_in_cache, project_hash = True, 'SSS'
-        # project_exists_in_cache, project_hash = ctx.invoke(
-        #     please_cli.check_cache.cmd,
-        #     project=project,
-        #     cache_urls=cache_urls,
-        #     nix_instantiate=nix_instantiate,
-        #     channel=channel,
-        #     indent=8,
-        #     interactive=False,
-        # )
+        project_exists_in_cache, project_hash = ctx.invoke(
+            please_cli.check_cache.cmd,
+            project=project,
+            cache_urls=cache_urls,
+            nix_instantiate=nix_instantiate,
+            channel=channel,
+            indent=8,
+            interactive=False,
+        )
         project_hashes[project] = project_hash
         if not project_exists_in_cache:
             build_projects.append(project)
