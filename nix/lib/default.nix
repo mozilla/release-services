@@ -558,7 +558,7 @@ in rec {
                            ];
                          taskExtra = {
                            notify = {
-                             ircChannelMessage = "Update hook for project ${project_name} failed: https://tools.taskcluster.net/tasks/\${status.taskId}";
+                             ircChannelMessage = "Update hook for project ${project_name} on ${channel} channel FAILED.";
                            };
                          };
                          taskImage = "mozillareleng/services:base-${version}";
