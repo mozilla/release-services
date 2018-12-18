@@ -424,15 +424,16 @@ def cmd(ctx,
     project_hashes = dict()
     for project in sorted(PROJECTS):
         click.echo('     => ' + project)
-        project_exists_in_cache, project_hash = ctx.invoke(
-            please_cli.check_cache.cmd,
-            project=project,
-            cache_urls=cache_urls,
-            nix_instantiate=nix_instantiate,
-            channel=channel,
-            indent=8,
-            interactive=False,
-        )
+        project_exists_in_cache, project_hash = True, 'SSS'
+        # project_exists_in_cache, project_hash = ctx.invoke(
+        #     please_cli.check_cache.cmd,
+        #     project=project,
+        #     cache_urls=cache_urls,
+        #     nix_instantiate=nix_instantiate,
+        #     channel=channel,
+        #     indent=8,
+        #     interactive=False,
+        # )
         project_hashes[project] = project_hash
         if not project_exists_in_cache:
             build_projects.append(project)
@@ -447,13 +448,6 @@ def cmd(ctx,
 
         for project_name in sorted(PROJECTS):
             deployed_projects.get(project_name)
-
-            if deployed_projects == project_hashes[project_name]:
-                continue
-
-            if project_name not in please_cli.config.PROJECTS_CONFIG or \
-                    'deploys' not in please_cli.config.PROJECTS_CONFIG[project_name]:
-                continue
 
             # update hook for each project
             if please_cli.config.PROJECTS_CONFIG[project_name]['update'] is True and channel == 'production':
@@ -472,6 +466,12 @@ def cmd(ctx,
                     'nix_path_attribute': update_hook_nix_path_atttribute,
                 },
             ))
+
+            if deployed_projects == project_hashes[project_name]:
+                continue
+
+            if 'deploys' not in please_cli.config.PROJECTS_CONFIG[project_name]:
+                continue
 
             for deploy in please_cli.config.PROJECTS_CONFIG[project_name]['deploys']:
                 for deploy_channel in deploy['options']:
