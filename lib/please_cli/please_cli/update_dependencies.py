@@ -141,12 +141,18 @@ def cmd(ctx,
         # run update on checkout
         run_update(project, nix_shell, root_dir, interactive)
 
-        # add, commit and push changed to an update branch
-        logger.info('Add, commit and push changed to an update branch.')
-        commit_message = f'{project}: Dependencies update.'
-        run_check(['git', 'add', '.'], cwd=root_dir)
-        run_check(['git', 'commit', '-m', commit_message], cwd=root_dir)
-        run_check(['git', 'push', '-f', git_url, f'HEAD:{branch_to_push}'], cwd=root_dir)
+        # check if there is something to commit
+        output = run_check(['git', 'status', '--porcelain'], cwd=root_dir)
+        if output.strip() == "":
+            logger.info('Nothing to commit.')
+        else:
+
+            # add, commit and push changed to an update branch
+            logger.info('Add, commit and push changed to an update branch.')
+            commit_message = f'{project}: Dependencies update.'
+            run_check(['git', 'add', '.'], cwd=root_dir)
+            run_check(['git', 'commit', '-m', commit_message], cwd=root_dir)
+            run_check(['git', 'push', '-f', git_url, f'HEAD:{branch_to_push}'], cwd=root_dir)
 
 
 def run_update(project, nix_shell, root_dir, interactive):
