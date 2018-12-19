@@ -72,7 +72,7 @@ def cmd(ctx,
     if not run_type:
         raise click.ClickException('Application `{}` is not configured to be runnable.'.format(project))
 
-    host = run_options.get('host', '127.0.0.1')
+    host = run_options.get('host', os.environ.get('HOST', '127.0.0.1'))
     port = str(run_options.get('port', 8000))
     schema = 'https://'
     project_name = project.replace('-', '_')
