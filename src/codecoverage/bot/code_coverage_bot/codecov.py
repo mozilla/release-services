@@ -188,7 +188,7 @@ class CodeCov(object):
         phabricatorUploader.upload(json.loads(output), changesets)
 
     # This function is executed when the bot is triggered via cron.
-    def do_cron(self):
+    def go_from_cron(self):
         self.retrieve_source_and_artifacts()
 
         logger.info('Generating suite reports')
