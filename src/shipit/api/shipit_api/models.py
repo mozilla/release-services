@@ -16,6 +16,7 @@ import shipit_api.config
 from backend_common.db import db
 from cli_common.log import get_logger
 from shipit_api.release import bump_version
+from shipit_api.release import is_eme_free_enabled
 from shipit_api.release import is_partner_enabled
 from shipit_api.tasks import extract_our_flavors
 from shipit_api.tasks import fetch_actions_json
@@ -167,8 +168,9 @@ class Release(db.Model):
             'release_eta': self.release_eta
         }
         if not is_partner_enabled(self.product, self.version):
-            input_common['release_enable_emefree'] = False
             input_common['release_enable_partners'] = False
+        if not is_eme_free_enabled(self.product, self.version):
+            input_common['release_enable_emefree'] = False
 
         if self.partial_updates:
             input_common['partial_updates'] = {}
