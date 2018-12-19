@@ -170,7 +170,7 @@ def run_update(project, nix_shell, root_dir, interactive):
     please_cli.utils.check_result(
         returncode,
         output,
-        raise_exception=False,
+        raise_exception=True,
         ask_for_details=interactive,
     )
 
