@@ -44,10 +44,6 @@ class CodeCov(object):
 
         self.cache_root = cache_root
 
-        branch = repository[len(HG_BASE):]
-
-        assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
-        self.repo_dir = os.path.join(cache_root, branch)
         temp_dir = tempfile.mkdtemp()
         self.artifacts_dir = os.path.join(temp_dir, 'ccov-artifacts')
         self.ccov_reports_dir = os.path.join(temp_dir, 'code-coverage-reports')
@@ -71,6 +67,11 @@ class CodeCov(object):
             self.revision = revision
             self.from_pulse = True
             self.notifier = Notifier(self.repo_dir, revision, client_id, access_token)
+
+        branch = self.repository[len(HG_BASE):]
+
+        assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
+        self.repo_dir = os.path.join(cache_root, branch)
 
         logger.info('Mercurial revision', revision=self.revision)
 
@@ -187,7 +188,7 @@ class CodeCov(object):
         phabricatorUploader.upload(json.loads(output), changesets)
 
     # This function is executed when the bot is triggered via cron.
-    def do_cron(self):
+    def go_from_cron(self):
         self.retrieve_source_and_artifacts()
 
         logger.info('Generating suite reports')
