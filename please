@@ -6,7 +6,7 @@ set -eu
 #set -x
 
 silent() {
-  out=$("$@" 2>&1) || echo "$out"
+  out=$("$@" 2>&1) || { echo "$out"; exit 1; }
 }
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -35,7 +35,7 @@ if [ "$USE_NIX" = "1" ]; then
     printf " => Building please command (this might take a minute or two the first time) ... ";
   fi
 
-  silent exec nix-build nix/default.nix -A please-cli -o result-please-cli;
+  silent nix-build nix/default.nix -A please-cli -o result-please-cli;
   if [ "$building_please_cli" = "1" ]; then
     echo "${GREEN}DONE${NC}";
   fi

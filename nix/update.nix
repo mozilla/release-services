@@ -54,6 +54,7 @@ in pkgs.stdenv.mkDerivation {
     echo "Updating packages ..."
     ${builtins.concatStringsSep "\n\n" (
         map (pkg: "echo ' - ${(builtins.parseDrvName pkg.name).name}'; ${if pkg.update == null then "" else pkg.update}") packages)}
+    if [ $? -ne 0 ]; then exit 1; fi
     echo "" 
     echo "Packages updated!"
     exit
