@@ -260,10 +260,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.67";
+      name = "boto3-1.9.68";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/f6/4b/673e844d45c3d339baa145ef997b58847ef7760028feac4bbe1df1d81ac8/boto3-1.9.67.tar.gz";
-        sha256 = "a2f8c0cbb63abd5f1908f9b95a00916eba45144b13871c6b6cbd0ed365277077";
+        url = "https://files.pythonhosted.org/packages/30/eb/5cbd83704d02de76bcba6b48ff9af02287c71c2ef4eec91ea5dcabf7dee3/boto3-1.9.68.tar.gz";
+        sha256 = "88233f9bdc1e6ee58c9489cef6c573bf7e660acfcc1597bc3ff765a065e1a0f0";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -282,10 +282,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.67";
+      name = "botocore-1.12.68";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/7a/fa/31de9805de92a54c81850cd2e6b2994f791cc5738e410a208af2c62299b7/botocore-1.12.67.tar.gz";
-        sha256 = "4a091f5296da00e4e552637101d5fa4f4c87fa888ee88e99e09127fe15176aec";
+        url = "https://files.pythonhosted.org/packages/09/ab/dfc7c53d727e651561016d3b4fcdc95049c0d52f9e1a27f71c6c146a90d8/botocore-1.12.68.tar.gz";
+        sha256 = "7fd7954f19a49c9794bed696c801f3dfd7bdde306d17c9bb9fb0c069e6b42e5a";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -307,8 +307,8 @@ let
     "bugbug" = python.mkDerivation {
       name = "bugbug-0.0.1";
       src = pkgs.fetchurl {
-        url = "https://github.com/marco-c/bugbug/archive/c3f68128e9f7a7a142d88d80bfd7e42477f0fbf7.tar.gz";
-        sha256 = "476421dbb014b88cb15643dd4a342027d9f68c363ce2a6aef874d90d18d7aeac";
+        url = "https://github.com/marco-c/bugbug/archive/a464840ca14d7172deed5336b66c2105865506e2.tar.gz";
+        sha256 = "f2b54c3f1d90e524abf0d6279ed25373463410bda5280d0f7f2863fe530fcbd2";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1610,10 +1610,10 @@ let
     };
 
     "raven" = python.mkDerivation {
-      name = "raven-6.9.0";
+      name = "raven-6.10.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/8f/80/e8d734244fd377fd7d65275b27252642512ccabe7850105922116340a37b/raven-6.9.0.tar.gz";
-        sha256 = "3fd787d19ebb49919268f06f19310e8112d619ef364f7989246fc8753d469888";
+        url = "https://files.pythonhosted.org/packages/79/57/b74a86d74f96b224a477316d418389af9738ba7a63c829477e7a86dd6f47/raven-6.10.0.tar.gz";
+        sha256 = "3fa6de6efa2493a7c827472e984ce9b020797d0da16f1db67197bcc23c8fae54";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1752,10 +1752,10 @@ let
     };
 
     "scikit-learn" = python.mkDerivation {
-      name = "scikit-learn-0.20.0";
+      name = "scikit-learn-0.20.2";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/0f/d7/136a447295adade38e7184618816e94190ded028318062a092daeb972073/scikit-learn-0.20.0.tar.gz";
-        sha256 = "97d1d971f8ec257011e64b7d655df68081dd3097322690afa1a71a1d755f8c18";
+        url = "https://files.pythonhosted.org/packages/49/0e/8312ac2d7f38537361b943c8cde4b16dadcc9389760bb855323b67bac091/scikit-learn-0.20.2.tar.gz";
+        sha256 = "bc5bc7c7ee2572a1edcb51698a6caf11fae554194aaab9a38105d9ec419f29e6";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1773,10 +1773,10 @@ let
     };
 
     "scipy" = python.mkDerivation {
-      name = "scipy-1.1.0";
+      name = "scipy-1.2.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/07/76/7e844757b9f3bf5ab9f951ccd3e4a8eed91ab8720b0aac8c2adcc2fdae9f/scipy-1.1.0.tar.gz";
-        sha256 = "878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1";
+        url = "https://files.pythonhosted.org/packages/ea/c8/c296904f2c852c5c129962e6ca4ba467116b08cd5b54b7180b2e77fe06b2/scipy-1.2.0.tar.gz";
+        sha256 = "51a2424c8ed80e60bdb9a896806e7adaf24a58253b326fbad10f80a6d06f2214";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1942,10 +1942,10 @@ let
     };
 
     "testfixtures" = python.mkDerivation {
-      name = "testfixtures-6.3.0";
+      name = "testfixtures-6.4.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/72/4c/846148761c1d3432fefb432d746b3e8441272113d25207e0437a60e9834e/testfixtures-6.3.0.tar.gz";
-        sha256 = "53c06c1feb0bf378d63c54d1d96858978422d5a34793b39f0dcb0e44f8ec26f4";
+        url = "https://files.pythonhosted.org/packages/18/fc/a74913ccebacd2b6cacc9ffb0ec800567d6a61d35e6d6701fa6e75159ddb/testfixtures-6.4.0.tar.gz";
+        sha256 = "ea3cd0caf1d6e4f9ebde9ff16617354db583c3343ec41c05f92612268be2e536";
       };
       doCheck = commonDoCheck;
       checkPhase = "";

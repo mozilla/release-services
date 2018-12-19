@@ -28,18 +28,6 @@ let
       ln -s ${git}/bin/git $out/bin/git
     '';
     passthru = {
-      worker_docker = mkDocker {
-        inherit (self.config) version;
-        inherit (self) name;
-        contents = [ busybox self ] ++ self.config.dockerContents;
-        config = self.docker_default_config;
-      };
-      worker_dockerflow = mkDockerflow {
-        inherit (self.config) version src;
-        inherit (self) name;
-        fromImage = self.worker_docker;
-        Cmd = ["flask" "worker"];
-      };
       update = writeScript "update-${self.name}" ''
         pushd ${self.src_path}
         cache_dir=$PWD/../../../tmp/pypi2nix
