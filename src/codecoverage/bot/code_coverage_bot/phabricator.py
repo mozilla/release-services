@@ -18,7 +18,7 @@ class PhabricatorUploader(object):
     def _find_coverage(self, report, path):
         return next((sf['coverage'] for sf in report['source_files'] if sf['name'] == path), None)
 
-    def _parse_revision_id(self, desc):
+    def parse_revision_id(self, desc):
         PHABRICATOR_REVISION_REGEX = 'Differential Revision: https://phabricator.services.mozilla.com/D([0-9]+)'
         match = re.search(PHABRICATOR_REVISION_REGEX, desc)
         if not match:
@@ -76,15 +76,16 @@ class PhabricatorUploader(object):
 
         return phab_coverage_data
 
-    def generate(self, report):
+    def generate(self, report, changesets=None):
         results = {}
 
         with hgmo.HGMO(self.repo_dir) as hgmo_server:
-            changesets = hgmo_server.get_push_changesets(self.revision)
+            if changesets is None:
+                changesets = hgmo_server.get_push_changesets(self.revision)
 
             for changeset in changesets:
                 # Retrieve the revision ID for this changeset.
-                revision_id = self._parse_revision_id(changeset['desc'])
+                revision_id = self.parse_revision_id(changeset['desc'])
                 if revision_id is None:
                     continue
 
@@ -119,8 +120,8 @@ class PhabricatorUploader(object):
 
         return results
 
-    def upload(self, report):
-        results = self.generate(report)
+    def upload(self, report, changesets=None):
+        results = self.generate(report, changesets)
 
         if secrets[secrets.PHABRICATOR_ENABLED]:
             phabricator = PhabricatorAPI(secrets[secrets.PHABRICATOR_TOKEN], secrets[secrets.PHABRICATOR_URL])

@@ -14,13 +14,15 @@ from code_coverage_bot.secrets import secrets
 
 @click.command()
 @taskcluster_options
+@click.option('--repository', envvar='REPOSITORY')
 @click.option('--revision', envvar='REVISION')
 @click.option(
     '--cache-root',
     required=True,
     help='Cache root, used to pull changesets'
 )
-def main(revision,
+def main(repository,
+         revision,
          cache_root,
          taskcluster_secret,
          taskcluster_client_id,
@@ -35,7 +37,7 @@ def main(revision,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
-    c = CodeCov(revision, cache_root, taskcluster_client_id, taskcluster_access_token)
+    c = CodeCov(repository, revision, cache_root, taskcluster_client_id, taskcluster_access_token)
     c.go()
 
 

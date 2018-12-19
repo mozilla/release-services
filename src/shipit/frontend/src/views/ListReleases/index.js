@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProgressBar, Button, Modal, Collapse, FormGroup, Radio, ControlLabel } from 'react-bootstrap';
+import { ProgressBar, Button, Modal, Collapse, FormGroup, Radio, ControlLabel, Tabs, Tab } from 'react-bootstrap';
 import { object } from 'prop-types';
 import ReactInterval from 'react-interval';
 import { Queue } from 'taskcluster-client-web';
@@ -30,6 +30,8 @@ export default class ListReleases extends React.Component {
       loaded: false,
       message: '',
       releases: [],
+      shippedReleases: [],
+      shippedReleasesMessage: '',
     };
   }
 
@@ -61,7 +63,57 @@ export default class ListReleases extends React.Component {
     }
   };
 
-  render() {
+  getRecentReleases = async () => {
+    // this is an expensive call, let's not repeat it
+    if (this.state.shippedReleases.length > 0) {
+      return;
+    }
+    try {
+      const req = await fetch(`${SHIPIT_API_URL}/releases?status=shipped`);
+      const shippedReleases = await req.json();
+      let shippedReleasesMessage = '';
+      if (shippedReleases.length === 0) {
+        shippedReleasesMessage = <h3>No recent releases!</h3>;
+      }
+      this.setState({
+        shippedReleasesMessage,
+        shippedReleases: shippedReleases.reverse().slice(0, 8),
+      });
+    } catch (e) {
+      const shippedReleasesMessage = <h3>Failed to fetch releases!</h3>;
+      this.setState({
+        shippedReleasesMessage,
+        shippedReleases: [],
+      });
+      throw e;
+    }
+  };
+
+  handleTabSelect = (key) => {
+    if (key === 'recentReleases') {
+      this.getRecentReleases();
+    }
+  };
+
+  renderRecentReleases = () => {
+    const { shippedReleases, shippedReleasesMessage } = this.state;
+    return (
+      <div className="container">
+        <h3>Recent releases</h3>
+        <div>
+          {shippedReleasesMessage}
+          {shippedReleases.length > 0 && shippedReleases.map(release => (
+            <Release
+              release={release}
+              key={release.name}
+              showCancel={false}
+            />))}
+        </div>
+      </div>
+    );
+  };
+
+  renderReleases = () => {
     const { releases, loaded, message } = this.state;
     return (
       <div className="container">
@@ -73,6 +125,7 @@ export default class ListReleases extends React.Component {
             <Release
               release={release}
               key={release.name}
+              showCancel
             />))}
           <ReactInterval
             enabled
@@ -81,6 +134,19 @@ export default class ListReleases extends React.Component {
           />
         </div>
       </div>
+    );
+  };
+
+  render() {
+    return (
+      <Tabs defaultActiveKey="releases" id="releases" onSelect={this.handleTabSelect}>
+        <Tab eventKey="releases" title="In progress">
+          {this.renderReleases()}
+        </Tab>
+        <Tab eventKey="recentReleases" title="Recent">
+          {this.renderRecentReleases()}
+        </Tab>
+      </Tabs>
     );
   }
 }
@@ -156,7 +222,7 @@ class Release extends React.Component {
   };
 
   render() {
-    const { release } = this.props;
+    const { release, showCancel } = this.props;
     return (
       <div className="row">
         <div className="col">
@@ -164,15 +230,17 @@ class Release extends React.Component {
             <a href={`${config.TREEHERDER_URL}/#/jobs?repo=${release.project}&revision=${release.revision}`}>
               {release.product} <small>{release.version} build{release.build_number}</small>
             </a>
-            <Button
-              onClick={this.open}
-              bsStyle="danger"
-              bsSize="xsmall"
-              style={{ margin: '10px' }}
-              disabled={!this.context.authController.userSession}
-            >
-              Cancel release
-            </Button>
+            {showCancel &&
+              <Button
+                onClick={this.open}
+                bsStyle="danger"
+                bsSize="xsmall"
+                style={{ margin: '10px' }}
+                disabled={!this.context.authController.userSession}
+              >
+                Cancel release
+              </Button>
+            }
           </h3>
         </div>
         <Modal show={this.state.showModal} onHide={this.close}>

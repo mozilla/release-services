@@ -14,6 +14,7 @@ from cli_common.taskcluster import get_service
 from cli_common.utils import ThreadPoolExecutorResult
 from code_coverage_bot import chunk_mapping
 from code_coverage_bot import grcov
+from code_coverage_bot import hgmo
 from code_coverage_bot import suite_reports
 from code_coverage_bot import taskcluster
 from code_coverage_bot import uploader
@@ -27,9 +28,14 @@ from code_coverage_bot.zero_coverage import ZeroCov
 logger = get_logger(__name__)
 
 
+HG_BASE = 'https://hg.mozilla.org/'
+MOZILLA_CENTRAL_REPOSITORY = '{}mozilla-central'.format(HG_BASE)
+TRY_REPOSITORY = '{}try'.format(HG_BASE)
+
+
 class CodeCov(object):
 
-    def __init__(self, revision, cache_root, client_id, access_token):
+    def __init__(self, repository, revision, cache_root, client_id, access_token):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
@@ -38,8 +44,10 @@ class CodeCov(object):
 
         self.cache_root = cache_root
 
+        branch = repository[len(HG_BASE):]
+
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
-        self.repo_dir = os.path.join(cache_root, 'mozilla-central')
+        self.repo_dir = os.path.join(cache_root, branch)
         temp_dir = tempfile.mkdtemp()
         self.artifacts_dir = os.path.join(temp_dir, 'ccov-artifacts')
         self.ccov_reports_dir = os.path.join(temp_dir, 'code-coverage-reports')
@@ -54,32 +62,38 @@ class CodeCov(object):
         if revision is None:
             # Retrieve revision of latest codecov build
             self.github_revision = uploader.get_latest_codecov()
+            self.repository = MOZILLA_CENTRAL_REPOSITORY
             self.revision = self.githubUtils.git_to_mercurial(self.github_revision)
             self.from_pulse = False
         else:
             self.github_revision = None
+            self.repository = repository
             self.revision = revision
             self.from_pulse = True
             self.notifier = Notifier(self.repo_dir, revision, client_id, access_token)
 
         logger.info('Mercurial revision', revision=self.revision)
 
-        task_ids = {
-            'linux': taskcluster.get_task('mozilla-central', self.revision, 'linux'),
-            'windows': taskcluster.get_task('mozilla-central', self.revision, 'win'),
-            'android-test': taskcluster.get_task('mozilla-central', self.revision, 'android-test'),
-            'android-emulator': taskcluster.get_task('mozilla-central', self.revision, 'android-emulator'),
-        }
+        task_ids = {}
+        for platform in ['linux', 'windows', 'android-test', 'android-emulator']:
+            task = taskcluster.get_task(branch, self.revision, platform)
+
+            # On try, developers might have requested to run only one platform, and we trust them.
+            # On mozilla-central, we want to assert that every platform was run.
+            if task is not None:
+                task_ids[platform] = task
+            elif self.repository == MOZILLA_CENTRAL_REPOSITORY:
+                raise Exception('Code coverage build failed and was not indexed.')
 
         self.artifactsHandler = ArtifactsHandler(task_ids, self.artifacts_dir)
 
-    def clone_mozilla_central(self, revision):
-        shared_dir = self.repo_dir + '-shared'
+    def clone_repository(self, repository, revision):
         cmd = hglib.util.cmdbuilder('robustcheckout',
-                                    'https://hg.mozilla.org/mozilla-central',
+                                    repository,
                                     self.repo_dir,
                                     purge=True,
-                                    sharebase=shared_dir,
+                                    sharebase='hg-shared',
+                                    upstream='https://hg.mozilla.org/mozilla-unified',
                                     revision=revision,
                                     networkattempts=7)
 
@@ -90,90 +104,131 @@ class CodeCov(object):
         if proc.returncode:
             raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
-        logger.info('mozilla-central cloned')
+        logger.info('{} cloned'.format(repository))
 
-    def go(self):
-        if self.from_pulse:
-            commit_sha = self.githubUtils.mercurial_to_git(self.revision)
-            try:
-                uploader.get_codecov(commit_sha)
-                logger.warn('Build was already injested')
-                return
-            except requests.exceptions.HTTPError:
-                pass
-
+    def retrieve_source_and_artifacts(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             # Thread 1 - Download coverage artifacts.
             executor.submit(self.artifactsHandler.download_all)
 
-            # Thread 2 - Clone mozilla-central.
-            executor.submit(self.clone_mozilla_central, self.revision)
+            # Thread 2 - Clone repository.
+            executor.submit(self.clone_repository, self.repository, self.revision)
 
-        if self.from_pulse:
-            self.githubUtils.update_geckodev_repo()
+    # This function is executed when the bot is triggered at the end of a mozilla-central build.
+    def go_from_trigger_mozilla_central(self):
+        commit_sha = self.githubUtils.mercurial_to_git(self.revision)
+        try:
+            uploader.get_codecov(commit_sha)
+            logger.warn('Build was already injested')
+            return
+        except requests.exceptions.HTTPError:
+            pass
 
-            logger.info('GitHub revision', revision=commit_sha)
+        self.retrieve_source_and_artifacts()
 
-            self.githubUtils.post_github_status(commit_sha)
+        self.githubUtils.update_geckodev_repo()
 
-            r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
-            r.raise_for_status()
-            push_id = r.json()['pushid']
+        logger.info('GitHub revision', revision=commit_sha)
 
-            output = grcov.report(
-                self.artifactsHandler.get(),
-                source_dir=self.repo_dir,
-                service_number=push_id,
-                commit_sha=commit_sha,
-                token=secrets[secrets.COVERALLS_TOKEN]
-            )
-            logger.info('Report generated successfully')
+        self.githubUtils.post_github_status(commit_sha)
 
-            logger.info('Upload changeset coverage data to Phabricator')
-            phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
-            phabricatorUploader.upload(json.loads(output))
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
+        r.raise_for_status()
+        push_id = r.json()['pushid']
 
-            with ThreadPoolExecutorResult(max_workers=2) as executor:
-                executor.submit(uploader.coveralls, output)
-                executor.submit(uploader.codecov, output, commit_sha)
+        output = grcov.report(
+            self.artifactsHandler.get(),
+            source_dir=self.repo_dir,
+            service_number=push_id,
+            commit_sha=commit_sha,
+            token=secrets[secrets.COVERALLS_TOKEN]
+        )
+        logger.info('Report generated successfully')
 
-            logger.info('Waiting for build to be ingested by Codecov...')
-            # Wait until the build has been ingested by Codecov.
-            if uploader.codecov_wait(commit_sha):
-                logger.info('Build ingested by codecov.io')
-                self.notifier.notify()
-            else:
-                logger.error('codecov.io took too much time to ingest data.')
+        logger.info('Upload changeset coverage data to Phabricator')
+        phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
+        phabricatorUploader.upload(json.loads(output))
+
+        with ThreadPoolExecutorResult(max_workers=2) as executor:
+            executor.submit(uploader.coveralls, output)
+            executor.submit(uploader.codecov, output, commit_sha)
+
+        logger.info('Waiting for build to be ingested by Codecov...')
+        # Wait until the build has been ingested by Codecov.
+        if uploader.codecov_wait(commit_sha):
+            logger.info('Build ingested by codecov.io')
+            self.notifier.notify()
         else:
-            logger.info('Generating suite reports')
-            os.makedirs(self.ccov_reports_dir, exist_ok=True)
-            suite_reports.generate(self.suites, self.artifactsHandler, self.ccov_reports_dir, self.repo_dir)
+            logger.error('codecov.io took too much time to ingest data.')
 
-            logger.info('Generating zero coverage reports')
-            zc = ZeroCov(self.repo_dir)
-            zc.generate(self.artifactsHandler.get(), self.revision, self.github_revision)
+    # This function is executed when the bot is triggered at the end of a try build.
+    def go_from_trigger_try(self):
+        phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
 
-            logger.info('Generating chunk mapping')
-            chunk_mapping.generate(self.repo_dir, self.revision, self.artifactsHandler)
+        with hgmo.HGMO(server_address=TRY_REPOSITORY) as hgmo_server:
+            changesets = hgmo_server.get_automation_relevance_changesets(self.revision)['changesets']
 
-            # Index the task in the TaskCluster index at the given revision and as "latest".
-            # Given that all tasks have the same rank, the latest task that finishes will
-            # overwrite the "latest" entry.
-            namespaces = [
-                'project.releng.services.project.{}.code_coverage_bot.{}'.format(secrets[secrets.APP_CHANNEL], self.revision),
-                'project.releng.services.project.{}.code_coverage_bot.latest'.format(secrets[secrets.APP_CHANNEL]),
-            ]
+        if not any(phabricatorUploader.parse_revision_id(changeset['desc']) is not None for changeset in changesets):
+            logger.info('None of the commits in the try push are linked to a Phabricator revision')
+            return
 
-            for namespace in namespaces:
-                self.index_service.insertTask(
-                    namespace,
-                    {
-                        'taskId': os.environ['TASK_ID'],
-                        'rank': 0,
-                        'data': {},
-                        'expires': (datetime.utcnow() + timedelta(180)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                    }
-                )
+        self.retrieve_source_and_artifacts()
 
-            os.chdir(self.ccov_reports_dir)
-            self.githubUtils.update_codecoveragereports_repo()
+        output = grcov.report(
+            self.artifactsHandler.get(),
+            source_dir=self.repo_dir,
+            service_number='SERVICE_NUMBER',
+            commit_sha='COMMIT_SHA',
+            token='TOKEN',
+        )
+        logger.info('Report generated successfully')
+
+        logger.info('Upload changeset coverage data to Phabricator')
+        phabricatorUploader.upload(json.loads(output), changesets)
+
+    # This function is executed when the bot is triggered via cron.
+    def do_cron(self):
+        self.retrieve_source_and_artifacts()
+
+        logger.info('Generating suite reports')
+        os.makedirs(self.ccov_reports_dir, exist_ok=True)
+        suite_reports.generate(self.suites, self.artifactsHandler, self.ccov_reports_dir, self.repo_dir)
+
+        logger.info('Generating zero coverage reports')
+        zc = ZeroCov(self.repo_dir)
+        zc.generate(self.artifactsHandler.get(), self.revision, self.github_revision)
+
+        logger.info('Generating chunk mapping')
+        chunk_mapping.generate(self.repo_dir, self.revision, self.artifactsHandler)
+
+        # Index the task in the TaskCluster index at the given revision and as "latest".
+        # Given that all tasks have the same rank, the latest task that finishes will
+        # overwrite the "latest" entry.
+        namespaces = [
+            'project.releng.services.project.{}.code_coverage_bot.{}'.format(secrets[secrets.APP_CHANNEL], self.revision),
+            'project.releng.services.project.{}.code_coverage_bot.latest'.format(secrets[secrets.APP_CHANNEL]),
+        ]
+
+        for namespace in namespaces:
+            self.index_service.insertTask(
+                namespace,
+                {
+                    'taskId': os.environ['TASK_ID'],
+                    'rank': 0,
+                    'data': {},
+                    'expires': (datetime.utcnow() + timedelta(180)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                }
+            )
+
+        os.chdir(self.ccov_reports_dir)
+        self.githubUtils.update_codecoveragereports_repo()
+
+    def go(self):
+        if not self.from_pulse:
+            self.go_from_cron()
+        elif self.repository == TRY_REPOSITORY:
+            self.go_from_trigger_try()
+        elif self.repository == MOZILLA_CENTRAL_REPOSITORY:
+            self.go_from_trigger_mozilla_central()
+        else:
+            assert False, 'We shouldn\'t be here!'
