@@ -22,8 +22,13 @@ fi
 
 # Detect OSX
 SHASUM="sha256sum"
+NETWORK_OPTIONS='--network="host"'
 if uname -a | grep -q Darwin; then
     SHASUM="shasum -a 256"
+    # Binding to 127.0.0.1 doesn't work on macosx
+    # --network="host" is not supported on macosx
+    # Try to minimise the forwarded ports to avoid open file limits.
+    NETWORK_OPTIONS="-e HOST=0.0.0.0 -p 8000-8040:8000-8040 -p 9000:9000 -p 7000:7000 -p 6379:6379"
 fi
 
 if [ "$USE_NIX" = "1" ]; then
@@ -54,7 +59,7 @@ else
             --volume="$(pwd)":/app \
             --volume=/var/run/docker.sock:/var/run/docker.sock \
             --workdir=/app \
-            --network="host" \
+            $NETWORK_OPTIONS \
             "mozillareleng/services:base-$(cat ./VERSION)"
       else
         docker start "$DOCKER_NAME"
