@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -15,7 +16,6 @@ import click
 
 import cli_common.command
 import cli_common.log
-
 
 log = cli_common.log.get_logger(__name__)
 
@@ -50,23 +50,23 @@ def check_result(returncode, output='', success_message='DONE',
 
 
 class ClickCustomCommand(click.Command):
-    """A custom click command which doesn't indent help and epilog text.
-    """
+    '''A custom click command which doesn't indent help and epilog text.
+    '''
 
     def format_help_text(self, ctx, formatter):
-        """Writes the help text to the formatter if it exists."""
+        '''Writes the help text to the formatter if it exists.'''
         if self.help:
             formatter.write_paragraph()
             formatter.write_text(self.help)
 
     def format_epilog(self, ctx, formatter):
-        """Writes the epilog into the formatter if it exists."""
+        '''Writes the epilog into the formatter if it exists.'''
         if self.epilog:
             formatter.write_paragraph()
             formatter.write_text(self.epilog)
 
     def format_options(self, ctx, formatter):
-        """Writes all the options into the formatter if they exist."""
+        '''Writes all the options into the formatter if they exist.'''
         opts = []
         for param in self.get_params(ctx):
             rv = param.get_help_record(ctx)
@@ -79,8 +79,8 @@ class ClickCustomCommand(click.Command):
 
 
 class ClickCustomGroup(click.Group, ClickCustomCommand):
-    """A custom click group Command which doesn't indent help and epilog text.
-    """
+    '''A custom click group Command which doesn't indent help and epilog text.
+    '''
     def format_usage(self, ctx, formatter):
         pieces = self.collect_usage_pieces(ctx)
         formatter.write_usage('./please', ' '.join(pieces))
@@ -90,9 +90,9 @@ class ClickCustomGroup(click.Group, ClickCustomCommand):
         self.format_commands(ctx, formatter)
 
     def format_commands(self, ctx, formatter):
-        """Extra format methods for multi methods that adds all the commands
+        '''Extra format methods for multi methods that adds all the commands
         after the options.
-        """
+        '''
         rows = []
         for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
@@ -111,8 +111,8 @@ class ClickCustomGroup(click.Group, ClickCustomCommand):
 
 
 def which(program):
-    """Find executable
-    """
+    '''Find executable
+    '''
 
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
@@ -122,7 +122,7 @@ def which(program):
         if is_exe(program):
             return program
     else:
-        for path in os.environ["PATH"].split(os.pathsep):
+        for path in os.environ['PATH'].split(os.pathsep):
             exe_file = os.path.join(path, program)
             if is_exe(exe_file):
                 return exe_file
@@ -131,8 +131,8 @@ def which(program):
 
 
 def generate_docker_auth(registry, username, password):
-    """Generate docker-specific auth JSON
-    """
+    '''Generate docker-specific auth JSON
+    '''
     # b64encode accepts bytes
     auth_pair = '{}:{}'.format(username, password).encode('utf-8')
     # JSON accepts unicode
@@ -184,10 +184,10 @@ def push_docker_image(registry, username, password, image, repo, tag,
 
 
 def docker_image_id(image):
-    """Get docker image ID
+    '''Get docker image ID
 
     Docker image ID corresponds to the sha256 hash of the config file
-    """
+    '''
     tar = tarfile.open(image)
     manifest = json.load(tar.extractfile('manifest.json'))
     config = tar.extractfile(manifest[0]['Config'])

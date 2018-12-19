@@ -6,7 +6,7 @@ set -eu
 #set -x
 
 silent() {
-  out=$("$@" 2>&1) || echo "$out"
+  out=$("$@" 2>&1) || { echo "$out"; exit 1; }
 }
 RED='\033[0;31m'
 GREEN='\033[0;32m'

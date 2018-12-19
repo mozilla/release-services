@@ -15,9 +15,11 @@ let
     makeWrapper
     nix
     stdenv
-    writeScript;
+    writeScript
+    writeText;
 
   inherit (releng_pkgs.pkgs.lib)
+    fileContents
     flatten
     inNixShell
     optional
@@ -233,6 +235,7 @@ in rec {
     , created ? "0 seconds"
     , expires ? "1 month"
     , deadline ? "1 hour"
+    , taskExtra ? {}
     , taskImage
     , taskCommand
     , taskArtifacts ? {}
@@ -263,61 +266,13 @@ in rec {
         routes = taskRoutes;
         scopes = scopes;
         workerType = workerType;
+        extra = taskExtra;
       });
       triggerSchema = {
         type = "object";
         additionalProperties = true;
       };
     };
-
-  mkTaskclusterGithubTask =
-    { name
-    , branch
-    , src_path
-    , secrets ? "repo:github.com/mozilla-releng/services:branch:${branch}"
-    }:
-    let
-      name' = builtins.substring 8 (builtins.stringLength name) name;
-    in ''
-    # --- ${name'} (${branch}) ---
-
-      - metadata:
-          name: "${name'}"
-          description: "Test, build and deploy ${name'}"
-          owner: "{{ event.head.user.email }}"
-          source: "https://github.com/mozilla/release-services/tree/${branch}/${src_path}"
-        scopes:
-          - secrets:get:${secrets}
-          - hooks:modify-hook:project-releng/services-${branch}-${name'}-*
-          - assume:hook-id:project-releng/services-${branch}-${name'}-*
-          - docker-worker:capability:privileged
-        extra:
-          github:
-            env: true
-            events:
-              ${if branch == "testing" || branch == "staging" || branch == "production"
-                then "- push"
-                else "- pull_request.*\n          - push"}
-            branches:
-              - ${branch}
-        provisionerId: "{{ taskcluster.docker.provisionerId }}"
-        workerType: "{{ taskcluster.docker.workerType }}"
-        payload:
-          maxRunTime: 7200 # seconds (i.e. two hours)
-          image: "nixos/nix:1.11"
-          features:
-            taskclusterProxy: true
-          capabilities:
-            privileged: true
-          env:
-            APP: "${name'}"
-            TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/${secrets}"
-          command:
-            - "/bin/bash"
-            - "-l"
-            - "-c"
-            - "source /etc/nix/profile.sh && nix-env -iA nixpkgs.gnumake nixpkgs.curl nixpkgs.cacert && export SSL_CERT_FILE=$HOME/.nix-profile/etc/ssl/certs/ca-bundle.crt && mkdir /src && cd /src && curl -L https://github.com/mozilla/release-services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd release-services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-    '';
 
   fromRequirementsFile = file: custom_pkgs:
     let
@@ -520,13 +475,6 @@ in rec {
             production = self;
           };
 
-          taskclusterGithubTasks =
-            map (branch: mkTaskclusterGithubTask { inherit (self.package) name; inherit branch; inherit (self) src_path; })
-                ([ "master" ] ++ optional inTesting "testing"
-                              ++ optional inStaging "staging"
-                              ++ optional inProduction "production"
-                );
-
           update = writeScript "update-${self.package.name}" ''
             set -e
             export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
@@ -572,17 +520,76 @@ in rec {
       args' = releng_pkgs.pkgs.lib.filterAttrs (n: v: ! builtins.elem n argsToSkip) args;
       self = mkDerivation (args' // {
         name = withDefault name (mkProjectFullName project_name version);
-        #dirname = withDefault dirname (mkProjectDirName project_name);
-        #module_name = withDefault module_name (mkProjectModuleName project_name);
-        #src_path = withDefault src_path (mkProjectSrcPath project_name);
         shellHook = shellHook + ''
-          PS1="\n\[\033[1;32m\][${self.module_name}:\w]\$\[\033[0m\] "
+          PS1="\n\[\033[1;32m\][${self.project_name}:\w]\$\[\033[0m\] "
         '';
         passthru = passthru // {
-          inherit version;
+          inherit version project_name;
           dirname = withDefault dirname (mkProjectDirName project_name);
           module_name = withDefault module_name (mkProjectModuleName project_name);
           src_path = withDefault src_path (mkProjectSrcPath project_name);
+          updateHook =
+            builtins.listToAttrs (builtins.map
+              (channel:
+                 let
+                   branch = if channel == "production"
+                            then "update-${self.module_name}"
+                            else "update-${channel}-${self.module_name}";
+                   hook_name = "${self.module_name}-update-${channel}";
+                   version = fileContents ./../../VERSION;
+                   github_commit = builtins.getEnv "GITHUB_COMMIT";
+                   hook = schedule:
+                     mkTaskclusterHook
+                       { name = hook_name;
+                         description = "Autogenerated by release-services project.";
+                         owner = "rgarbas@mozilla.com";  # TODO: we need to configure this owner
+                         deadline = "2 hours";
+                         maxRunTime = 4 * 60 * 60;  # 4 hours
+                         inherit schedule;
+                         scopes =
+                           [ "secrets:get:repo:github.com/mozilla-releng/services:branch:${channel}"
+                             "queue:create-task:aws-provisioner-v1/releng-svc"
+                             "docker-worker:capability:privileged"
+                             "queue:route:notify.irc-channel.#release-services"
+                           ];
+                         taskRoutes =
+                           [ "notify.irc-channel.#release-services.on-failed"
+                             "notify.irc-channel.#release-services.on-exception"
+                           ];
+                         taskExtra = {
+                           notify = {
+                             ircChannelMessage = "Update hook for project ${project_name} on ${channel} channel FAILED.";
+                           };
+                         };
+                         taskImage = "mozillareleng/services:base-${version}";
+                         taskCapabilities = { privileged = true; };
+                         taskCommand = [
+                           "/bin/bash"
+                           "-c"
+                           (builtins.concatStringsSep " && " [
+                             "source /etc/nix/profile.sh"
+                             "nix-env -f /etc/nix/nixpkgs -iA git"
+                             "mkdir -p /tmp/app"
+                             "cd /tmp/app"
+                             "wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla/release-services/archive/${github_commit}.tar.gz"
+                             "tar zxf ${github_commit}.tar.gz"
+                             "cd release-services-${github_commit}"
+                             "./please -vv tools update-dependencies ${project_name} --branch-to-push=${branch} --taskcluster-secret='repo:github.com/mozilla-releng/services:branch:${channel}' --no-interactive"
+                           ])
+                         ];
+                         workerType = "releng-svc";
+                       };
+                  mkHook = schedule: writeText "taskcluster-hook-${hook_name}.json" (builtins.toJSON (hook schedule));
+                in { name = channel;
+                     value = { scheduled = mkHook [ "0 0 * * *" ];
+                               notScheduled = mkHook [];
+                             };
+                   })
+              [ "testing"
+                "staging"
+                "production"
+              ]);
+
         };
       });
     in self;
@@ -701,13 +708,6 @@ in rec {
             staging = self;
             production = self;
           };
-
-          taskclusterGithubTasks =
-            map (branch: mkTaskclusterGithubTask { inherit branch; inherit (self) name src_path; })
-                ([ "master" ] ++ optional inTesting "testing"
-                              ++ optional inStaging "staging"
-                              ++ optional inProduction "production"
-                );
 
           update = writeScript "update-${self.name}" ''
             export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
@@ -979,13 +979,6 @@ in rec {
 
         passthru = {
           inherit python;
-
-          taskclusterGithubTasks =
-            map (branch: mkTaskclusterGithubTask { inherit branch; inherit (self) name src_path; })
-                ([ "master" ] ++ optional inTesting "testing"
-                              ++ optional inStaging "staging"
-                              ++ optional inProduction "production"
-                );
 
           docker = mkDocker {
             inherit version;

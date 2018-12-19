@@ -1,18 +1,17 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import os
 import subprocess
 
+import click
+import click_spinner
 import requests
 
 import cli_common.command
 import cli_common.log
-import click
-import click_spinner
 import please_cli.config
 import please_cli.utils
 
@@ -50,12 +49,22 @@ class Derive:
 @click.option(
     '--channel',
     type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BRANCH",
+    envvar='GITHUB_BRANCH',
     required=True,
     )
-def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=True):
-    """Command to check if project is already in cache.
-    """
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
+    )
+def cmd(project,
+        cache_urls,
+        nix_instantiate,
+        channel,
+        indent=0,
+        interactive=True,
+        ):
+    '''Command to check if project is already in cache.
+    '''
 
     indent = ' ' * indent
     channel_derivations = dict()
@@ -124,11 +133,11 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
             success_message='EXISTS',
             error_message='NOT EXISTS',
             raise_exception=False,
-            ask_for_details=False,
+            ask_for_details=interactive,
         )
 
     return project_exists, channel_derivations[project].nix_hash
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmd()

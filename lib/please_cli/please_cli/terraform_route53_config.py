@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 import click
+
 import please_cli.config
 
 HEROKU_COMMENT = '## Heroku {channel} app cnames ##'
@@ -111,7 +112,7 @@ def to_route53_name(project_id, channel):
     elif 'shipit-' in project_id:
         project_name = project_name[7:] + '-shipit'
 
-    return 'heroku-%s-cname-%s' % (project_name,channel_short)
+    return 'heroku-%s-cname-%s' % (project_name, channel_short)
 
 
 @click.command()
@@ -124,7 +125,7 @@ def cmd():
         deployments = please_cli.config.PROJECTS_CONFIG.get(project_name, dict()).get('deploys', [])
 
         for deployment in deployments:
-            deployment_target= deployment['target']
+            deployment_target = deployment['target']
             channels = deployment.get('options', dict()).keys()
 
             for channel in channels:
@@ -180,7 +181,6 @@ def cmd():
                     alias_target = alias_target.rstrip('.cloudfront.net.')
                     S3.append((alias, alias_target))
 
-
     click.echo(HEADER)
 
     channels = ['production', 'staging', 'testing']
@@ -200,7 +200,6 @@ def cmd():
             echo_heroku_comment('shipit ' + channel)
             for project in sorted(projects, key=lambda x: x['name']):
                 click.echo(HEROKU_TEMPLATE % project)
-
 
     aliases = ('\n' + ' ' * 8)
     aliases += ('\n' + ' ' * 8).join(['"{}",'.format(alias) for (alias, alias_target) in S3])

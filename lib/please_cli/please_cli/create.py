@@ -1,8 +1,7 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-from __future__ import absolute_import
 
 import os
 
@@ -11,7 +10,6 @@ import cookiecutter.main
 
 import please_cli.config
 import please_cli.utils
-
 
 CMD_HELP = '''
 Create a new PROJECT from a TEMPLATE
@@ -26,8 +24,8 @@ TEMPLATES:
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Create PROJECT initial structure.",
-    epilog="Happy hacking!",
+    short_help='Create PROJECT initial structure.',
+    epilog='Happy hacking!',
     help=CMD_HELP,
     )
 @click.argument(
@@ -42,8 +40,8 @@ TEMPLATES:
     )
 @click.pass_context
 def cmd(ctx, template, project):
-    """
-    """
+    '''
+    '''
 
     template_dir = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'templates', template)
     if not os.path.isdir(template_dir):

@@ -1,15 +1,15 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import os
 import sys
 
-import cli_common.cli
 import click
 import click_spinner
+
+import cli_common.cli
 import please_cli.config
 import please_cli.create_certs
 import please_cli.shell
@@ -29,8 +29,8 @@ PROJECTS:
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Run PROJECT in development mode.",
-    epilog="Happy hacking!",
+    short_help='Run PROJECT in development mode.',
+    epilog='Happy hacking!',
     help=CMD_HELP,
     )
 @click.argument(
@@ -49,9 +49,17 @@ PROJECTS:
     default=please_cli.config.NIX_BIN_DIR + 'nix-shell',
     help='`nix-shell` command',
     )
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
+    )
 @cli_common.cli.taskcluster_options
 @click.pass_context
-def cmd(ctx, project, quiet, nix_shell,
+def cmd(ctx,
+        project,
+        quiet,
+        nix_shell,
+        interactive,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
@@ -109,7 +117,7 @@ def cmd(ctx, project, quiet, nix_shell,
                 'in a separate terminal.'
             )
 
-        please_cli.utils.check_result(result, output)
+        please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
         database_exists = False
         for line in output.split('\n'):
@@ -132,7 +140,7 @@ def cmd(ctx, project, quiet, nix_shell,
                     ]),
                     nix_shell=nix_shell,
                     )
-            please_cli.utils.check_result(result, output)
+            please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
         os.environ['DATABASE_URL'] = 'postgresql://{}:{}/{}'.format(
             pg_host, pg_port, dbname
@@ -151,7 +159,7 @@ def cmd(ctx, project, quiet, nix_shell,
                 nix_shell=nix_shell,
                 )
 
-        please_cli.utils.check_result(result, output)
+        please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
         # Setup config for client application
         os.environ['REDIS_URL'] = 'redis://{}:{}'.format(redis_host, redis_port)
@@ -167,7 +175,7 @@ def cmd(ctx, project, quiet, nix_shell,
                                                    command='initdb -D {} --auth=trust'.format(data_dir),
                                                    nix_shell=nix_shell,
                                                    )
-            please_cli.utils.check_result(result, output)
+            please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
         schema = ''
         command = [
@@ -324,5 +332,5 @@ def cmd(ctx, project, quiet, nix_shell,
     sys.exit(returncode)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmd()

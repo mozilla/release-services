@@ -1,15 +1,15 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import os
 import subprocess
 
-import cli_common.command
 import click
 import click_spinner
+
+import cli_common.command
 import please_cli.config
 import please_cli.utils
 
@@ -44,6 +44,10 @@ import please_cli.utils
     help='Path to openssl configuration (default: {}).'.format(
         please_cli.config.OPENSSL_ETC_DIR + 'openssl.cnf',
         ),
+    )
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
     )
 def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
 
@@ -181,5 +185,5 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
     please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmd()

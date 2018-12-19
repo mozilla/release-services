@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -44,10 +45,10 @@ DOCKER_BASE_REGISTRY = 'index.docker.io'
 DOCKER_BASE_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-' + VERSION
 
-NIX_BIN_DIR = os.environ.get("NIX_BIN_DIR", "")  # must end with /
-OPENSSL_BIN_DIR = os.environ.get("OPENSSL_BIN_DIR", "")  # must end with /
-OPENSSL_ETC_DIR = os.environ.get("OPENSSL_ETC_DIR", "")  # must end with /
-POSTGRESQL_BIN_DIR = os.environ.get("POSTGRESQL_BIN_DIR", "")  # must end with /
+NIX_BIN_DIR = os.environ.get('NIX_BIN_DIR', '')  # must end with /
+OPENSSL_BIN_DIR = os.environ.get('OPENSSL_BIN_DIR', '')  # must end with /
+OPENSSL_ETC_DIR = os.environ.get('OPENSSL_ETC_DIR', '')  # must end with /
+POSTGRESQL_BIN_DIR = os.environ.get('POSTGRESQL_BIN_DIR', '')  # must end with /
 
 IN_DOCKER = False
 with open('/proc/1/cgroup', 'rt') as ifh:
@@ -66,8 +67,11 @@ PROJECTS += DEV_PROJECTS
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
-    'common/naming': {},
+    'common/naming': {
+        'update': True,
+    },
     'postgresql': {
+        'update': False,
         'run': 'POSTGRESQL',
         'run_options': {
             'port': 9000,
@@ -75,6 +79,7 @@ PROJECTS_CONFIG = {
         },
     },
     'redis': {
+        'update': False,
         'run': 'REDIS',
         'run_options': {
             'port': 6379,
@@ -82,6 +87,7 @@ PROJECTS_CONFIG = {
         },
     },
     'notification/policy': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8006,
@@ -122,6 +128,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'notification/identity': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8007,
@@ -162,6 +169,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'docs': {
+        'update': True,
         'run': 'SPHINX',
         'run_options': {
             'schema': 'http',
@@ -194,6 +202,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'releng-frontend': {
+        'update': False,
         'run': 'ELM',
         'run_options': {
             'port': 8010,
@@ -247,6 +256,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'mapper/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8004,
@@ -287,6 +297,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'tokens/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8003,
@@ -327,6 +338,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'tooltool/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8002,
@@ -445,6 +457,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'treestatus/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8000,
@@ -488,6 +501,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/bot': {
+        'update': True,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -515,6 +529,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/bot': {
+        'update': True,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -542,6 +557,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/backend': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -582,6 +598,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/crawler': {
+        'update': True,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -609,6 +626,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'bugbug/data': {
+        'update': True,
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -640,6 +658,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'bugbug/train': {
+        'update': True,
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -671,6 +690,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'bugbug/eval': {
+        'update': True,
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
@@ -702,6 +722,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'pulselistener': {
+        'update': True,
         'requires': [],
         'deploys': [
             {
@@ -730,6 +751,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'staticanalysis/bot': {
+        'update': True,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -757,6 +779,7 @@ PROJECTS_CONFIG = {
         ]
     },
     'staticanalysis/frontend': {
+        'update': False,
         'run': 'NEUTRINO',
         'run_options': {
             'port': 8010,
@@ -818,6 +841,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/backend': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -858,6 +882,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'shipit/api': {
+        'update': True,
         'run': 'FLASK',
         'run_options': {
             'port': 8015,
@@ -920,6 +945,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'shipit/frontend': {
+        'update': False,
         'run': 'NEUTRINO',
         'run_options': {
             'port': 8010,

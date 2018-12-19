@@ -5,21 +5,28 @@
 
 import concurrent.futures
 import time
-from concurrent.futures import ThreadPoolExecutor
+
+import click
 
 
-def retry(operation, retries=5, wait_between_retries=30):
+def retry(operation,
+          retries=5,
+          wait_between_retries=30,
+          exception_to_break=click.ClickException,
+          ):
     while True:
         try:
             return operation()
-        except Exception:
+        except Exception as e:
+            if isinstance(e, exception_to_break):
+                raise
             retries -= 1
             if retries == 0:
                 raise
             time.sleep(wait_between_retries)
 
 
-class ThreadPoolExecutorResult(ThreadPoolExecutor):
+class ThreadPoolExecutorResult(concurrent.futures.ThreadPoolExecutor):
     def __init__(self, *args, **kwargs):
         self.futures = []
         super(ThreadPoolExecutorResult, self).__init__(*args, **kwargs)

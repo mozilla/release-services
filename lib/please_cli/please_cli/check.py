@@ -1,12 +1,12 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-import cli_common.cli
 import click
 import click_spinner
+
+import cli_common.cli
 import please_cli.config
 import please_cli.shell
 import please_cli.utils
@@ -25,8 +25,8 @@ PROJECTS:
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Run tests, linters, etc.. for an PROJECT.",
-    epilog="Happy hacking!",
+    short_help='Run tests, linters, etc.. for an PROJECT.',
+    epilog='Happy hacking!',
     help=CMD_HELP,
     )
 @click.argument(
@@ -44,7 +44,9 @@ PROJECTS:
     )
 @cli_common.cli.taskcluster_options
 @click.pass_context
-def cmd(ctx, project, nix_build,
+def cmd(ctx,
+        project,
+        nix_build,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
@@ -66,5 +68,5 @@ def cmd(ctx, project, nix_build,
             click.secho('ERROR', fg='red')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmd()

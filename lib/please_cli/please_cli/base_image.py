@@ -1,8 +1,7 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-from __future__ import absolute_import
 
 import json
 import os
@@ -12,9 +11,9 @@ import subprocess
 import click
 import click_spinner
 
-import cli_common.log
 import cli_common.cli
 import cli_common.command
+import cli_common.log
 import please_cli.config
 import please_cli.utils
 
@@ -23,8 +22,8 @@ log = cli_common.log.get_logger(__name__)
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Build base docker image.",
-    epilog="Happy hacking!",
+    short_help='Build base docker image.',
+    epilog='Happy hacking!',
     )
 @click.option(
     '--docker',
@@ -58,12 +57,17 @@ log = cli_common.log.get_logger(__name__)
     default=[],
     help='Public key for nix cache',
     )
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
+    )
 @cli_common.cli.taskcluster_options
 def build(docker,
           docker_repo,
           docker_tag,
           nix_cache_public_keys,
           nix_cache_public_urls,
+          interactive,
           taskcluster_secret,
           taskcluster_client_id,
           taskcluster_access_token,
@@ -133,7 +137,7 @@ def build(docker,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
-        please_cli.utils.check_result(result, output)
+        please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
     finally:
         if os.path.exists(temp_docker_file):
@@ -142,8 +146,8 @@ def build(docker,
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Push base docker image.",
-    epilog="Happy hacking!",
+    short_help='Push base docker image.',
+    epilog='Happy hacking!',
     )
 @click.option(
     '--docker-registry',
