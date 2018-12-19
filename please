@@ -35,7 +35,7 @@ if [ "$USE_NIX" = "1" ]; then
     printf " => Building please command (this might take a minute or two the first time) ... ";
   fi
 
-  silent nix-build nix/default.nix -A please-cli -o result-please-cli;
+  silent exec nix-build nix/default.nix -A please-cli -o result-please-cli;
   if [ "$building_please_cli" = "1" ]; then
     echo "${GREEN}DONE${NC}";
   fi
