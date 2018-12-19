@@ -47,17 +47,17 @@ let
           "/cache"
         ];
         taskArtifacts = {
-          "public/bug.model.xz" = {
+          "public/bugmodel.xz" = {
             type = "file";
-            path = "/bug.model.xz";
+            path = "/bugmodel.xz";
           };
-          "public/regression.model.xz" = {
+          "public/regressionmodel.xz" = {
             type = "file";
-            path = "/regression.model.xz";
+            path = "/regressionmodel.xz";
           };
-          "public/tracking.model.xz" = {
+          "public/trackingmodel.xz" = {
             type = "file";
-            path = "/tracking.model.xz";
+            path = "/trackingmodel.xz";
           };
         };
       };
