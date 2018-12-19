@@ -29,15 +29,14 @@ def test_get_task(LINUX_TASK_ID, LATEST_LINUX, WIN_TASK_ID, LATEST_WIN):
     assert taskcluster.get_task('mozilla-central', 'b2a9a4bb5c94de179ae7a3f52fde58c0e2897498', 'linux') == LINUX_TASK_ID
 
     responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.revision.916103b8675d9fdb28b891cac235d74f9f475942.firefox.win64-ccov-debug', json=LATEST_WIN, status=200)  # noqa
-    assert taskcluster.get_task('mozilla-central', '916103b8675d9fdb28b891cac235d74f9f475942', 'win') == WIN_TASK_ID
+    assert taskcluster.get_task('mozilla-central', '916103b8675d9fdb28b891cac235d74f9f475942', 'windows') == WIN_TASK_ID
 
 
 @responses.activate
 def test_get_task_not_found(TASK_NOT_FOUND):
     responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.revision.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.firefox.linux64-ccov-debug', json=TASK_NOT_FOUND, status=404)  # noqa
 
-    with pytest.raises(taskcluster.TaskclusterException, message='Code coverage build failed and was not indexed.'):
-        taskcluster.get_task('mozilla-central', 'b2a9a4bb5c94de179ae7a3f52fde58c0e2897498', 'linux')
+    assert taskcluster.get_task('mozilla-central', 'b2a9a4bb5c94de179ae7a3f52fde58c0e2897498', 'linux') is None
 
 
 @responses.activate

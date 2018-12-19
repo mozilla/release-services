@@ -1,0 +1,907 @@
+{
+  "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+  "tasks": [
+    {
+      "status": {
+        "taskId": "CGF4HL32ROmCfePv0mteJA",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "deadline": "2018-12-12T10:11:05.619Z",
+        "expires": "2019-01-08T10:11:05.619Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-1",
+            "workerId": "i-0a63299678506fd19",
+            "takenUntil": "2018-12-11T10:31:22.621Z",
+            "scheduled": "2018-12-11T10:11:22.237Z",
+            "started": "2018-12-11T10:11:22.696Z",
+            "resolved": "2018-12-11T10:16:15.726Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "dependencies": [
+          "Y_m4ihw8S5e3vMSK59-4Kg",
+          "FG3goVnCQfif8ZEOaM_4IA"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.try.066cb18ba95a7efe144e729713c429e422d9f95b.321031"
+        ],
+        "priority": "very-low",
+        "retries": 5,
+        "created": "2018-12-11T10:11:05.619Z",
+        "deadline": "2018-12-12T10:11:05.619Z",
+        "expires": "2019-01-08T10:11:05.619Z",
+        "scopes": [
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:cache:level-1-checkouts-v3-2f7c6cb7dd63ce826370"
+        ],
+        "payload": {
+          "onExitStatus": {
+            "retry": [
+              72
+            ],
+            "purgeCaches": [
+              72
+            ]
+          },
+          "maxRunTime": 1800,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Y_m4ihw8S5e3vMSK59-4Kg"
+          },
+          "cache": {
+            "level-1-checkouts-v3-2f7c6cb7dd63ce826370": "/builds/worker/checkouts"
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--vcs-checkout=/builds/worker/checkouts/gecko",
+            "--fetch-hgfingerprint",
+            "--",
+            "bash",
+            "-cx",
+            "cd /builds/worker/checkouts/gecko && ./mach lint -l codespell -f treeherder"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts",
+            "TASKCLUSTER_UNTRUSTED_CACHES": "1",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "MOZ_SCM_LEVEL": "1",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts",
+            "GECKO_PATH": "/builds/worker/checkouts/gecko",
+            "TASKCLUSTER_PROXY_URL": "http://taskcluster/",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/try",
+            "MOZ_AUTOMATION": "1",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified"
+          },
+          "features": {
+            "taskclusterProxy": true
+          }
+        },
+        "metadata": {
+          "owner": "mcastelluccio@mozilla.com",
+          "source": "https://hg.mozilla.org/try/file/066cb18ba95a7efe144e729713c429e422d9f95b/taskcluster/ci/source-test",
+          "description": "Checks for misspellings in text files ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=try&revision=066cb18ba95a7efe144e729713c429e422d9f95b))",
+          "name": "source-test-mozlint-codespell"
+        },
+        "tags": {
+          "os": "linux",
+          "createdForUser": "mcastelluccio@mozilla.com",
+          "worker-implementation": "docker-worker",
+          "kind": "source-test",
+          "label": "source-test-mozlint-codespell"
+        },
+        "extra": {
+          "index": {
+            "rank": 1544522872
+          },
+          "treeherder": {
+            "machine": {
+              "platform": "lint"
+            },
+            "tier": 1,
+            "symbol": "spell",
+            "jobKind": "test",
+            "collection": {
+              "opt": true
+            }
+          },
+          "treeherder-platform": "lint/opt",
+          "parent": "FG3goVnCQfif8ZEOaM_4IA"
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "FG3goVnCQfif8ZEOaM_4IA",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-1-decision",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "deadline": "2018-12-12T10:08:27.733Z",
+        "expires": "2019-12-11T10:08:28.733Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-1",
+            "workerId": "i-0a71482354635cfdb",
+            "takenUntil": "2018-12-11T10:28:29.149Z",
+            "scheduled": "2018-12-11T10:08:28.452Z",
+            "started": "2018-12-11T10:08:29.228Z",
+            "resolved": "2018-12-11T10:11:20.724Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-1-decision",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "dependencies": [],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.try.066cb18ba95a7efe144e729713c429e422d9f95b.321031",
+          "index.gecko.v2.try.latest.taskgraph.decision",
+          "index.gecko.v2.try.revision.066cb18ba95a7efe144e729713c429e422d9f95b.taskgraph.decision",
+          "index.gecko.v2.try.pushlog-id.321031.decision",
+          "notify.email.mcastelluccio@mozilla.com.on-failed",
+          "notify.email.mcastelluccio@mozilla.com.on-exception",
+          "notify.email.mcastelluccio@mozilla.com.on-completed",
+          "notify.email.ciduty+failedcron@mozilla.com.on-failed",
+          "notify.email.ciduty+exceptioncron@mozilla.com.on-exception",
+          "notify.email.sheriffs+failedcron@mozilla.com.on-failed",
+          "notify.email.sheriffs+exceptioncron@mozilla.com.on-exception",
+          "index.gecko.v2.try.latest.firefox.decision",
+          "index.gecko.v2.try.revision.066cb18ba95a7efe144e729713c429e422d9f95b.firefox.decision"
+        ],
+        "priority": "very-low",
+        "retries": 5,
+        "created": "2018-12-11T10:08:27.733Z",
+        "deadline": "2018-12-12T10:08:27.733Z",
+        "expires": "2019-12-11T10:08:28.733Z",
+        "scopes": [
+          "assume:repo:hg.mozilla.org/try:branch:default",
+          "queue:route:notify.email.mcastelluccio@mozilla.com.*",
+          "in-tree:hook-action:project-gecko/in-tree-action-1-*"
+        ],
+        "payload": {
+          "env": {
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/try",
+            "GECKO_HEAD_REF": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "GECKO_HEAD_REV": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "GECKO_COMMIT_MSG": " ",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts"
+          },
+          "cache": {
+            "level-1-checkouts-sparse-v2": "/builds/worker/checkouts"
+          },
+          "features": {
+            "taskclusterProxy": true,
+            "chainOfTrust": true
+          },
+          "image": "taskcluster/decision:2.1.0@sha256:6db3b697d7a3c7aba440d72f04199331b872111cefff57206b8b8b1d53230360",
+          "maxRunTime": 1800,
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--vcs-checkout=/builds/worker/checkouts/gecko",
+            "--sparse-profile=build/sparse-profiles/taskgraph",
+            "--",
+            "bash",
+            "-cx",
+            "cd /builds/worker/checkouts/gecko && ln -s /builds/worker/artifacts artifacts && ./mach --log-no-times taskgraph decision --pushlog-id='321031' --pushdate='1544522872' --project='try' --message=\"$GECKO_COMMIT_MSG\" --owner='mcastelluccio@mozilla.com' --level='1' --base-repository=\"$GECKO_BASE_REPOSITORY\" --head-repository=\"$GECKO_HEAD_REPOSITORY\" --head-ref=\"$GECKO_HEAD_REF\" --head-rev=\"$GECKO_HEAD_REV\" \n"
+          ],
+          "artifacts": {
+            "public": {
+              "type": "directory",
+              "path": "/builds/worker/artifacts",
+              "expires": "2019-12-11T10:08:27.733Z"
+            }
+          }
+        },
+        "metadata": {
+          "owner": "mcastelluccio@mozilla.com",
+          "source": "https://hg.mozilla.org/try/raw-file/066cb18ba95a7efe144e729713c429e422d9f95b/.taskcluster.yml",
+          "name": "Gecko Decision Task",
+          "description": "The task that creates all of the other tasks in the task graph"
+        },
+        "tags": {
+          "createdForUser": "mcastelluccio@mozilla.com",
+          "kind": "decision-task"
+        },
+        "extra": {
+          "treeherder": {
+            "machine": {
+              "platform": "gecko-decision"
+            },
+            "symbol": "D"
+          },
+          "tasks_for": "hg-push",
+          "notify": {
+            "email": {
+              "subject": "Thank you for your try submission of 066cb18ba95a7efe144e729713c429e422d9f95b. It's the best!",
+              "content": "Your try push has been submitted. It's the best! Use the link to view the status of your jobs.",
+              "link": {
+                "text": "Treeherder Jobs",
+                "href": "https://treeherder.mozilla.org/#/jobs?repo=try&revision=066cb18ba95a7efe144e729713c429e422d9f95b"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "PUFNU67jRam5F7iCrt2j3w",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "deadline": "2018-12-12T10:11:05.621Z",
+        "expires": "2019-01-08T10:11:05.621Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-2",
+            "workerId": "i-0fae3aa88fa21d081",
+            "takenUntil": "2018-12-11T10:31:22.622Z",
+            "scheduled": "2018-12-11T10:11:22.234Z",
+            "started": "2018-12-11T10:11:22.695Z",
+            "resolved": "2018-12-11T10:19:43.195Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "dependencies": [
+          "Y_m4ihw8S5e3vMSK59-4Kg",
+          "FG3goVnCQfif8ZEOaM_4IA"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.try.066cb18ba95a7efe144e729713c429e422d9f95b.321031"
+        ],
+        "priority": "very-low",
+        "retries": 5,
+        "created": "2018-12-11T10:11:05.621Z",
+        "deadline": "2018-12-12T10:11:05.621Z",
+        "expires": "2019-01-08T10:11:05.621Z",
+        "scopes": [
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:cache:level-1-checkouts-v3-2f7c6cb7dd63ce826370"
+        ],
+        "payload": {
+          "onExitStatus": {
+            "retry": [
+              72
+            ],
+            "purgeCaches": [
+              72
+            ]
+          },
+          "maxRunTime": 3600,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Y_m4ihw8S5e3vMSK59-4Kg"
+          },
+          "cache": {
+            "level-1-checkouts-v3-2f7c6cb7dd63ce826370": "/builds/worker/checkouts"
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--vcs-checkout=/builds/worker/checkouts/gecko",
+            "--fetch-hgfingerprint",
+            "--",
+            "bash",
+            "-cx",
+            "cd /builds/worker/checkouts/gecko/testing/mozharness && /usr/local/bin/tox -e py27-hg4.3\n"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts",
+            "TASKCLUSTER_UNTRUSTED_CACHES": "1",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "MOZ_SCM_LEVEL": "1",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts",
+            "GECKO_PATH": "/builds/worker/checkouts/gecko",
+            "TASKCLUSTER_PROXY_URL": "http://taskcluster/",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/try",
+            "MOZ_AUTOMATION": "1",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified"
+          },
+          "features": {
+            "taskclusterProxy": true
+          }
+        },
+        "metadata": {
+          "owner": "mcastelluccio@mozilla.com",
+          "source": "https://hg.mozilla.org/try/file/066cb18ba95a7efe144e729713c429e422d9f95b/taskcluster/ci/source-test",
+          "description": "mozharness integration tests ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=try&revision=066cb18ba95a7efe144e729713c429e422d9f95b))",
+          "name": "source-test-python-mozharness"
+        },
+        "tags": {
+          "os": "linux",
+          "createdForUser": "mcastelluccio@mozilla.com",
+          "worker-implementation": "docker-worker",
+          "kind": "source-test",
+          "label": "source-test-python-mozharness"
+        },
+        "extra": {
+          "index": {
+            "rank": 0
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "py2",
+            "collection": {
+              "opt": true
+            },
+            "machine": {
+              "platform": "linux64"
+            },
+            "groupName": "Python 2 unit tests",
+            "tier": 2,
+            "symbol": "mh"
+          },
+          "treeherder-platform": "linux64/opt",
+          "parent": "FG3goVnCQfif8ZEOaM_4IA"
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "QyFZC5C9SQOt9TBRHMcpxA",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "deadline": "2018-12-12T10:11:05.624Z",
+        "expires": "2019-01-08T10:11:05.624Z",
+        "retriesLeft": 5,
+        "state": "failed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "failed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "failed",
+            "workerGroup": "us-west-2",
+            "workerId": "i-0a5116e8de8e8add4",
+            "takenUntil": "2018-12-11T10:31:22.570Z",
+            "scheduled": "2018-12-11T10:11:22.246Z",
+            "started": "2018-12-11T10:11:22.642Z",
+            "resolved": "2018-12-11T10:16:09.297Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "dependencies": [
+          "Y_m4ihw8S5e3vMSK59-4Kg",
+          "FG3goVnCQfif8ZEOaM_4IA"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.try.066cb18ba95a7efe144e729713c429e422d9f95b.321031"
+        ],
+        "priority": "very-low",
+        "retries": 5,
+        "created": "2018-12-11T10:11:05.624Z",
+        "deadline": "2018-12-12T10:11:05.624Z",
+        "expires": "2019-01-08T10:11:05.624Z",
+        "scopes": [
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:cache:level-1-checkouts-v3-2f7c6cb7dd63ce826370"
+        ],
+        "payload": {
+          "onExitStatus": {
+            "retry": [
+              72
+            ],
+            "purgeCaches": [
+              72
+            ]
+          },
+          "maxRunTime": 1800,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Y_m4ihw8S5e3vMSK59-4Kg"
+          },
+          "cache": {
+            "level-1-checkouts-v3-2f7c6cb7dd63ce826370": "/builds/worker/checkouts"
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--vcs-checkout=/builds/worker/checkouts/gecko",
+            "--fetch-hgfingerprint",
+            "--",
+            "bash",
+            "-cx",
+            "cd /builds/worker/checkouts/gecko && ./mach lint -l py2 -l py3 -f treeherder"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts",
+            "TASKCLUSTER_UNTRUSTED_CACHES": "1",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "MOZ_SCM_LEVEL": "1",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts",
+            "GECKO_PATH": "/builds/worker/checkouts/gecko",
+            "TASKCLUSTER_PROXY_URL": "http://taskcluster/",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/try",
+            "MOZ_AUTOMATION": "1",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified"
+          },
+          "features": {
+            "taskclusterProxy": true
+          }
+        },
+        "metadata": {
+          "owner": "mcastelluccio@mozilla.com",
+          "source": "https://hg.mozilla.org/try/file/066cb18ba95a7efe144e729713c429e422d9f95b/taskcluster/ci/source-test",
+          "description": "lint for python 2/3 compatibility issues ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=try&revision=066cb18ba95a7efe144e729713c429e422d9f95b))",
+          "name": "source-test-mozlint-py-compat"
+        },
+        "tags": {
+          "os": "linux",
+          "createdForUser": "mcastelluccio@mozilla.com",
+          "worker-implementation": "docker-worker",
+          "kind": "source-test",
+          "label": "source-test-mozlint-py-compat"
+        },
+        "extra": {
+          "index": {
+            "rank": 1544522872
+          },
+          "treeherder": {
+            "machine": {
+              "platform": "lint"
+            },
+            "tier": 1,
+            "symbol": "py-compat",
+            "jobKind": "test",
+            "collection": {
+              "opt": true
+            }
+          },
+          "treeherder-platform": "lint/opt",
+          "parent": "FG3goVnCQfif8ZEOaM_4IA"
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "VL1MYVzXTCG7mb1T4KQPFQ",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-1-b-win2012",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "deadline": "2018-12-12T10:11:05.617Z",
+        "expires": "2019-01-08T10:11:05.617Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "eu-central-1",
+            "workerId": "i-02fac43eb0f70fb8a",
+            "takenUntil": "2018-12-11T11:58:27.510Z",
+            "scheduled": "2018-12-11T10:11:22.243Z",
+            "started": "2018-12-11T10:13:21.632Z",
+            "resolved": "2018-12-11T11:40:40.329Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-1-b-win2012",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "dependencies": [
+          "DKX3WtmHQ2CVtC9Nx9SNeg",
+          "FgbbQOd1SyOxgC-gy3YGyA",
+          "Fw-4UcpQTSy3YBubzvebMA",
+          "ImgJmzyISt-3TsObD8sTuA",
+          "N2yhA4J1Sc-cgh2q8cbbZA",
+          "eATwvbMqSoaZ1LEe6VKksA",
+          "ecwec-MXT_W7RkzIgUFp0Q",
+          "FG3goVnCQfif8ZEOaM_4IA"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "index.gecko.v2.try.latest.firefox.win64-ccov-debug",
+          "index.gecko.v2.try.pushdate.2018.12.11.20181211100752.firefox.win64-ccov-debug",
+          "index.gecko.v2.try.pushlog-id.321031.firefox.win64-ccov-debug",
+          "index.gecko.v2.try.revision.066cb18ba95a7efe144e729713c429e422d9f95b.firefox.win64-ccov-debug",
+          "tc-treeherder.v2.try.066cb18ba95a7efe144e729713c429e422d9f95b.321031"
+        ],
+        "priority": "very-low",
+        "retries": 5,
+        "created": "2018-12-11T10:11:05.617Z",
+        "deadline": "2018-12-12T10:11:05.617Z",
+        "expires": "2019-01-08T10:11:05.617Z",
+        "scopes": [
+          "secrets:get:project/taskcluster/gecko/hgfingerprint"
+        ],
+        "payload": {
+          "maxRunTime": 7200,
+          "artifacts": [
+            {
+              "path": "build\\src\\obj-firefox\\code-coverage-grcov.zip",
+              "type": "file",
+              "name": "public/code-coverage-grcov.zip"
+            },
+            {
+              "path": "logs",
+              "type": "directory",
+              "name": "public/logs"
+            },
+            {
+              "path": "public/build",
+              "type": "directory",
+              "name": "public/build"
+            }
+          ],
+          "command": [
+            ":: sccache currently uses the full compiler commandline as input to the\n:: cache hash key, so create a symlink to the task dir and build from\n:: the symlink dir to get consistent paths.\nif exist z:\\build rmdir z:\\build",
+            "mklink /d z:\\build %cd%",
+            "icacls z:\\build /grant *S-1-1-0:D /L",
+            "cd /d z:\\build",
+            "\"c:\\Program Files\\Mercurial\\hg.exe\" robustcheckout --sharebase y:\\hg-shared --purge --upstream https://hg.mozilla.org/mozilla-unified --revision 066cb18ba95a7efe144e729713c429e422d9f95b https://hg.mozilla.org/try .\\build\\src",
+            ":: TinderboxPrint:<a href=https://hg.mozilla.org/try/rev/066cb18ba95a7efe144e729713c429e422d9f95b title='Built from try revision 066cb18ba95a7efe144e729713c429e422d9f95b'>066cb18ba95a7efe144e729713c429e422d9f95b</a>\n",
+            "c:\\mozilla-build\\python3\\python3.exe build\\src\\taskcluster\\scripts\\misc\\fetch-content task-artifacts",
+            "c:\\mozilla-build\\python\\python.exe .\\build\\src\\testing\\mozharness\\scripts\\fx_desktop_build.py --config builds\\releng_base_firefox.py --config builds\\taskcluster_base_windows.py --config builds\\taskcluster_base_win64.py --config builds\\taskcluster_sub_win64\\ccov_debug.py --branch try --work-dir %cd:Z:=z:%\\build --append-env-variables-from-configs"
+          ],
+          "features": {
+            "chainOfTrust": true
+          },
+          "env": {
+            "MH_BRANCH": "try",
+            "MOZ_BUILD_DATE": "20181211100752",
+            "TRY_COMMIT_MSG": " ",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "MOZ_TOOLCHAINS": "public/build/clang.tar.bz2@ecwec-MXT_W7RkzIgUFp0Q public/build/rustc.tar.bz2@DKX3WtmHQ2CVtC9Nx9SNeg public/build/rust-size.tar.bz2@FgbbQOd1SyOxgC-gy3YGyA public/build/cbindgen.tar.bz2@eATwvbMqSoaZ1LEe6VKksA public/build/sccache2.tar.bz2@ImgJmzyISt-3TsObD8sTuA public/build/node.tar.bz2@N2yhA4J1Sc-cgh2q8cbbZA",
+            "MOZ_SOURCE_CHANGESET": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "GECKO_PATH": "/builds/worker/checkouts/gecko",
+            "MOZ_SCM_LEVEL": "1",
+            "EXTRA_MOZHARNESS_CONFIG": "{\"mozconfig_variant\": \"code-coverage\"}",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/try",
+            "MOZ_SIMPLE_PACKAGE_NAME": "target",
+            "SCCACHE_IDLE_TIMEOUT": "0",
+            "MOZ_FETCHES": "[{\"artifact\": \"public/build/grcov.tar.bz2\", \"extract\": true, \"task\": \"Fw-4UcpQTSy3YBubzvebMA\"}]",
+            "TOOLTOOL_MANIFEST": "browser/config/tooltool-manifests/win64/releng.manifest",
+            "USE_SCCACHE": "1",
+            "MOZ_FETCHES_DIR": "fetches",
+            "MOZ_AUTOMATION": "1",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+            "MOZ_DISABLE_FULL_SYMBOLS": "1"
+          }
+        },
+        "metadata": {
+          "owner": "mcastelluccio@mozilla.com",
+          "source": "https://hg.mozilla.org/try/file/066cb18ba95a7efe144e729713c429e422d9f95b/taskcluster/ci/build",
+          "description": "Win64 Debug Code Coverage ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=try&revision=066cb18ba95a7efe144e729713c429e422d9f95b))",
+          "name": "build-win64-ccov/debug"
+        },
+        "tags": {
+          "os": "windows",
+          "createdForUser": "mcastelluccio@mozilla.com",
+          "worker-implementation": "generic-worker",
+          "kind": "build",
+          "label": "build-win64-ccov/debug"
+        },
+        "extra": {
+          "index": {
+            "rank": 0
+          },
+          "treeherder": {
+            "machine": {
+              "platform": "windows2012-64"
+            },
+            "tier": 2,
+            "symbol": "B",
+            "jobKind": "build",
+            "collection": {
+              "ccov": true
+            }
+          },
+          "treeherder-platform": "windows2012-64/ccov",
+          "parent": "FG3goVnCQfif8ZEOaM_4IA"
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "XO44zQK5Sk-gRT2awyV9VQ",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "deadline": "2018-12-12T10:11:05.622Z",
+        "expires": "2019-01-08T10:11:05.622Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-1",
+            "workerId": "i-0125a8755d0f5b579",
+            "takenUntil": "2018-12-11T10:31:22.623Z",
+            "scheduled": "2018-12-11T10:11:22.227Z",
+            "started": "2018-12-11T10:11:22.694Z",
+            "resolved": "2018-12-11T10:16:06.499Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "dependencies": [
+          "Y_m4ihw8S5e3vMSK59-4Kg",
+          "FG3goVnCQfif8ZEOaM_4IA"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.try.066cb18ba95a7efe144e729713c429e422d9f95b.321031"
+        ],
+        "priority": "very-low",
+        "retries": 5,
+        "created": "2018-12-11T10:11:05.622Z",
+        "deadline": "2018-12-12T10:11:05.622Z",
+        "expires": "2019-01-08T10:11:05.622Z",
+        "scopes": [
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:cache:level-1-checkouts-v3-2f7c6cb7dd63ce826370"
+        ],
+        "payload": {
+          "onExitStatus": {
+            "retry": [
+              72
+            ],
+            "purgeCaches": [
+              72
+            ]
+          },
+          "maxRunTime": 1800,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Y_m4ihw8S5e3vMSK59-4Kg"
+          },
+          "cache": {
+            "level-1-checkouts-v3-2f7c6cb7dd63ce826370": "/builds/worker/checkouts"
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--vcs-checkout=/builds/worker/checkouts/gecko",
+            "--fetch-hgfingerprint",
+            "--",
+            "bash",
+            "-cx",
+            "cd /builds/worker/checkouts/gecko && ./mach lint -l yaml -f treeherder"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts",
+            "TASKCLUSTER_UNTRUSTED_CACHES": "1",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "MOZ_SCM_LEVEL": "1",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts",
+            "GECKO_PATH": "/builds/worker/checkouts/gecko",
+            "TASKCLUSTER_PROXY_URL": "http://taskcluster/",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/try",
+            "MOZ_AUTOMATION": "1",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified"
+          },
+          "features": {
+            "taskclusterProxy": true
+          }
+        },
+        "metadata": {
+          "owner": "mcastelluccio@mozilla.com",
+          "source": "https://hg.mozilla.org/try/file/066cb18ba95a7efe144e729713c429e422d9f95b/taskcluster/ci/source-test",
+          "description": "yamllint run over the gecko codebase ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=try&revision=066cb18ba95a7efe144e729713c429e422d9f95b))",
+          "name": "source-test-mozlint-yaml"
+        },
+        "tags": {
+          "os": "linux",
+          "createdForUser": "mcastelluccio@mozilla.com",
+          "worker-implementation": "docker-worker",
+          "kind": "source-test",
+          "label": "source-test-mozlint-yaml"
+        },
+        "extra": {
+          "index": {
+            "rank": 1544522872
+          },
+          "treeherder": {
+            "machine": {
+              "platform": "lint"
+            },
+            "tier": 1,
+            "symbol": "yaml",
+            "jobKind": "test",
+            "collection": {
+              "opt": true
+            }
+          },
+          "treeherder-platform": "lint/opt",
+          "parent": "FG3goVnCQfif8ZEOaM_4IA"
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "a_RES_SWSHKTuBu9qcUtJQ",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "deadline": "2018-12-12T10:11:05.616Z",
+        "expires": "2019-01-08T10:11:05.616Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-1",
+            "workerId": "i-006805e64def7cade",
+            "takenUntil": "2018-12-11T10:31:22.622Z",
+            "scheduled": "2018-12-11T10:11:22.232Z",
+            "started": "2018-12-11T10:11:22.694Z",
+            "resolved": "2018-12-11T10:16:49.825Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-1",
+        "taskGroupId": "FG3goVnCQfif8ZEOaM_4IA",
+        "dependencies": [
+          "Y_m4ihw8S5e3vMSK59-4Kg",
+          "FG3goVnCQfif8ZEOaM_4IA"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.try.066cb18ba95a7efe144e729713c429e422d9f95b.321031"
+        ],
+        "priority": "very-low",
+        "retries": 5,
+        "created": "2018-12-11T10:11:05.616Z",
+        "deadline": "2018-12-12T10:11:05.616Z",
+        "expires": "2019-01-08T10:11:05.616Z",
+        "scopes": [
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:cache:level-1-checkouts-v3-2f7c6cb7dd63ce826370"
+        ],
+        "payload": {
+          "onExitStatus": {
+            "retry": [
+              72
+            ],
+            "purgeCaches": [
+              72
+            ]
+          },
+          "maxRunTime": 1800,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Y_m4ihw8S5e3vMSK59-4Kg"
+          },
+          "cache": {
+            "level-1-checkouts-v3-2f7c6cb7dd63ce826370": "/builds/worker/checkouts"
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--vcs-checkout=/builds/worker/checkouts/gecko",
+            "--fetch-hgfingerprint",
+            "--",
+            "bash",
+            "-cx",
+            "cd /builds/worker/checkouts/gecko && ./mach lint -l flake8 -f treeherder"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts",
+            "TASKCLUSTER_UNTRUSTED_CACHES": "1",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "066cb18ba95a7efe144e729713c429e422d9f95b",
+            "MOZ_SCM_LEVEL": "1",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts",
+            "GECKO_PATH": "/builds/worker/checkouts/gecko",
+            "TASKCLUSTER_PROXY_URL": "http://taskcluster/",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/try",
+            "MOZ_AUTOMATION": "1",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified"
+          },
+          "features": {
+            "taskclusterProxy": true
+          }
+        },
+        "metadata": {
+          "owner": "mcastelluccio@mozilla.com",
+          "source": "https://hg.mozilla.org/try/file/066cb18ba95a7efe144e729713c429e422d9f95b/taskcluster/ci/source-test",
+          "description": "flake8 run over the gecko codebase ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=try&revision=066cb18ba95a7efe144e729713c429e422d9f95b))",
+          "name": "source-test-mozlint-py-flake8"
+        },
+        "tags": {
+          "os": "linux",
+          "createdForUser": "mcastelluccio@mozilla.com",
+          "worker-implementation": "docker-worker",
+          "kind": "source-test",
+          "label": "source-test-mozlint-py-flake8"
+        },
+        "extra": {
+          "index": {
+            "rank": 1544522872
+          },
+          "treeherder": {
+            "machine": {
+              "platform": "lint"
+            },
+            "tier": 1,
+            "symbol": "f8",
+            "jobKind": "test",
+            "collection": {
+              "opt": true
+            }
+          },
+          "treeherder-platform": "lint/opt",
+          "parent": "FG3goVnCQfif8ZEOaM_4IA"
+        }
+      }
+    }
+  ]
+}
