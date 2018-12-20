@@ -66,7 +66,6 @@ class CodeCov(object):
             self.repository = repository
             self.revision = revision
             self.from_pulse = True
-            self.notifier = Notifier(self.repo_dir, revision, client_id, access_token)
 
         branch = self.repository[len(HG_BASE):]
 
@@ -158,7 +157,8 @@ class CodeCov(object):
         # Wait until the build has been ingested by Codecov.
         if uploader.codecov_wait(commit_sha):
             logger.info('Build ingested by codecov.io')
-            self.notifier.notify()
+            notifier = Notifier(self.repo_dir, self.revision, self.client_id, self.access_token)
+            notifier.notify()
         else:
             logger.error('codecov.io took too much time to ingest data.')
 
