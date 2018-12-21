@@ -260,10 +260,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.68";
+      name = "boto3-1.9.70";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/30/eb/5cbd83704d02de76bcba6b48ff9af02287c71c2ef4eec91ea5dcabf7dee3/boto3-1.9.68.tar.gz";
-        sha256 = "88233f9bdc1e6ee58c9489cef6c573bf7e660acfcc1597bc3ff765a065e1a0f0";
+        url = "https://files.pythonhosted.org/packages/69/9a/a3b073d5f40fdcb5ad5a36663e75bcccc07ad721a9560e0fd4e06c3963ef/boto3-1.9.70.tar.gz";
+        sha256 = "9341b88f5242fbd82942b86782a980bad28397ef238774a7d9c860dc6b1a41aa";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -282,10 +282,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.68";
+      name = "botocore-1.12.70";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/09/ab/dfc7c53d727e651561016d3b4fcdc95049c0d52f9e1a27f71c6c146a90d8/botocore-1.12.68.tar.gz";
-        sha256 = "7fd7954f19a49c9794bed696c801f3dfd7bdde306d17c9bb9fb0c069e6b42e5a";
+        url = "https://files.pythonhosted.org/packages/a1/c6/a10883791de3b56809ab42a91f36e4fc1027dd4ec5ba83f65bd108e10cd8/botocore-1.12.70.tar.gz";
+        sha256 = "6170572ac4517eced6631ea55211b7a36d62baf507756c6c2738f0049ec1a540";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -307,8 +307,8 @@ let
     "bugbug" = python.mkDerivation {
       name = "bugbug-0.0.1";
       src = pkgs.fetchurl {
-        url = "https://github.com/marco-c/bugbug/archive/a464840ca14d7172deed5336b66c2105865506e2.tar.gz";
-        sha256 = "f2b54c3f1d90e524abf0d6279ed25373463410bda5280d0f7f2863fe530fcbd2";
+        url = "https://github.com/marco-c/bugbug/archive/499d897792054ccbf2685f1718668200abc62c07.tar.gz";
+        sha256 = "73413d1f8aac32d1d786da83fd2d259046a1fd64c73e8b1e9b1625121342b3fe";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -796,10 +796,10 @@ let
     };
 
     "google-api-python-client" = python.mkDerivation {
-      name = "google-api-python-client-1.7.6";
+      name = "google-api-python-client-1.7.7";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/83/c6/cf9c3c66e986f800c160fdd2ee3d42e172facdcf450c6ccdccb132d21d0c/google-api-python-client-1.7.6.tar.gz";
-        sha256 = "bf98b066fb6e4e6da1f2f11d6cb0bb947de156aef8562a32b0692e7073d38593";
+        url = "https://files.pythonhosted.org/packages/e0/91/0e6a42ea3e0898a75d819a9690c8c8d0eecd31275d8a85503c8fc33949f2/google-api-python-client-1.7.7.tar.gz";
+        sha256 = "9106e7d09d80f59a9472a91edd85c2d6ad420aef28c9440ce1691b4a19ba9ada";
       };
       doCheck = commonDoCheck;
       checkPhase = "";

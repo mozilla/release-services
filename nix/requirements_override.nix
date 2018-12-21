@@ -112,23 +112,10 @@ in skipOverrides {
     };
   };
 
-  "spacy" = self: old: {
-    postInstall = ''
-      ln -s ${self.en-core-web-sm}/lib/${python.__old.python.libPrefix}/site-packages/en_core_web_sm $out/lib/${python.__old.python.libPrefix}/site-packages/spacy/data/en
-    '';
-  };
-
   "taskcluster-urls" = self: old: {
     patchPhase = ''
       # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37
       sed -i -e "s|/api/|/|" taskcluster_urls/__init__.py
-    '';
-  };
-
-  "bugbug" = self: old: {
-    # pypi2nix fails with 0.20.1
-    patchPhase = ''
-      sed -i -e "s|scikit-learn==0.20.1|scikit-learn==0.20.0|" requirements.txt
     '';
   };
 }
