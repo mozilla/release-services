@@ -41,16 +41,19 @@ class Trainer(object):
                 shutil.copyfileobj(input_f, output_f)
 
     def train_bug(self):
+        logger.info('Training *bug vs feature* model')
         model = BugModel()
         model.train()
         self.compress_file('bugmodel')
 
     def train_regression(self):
+        logger.info('Training *regression vs non-regression* model')
         model = RegressionModel()
         model.train()
         self.compress_file('regressionmodel')
 
     def train_tracking(self):
+        logger.info('Training *tracking* model')
         model = TrackingModel()
         model.train()
         self.compress_file('trackingmodel')
