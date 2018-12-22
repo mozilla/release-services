@@ -46,8 +46,8 @@ let
           "--cache-root"
           "/cache"
         ];
-        deadline = "7 hours";
-        maxRunTime = 7 * 60 * 60;
+        deadline = "14 hours";
+        maxRunTime = 14 * 60 * 60;
         taskArtifacts = {
           "public/bugs.json.xz" = {
             type = "file";
