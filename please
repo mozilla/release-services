@@ -22,7 +22,7 @@ fi
 
 # Detect OSX
 SHASUM="sha256sum"
-NETWORK_OPTIONS='--network="host"'
+NETWORK_OPTIONS=--network="host"
 if uname -a | grep -q Darwin; then
     SHASUM="shasum -a 256"
     # Binding to 127.0.0.1 doesn't work on macosx
