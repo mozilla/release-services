@@ -1,11 +1,11 @@
 aioamqp==0.12.0
-aiohttp==3.4.4
+aiohttp==3.5.1
 asn1crypto==0.24.0
 async-timeout==3.0.1
 atomicwrites==1.2.1
 attrs==18.2.0
-boto3==1.9.68
-botocore==1.12.68
+boto3==1.9.71
+botocore==1.12.71
 bugbug==0.0.1
 cachetools==3.0.0
 certifi==2018.11.29
@@ -31,7 +31,7 @@ flake8-debugger==3.1.0
 flake8-isort==2.6.0
 flake8-mypy==17.8.0
 flake8-quotes==1.0.0
-google-api-python-client==1.7.6
+google-api-python-client==1.7.7
 google-auth==1.6.2
 google-auth-httplib2==0.0.3
 httplib2==0.12.0
@@ -44,7 +44,7 @@ libmozdata==0.1.44
 Logbook==1.4.1
 mccabe==0.6.1
 mohawk==0.3.4
-more-itertools==4.3.0
+more-itertools==5.0.0
 mozdef-client==1.0.11
 mozilla-cli-common==1.0.0
 msgpack==0.5.6
@@ -60,8 +60,8 @@ plac==0.9.6
 pluggy==0.8.0
 preshed==2.0.1
 py==1.7.0
-pyasn1==0.4.4
-pyasn1-modules==0.2.2
+pyasn1==0.4.5
+pyasn1-modules==0.2.3
 pycodestyle==2.4.0
 pycparser==2.19
 pyflakes==2.0.0
@@ -89,7 +89,7 @@ spacy==2.0.18
 structlog==18.2.0
 taskcluster==6.0.0
 taskcluster-urls==11.0.0
-testfixtures==6.4.0
+testfixtures==6.4.1
 thinc==6.12.1
 toolz==0.9.0
 tqdm==4.28.1
