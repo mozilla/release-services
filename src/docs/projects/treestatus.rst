@@ -37,6 +37,114 @@ The tree status tool provides an interface for **anyone to see the current
 status of all trees**. It also allows "sheriffs" to manipulate tree status.
 
 
+Start developing
+----------------
+
+0. Requirements
+^^^^^^^^^^^^^^^
+
+You'll need:
+
+1. A `Taskcluster`_ account
+2. Docker installed on your machine
+
+
+1. Taskcluster secret
+^^^^^^^^^^^^^^^^^^^^^
+
+Once logged on Taskcluster, please check that you can view the contents of the
+Taskcluster secret : `repo:github.com/mozilla-releng/services:branch:master`_.
+
+This secret holds the configuration for all the services, you can look at the
+``treestatus/api`` section for more details.
+
+If you don't have access to that secret, or you need to make some changes to
+it, you can create a new secret under the "garbage" namespace (publicly visible
+to anyone); and use its name everywhere the ``master`` secret is mentioned in
+this documentation.
+
+For example, you can create a secret called
+``garbage/LOGIN/treestatus-api-dev`` with this value:
+
+.. code-block:: yaml
+
+  common:
+    APP_CHANNEL: master
+    AUTH_DOMAIN: auth.mozilla.auth0.com
+    SECRET_KEY_BASE64: gDs52OnoHp6YPR7KTQCCC7jGK7PfS0Yn
+  treestatus/api:
+    AUTH_REDIRECT_URI: 'https://localhost:8010/login'
+    AUTH_CLIENT_ID: dummy
+    AUTH_CLIENT_SECRET: dummy
+
+
+Just replace ``LOGIN`` with your username (e.g. ``michel``);
+
+
+2. Taskcluster client
+^^^^^^^^^^^^^^^^^^^^^
+
+You need to create a `Taskcluster client`_ to access above created secrets.
+
+Use the form to create a new client in your own namespace (the ``ClientId``
+should be pre-filled with ``mozilla-auth0/ad|Mozilla-LDAP|login/``, simply
+add an explicit suffix, like ``treestatus-api-dev``)
+
+Add an explicit description, you can leave the ``Expires`` setting into the far
+future.
+
+Add the Taskcluster scope needed to read the secret previously mentioned:
+``secrets:get:repo:github.com/mozilla-releng/services:branch:master`` (or
+``secrets:get:garbage/michel/treestatus-api-dev`` if you're using your own
+secret).
+
+To summarize, you need to setup your client (if your login is ``michel``),
+like this:
+
+============= =================================================================
+Key           Value
+============= =================================================================
+ClientId      ``mozilla-auth0/ad|Mozilla-LDAP|michel/treestatus-api-dev``
+Description   My own treestatus/api dev client
+Client Scopes ``secrets:get:garbage/michel/treestatus-api-dev``
+============= =================================================================
+
+
+.. warning::
+
+  Save the **access token** provided by Taskcluster after creating your client,
+  it won't be displayed afterwards.
+
+
+3. Project shell
+^^^^^^^^^^^^^^^^
+
+Run the following (where ``XXX`` is the Taskcluster access token):
+
+.. code-block:: shell
+
+  ./please shell treestatus/api \
+    --taskcluster-secret="garbage/michel/treestatus-api-dev" \
+    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|michel/treestatus-api-dev" \
+    --taskcluster-access-token="XXX"
+
+Once the initial build finishes, you should get a green development shell,
+running in ``/app/src/treestatus/api``.
+
+
+4. Run project in development mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Run the following (where ``XXX`` is the Taskcluster access token):
+
+.. code-block:: shell
+
+  ./please shell treestatus/api \
+    --taskcluster-secret="garbage/michel/treestatus-api-dev" \
+    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|michel/treestatus-api-dev" \
+    --taskcluster-access-token="XXX"
+
+
 Giving permission/roles to Sherrifs to close/open trees
 -------------------------------------------------------
 
@@ -234,3 +342,6 @@ To start developing ``treestatus`` you would need to:
 .. _`Pulse`: https://wiki.mozilla.org/Auto-tools/Projects/Pulse
 .. _`vpn_sheriff`: https://tools.taskcluster.net/auth/roles/mozilla-group%3Avpn_sheriff
 .. _`Taskcluster scopes`: https://docs.taskcluster.net/presentations/scopes/
+.. _`Taskcluster`: https://tools.taskcluster.net/
+.. _`repo:github.com/mozilla-releng/services:branch:master`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Amaster
+
