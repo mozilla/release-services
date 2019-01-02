@@ -7,8 +7,10 @@ import pytest
 
 from shipit_api.release import bump_version
 from shipit_api.release import is_beta
+from shipit_api.release import is_eme_free_enabled
 from shipit_api.release import is_esr
 from shipit_api.release import is_final_release
+from shipit_api.release import is_partner_enabled
 from shipit_api.release import is_rc
 
 
@@ -68,5 +70,32 @@ def test_is_rc(version, partial_updates, result):
     ('45.0.1esr', '45.0.2esr'),
     ('45.2.1esr', '45.2.2esr'),
 ))
-def test_bump_verison(version, result):
+def test_bump_version(version, result):
     assert bump_version(version) == result
+
+
+@pytest.mark.parametrize('product, version, result', (
+    ('firefox', '59.0', False),
+    ('firefox', '65.0b3', False),
+    ('firefox', '65.0b8', True),
+    ('firefox', '65.0', True),
+    ('firefox', '65.0.1', True),
+    ('firefox', '60.5.0esr', True),
+    ('fennec', '65.0b8', False),
+    ('fennec', '65.0', False),
+))
+def test_is_partner_enabled(product, version, result):
+    assert is_partner_enabled(product, version) == result
+
+
+@pytest.mark.parametrize('product, version, result', (
+    ('firefox', '65.0b3', False),
+    ('firefox', '65.0b8', True),
+    ('firefox', '65.0', True),
+    ('firefox', '65.0.1', True),
+    ('firefox', '60.5.0esr', False),
+    ('fennec', '65.0b8', False),
+    ('fennec', '65.0', False),
+))
+def test_is_eme_free_enabled(product, version, result):
+    assert is_eme_free_enabled(product, version) == result
