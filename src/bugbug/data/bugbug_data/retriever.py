@@ -61,8 +61,10 @@ class Retriever(object):
 
         six_months_ago = datetime.utcnow() - timedelta(182)
         two_years_and_six_months_ago = six_months_ago - timedelta(365)
+        logger.info('Downloading bugs from {} to {}'.format(two_years_and_six_months_ago, six_months_ago))
         bugzilla.download_bugs_between(two_years_and_six_months_ago, six_months_ago)
 
+        logger.info('Downloading labelled bugs')
         bug_ids = labels.get_all_bug_ids()
         bugzilla.download_bugs(bug_ids)
 
