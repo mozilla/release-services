@@ -146,7 +146,7 @@ def cmd(ctx,
 
         # check if there is something to commit
         output = run_check(['git', 'status', '--porcelain'], cwd=root_dir, secrets=dont_log)
-        if output.strip() == "":
+        if output.strip() == '':
             logger.info('Nothing to commit.')
         else:
 

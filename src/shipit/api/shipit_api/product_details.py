@@ -14,7 +14,7 @@ import pathlib
 import re
 import shutil
 import typing
-import urllib
+import urllib.parse
 
 import aiohttp
 import arrow
@@ -977,7 +977,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                   clean_working_copy: bool = False,
                   ):
 
-    secrets = [urllib.parse.urlparse(git_url).password]
+    secrets = [urllib.parse.urlparse(git_repo_url).password]
 
     # Sometimes we want to work from a clean working copy
     if clean_working_copy and shipit_api.config.PRODUCT_DETAILS_DIR.exists():
