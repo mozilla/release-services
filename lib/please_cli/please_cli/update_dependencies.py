@@ -6,6 +6,7 @@
 import os
 import subprocess
 import tempfile
+import urllib
 
 import click
 import click_spinner

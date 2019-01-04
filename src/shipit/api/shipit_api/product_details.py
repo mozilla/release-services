@@ -14,6 +14,7 @@ import pathlib
 import re
 import shutil
 import typing
+import urllib
 
 import aiohttp
 import arrow
@@ -976,6 +977,8 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                   clean_working_copy: bool = False,
                   ):
 
+    secrets = [urllib.parse.urlparse(git_url).password]
+
     # Sometimes we want to work from a clean working copy
     if clean_working_copy and shipit_api.config.PRODUCT_DETAILS_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_DIR)
@@ -985,25 +988,30 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     if shipit_api.config.PRODUCT_DETAILS_DIR.exists():
         run_check(['git', 'pull'],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
                   )
     else:
         run_check(['git', 'clone', git_repo_url, shipit_api.config.PRODUCT_DETAILS_DIR.name],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR.parent,
+                  secrets=secrets,
                   )
 
     # make sure checkout is clean by removing changes to existing files
     run_check(['git', 'reset', '--hard', 'HEAD'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
     # make sure checkout is clean by removing files which are new
     run_check(['git', 'clean', '-xfd'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
 
     # Checkout the branch we are working on
     logger.info(f'Checkout {git_branch} branch.')
     run_check(['git', 'checkout', git_branch],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
 
     # XXX: we need to implement how to figure out breakpoint_version from old_product_details
@@ -1191,6 +1199,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     # Add, commit and push changes
     run_check(['git', 'add', '.'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
 
     run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
@@ -1201,7 +1210,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     commit_message = 'Updating product details'
     run_check(['git', 'commit', '-m', commit_message],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
     run_check(['git', 'push'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
