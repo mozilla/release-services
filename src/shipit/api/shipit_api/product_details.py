@@ -971,6 +971,7 @@ def run_check(*arg, **kw):
 async def rebuild(db_session: sqlalchemy.orm.Session,
                   git_branch: str,
                   git_repo_url: str,
+                  folder_in_repo: str,
                   breakpoint_version: typing.Optional[int],
                   clean_working_copy: bool = False,
                   ):
@@ -1014,8 +1015,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     logger.info(f'Breakpoint version is {breakpoint_version}')
 
     # get data from older product-details
-    logger.info(f'Reading old product details from {shipit_api.config.PRODUCT_DETAILS_DIR}')
-    old_product_details = get_old_product_details(shipit_api.config.PRODUCT_DETAILS_DIR)
+    logger.info(f'Reading old product details from {shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo}')
+    old_product_details = get_old_product_details(
+        shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo)
 
     # get all the releases from the database from (including)
     # breakpoint_version on
@@ -1172,7 +1174,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
             f.write(json.dumps(content, sort_keys=True, indent=4))
 
     for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_NEW_DIR):
-        old_item = shipit_api.config.PRODUCT_DETAILS_DIR / item
+        old_item = shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo / item
         new_item = shipit_api.config.PRODUCT_DETAILS_NEW_DIR / item
 
         # We remove all top files/folders in PRODUCT_DETAILS_DIR that were
