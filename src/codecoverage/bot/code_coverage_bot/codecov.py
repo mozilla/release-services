@@ -144,12 +144,13 @@ class CodeCov(object):
             token=secrets[secrets.COVERALLS_TOKEN]
         )
         logger.info('Report generated successfully')
-        json_output = json.loads(output)
-        file_list = [file['name'] for file in json_output['source_files']]
+
+        report = json.loads(output)
         expected_extensions = ['.js', '.cpp']
         for extension in expected_extensions:
-            assert any([file.endswith(extension) for file in file_list]), 'No {} file in the generated report'.format(
-                extension)
+            assert any(file['name'].endswith(extension) for file in
+                       report['source_files']), 'No {} file in the generated report'.format(extension)
+
         logger.info('Upload changeset coverage data to Phabricator')
         phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
         phabricatorUploader.upload(json.loads(output))
