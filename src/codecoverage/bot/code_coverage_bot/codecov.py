@@ -145,9 +145,15 @@ class CodeCov(object):
         )
         logger.info('Report generated successfully')
 
+        report = json.loads(output)
+        expected_extensions = ['.js', '.cpp']
+        for extension in expected_extensions:
+            assert any(f['name'].endswith(extension) for f in
+                       report['source_files']), 'No {} file in the generated report'.format(extension)
+
         logger.info('Upload changeset coverage data to Phabricator')
         phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
-        phabricatorUploader.upload(json.loads(output))
+        phabricatorUploader.upload(report)
 
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             executor.submit(uploader.coveralls, output)
