@@ -106,12 +106,12 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates):
     return SUPPORTED_FLAVORS[product_key]
 
 
-def generate_action_task(decision_task_id, action_name, action_task_input, actions):
+def generate_action_task(decision_task_id, action_name, input_, actions):
     target_action = find_action(action_name, actions)
     context = copy.deepcopy(actions['variables'])  # parameters
     action_task_id = slugid.nice().decode('utf-8')
     context.update({
-        'input': action_task_input,
+        'input': input_,
         'taskGroupId': decision_task_id,
         'ownTaskId': action_task_id,
         'taskId': None,
@@ -122,24 +122,33 @@ def generate_action_task(decision_task_id, action_name, action_task_input, actio
     return action_task_id, action_task, context
 
 
-def render_action_task(task, context, action_task_id):
+def render_action_task(task, context):
     action_task = jsone.render(task, context)
     return action_task
 
 
-def generate_action_hook(decision_task_id, action_name, actions):
+def generate_action_hook(task_group_id, action_name, actions, input_):
     target_action = find_action(action_name, actions)
     context = copy.deepcopy(actions['variables'])  # parameters
     context.update({
-        'input': {},
-        'taskGroupId': decision_task_id,
+        'taskGroupId': task_group_id,
         'taskId': None,
         'task': None,
+        'input': input_,
     })
-    hook_payload = jsone.render(target_action['hookPayload'], context)
     return dict(
         hook_group_id=target_action['hookGroupId'],
         hook_id=target_action['hookId'],
-        hook_payload=hook_payload,
+        hook_payload=target_action['hookPayload'],
         context=context,
     )
+
+
+def render_action_hook(payload, context, delete_params=[]):
+    rendered_payload = jsone.render(payload, context)
+    # some parameters contain a lot of entries, so we hit the payload
+    # size limit. We don't use this parameter in any case, safe to
+    # remove
+    for param in delete_params:
+        del rendered_payload['decision']['parameters'][param]
+    return rendered_payload

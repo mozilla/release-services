@@ -417,22 +417,22 @@ MOBILE_DETAILS_TEMPLATE = r'''
 # TODO: add other branches
 # TODO: consider move this to secrets, aka per env config
 SIGNOFFS = {
-    'projects/maple': {
-        'fennec': {
-            'ship_fennec': [
-                {
-                    'name': '[relman] Ship Fennec',
-                    'description': 'Publish Firefox for Android to Play Store',
-                    # TODO: this group includes releng/relman/qa/etc, need to split or switch to real scopes
-                    'permissions': 'vpn_cloudops_shipit',
-                },
-                {
-                    'name': '[releng] Ship Fennec',
-                    'description': 'Publish Firefox for Android to Play Store',
-                    # XXX: stands for the LDAP group for now
-                    'permissions': 'releng',
-                },
-            ],
-        },
-    },
+    # 'projects/maple': {
+    #     'fennec': {
+    #         'ship_fennec': [
+    #             {
+    #                 'name': '[relman] Ship Fennec',
+    #                 'description': 'Publish Firefox for Android to Play Store',
+    #                 # TODO: this group includes releng/relman/qa/etc, need to split or switch to real scopes
+    #                 'permissions': 'vpn_cloudops_shipit',
+    #             },
+    #             {
+    #                 'name': '[releng] Ship Fennec',
+    #                 'description': 'Publish Firefox for Android to Play Store',
+    #                 # XXX: stands for the LDAP group for now
+    #                 'permissions': 'releng',
+    #             },
+    #         ],
+    #     },
+    # },
 }
