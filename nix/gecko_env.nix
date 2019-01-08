@@ -5,8 +5,8 @@ let
   inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
-  # Rust 1.30.0
-  rustChannel' = rustChannelOf { date = "2018-10-25"; channel = "stable"; };
+  # Rust 1.31.1
+  rustChannel' = rustChannelOf { date = "2018-12-20"; channel = "stable"; };
   rustChannel = { inherit (rustChannel') cargo; rust = rustChannel'.rust.override { targets=["armv7-linux-androideabi"]; }; };
 
   # Add missing gcc libraries needed by clang (see https://github.com/mozilla/release-services/issues/1256)
