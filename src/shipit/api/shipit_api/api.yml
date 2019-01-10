@@ -269,6 +269,65 @@ paths:
           description: Retruns phase signoff representation
           schema:
             $ref: '#/definitions/Signoffs'
+  /releaseduty:
+    post:
+      summary: Add a new releaseduty entry
+      operationId: shipit_api.api.add_releaseduty
+      consumes:
+      - "application/json"
+      parameters:
+      - in: body
+        name: body
+        description: Releaseduty object
+        required: true
+        schema:
+          $ref: '#/definitions/ReleaseDutyInput'
+      responses:
+        405:
+          description: Invalid input
+        201:
+          description: Releaseduty added
+          schema:
+            $ref: '#/definitions/ReleaseDuty'
+    get:
+      summary: List releaseduty
+      operationId: shipit_api.api.list_releaseduty
+      responses:
+        200:
+          description: A list of releaseduty entries
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ReleaseDuty'
+  /releaseduty/{id}:
+    get:
+      summary: Releaseduty info
+      operationId: shipit_api.api.get_releasduty
+      parameters:
+      - name: id
+        in: path
+        required: true
+        type: integer
+        description: releaseduty id
+      responses:
+        200:
+          description: Returns releaseduty representation
+          schema:
+            $ref: '#/definitions/ReleaseDuty'
+    delete:
+      summary: Remove releaseduty entry
+      operationId: shipit_api.api.delete_releaseduty
+      parameters:
+      - name: id
+        in: path
+        required: true
+        type: integer
+        description: releaseduty id
+      responses:
+        200:
+          description: Returns releaseduty representation
+          schema:
+            $ref: '#/definitions/ReleaseDuty'
 
 definitions:
   ReleaseInput:
@@ -454,3 +513,42 @@ definitions:
         type: string
         format: datetime
         description: Timestamp of the signoff
+
+  ReleaseDutyInput:
+    type: object
+    required:
+    - start_date
+    - finish_date
+    - irc_nick
+    properties:
+      start_date:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      finish_date:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      irc_nick:
+        type: string
+
+  ReleaseDuty:
+    type: object
+    required:
+    - id
+    - start_date
+    - finish_date
+    - irc_nick
+    properties:
+      id:
+        type: integer
+      start_date:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      finish_date:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      irc_nick:
+        type: string

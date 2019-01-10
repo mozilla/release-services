@@ -30,6 +30,28 @@ from shipit_api.tasks import render_action_task
 log = get_logger(__name__)
 
 
+class ReleaseDuty(db.Model):
+    __tablename__ = 'shipit_api_releaseduty'
+    id = sa.Column(sa.Integer, primary_key=True)
+    start_date = sa.Column(sa.DateTime, nullable=False)
+    finish_date = sa.Column(sa.DateTime, nullable=False)
+    irc_nick = sa.Column(sa.String, nullable=False)
+
+    def __init__(self, start_date, finish_date, irc_nick):
+        self.start_date = start_date
+        self.finish_date = finish_date
+        self.irc_nick = irc_nick
+
+    @property
+    def json(self):
+        return dict(
+            id=self.id,
+            start_date=self.start_date,
+            finish_date=self.finish_date,
+            irc_nick=self.irc_nick,
+        )
+
+
 class Signoff(db.Model):
     __tablename__ = 'shipit_api_signoffs'
     id = sa.Column(sa.Integer, primary_key=True)

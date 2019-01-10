@@ -23,6 +23,7 @@ from shipit_api.config import PULSE_ROUTE_REBUILD_PRODUCT_DETAILS
 from shipit_api.config import SCOPE_PREFIX
 from shipit_api.models import Phase
 from shipit_api.models import Release
+from shipit_api.models import ReleaseDuty
 from shipit_api.models import Signoff
 from shipit_api.tasks import ActionsJsonNotFound
 from shipit_api.tasks import UnsupportedFlavor
@@ -49,7 +50,17 @@ def good_version(release):
 
 
 def notify_via_irc(message):
-    owners = current_app.config.get('IRC_NOTIFICATIONS_OWNERS')
+    session = g.db.session
+    try:
+        now = datetime.datetime.utcnow()
+        q = session.query(ReleaseDuty) \
+            .filter(ReleaseDuty.start_date <= now) \
+            .filter(ReleaseDuty.finish_date >= now)
+        owners = [o.irc_nick for o in q.all()]
+    except NoResultFound:
+        logger.warning('No IRC owners found')
+        return
+
     channel = current_app.config.get('IRC_NOTIFICATIONS_CHANNEL')
 
     if owners and channel:
@@ -393,3 +404,46 @@ def phase_signoff(name, phase, uid):
         f'{phase} of {r.product} {r.version} build{r.build_number} signed off by {who}.')
 
     return dict(signoffs=signoffs)
+
+
+def add_releaseduty(body):
+    session = g.db.session
+    releaseduty = ReleaseDuty(
+        start_date=body['start_date'],
+        finish_date=body['finish_date'],
+        irc_nick=body['irc_nick']
+    )
+    session.add(releaseduty)
+    session.commit()
+    return releaseduty.json
+
+
+def delete_releaseduty(id):
+    session = g.db.session
+    try:
+        releaseduty = session.query(ReleaseDuty) \
+            .filter(ReleaseDuty.id == id).one()
+    except NoResultFound:
+        abort(404)
+    session.delete(releaseduty)
+    session.commit()
+    return releaseduty.json
+
+
+def list_releaseduty():
+    session = g.db.session
+    try:
+        releaseduty = session.query(ReleaseDuty).all()
+        return [r.json for r in releaseduty]
+    except NoResultFound:
+        abort(404)
+
+
+def get_releaseduty(id):
+    session = g.db.session
+    try:
+        releaseduty = session.query(ReleaseDuty) \
+            .filter(ReleaseDuty.id == id).one()
+        return releaseduty.json
+    except NoResultFound:
+        abort(404)
