@@ -77,12 +77,11 @@ class PhabricatorUploader(object):
 
         return phab_coverage_data
 
-    def generate(self, report, changesets=None):
+    def generate(self, report):
         results = {}
 
         with hgmo.HGMO(self.repo_dir) as hgmo_server:
-            if changesets is None:
-                changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
+            changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
 
             for changeset in changesets:
                 # Retrieve the revision ID for this changeset.
@@ -121,8 +120,8 @@ class PhabricatorUploader(object):
 
         return results
 
-    def upload(self, report, changesets=None):
-        results = self.generate(report, changesets)
+    def upload(self, report):
+        results = self.generate(report)
 
         if secrets[secrets.PHABRICATOR_ENABLED]:
             phabricator = PhabricatorAPI(secrets[secrets.PHABRICATOR_TOKEN], secrets[secrets.PHABRICATOR_URL])

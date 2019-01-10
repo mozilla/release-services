@@ -191,7 +191,7 @@ class CodeCov(object):
         logger.info('Report generated successfully')
 
         logger.info('Upload changeset coverage data to Phabricator')
-        phabricatorUploader.upload(json.loads(output), changesets)
+        phabricatorUploader.upload(json.loads(output))
 
     # This function is executed when the bot is triggered via cron.
     def go_from_cron(self):
