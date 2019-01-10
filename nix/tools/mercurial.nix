@@ -8,8 +8,8 @@ let
   hg_tools = mkDerivation {
     name = "mozilla-hg-tools";
     src = fetchurl {
-      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/825b151d379c.tar.bz2";
-      sha256 = "0l4i3x20irshf4xa2xy64nvqi04wrj2h92bn24v2j72nqmg6379x";
+      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/f260c773c13f.tar.bz2";
+      sha256 = "1llsqvl7mv02mfbjpn35s9hsqjd1414v81qc81kjwi3kzjbllfvn";
     };
     installPhase = ''
       mkdir -p $out
@@ -25,8 +25,8 @@ let
     };
   };
 
-  # Stick to 4.4 so that robustcheckout works fine
-  version = "4.4";
+  # Stick to 4.8, which is supported by version-control-tools.
+  version = "4.8";
   name = "mercurial-${version}";
 
 in python2Packages.buildPythonApplication {
@@ -35,7 +35,7 @@ in python2Packages.buildPythonApplication {
 
   src = fetchurl {
     url = "https://mercurial-scm.org/release/${name}.tar.gz";
-    sha256 = "1pl77mb7d1r0hwk571cvyq9cyjxl99q0r4d1n0imkj35fnkg8ji3";
+    sha256 = "00rzjbf2blxkc0qwd9mdzx5fnzgpp4jxzijq6wgsjgmqscx40sy5";
   };
 
   buildInputs = [ makeWrapper docutils unzip ];
