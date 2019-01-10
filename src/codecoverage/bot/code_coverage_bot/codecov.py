@@ -173,7 +173,7 @@ class CodeCov(object):
         phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
 
         with hgmo.HGMO(server_address=TRY_REPOSITORY) as hgmo_server:
-            changesets = hgmo_server.get_automation_relevance_changesets(self.revision)['changesets']
+            changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
 
         if not any(phabricatorUploader.parse_revision_id(changeset['desc']) is not None for changeset in changesets):
             logger.info('None of the commits in the try push are linked to a Phabricator revision')

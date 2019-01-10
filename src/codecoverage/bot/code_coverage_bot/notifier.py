@@ -38,7 +38,7 @@ class Notifier(object):
         # Get pushlog and ask the backend to generate the coverage by changeset
         # data, which will be cached.
         with hgmo.HGMO(self.repo_dir) as hgmo_server:
-            changesets = hgmo_server.get_push_changesets(self.revision)
+            changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
 
         for changeset in changesets:
             desc = changeset['desc'].split('\n')[0]
