@@ -85,9 +85,12 @@ class HGMO(object):
 
         annotate_data = r.json()
 
-        if 'not found in manifest' in annotate_data:
-            # The file was removed.
-            return None
+        if 'error' in annotate_data:
+            if 'not found in manifest' in annotate_data['error']:
+                # The file was removed.
+                return None
+            else:
+                raise Exception('Error while retrieving annotate data: {}'.format(annotate_data['error']))
 
         return annotate_data['annotate']
 
