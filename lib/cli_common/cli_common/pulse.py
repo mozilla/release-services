@@ -47,9 +47,6 @@ async def create_consumer(user, password, exchange, topic, callback):
 
     queue = 'queue/{}/{}'.format(user, exchange)
     await channel.queue_declare(queue_name=queue, durable=True)
-    await channel.exchange_declare(exchange_name=exchange,
-                                   type_name='topic',
-                                   durable=True)
     logger.info('Connected', queue=queue, topic=topic, exchange=exchange)
 
     await channel.queue_bind(exchange_name=exchange,

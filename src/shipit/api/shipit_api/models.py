@@ -22,7 +22,9 @@ from shipit_api.tasks import extract_our_flavors
 from shipit_api.tasks import fetch_actions_json
 from shipit_api.tasks import find_action
 from shipit_api.tasks import find_decision_task_id
+from shipit_api.tasks import generate_action_hook
 from shipit_api.tasks import generate_action_task
+from shipit_api.tasks import render_action_hook
 from shipit_api.tasks import render_action_task
 
 log = get_logger(__name__)
@@ -92,14 +94,28 @@ class Phase(db.Model):
 
     @property
     def rendered(self):
-        return render_action_task(self.task_json, self.context_json, self.task_id)
+        return render_action_task(self.task_json, self.context_json)
+
+    @property
+    def rendered_hook_payload(self):
+        context = self.context_json
+        previous_graph_ids = context['input']['previous_graph_ids']
+        # The first ID is always the decision task ID. We need to update the
+        # remaining tasks' IDs using their names.
+        decision_task_id, remaining = previous_graph_ids[0], previous_graph_ids[1:]
+        resolved_previous_graph_ids = [decision_task_id]
+        other_phases = {p.name: p.task_id for p in self.release.phases}
+        for phase_name in remaining:
+            resolved_previous_graph_ids.append(other_phases[phase_name])
+        context['input']['previous_graph_ids'] = resolved_previous_graph_ids
+        return render_action_hook(self.task_json['hook_payload'], context)
 
     @property
     def json(self):
         return {
             'name': self.name,
             'submitted': self.submitted,
-            'actionTaskId': self.task_id,
+            'actionTaskId': self.task_id or '',
             'created': self.created or '',
             'completed': self.completed or '',
         }
@@ -154,7 +170,6 @@ class Release(db.Model):
         ]
 
     def generate_phases(self, partner_urls=None, github_token=None):
-        blob = []
         phases = []
         previous_graph_ids = [self.decision_task_id]
         next_version = bump_version(self.version.replace('esr', ''))
@@ -179,25 +194,44 @@ class Release(db.Model):
                     'buildNumber': info['buildNumber'],
                     'locales': info['locales']
                 }
+        target_action = find_action('release-promotion', self.actions)
+        kind = target_action['kind']
         for phase in self.release_promotion_flavors():
-            action_task_input = copy.deepcopy(input_common)
-            action_task_input['previous_graph_ids'] = list(previous_graph_ids)
-            action_task_input['release_promotion_flavor'] = phase['name']
-            action_task_id, action_task, context = generate_action_task(
-                decision_task_id=self.decision_task_id,
-                action_name='release-promotion',
-                action_task_input=action_task_input,
-                actions=self.actions,
-            )
-            blob.append({
-                'task_id': action_task_id,
-                'task': action_task,
-                'status': 'pending'
-            })
-            if phase['in_previous_graph_ids']:
-                previous_graph_ids.append(action_task_id)
-            phase_obj = Phase(
-                phase['name'], action_task_id, json.dumps(action_task), json.dumps(context))
+            input_ = copy.deepcopy(input_common)
+            input_['release_promotion_flavor'] = phase['name']
+            input_['previous_graph_ids'] = list(previous_graph_ids)
+            if kind == 'task':
+                action_task_id, action_task, context = generate_action_task(
+                    decision_task_id=self.decision_task_id,
+                    action_name='release-promotion',
+                    input_=input_,
+                    actions=self.actions,
+                )
+                if phase['in_previous_graph_ids']:
+                    previous_graph_ids.append(action_task_id)
+                phase_obj = Phase(
+                    phase['name'], action_task_id, json.dumps(action_task), json.dumps(context))
+            elif kind == 'hook':
+                hook = generate_action_hook(
+                    task_group_id=self.decision_task_id,
+                    action_name='release-promotion',
+                    actions=self.actions,
+                    input_=input_,
+                )
+                hook_no_context = {k: v for k, v in hook.items() if k != 'context'}
+                phase_obj = Phase(
+                    name=phase['name'],
+                    task_id='',
+                    task=json.dumps(hook_no_context),
+                    context=json.dumps(hook['context']),
+                )
+                # we need to update input_['previous_graph_ids'] later, because
+                # the task IDs cannot be set for hooks in advance
+                if phase['in_previous_graph_ids']:
+                    previous_graph_ids.append(phase['name'])
+            else:
+                raise ValueError(f'Unsupported kind: {kind}')
+
             phase_obj.signoffs = self.phase_signoffs(self.branch, self.product, phase['name'])
             phases.append(phase_obj)
         self.phases = phases

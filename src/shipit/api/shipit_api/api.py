@@ -28,6 +28,7 @@ from shipit_api.tasks import ActionsJsonNotFound
 from shipit_api.tasks import UnsupportedFlavor
 from shipit_api.tasks import fetch_actions_json
 from shipit_api.tasks import generate_action_hook
+from shipit_api.tasks import render_action_hook
 
 logger = get_logger(__name__)
 
@@ -175,8 +176,18 @@ def schedule_phase(name, phase):
         if not signoff.signed:
             abort(400, 'Pending signoffs')
 
-    queue = get_service('queue')
-    queue.createTask(phase.task_id, phase.rendered)
+    task_or_hook = phase.task_json
+    if 'hook_payload' in task_or_hook:
+        hooks = get_service('hooks')
+        result = hooks.triggerHook(
+            task_or_hook['hook_group_id'],
+            task_or_hook['hook_id'],
+            phase.rendered_hook_payload,
+        )
+        phase.task_id = result['status']['taskId']
+    else:
+        queue = get_service('queue')
+        queue.createTask(phase.task_id, phase.rendered)
 
     phase.submitted = True
     phase.completed_by = g.userinfo['email']
@@ -211,18 +222,21 @@ def abandon_release(name):
                 continue
 
             hook = generate_action_hook(
-                decision_task_id=phase.task_id,
+                task_group_id=phase.task_id,
                 action_name='cancel-all',
                 actions=actions,
+                input_={},
             )
-            # some parameters contain a lot of entries, so we hit the payload
-            # size limit. We don't use this parameter in any case, safe to
-            # remove
-            for long_param in ('existing_tasks', 'release_history', 'release_partner_config'):
-                del hook['context']['parameters'][long_param]
-            logger.info('Cancel phase %s by hook %s', phase.name, hook)
+            hook_payload_rendered = render_action_hook(
+                payload=hook['hook_payload'],
+                context=hook['context'],
+                delete_params=['existing_tasks', 'release_history', 'release_partner_config'],
+            )
+            logger.info('Cancel phase %s by hook %s with payload: %s',
+                        phase.name, hook['hook_id'], hook_payload_rendered)
             hooks = get_service('hooks')
-            res = hooks.triggerHook(hook['hook_group_id'], hook['hook_id'], hook['hook_payload'])
+            res = hooks.triggerHook(
+                    hook['hook_group_id'], hook['hook_id'], hook_payload_rendered)
             logger.debug('Done: %s', res)
 
         r.status = 'aborted'
