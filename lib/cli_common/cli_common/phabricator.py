@@ -40,6 +40,10 @@ class LintResult(dict):
         self['description'] = description
 
 
+class PhabricatorRevisionNotFoundException(Exception):
+    pass
+
+
 class ConduitError(Exception):
     '''
     Exception to be raised when Phabricator returns an error response.
@@ -148,8 +152,8 @@ class PhabricatorAPI(object):
         )
 
         data = out['data']
-        assert len(data) == 1, \
-            'Revision not found'
+        if len(data) != 1:
+            raise PhabricatorRevisionNotFoundException()
         return data[0]
 
     def list_repositories(self):
