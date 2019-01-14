@@ -75,12 +75,6 @@ class HGMO(object):
         r.raise_for_status()
         return r.json()
 
-    def get_push_changesets(self, changeset):
-        push_data = self.get_pushes(changeset=changeset)
-
-        # Reduce operation to concatenate the lists of changesets from all pushes.
-        return sum((data['changesets'] for data in push_data['pushes'].values()), [])
-
     def get_annotate(self, revision, path):
         r = requests.get('{}/json-annotate/{}/{}'.format(self.server_address, revision, path))
 
@@ -91,13 +85,16 @@ class HGMO(object):
 
         annotate_data = r.json()
 
-        if 'not found in manifest' in annotate_data:
-            # The file was removed.
-            return None
+        if 'error' in annotate_data:
+            if 'not found in manifest' in annotate_data['error']:
+                # The file was removed.
+                return None
+            else:
+                raise Exception('Error while retrieving annotate data: {}'.format(annotate_data['error']))
 
         return annotate_data['annotate']
 
     def get_automation_relevance_changesets(self, changeset):
         r = requests.get('{}/json-automationrelevance/{}'.format(self.server_address, changeset))
         r.raise_for_status()
-        return r.json()
+        return r.json()['changesets']

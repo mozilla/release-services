@@ -82,7 +82,7 @@ class PhabricatorUploader(object):
 
         with hgmo.HGMO(self.repo_dir) as hgmo_server:
             if changesets is None:
-                changesets = hgmo_server.get_push_changesets(self.revision)
+                changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
 
             for changeset in changesets:
                 # Retrieve the revision ID for this changeset.
