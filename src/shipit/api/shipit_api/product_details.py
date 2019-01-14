@@ -14,6 +14,7 @@ import pathlib
 import re
 import shutil
 import typing
+import urllib.parse
 
 import aiohttp
 import arrow
@@ -971,9 +972,12 @@ def run_check(*arg, **kw):
 async def rebuild(db_session: sqlalchemy.orm.Session,
                   git_branch: str,
                   git_repo_url: str,
+                  folder_in_repo: str,
                   breakpoint_version: typing.Optional[int],
                   clean_working_copy: bool = False,
                   ):
+
+    secrets = [urllib.parse.urlparse(git_repo_url).password]
 
     # Sometimes we want to work from a clean working copy
     if clean_working_copy and shipit_api.config.PRODUCT_DETAILS_DIR.exists():
@@ -984,25 +988,30 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     if shipit_api.config.PRODUCT_DETAILS_DIR.exists():
         run_check(['git', 'pull'],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
                   )
     else:
         run_check(['git', 'clone', git_repo_url, shipit_api.config.PRODUCT_DETAILS_DIR.name],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR.parent,
+                  secrets=secrets,
                   )
 
     # make sure checkout is clean by removing changes to existing files
     run_check(['git', 'reset', '--hard', 'HEAD'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
     # make sure checkout is clean by removing files which are new
     run_check(['git', 'clean', '-xfd'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
 
     # Checkout the branch we are working on
     logger.info(f'Checkout {git_branch} branch.')
     run_check(['git', 'checkout', git_branch],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
 
     # XXX: we need to implement how to figure out breakpoint_version from old_product_details
@@ -1014,8 +1023,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     logger.info(f'Breakpoint version is {breakpoint_version}')
 
     # get data from older product-details
-    logger.info(f'Reading old product details from {shipit_api.config.PRODUCT_DETAILS_DIR}')
-    old_product_details = get_old_product_details(shipit_api.config.PRODUCT_DETAILS_DIR)
+    logger.info(f'Reading old product details from {shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo}')
+    old_product_details = get_old_product_details(
+        shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo)
 
     # get all the releases from the database from (including)
     # breakpoint_version on
@@ -1172,7 +1182,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
             f.write(json.dumps(content, sort_keys=True, indent=4))
 
     for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_NEW_DIR):
-        old_item = shipit_api.config.PRODUCT_DETAILS_DIR / item
+        old_item = shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo / item
         new_item = shipit_api.config.PRODUCT_DETAILS_NEW_DIR / item
 
         # We remove all top files/folders in PRODUCT_DETAILS_DIR that were
@@ -1189,6 +1199,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     # Add, commit and push changes
     run_check(['git', 'add', '.'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
 
     run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
@@ -1199,7 +1210,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     commit_message = 'Updating product details'
     run_check(['git', 'commit', '-m', commit_message],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )
     run_check(['git', 'push'],
               cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
               )

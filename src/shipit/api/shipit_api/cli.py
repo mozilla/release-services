@@ -106,6 +106,12 @@ async def download_product_details(url: str, download_dir: str):
     default='https://github.com/mozilla-releng/product-details',
 )
 @click.option(
+    '--folder-in-repo',
+    type=str,
+    required=True,
+    default='public/',
+)
+@click.option(
     '--channel',
     type=click.Choice([
         'development',
@@ -119,7 +125,7 @@ async def download_product_details(url: str, download_dir: str):
 )
 @click.option(
     '--breakpoint-version',
-    default=None,
+    default=shipit_api.config.BREAKPOINT_VERSION,
     type=int,
 )
 @click.option(
@@ -128,8 +134,9 @@ async def download_product_details(url: str, download_dir: str):
 )
 @coroutine
 async def rebuild_product_details(database_url: str,
-                                  channel: str,
                                   git_repo_url: str,
+                                  folder_in_repo: str,
+                                  channel: str,
                                   breakpoint_version: typing.Optional[int] = None,
                                   clean_working_copy: bool = False,
                                   ):
@@ -141,6 +148,7 @@ async def rebuild_product_details(database_url: str,
     await shipit_api.product_details.rebuild(session,
                                              channel,
                                              git_repo_url,
+                                             folder_in_repo,
                                              breakpoint_version,
                                              clean_working_copy,
                                              )
