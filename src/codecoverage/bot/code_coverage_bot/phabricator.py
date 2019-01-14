@@ -4,6 +4,7 @@ import re
 
 from cli_common.log import get_logger
 from cli_common.phabricator import PhabricatorAPI
+from cli_common.phabricator import PhabricatorRevisionNotFoundException
 from code_coverage_bot import hgmo
 from code_coverage_bot.secrets import secrets
 
@@ -134,7 +135,10 @@ class PhabricatorUploader(object):
             if not phabricator or not coverage:
                 continue
 
-            rev_data = phabricator.load_revision(rev_id=rev_id)
-            phabricator.upload_coverage_results(rev_data['fields']['diffPHID'], coverage)
-            # XXX: This is only necessary until https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
-            phabricator.upload_lint_results(rev_data['fields']['diffPHID'], 'pass', [])
+            try:
+                rev_data = phabricator.load_revision(rev_id=rev_id)
+                phabricator.upload_coverage_results(rev_data['fields']['diffPHID'], coverage)
+                # XXX: This is only necessary until https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
+                phabricator.upload_lint_results(rev_data['fields']['diffPHID'], 'pass', [])
+            except PhabricatorRevisionNotFoundException:
+                logger.warn('Phabricator revision not found', rev_id=rev_id)
