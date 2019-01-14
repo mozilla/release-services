@@ -13,8 +13,14 @@ import cli_common.log
 log = cli_common.log.get_logger(__name__)
 
 
+def hide_secrets(text, secrets):
+    for secret in secrets:
+        text = text.replace(secret, 'XXX')
+    return text
+
+
 def run(command, stream=False, handle_stream_line=None, log_command=True,
-        log_output=True, **kwargs):
+        log_output=True, secrets=[], **kwargs):
     '''Run a command through subprocess
     '''
 
@@ -38,7 +44,7 @@ def run(command, stream=False, handle_stream_line=None, log_command=True,
         _kwargs['bufsize'] = 1
 
     if log_command:
-        log.debug('Running command', command=command_as_string, kwargs=_kwargs)
+        log.debug('Running command', command=hide_secrets(command_as_string, secrets), kwargs=_kwargs)
 
     with subprocess.Popen(command, **_kwargs) as proc:
         if stream:
@@ -47,7 +53,7 @@ def run(command, stream=False, handle_stream_line=None, log_command=True,
                 line = line.decode('utf-8', 'ignore')
                 line = line.rstrip('\n')
                 if log_output:
-                    log.debug(line)
+                    log.debug(hide_secrets(line, secrets))
                 output.append(line)
                 if handle_stream_line:
                     handle_stream_line(line)
@@ -76,17 +82,18 @@ def run_check(command, **kwargs):
     returncode, output, error = run(command, **kwargs)
 
     if returncode != 0:
+        secrets = kwargs.get('secrets', [])
         log.info(
             'Command failed with code: {}'.format(returncode),
-            command=command_as_string,
-            output=output,
-            error=error,
+            command=hide_secrets(command_as_string, secrets),
+            output=hide_secrets(output, secrets),
+            error=hide_secrets(error, secrets),
         )
-        raise click.ClickException(
+        raise click.ClickException(hide_secrets(
             '`{}` failed with code: {}.'.format(
                 command[0],
                 returncode,
-            )
+            ), secrets)
         )
 
     return output

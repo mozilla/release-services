@@ -6,6 +6,7 @@
 import os
 import subprocess
 import tempfile
+import urllib
 
 import click
 import click_spinner
@@ -129,30 +130,32 @@ def cmd(ctx,
             )
             git_url = secrets['UPDATE_GIT_URL']
 
+        dont_log = [urllib.parse.urlparse(git_url).password]
+
         logger.info('Cloning release-services')
-        run_check(['git', 'clone', git_url, root_dir])
+        run_check(['git', 'clone', git_url, root_dir], secrets=dont_log)
 
         # Setup git
         logger.info('Configuring git')
-        run_check(['git', 'config', 'http.postBuffer', '12M'], cwd=root_dir)
-        run_check(['git', 'config', 'user.email', git_user_email], cwd=root_dir)
-        run_check(['git', 'config', 'user.name', git_user_name], cwd=root_dir)
+        run_check(['git', 'config', 'http.postBuffer', '12M'], cwd=root_dir, secrets=dont_log)
+        run_check(['git', 'config', 'user.email', git_user_email], cwd=root_dir, secrets=dont_log)
+        run_check(['git', 'config', 'user.name', git_user_name], cwd=root_dir, secrets=dont_log)
 
         # run update on checkout
         run_update(project, nix_shell, root_dir, interactive)
 
         # check if there is something to commit
-        output = run_check(['git', 'status', '--porcelain'], cwd=root_dir)
-        if output.strip() == "":
+        output = run_check(['git', 'status', '--porcelain'], cwd=root_dir, secrets=dont_log)
+        if output.strip() == '':
             logger.info('Nothing to commit.')
         else:
 
             # add, commit and push changed to an update branch
             logger.info('Add, commit and push changed to an update branch.')
             commit_message = f'{project}: Dependencies update.'
-            run_check(['git', 'add', '.'], cwd=root_dir)
-            run_check(['git', 'commit', '-m', commit_message], cwd=root_dir)
-            run_check(['git', 'push', '-f', git_url, f'HEAD:{branch_to_push}'], cwd=root_dir)
+            run_check(['git', 'add', '.'], cwd=root_dir, secrets=dont_log)
+            run_check(['git', 'commit', '-m', commit_message], cwd=root_dir, secrets=dont_log)
+            run_check(['git', 'push', '-f', git_url, f'HEAD:{branch_to_push}'], cwd=root_dir, secrets=dont_log)
 
 
 def run_update(project, nix_shell, root_dir, interactive):
