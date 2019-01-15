@@ -10,6 +10,7 @@ from flask import abort
 from flask import current_app
 from flask import g
 from flask import jsonify
+from flask_login import current_user
 from mozilla_version.gecko import FirefoxVersion
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
@@ -163,7 +164,8 @@ def schedule_phase(name, phase):
         queue.createTask(phase.task_id, phase.rendered)
 
     phase.submitted = True
-    phase.completed_by = g.userinfo['email']
+    # TODO: (rok) this should be email
+    phase.completed_by = current_user.get_id()
     completed = datetime.datetime.utcnow()
     phase.completed = completed
     if all([ph.submitted for ph in phase.release.phases]):
@@ -327,14 +329,12 @@ def phase_signoff(name, phase, uid):
     if signoff.signed:
         abort(409, 'Already signed off')
 
-    who = g.userinfo['email']
-    try:
-        # TODO: temporarily use LDAP groups instead of scopes
-        groups = g.userinfo['https://sso.mozilla.com/claim/groups']
-        if signoff.permissions not in groups:
-            abort(401, f'Required LDAP group: `{signoff.permissions}`')
-    except KeyError:
-        abort(401, 'Auth failure')
+    # TODO: (rok) this should be email
+    who = current_user.get_id()
+    # TODO: (rok) transform signoff permissions to scopes
+    permissions = [i for i in signoff.permissions]
+    if not current_user.has_permissions(permissions):
+        abort(401, f'Required LDAP group: `{signoff.permissions}`')
 
     try:
         # Prevent the same user signing off for multiple signoffs
