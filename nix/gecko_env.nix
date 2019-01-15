@@ -4,6 +4,14 @@ let
   inherit (releng_pkgs.lib) mkRustPlatform ;
   inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
+  inherit (builtins) head readFile fetchurl match trace;
+
+  # Fetch rust-cbindgen version required currently on top of mozilla central
+  rust-cbindgen-version = head (
+    match
+      ".*cbindgen_min_version = Version\\('([0-9\.]+)'\\).*"
+      (readFile (fetchurl "https://hg.mozilla.org/mozilla-central/raw-file/tip/build/moz.configure/bindgen.configure"))
+  );
 
   # Rust 1.31.1
   rustChannel' = rustChannelOf { date = "2018-12-20"; channel = "stable"; };
@@ -17,7 +25,7 @@ let
     "${glibc.dev}/include"
   ];
 
-  # Mach needs 0.6.8 at least
+  # Dynamically retrieved version from hgweb
   # From https://github.com/NixOS/nixpkgs/blob/cdf90258e6bf911db2b56280301014a88c91be65/pkgs/development/tools/rust/cbindgen/default.nix
   rustPlatform = mkRustPlatform {
     rust = {
@@ -27,7 +35,7 @@ let
   };
   rust-cbindgen =  rustPlatform.buildRustPackage rec {
     name = "rust-cbindgen-${version}";
-    version = "0.6.8";
+    version = rust-cbindgen-version;
 
     src = fetchFromGitHub {
       owner = "eqrion";
