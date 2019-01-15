@@ -53,15 +53,15 @@ async def rebuild_product_details(channel, body, envelope, properties):
 def cmd():
     pulse_user = flask.current_app.config['PULSE_USER']
     pulse_pass = flask.current_app.config['PULSE_PASSWORD']
-    queue = f'exchange/{pulse_user}/{shipit_api.config.PROJECT_NAME}'
     rebuild_product_details_consumer = cli_common.pulse.create_consumer(
         pulse_user,
         pulse_pass,
-        queue,
+        shipit_api.config.PROJECT_NAME,
         shipit_api.config.PULSE_ROUTE_REBUILD_PRODUCT_DETAILS,
         rebuild_product_details,
     )
 
+    queue = f'exchange/{pulse_user}/{shipit_api.config.PROJECT_NAME}'
     logger.info(
         'Listening for new messages on',
         queue=queue,

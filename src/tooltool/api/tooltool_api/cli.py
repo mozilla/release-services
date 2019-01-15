@@ -216,18 +216,18 @@ def cmd_replicate(app):
 def cmd_worker(app):
     '''Check for pending uploads for a single file.
     '''
-    queue = 'exchange/{}/{}'.format(
-        flask.current_app.config['PULSE_USER'],
-        tooltool_api.config.PROJECT_NAME,
-    )
     consumer = cli_common.pulse.create_consumer(
         app.config['PULSE_USER'],
         app.config['PULSE_PASSWORD'],
-        queue,
+        tooltool_api.config.PROJECT_NAME,
         tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
         check_file_pending_uploads,
     )
 
+    queue = 'exchange/{}/{}'.format(
+        flask.current_app.config['PULSE_USER'],
+        tooltool_api.config.PROJECT_NAME,
+    )
     logger.info(
         'Listening for new messages on',
         queue=queue,

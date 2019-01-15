@@ -13,14 +13,14 @@ import cli_common.log
 logger = cli_common.log.get_logger(__name__)
 
 
-async def create_consumer(user, password, exchange, topic, callback):
+async def create_consumer(user, password, exchange_name, topic, callback):
     '''
     Create an async consumer for Mozilla pulse queues
     Inspired by : https://github.com/mozilla-releng/fennec-aurora-task-creator/blob/master/fennec_aurora_task_creator/worker.py  # noqa
     '''
     assert isinstance(user, str)
     assert isinstance(password, str)
-    assert isinstance(exchange, str)
+    assert isinstance(exchange_name, str)
     assert isinstance(topic, str)
 
     host = 'pulse.mozilla.org'
@@ -45,8 +45,11 @@ async def create_consumer(user, password, exchange, topic, callback):
         connection_global=False
     )
 
-    queue = 'queue/{}/{}'.format(user, exchange)
+    queue = f'queue/{user}/{exchange_name}'
+    exchange = f'exchange/{user}/{exchange_name}'
+
     await channel.queue_declare(queue_name=queue, durable=True)
+    await channel.exchange_declare(exchange_name=exchange, type_name='topic', durable=True)
     logger.info('Connected', queue=queue, topic=topic, exchange=exchange)
 
     await channel.queue_bind(exchange_name=exchange,
