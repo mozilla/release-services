@@ -37,10 +37,13 @@ def test_generate_path(FAKE_ARTIFACTS_DIR):
 
 def test_get_chunks(FAKE_ARTIFACTS_DIR):
     a = ArtifactsHandler([], parent_dir=FAKE_ARTIFACTS_DIR)
-    assert set(a.get_chunks()) == set([
-        'mochitest-1', 'mochitest-2', 'xpcshell-3', 'xpcshell-7',
-        'cppunit', 'firefox-ui-functional-remote',
-    ])
+    assert a.get_chunks('windows') == {
+        'mochitest-1', 'xpcshell-7', 'cppunit',
+    }
+    assert a.get_chunks('linux') == {
+        'mochitest-2', 'xpcshell-3', 'xpcshell-7',
+        'firefox-ui-functional-remote',
+    }
 
 
 def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):

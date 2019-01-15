@@ -29,8 +29,8 @@ class ArtifactsHandler(object):
         file_name = '%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
         return os.path.join(self.parent_dir, file_name)
 
-    def get_chunks(self):
-        return list(set([f.split('_')[1] for f in os.listdir(self.parent_dir)]))
+    def get_chunks(self, platform):
+        return set(f.split('_')[1] for f in os.listdir(self.parent_dir) if os.path.basename(f).startswith(f'{platform}_'))
 
     def get(self, platform=None, suite=None, chunk=None):
         files = os.listdir(self.parent_dir)
