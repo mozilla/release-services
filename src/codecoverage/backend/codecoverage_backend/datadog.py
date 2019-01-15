@@ -26,7 +26,7 @@ def get_stats():
     if secrets.DATADOG_API_KEY:
         datadog.initialize(
             api_key=secrets.DATADOG_API_KEY,
-            host_name='coverage.{}.moz.tools'.format(secrets.APP_CHANNEL),
+            host_name=f'coverage.{secrets.APP_CHANNEL}.moz.tools',
         )
     else:
         logger.info('No datadog credentials')
@@ -36,7 +36,7 @@ def get_stats():
     __stats = datadog.ThreadStats(
         constant_tags=[
             config.PROJECT_NAME,
-            'channel:{}'.format(secrets.APP_CHANNEL),
+            f'channel:{secrets.APP_CHANNEL}',
         ],
     )
     __stats.start(flush_in_thread=True)

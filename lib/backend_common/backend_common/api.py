@@ -73,7 +73,7 @@ class Api:
 
         app = self.__app
 
-        logger.debug('Adding API: {}'.format(specification))
+        logger.debug(f'Adding API: {specification}')
 
         self.__api = api = connexion.apis.flask_api.FlaskApi(
             specification=pathlib.Path(specification),

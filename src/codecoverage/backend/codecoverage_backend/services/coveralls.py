@@ -16,7 +16,7 @@ from codecoverage_backend.services.base import get_mercurial_commit
 class CoverallsCoverage(Coverage):
     @staticmethod
     def _get(url=''):
-        return aiohttp.request('GET', 'https://coveralls.io{}'.format(url))
+        return aiohttp.request('GET', f'https://coveralls.io{url}')
 
     @staticmethod
     @alru_cache(maxsize=2048)
@@ -34,7 +34,8 @@ class CoverallsCoverage(Coverage):
 
     @staticmethod
     async def get_file_coverage(changeset, filename):
-        async with CoverallsCoverage._get('/builds/{}/source.json?filename={}'.format(await get_github_commit(changeset), filename)) as r:
+        async with CoverallsCoverage._get(
+                '/builds/{}/source.json?filename={}'.format(await get_github_commit(changeset), filename)) as r:
             if r.status != 200:
                 return None
 
@@ -42,7 +43,7 @@ class CoverallsCoverage(Coverage):
 
     @staticmethod
     async def get_latest_build():
-        async with CoverallsCoverage._get('/github/{}.json?page=1'.format(secrets.CODECOV_REPO)) as r:
+        async with CoverallsCoverage._get(f'/github/{secrets.CODECOV_REPO}.json?page=1') as r:
             builds = (await r.json())['builds']
 
         return await get_mercurial_commit(builds[0]['commit_sha']), await get_mercurial_commit(builds[1]['commit_sha'])

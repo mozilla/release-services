@@ -55,9 +55,9 @@ def cmd(ctx, template, project):
     template_options['project_path'] = project.replace('-', '_')
     template_options['project_url'] = 'TODO'
     if project.startswith('releng-'):
-        template_options['project_url'] = '{}.mozilla-releng.net'.format(project[len('releng-'):])
+        template_options['project_url'] = f"{project[len('releng-'):]}.mozilla-releng.net"
     if project.startswith('shipit-'):
-        template_options['project_url'] = '{}.shipit.mozilla-releng.net'.format(project[len('shipit-'):])
+        template_options['project_url'] = f"{project[len('shipit-'):]}.shipit.mozilla-releng.net"
 
     click.echo('=> Creating project structure ...')
     cookiecutter.main.cookiecutter(
@@ -67,11 +67,11 @@ def cmd(ctx, template, project):
         output_dir=please_cli.config.SRC_DIR,
     )
 
-    click.secho('\nProject `{}` created sucessfully!'.format(project), fg='green', bold=True)
+    click.secho(f'\nProject `{project}` created sucessfully!', fg='green', bold=True)
     click.echo('\nCode is located at:')
-    click.echo('    src/{}'.format(project))
+    click.echo(f'    src/{project}')
     click.echo('\nTo enter development environemnt run:')
-    click.echo('    ./please shell {}'.format(project))
-    click.echo('\nTo read more about `{}` template visit:'.format(template))
-    click.echo('    https://docs.mozilla-releng.net/develop/template-{}.html'.format(template))
+    click.echo(f'    ./please shell {project}')
+    click.echo(f'\nTo read more about `{template}` template visit:')
+    click.echo(f'    https://docs.mozilla-releng.net/develop/template-{template}.html')
     click.echo('')
