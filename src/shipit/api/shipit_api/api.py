@@ -15,7 +15,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
 from backend_common.auth import auth
-from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from shipit_api.config import PROJECT_NAME
@@ -60,31 +59,7 @@ def notify_via_irc(message):
         })
 
 
-def validate_user(key, checker):
-    def wrapper(view_func):
-        @functools.wraps(view_func)
-        def decorated(*args, **kwargs):
-            has_permissions = False
-            try:
-                has_permissions = checker(g.userinfo[key])
-            except (AttributeError, KeyError):
-                response_body = {'error': 'missing_userinfo',
-                                 'error_description': 'Userinfo is missing'}
-                return response_body, 401, {'WWW-Authenticate': 'Bearer'}
-
-            if has_permissions:
-                return view_func(*args, **kwargs)
-            else:
-                response_body = {'error': 'invalid_permissions',
-                                 'error_description': 'Check your permissions'}
-                return response_body, 401, {'WWW-Authenticate': 'Bearer'}
-        return decorated
-    return wrapper
-
-
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/add_release'])
 def add_release(body):
     session = g.db.session
     r = Release(
@@ -156,9 +131,7 @@ def get_phase(name, phase):
         abort(404)
 
 
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/schedule_phase'])
 def schedule_phase(name, phase):
     session = g.db.session
     try:
@@ -206,9 +179,7 @@ def schedule_phase(name, phase):
     return phase.json
 
 
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/abandon_release'])
 def abandon_release(name):
     session = g.db.session
     try:
@@ -344,7 +315,7 @@ def get_phase_signoff(name, phase):
         abort(404)
 
 
-@mozilla_accept_token()
+@auth.require_scopes([SCOPE_PREFIX + '/phase_signoff'])
 def phase_signoff(name, phase, uid):
     session = g.db.session
     try:
