@@ -91,13 +91,12 @@ class PulseHook(Hook):
 
         # Parse payload
         env = self.parse(body)
-        if env is None:
-            logger.warn('Skipping message, no task created', hook=self.hook_id)
-        elif isinstance(env, list):
-            for e in env:
-                await self.create_task(extra_env=e)
-        else:
-            raise Exception('Unsupported env type')
+        if env is not None:
+            if isinstance(env, list):
+                for e in env:
+                    await self.create_task(extra_env=e)
+            else:
+                raise Exception('Unsupported env type')
 
         # Ack the message so it is removed from the broker's queue
         await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
