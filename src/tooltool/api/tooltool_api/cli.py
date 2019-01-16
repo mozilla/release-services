@@ -218,7 +218,7 @@ def cmd_worker(app):
     '''
     pulse_user = flask.current_app.config['PULSE_USER']
     pulse_pass = flask.current_app.config['PULSE_PASSWORD']
-    exchange = f'exchange/{pulse_user}/{shipit_api.config.PROJECT_NAME}'
+    exchange = f'exchange/{pulse_user}/{tooltool_api.config.PROJECT_NAME}'
     check_file_pending_uploads_consumer = cli_common.pulse.create_consumer(
         pulse_user,
         pulse_pass,
