@@ -45,12 +45,11 @@ async def create_consumer(user, password, exchange, topic, callback):
         connection_global=False
     )
 
+    exchange_name = exchange
     if exchange.startswith(f'exchange/{user}/'):
-        exchange_name = exchange_name[len(f'exchange/{user}/'):]
+        exchange_name = exchange[len(f'exchange/{user}/'):]
     elif exchange.startswith(f'exchange/'):
-        exchange_name = exchange_name[len(f'exchange/'):]
-    else:
-        exchange_name = exchange
+        exchange_name = exchange[len(f'exchange/'):]
 
     if not exchange.startswith('exchange/'):
         exchange = f'exchange/{exchange}'
