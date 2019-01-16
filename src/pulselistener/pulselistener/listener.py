@@ -115,7 +115,7 @@ class HookCodeCoverage(PulseHook):
         super().__init__(
             'project-releng',
             configuration['hookId'],
-            'taskcluster-queue/v1/task-group-resolved',
+            'exchange/taskcluster-queue/v1/task-group-resolved',
             '#'
         )
 
