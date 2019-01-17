@@ -216,22 +216,21 @@ def cmd_replicate(app):
 def cmd_worker(app):
     '''Check for pending uploads for a single file.
     '''
-    queue = 'exchange/{}/{}'.format(
-        flask.current_app.config['PULSE_USER'],
-        tooltool_api.config.PROJECT_NAME,
-    )
-    consumer = cli_common.pulse.create_consumer(
-        app.config['PULSE_USER'],
-        app.config['PULSE_PASSWORD'],
-        queue,
+    pulse_user = flask.current_app.config['PULSE_USER']
+    pulse_pass = flask.current_app.config['PULSE_PASSWORD']
+    exchange = f'exchange/{pulse_user}/{tooltool_api.config.PROJECT_NAME}'
+    check_file_pending_uploads_consumer = cli_common.pulse.create_consumer(
+        pulse_user,
+        pulse_pass,
+        exchange,
         tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
         check_file_pending_uploads,
     )
-
     logger.info(
         'Listening for new messages on',
-        queue=queue,
+        exchange=exchange,
         route=tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
     )
-
-    cli_common.pulse.run_consumer(asyncio.gather(consumer))
+    cli_common.pulse.run_consumer(asyncio.gather(*[
+        check_file_pending_uploads_consumer,
+    ]))
