@@ -137,7 +137,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 CMD /bin/bash
 WORKDIR /app
 
-RUN chown app:app /app -R
+RUN sudo chown app:app /app -R
 
 #
 # install please command
