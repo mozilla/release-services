@@ -1,7 +1,6 @@
 -e ./../../../lib/cli_common[taskcluster,mercurial,log] #egg=mozilla-cli-common
 
-idna<2.8,>=2.5  # Could not find a version that satisfies the requirement idna<2.8,>=2.5 (from requests==2.20.1)
 msgpack<0.6.0,>=0.5.6  # Could not find a version that satisfies the requirement msgpack<0.6.0,>=0.5.6 (from thinc==6.12.1)
 pyOpenSSL>=0.14  # Could not find a version that satisfies the requirement pyOpenSSL>=0.14; extra == "security" (from requests[security]>=2.7.0->libmozdata==0.1.43)
-https://github.com/marco-c/bugbug/archive/628f25576ce8d1314b4bb1e08fb63d5c3b2e8125.tar.gz#egg=bugbug
+https://github.com/marco-c/bugbug/archive/9067dd56a426acd3d11d90d0451242ac3e8fc9a7.tar.gz#egg=bugbug
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz#egg=en-core-web-sm
