@@ -1027,19 +1027,19 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        'nix_path_attribute': 'dockerflow',
+                        'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
                     },
                     'staging': {
                         'enable': True,
-                        'nix_path_attribute': 'dockerflow',
+                        'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
                     },
                     'production': {
                         'enable': True,
-                        'nix_path_attribute': 'dockerflow',
+                        'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
                     },
