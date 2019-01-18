@@ -179,15 +179,19 @@ def schedule_phase(name, phase):
     task_or_hook = phase.task_json
     if 'hook_payload' in task_or_hook:
         hooks = get_service('hooks')
+        client_id = hooks.options['credentials']['clientId'].decode('utf-8')
+        extra_context = {'clientId': client_id}
         result = hooks.triggerHook(
             task_or_hook['hook_group_id'],
             task_or_hook['hook_id'],
-            phase.rendered_hook_payload,
+            phase.rendered_hook_payload(extra_context=extra_context),
         )
         phase.task_id = result['status']['taskId']
     else:
         queue = get_service('queue')
-        queue.createTask(phase.task_id, phase.rendered)
+        client_id = queue.options['credentials']['clientId'].decode('utf-8')
+        extra_context = {'clientId': client_id}
+        queue.createTask(phase.task_id, phase.rendered(extra_context=extra_context))
 
     phase.submitted = True
     phase.completed_by = g.userinfo['email']
@@ -227,6 +231,9 @@ def abandon_release(name):
                 actions=actions,
                 input_={},
             )
+            hooks = get_service('hooks')
+            client_id = hooks.options['credentials']['clientId'].decode('utf-8')
+            hook['context']['clientId'] = client_id
             hook_payload_rendered = render_action_hook(
                 payload=hook['hook_payload'],
                 context=hook['context'],
@@ -234,7 +241,6 @@ def abandon_release(name):
             )
             logger.info('Cancel phase %s by hook %s with payload: %s',
                         phase.name, hook['hook_id'], hook_payload_rendered)
-            hooks = get_service('hooks')
             res = hooks.triggerHook(
                     hook['hook_group_id'], hook['hook_id'], hook_payload_rendered)
             logger.debug('Done: %s', res)

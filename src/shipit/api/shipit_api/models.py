@@ -92,12 +92,13 @@ class Phase(db.Model):
     def context_json(self):
         return json.loads(self.context)
 
-    @property
-    def rendered(self):
-        return render_action_task(self.task_json, self.context_json)
+    def rendered(self, extra_context={}):
+        context = self.context_json
+        if extra_context:
+            context.update(extra_context)
+        return render_action_task(self.task_json, context)
 
-    @property
-    def rendered_hook_payload(self):
+    def rendered_hook_payload(self, extra_context={}):
         context = self.context_json
         previous_graph_ids = context['input']['previous_graph_ids']
         # The first ID is always the decision task ID. We need to update the
@@ -108,6 +109,8 @@ class Phase(db.Model):
         for phase_name in remaining:
             resolved_previous_graph_ids.append(other_phases[phase_name])
         context['input']['previous_graph_ids'] = resolved_previous_graph_ids
+        if extra_context:
+            context.update(extra_context)
         return render_action_hook(self.task_json['hook_payload'], context)
 
     @property
