@@ -102,6 +102,8 @@ let
           -E pkgconfig \
           -E freetype.dev \
           -s numpy \
+          -s flit \
+          -s intreehooks \
           -e pytest-runner \
           -e setuptools-scm \
           -r requirements.txt \
