@@ -16,8 +16,8 @@ def fake_artifacts_handler(grcov_artifact, jsvm_artifact, grcov_existing_file_ar
         def __init__(self):
             pass
 
-        def get_chunks(self):
-            return ['chunk1', 'chunk2']
+        def get_chunks(self, platform):
+            return {'chunk1', 'chunk2'}
 
         def get(self, platform=None, suite=None, chunk=None):
             if platform == 'linux' and chunk == 'chunk1':

@@ -167,14 +167,18 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
             futures = {}
             for platform in PLATFORMS:
                 logger.info('Reading chunk coverage artifacts for {}.'.format(platform))
-                for chunk in artifactsHandler.get_chunks():
+                for chunk in artifactsHandler.get_chunks(platform):
                     suite = taskcluster.get_suite(chunk)
                     if not is_chunk_only_suite(suite):
                         continue
 
                     assert chunk.strip() != '', 'chunk can not be an empty string'
 
-                    future = executor.submit(grcov.files_list, artifactsHandler.get(platform=platform, chunk=chunk), source_dir=repo_dir)
+                    artifacts = artifactsHandler.get(platform=platform, chunk=chunk)
+
+                    assert len(artifacts) > 0, 'There should be at least one artifact'
+
+                    future = executor.submit(grcov.files_list, artifacts, source_dir=repo_dir)
                     futures[future] = (platform, chunk)
 
                 logger.info('Populating chunk_to_test table for {}.'.format(platform))

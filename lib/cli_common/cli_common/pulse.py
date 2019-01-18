@@ -45,8 +45,34 @@ async def create_consumer(user, password, exchange, topic, callback):
         connection_global=False
     )
 
-    queue = 'queue/{}/{}'.format(user, exchange)
+    # get exchange name out from full exchange name
+    exchange_name = exchange
+    if exchange.startswith(f'exchange/{user}/'):
+        exchange_name = exchange[len(f'exchange/{user}/'):]
+    elif exchange.startswith(f'exchange/'):
+        exchange_name = exchange[len(f'exchange/'):]
+
+    # full exchange name should start with "exchange/"
+    if not exchange.startswith('exchange/'):
+        exchange = f'exchange/{exchange}'
+
+    # queue is required to:
+    # - start with "queue/"
+    # - user should follow the "queue/"
+    # - after that "exchange/" should follow, this is not requirement from
+    #   pulse but something we started doing in release services
+    queue = f'queue/{user}/exchange/{exchange_name}'
+
     await channel.queue_declare(queue_name=queue, durable=True)
+
+    # in case we are going to listen to an exchange that is specific for this
+    # user, we need to ensure that exchange exists before first message is
+    # sent (this is what creates exchange)
+    if exchange.startswith(f'exchange/{user}/'):
+        await channel.exchange_declare(exchange_name=exchange,
+                                       type_name='topic',
+                                       durable=True)
+
     logger.info('Connected', queue=queue, topic=topic, exchange=exchange)
 
     await channel.queue_bind(exchange_name=exchange,
