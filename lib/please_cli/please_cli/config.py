@@ -62,6 +62,7 @@ DEV_PROJECTS = ['postgresql', 'redis']
 PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
+PROJECTS += ['scriptworker/shipit']
 PROJECTS += DEV_PROJECTS
 
 
