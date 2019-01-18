@@ -326,7 +326,7 @@ PROJECTS_CONFIG = {
                         'dns': 'tokens.staging.mozilla-releng.net.herokudns.com',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tokens',
                         'heroku_dyno_type': 'web',
@@ -367,7 +367,7 @@ PROJECTS_CONFIG = {
                         'dns': 'shizuoka-60622.herokussl.com',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tooltool',
                         'heroku_dyno_type': 'web',
@@ -394,7 +394,7 @@ PROJECTS_CONFIG = {
                         'heroku_command': '/bin/flask worker',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tooltool',
                         'heroku_dyno_type': 'worker',
@@ -420,7 +420,7 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'cron.replicate.production',
                         'name-suffix': '-replicate',
                         'docker_registry': 'index.docker.io',
@@ -446,7 +446,7 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'cron.check_pending_uploads.production',
                         'name-suffix': '-check_pending_uploads',
                         'docker_registry': 'index.docker.io',

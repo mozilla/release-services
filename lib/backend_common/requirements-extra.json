@@ -24,7 +24,7 @@
         "Flask-Migrate",
         "Flask-SQLAlchemy",
         "SQLAlchemy",
-        "itsdangerous",
+        "itsdangerous==0.24",
         "mozilla-cli-common[log]",
         "taskcluster"
     ],
@@ -50,7 +50,7 @@
     ],
     "notifications": [
         "Flask",
-        "mohawk",
+        "mohawk<0.4,>=0.3.4",
         "requests"
     ],
     "security": [
