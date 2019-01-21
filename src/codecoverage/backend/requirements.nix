@@ -1830,10 +1830,10 @@ let
     };
 
     "pytest-asyncio" = python.mkDerivation {
-      name = "pytest-asyncio-0.9.0";
+      name = "pytest-asyncio-0.10.0";
       src = pkgs.fetchurl {
-        url = "https://github.com/pytest-dev/pytest-asyncio/archive/v0.9.0.tar.gz";
-        sha256 = "20db04d27c197050f0ecdc30c115e677a77f0d27d95416f6ecef4b29e2de30f9";
+        url = "https://files.pythonhosted.org/packages/dc/20/a35b6fbb9b97859ed2203ad474e4dd8591ef369b7387f6ef08270a0a3e84/pytest-asyncio-0.10.0.tar.gz";
+        sha256 = "9fac5100fd716cbecf6ef89233e8590a4ad61d729d1732e0a96b84182df1daaf";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2096,10 +2096,10 @@ let
     };
 
     "rq" = python.mkDerivation {
-      name = "rq-0.13.0";
+      name = "rq-0.12.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/d2/d7/51904875025b2432cb3c97cc476ab8d2033a8f105393db2267622e56f3ac/rq-0.13.0.tar.gz";
-        sha256 = "2ef7de3fa26a4ce41dcd0561bdba12bb62fa5b9b6d21120122d8dbbe44bb6a77";
+        url = "https://files.pythonhosted.org/packages/bf/64/29e23a46bdc084199398288d0cd2e183b64cb375483bfe8bba797331858a/rq-0.12.0.tar.gz";
+        sha256 = "7ac5989a27bdff713dd40517498c1b3bf720f8ebc47305055496f653a29da899";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
