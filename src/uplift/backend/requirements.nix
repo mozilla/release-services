@@ -1743,10 +1743,10 @@ let
     };
 
     "pytest-asyncio" = python.mkDerivation {
-      name = "pytest-asyncio-0.9.0";
+      name = "pytest-asyncio-0.10.0";
       src = pkgs.fetchurl {
-        url = "https://github.com/pytest-dev/pytest-asyncio/archive/v0.9.0.tar.gz";
-        sha256 = "20db04d27c197050f0ecdc30c115e677a77f0d27d95416f6ecef4b29e2de30f9";
+        url = "https://files.pythonhosted.org/packages/dc/20/a35b6fbb9b97859ed2203ad474e4dd8591ef369b7387f6ef08270a0a3e84/pytest-asyncio-0.10.0.tar.gz";
+        sha256 = "9fac5100fd716cbecf6ef89233e8590a4ad61d729d1732e0a96b84182df1daaf";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
