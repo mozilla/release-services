@@ -878,10 +878,10 @@ let
     };
 
     "mohawk" = python.mkDerivation {
-      name = "mohawk-1.0.0";
+      name = "mohawk-0.3.4";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/f2/05/e9a7e8e8194f77d40f32ef9fba96d3d3bcdd55d3057c3cd6e34b0b1959b2/mohawk-1.0.0.tar.gz";
-        sha256 = "fca4e34d8f5492f1c33141c98b96e168a089e5692ce65fb747e4bb613f5fe552";
+        url = "https://files.pythonhosted.org/packages/19/22/10f696548a8d41ad41b92ab6c848c60c669e18c8681c179265ce4d048b03/mohawk-0.3.4.tar.gz";
+        sha256 = "e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1109,10 +1109,10 @@ let
     };
 
     "pyOpenSSL" = python.mkDerivation {
-      name = "pyOpenSSL-18.0.0";
+      name = "pyOpenSSL-19.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/9b/7c/ee600b2a9304d260d96044ab5c5e57aa489755b92bbeb4c0803f9504f480/pyOpenSSL-18.0.0.tar.gz";
-        sha256 = "6488f1423b00f73b7ad5167885312bb0ce410d3312eb212393795b53c8caa580";
+        url = "https://files.pythonhosted.org/packages/40/d0/8efd61531f338a89b4efa48fcf1972d870d2b67a7aea9dcf70783c8464dc/pyOpenSSL-19.0.0.tar.gz";
+        sha256 = "aeca66338f6de19d1aa46ed634c3b9ae519a64b458f8468aec688e7e3c20f200";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
