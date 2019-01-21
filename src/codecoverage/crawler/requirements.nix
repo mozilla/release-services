@@ -364,8 +364,8 @@ let
     "coverage-crawler" = python.mkDerivation {
       name = "coverage-crawler-1.0.0";
       src = pkgs.fetchurl {
-        url = "https://github.com/mozilla/coverage-crawler/archive/be53319e43a2a991df69fbbb17489548984809ca.tar.gz";
-        sha256 = "7c8332623377c911592909ff8dfdab0945de084ca0986d083e2cec8e8e699c30";
+        url = "https://github.com/mozilla/coverage-crawler/archive/0f20282ae05ee6e15e697d39d82dc7c89865b255.tar.gz";
+        sha256 = "34ea9a565662d9a1fbc9364c49fd927d3e9f8d0abe58bf8770f7757bc454f728";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -465,8 +465,8 @@ let
     "firefox-code-coverage" = python.mkDerivation {
       name = "firefox-code-coverage-1.0.0";
       src = pkgs.fetchurl {
-        url = "https://github.com/marco-c/firefox-code-coverage/archive/06e2438cf0f1c29b7fae129f8b73231e55f3e14b.tar.gz";
-        sha256 = "dad5875d7b66de2727f223d691e1de7035393b39dc74823ea36d999f8521ac77";
+        url = "https://github.com/marco-c/firefox-code-coverage/archive/d378786543cd0d15e7c80c2feec1c3f06aabebe4.tar.gz";
+        sha256 = "60c903c0343c7b06374c26535e6ba1b84274afa58f26f9599867b35afe49ac1f";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1212,10 +1212,10 @@ let
     };
 
     "six" = python.mkDerivation {
-      name = "six-1.11.0";
+      name = "six-1.12.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz";
-        sha256 = "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9";
+        url = "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz";
+        sha256 = "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1223,7 +1223,7 @@ let
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "http://pypi.python.org/pypi/six/";
+        homepage = "https://github.com/benjaminp/six";
         license = licenses.mit;
         description = "Python 2 and 3 compatibility utilities";
       };
