@@ -16,10 +16,10 @@ boto
 connexion[swagger-ui]
 flask-oidc
 flask-talisman
-itsdangerous
+itsdangerous==0.24
 kombu
 Logbook
-mohawk
+mohawk<0.4,>=0.3.4
 python-dateutil<2.7.0,>=2.1
 python-jose
 requests
