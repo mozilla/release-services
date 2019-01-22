@@ -326,7 +326,7 @@ PROJECTS_CONFIG = {
                         'dns': 'tokens.staging.mozilla-releng.net.herokudns.com',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tokens',
                         'heroku_dyno_type': 'web',
@@ -367,7 +367,7 @@ PROJECTS_CONFIG = {
                         'dns': 'shizuoka-60622.herokussl.com',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tooltool',
                         'heroku_dyno_type': 'web',
@@ -394,7 +394,7 @@ PROJECTS_CONFIG = {
                         'heroku_command': '/bin/flask worker',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tooltool',
                         'heroku_dyno_type': 'worker',
@@ -420,7 +420,7 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'cron.replicate.production',
                         'name-suffix': '-replicate',
                         'docker_registry': 'index.docker.io',
@@ -446,7 +446,7 @@ PROJECTS_CONFIG = {
                         'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
-                        'enable': False,
+                        'enable': True,
                         'nix_path_attribute': 'cron.check_pending_uploads.production',
                         'name-suffix': '-check_pending_uploads',
                         'docker_registry': 'index.docker.io',
@@ -900,6 +900,7 @@ PROJECTS_CONFIG = {
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
+                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-testing',
                     },
                     'staging': {
                         'enable': True,
@@ -907,6 +908,7 @@ PROJECTS_CONFIG = {
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
+                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-staging',
                     },
                     'production': {
                         'enable': True,
@@ -916,6 +918,38 @@ PROJECTS_CONFIG = {
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/shipitbackend',
+                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-production',
+                    },
+                },
+            },
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'url': 'https://api.shipit.testing.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'shipit_api_dockerflow_testing',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'url': 'https://api.shipit.staging.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'shipit_api_dockerflow_staging',
+                    },
+                    'production': {
+                        'enable': True,
+                        # TODO: we will switch to new url soon
+                        # 'url': 'https://api.shipit.mozilla-releng.net',
+                        'url': 'https://shipit-api.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'shipit_api_dockerflow_production',
                     },
                 },
             },

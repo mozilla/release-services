@@ -1,5 +1,5 @@
 -e ./../../../lib/cli_common[taskcluster,mercurial,log] #egg=mozilla-cli-common
 
 Click
-mohawk
+mohawk<0.4,>=0.3.4
 libmozdata
