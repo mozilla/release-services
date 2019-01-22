@@ -628,9 +628,16 @@ def cmd_DOCKERHUB(ctx,
         # Puth the hash to the end of the tag
         image_tag_versioned = '-'.join(reversed(tag_base.split('-', 1)))
         # Stable tag, e.g. shipit-api-staging
-        image_tag = docker_image_tag_format.format(project=project.replace('/', '-'),
-                                                   nix_path_attribute=nix_path_attribute.replace('/', '-'),
+        nix_path_attribute_ = nix_path_attribute.replace('/', '-')
+        project_ = project.replace('/', '-')
+        image_tag = docker_image_tag_format.format(project=project_,
+                                                   nix_path_attribute=nix_path_attribute_,
                                                    channel=channel)
+        # If nix_path_attribute contains the project name, do not duplicate it
+        if nix_path_attribute_.startswith(project_):
+            # TODO: remove the following hack and strip the project name unconditionally
+            if docker_repo != 'mozilla/shipitbackend':
+                image_tag = image_tag.replace(f'{project_}-', '', 1)
         for tag in (image_tag_versioned, image_tag):
             click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, tag), nl=False)
             with click_spinner.spinner():
