@@ -565,9 +565,9 @@ def cmd_TASKCLUSTER_HOOK(ctx,
     help='Docker password.',
     )
 @click.option(
-    '--docker-image-tag-format',
-    default='{project}-{nix_path_attribute}-{channel}',
-    help='Docker image tag format. Accepted templates: {project}, {nix_path_attribute}, {channel}',
+    '--docker-stable-tag',
+    required=True,
+    help='Docker image tag that we overwrite with every push. Helps tracking a project using a single tag',
     )
 @click.option(
     '--interactive/--no-interactive',
@@ -587,7 +587,7 @@ def cmd_DOCKERHUB(ctx,
                   docker_username,
                   docker_password,
                   docker_repo,
-                  docker_image_tag_format,
+                  docker_stable_tag,
                   interactive,
                   ):
     '''Push to Docker Hub.
@@ -625,13 +625,9 @@ def cmd_DOCKERHUB(ctx,
         project_basename = os.path.basename(project_path)
         # remove the docker-image-mozilla- prefix and the extension
         tag_base = project_basename.replace('docker-image-mozilla-', '').replace('.tar.gz', '')
-        # Puth the hash to the end of the tag
+        # Put the hash to the end of the tag
         image_tag_versioned = '-'.join(reversed(tag_base.split('-', 1)))
-        # Stable tag, e.g. shipit-api-staging
-        image_tag = docker_image_tag_format.format(project=project.replace('/', '-'),
-                                                   nix_path_attribute=nix_path_attribute.replace('/', '-'),
-                                                   channel=channel)
-        for tag in (image_tag_versioned, image_tag):
+        for tag in (image_tag_versioned, docker_stable_tag):
             click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, tag), nl=False)
             with click_spinner.spinner():
                 please_cli.utils.push_docker_image(
