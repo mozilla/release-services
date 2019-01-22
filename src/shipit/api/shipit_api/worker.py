@@ -31,6 +31,7 @@ async def rebuild_product_details(channel, body, envelope, properties):
         os.environ['TASKCLUSTER_SECRET'],
         shipit_api.config.PROJECT_NAME,
         required=(
+            'APP_CHANNEL',
             'PRODUCT_DETAILS_GIT_REPO_URL',
         ),
         taskcluster_client_id=os.environ['TASKCLUSTER_CLIENT_ID'],
@@ -40,9 +41,13 @@ async def rebuild_product_details(channel, body, envelope, properties):
     body = json.loads(body.decode('utf-8'))
     breakpoint_version = body.get('breakpoint_version', secrets.get('BREAKPOINT_VERSION'))
     clean_working_copy = body.get('clean_working_copy', False)
+    channel = body.get('channel', secrets['APP_CHANNEL'])
+    folder_in_repo = body.get('folder_in_repo', 'public/')
 
     shipit_api.product_details.rebuild(flask.current_app.db.session,
+                                       channel,
                                        secrets['PRODUCT_DETAILS_GIT_REPO_URL'],
+                                       folder_in_repo,
                                        breakpoint_version,
                                        clean_working_copy,
                                        )

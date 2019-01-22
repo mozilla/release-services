@@ -259,3 +259,45 @@ def v1_sync(ldap_username,
     )
     r.raise_for_status()
     click.echo(click.style('OK', fg='green'))
+
+
+@click.command(name='trigger-product-details')
+@click.option(
+    '--base-url',
+    default='https://api.mozilla-releng.net',
+)
+@click.option(
+    '--taskcluster-client-id',
+    help='Taskcluster Client ID',
+    required=True,
+    prompt=True,
+)
+@click.option(
+    '--taskcluster-access-token',
+    help='Taskcluster Access token',
+    required=True,
+    prompt=True,
+    hide_input=True,
+)
+def trigger_product_details(base_url: str,
+                            taskcluster_client_id: str,
+                            taskcluster_access_token: str,
+                            ):
+    url = f'{base_url}/product-details'
+    data = '{}'
+    click.echo(f'Triggering product details rebuild on {url} url ... ', nl=False)
+    headers = get_taskcluster_headers(
+        url,
+        'post',
+        data,
+        taskcluster_client_id,
+        taskcluster_access_token,
+    )
+    r = requests.post(
+        url,
+        headers=headers,
+        verify=True,
+        data=data,
+    )
+    r.raise_for_status()
+    click.echo(click.style('OK', fg='green'))

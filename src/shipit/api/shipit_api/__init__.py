@@ -26,6 +26,7 @@ def create_app(config=None):
             'auth',
             'auth0',
             'db',
+            'pulse',
         ],
     )
 
