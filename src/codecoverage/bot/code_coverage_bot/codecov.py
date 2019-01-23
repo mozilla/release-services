@@ -137,14 +137,15 @@ class CodeCov(object):
         r.raise_for_status()
         push_id = r.json()['pushid']
 
-        for zf in self.artifactsHandler.get():
-            with zipfile.ZipFile(zf, 'r') as uz:
-                for i in uz.namelist():
-                    with uz.open(i, 'r') as fl:
-                        entries = fl.read().decode('utf-8').splitlines()
-                        source_files = [line[3:] for line in entries if line.startswith('SF:')]
-                        missing_files = [f for f in source_files if not os.path.exists(os.path.join(self.repo_dir, f))]
-                        assert len(missing_files) == 0, f'{missing_files} are missing'
+        for artifact in self.artifactsHandler.get():
+            if 'jsvm' in artifact:
+                with zipfile.ZipFile(artifact, 'r') as zf:
+                    for file_name in zf.namelist():
+                        with zf.open(file_name, 'r') as fl:
+                            source_files = [line[3:-1].decode('utf-8') for line in fl if line.startswith(b'SF:')]
+                            missing_files = [f for f in source_files if
+                                             not os.path.exists(os.path.join(self.repo_dir, f))]
+                            assert len(missing_files) == 0, f'{missing_files} are missing'
 
         output = grcov.report(
             self.artifactsHandler.get(),
