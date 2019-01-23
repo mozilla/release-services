@@ -143,7 +143,7 @@ class CodeCov(object):
                     with uz.open(i, 'r') as fl:
                         entries = fl.read().decode('utf-8').splitlines()
                         source_files = [line[3:] for line in entries if line.startswith('SF:')]
-                        missing_files = [f for f in source_files if not os.path.exists(os.path.join(repo_dir, f))]
+                        missing_files = [f for f in source_files if not os.path.exists(os.path.join(self.repo_dir, f))]
                         assert len(missing_files) == 0, f'{missing_files} are missing'
 
         output = grcov.report(
