@@ -3,6 +3,7 @@
 import json
 import os
 import tempfile
+import zipfile
 from datetime import datetime
 from datetime import timedelta
 
@@ -135,6 +136,16 @@ class CodeCov(object):
         r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
         r.raise_for_status()
         push_id = r.json()['pushid']
+
+        for artifact in self.artifactsHandler.get():
+            if 'jsvm' not in artifact:
+                continue
+            with zipfile.ZipFile(artifact, 'r') as zf:
+                for file_name in zf.namelist():
+                    with zf.open(file_name, 'r') as fl:
+                        source_files = [line[3:].decode('utf-8').rstrip() for line in fl if line.startswith(b'SF:')]
+                        missing_files = [f for f in source_files if not os.path.exists(os.path.join(self.repo_dir, f))]
+                        assert len(missing_files) == 0, f'{missing_files} are missing'
 
         output = grcov.report(
             self.artifactsHandler.get(),
