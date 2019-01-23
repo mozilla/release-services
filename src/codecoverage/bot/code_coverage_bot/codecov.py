@@ -141,9 +141,9 @@ class CodeCov(object):
             with zipfile.ZipFile(zf, 'r') as uz:
                 for i in uz.namelist():
                     with uz.open(i, 'r') as fl:
-                        l = fl.read().decode('utf-8').splitlines()
-                        missing_files = [f for f in (s[3:] for s in l if s.startswith('SF')) if
-                                         not os.path.exists(os.path.join(self.repo_dir, f))]
+                        entries = fl.read().decode('utf-8').splitlines()
+                        source_files = [line[3:] for line in entries if line.startswith('SF:')]
+                        missing_files = [f for f in source_files if not os.path.exists(os.path.join(repo_dir, f))]
                         assert len(missing_files) == 0, f'{missing_files} are missing'
 
         output = grcov.report(
