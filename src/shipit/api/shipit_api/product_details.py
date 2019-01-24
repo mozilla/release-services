@@ -194,6 +194,7 @@ def get_product_mozilla_version(product: Product,
 async def fetch_l10n_data(
         session: aiohttp.ClientSession,
         release: shipit_api.models.Release,
+        git_branch: str,
         ) -> typing.Tuple[shipit_api.models.Release, typing.Optional[ReleaseL10ns]]:
 
     url_file = {
@@ -230,11 +231,16 @@ async def fetch_l10n_data(
     else:
         logger.debug(f'Fetching {url}')
         async with session.get(url) as response:
-            response.raise_for_status()
-            logger.debug(f'Fetched {url}')
-            changesets = await response.json()
-            with cache.open('w+') as f:
-                f.write(json.dumps(changesets))
+            try:
+                response.raise_for_status()
+                logger.debug(f'Fetched {url}')
+                changesets = await response.json()
+                with cache.open('w+') as f:
+                    f.write(json.dumps(changesets))
+            except Exception as e:
+                logger.exception(e)
+                if git_branch == 'production':
+                    raise
 
     return (release, changesets)
 
@@ -1037,7 +1043,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     logger.info(f'Getting locales from hg.mozilla.org for each release from database')
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit_per_host=50)) as session:
         releases_l10n = await asyncio.gather(*[
-            fetch_l10n_data(session, release)
+            fetch_l10n_data(session, release, git_branch)
             for release in releases
         ])
     releases_l10n = {
