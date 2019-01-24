@@ -62,7 +62,7 @@ DEV_PROJECTS = ['postgresql', 'redis']
 PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
-PROJECTS += ['scriptworker/shipit']
+PROJECTS += ['scriptworker/shipitscript']
 PROJECTS += DEV_PROJECTS
 
 
@@ -1019,7 +1019,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'scriptworker/shipit': {
+    'scriptworker/shipitscript': {
         'update': False,
         'deploys': [
             {
@@ -1030,21 +1030,21 @@ PROJECTS_CONFIG = {
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'scriptworker_shipit_docker_testing',
+                        'docker_stable_tag': 'scriptworker_shipitscript_docker_testing',
                     },
                     'staging': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'scriptworker_shipit_docker_staging',
+                        'docker_stable_tag': 'scriptworker_shipitscript_docker_staging',
                     },
                     'production': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'scriptworker_shipit_docker_production',
+                        'docker_stable_tag': 'scriptworker_shipitscript_docker_production',
                     },
                 },
             },
