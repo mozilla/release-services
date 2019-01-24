@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -C /app/src/bugbug/data/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E blas -E gfortran -E libffi -E openssl -E pkgconfig -E freetype.dev -s numpy -s flit -s intreehooks -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -C /tmp/release-services-fuse1jsq/src/bugbug/data/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E blas -E gfortran -E libffi -E openssl -E pkgconfig -E freetype.dev -s numpy -s flit -s intreehooks -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -278,10 +278,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.81";
+      name = "boto3-1.9.84";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/db/11/d548f5ead4209222135f6a4c86afdb54074407b32aaa6a53384aadd2b69e/boto3-1.9.81.tar.gz";
-        sha256 = "31c59a141570e05acca0ed67084b19b5d77055b1d89889d816cdf0152a00ac5d";
+        url = "https://files.pythonhosted.org/packages/ee/c4/d5238a23efa236176e4bb7182aae416ec3d7effdb1de0be4ae589332981a/boto3-1.9.84.tar.gz";
+        sha256 = "31ca957a8df72956cc83dc3f178cc6ebd556fff3e8c602548ae83c65c282a18e";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -300,10 +300,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.81";
+      name = "botocore-1.12.84";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/88/48/b05debce2b5a0b5165e48f06669dd42e7530c1d9c343806a91b60555c81a/botocore-1.12.81.tar.gz";
-        sha256 = "783cb25515f59ea191cfe70944d1c69c988911845f3e86b3559b49b52e36ea27";
+        url = "https://files.pythonhosted.org/packages/88/a7/1ffea2cdfd9e7ed60533b7343f5e059e987bc557c791ba12a3a4a4f52e80/botocore-1.12.84.tar.gz";
+        sha256 = "7691463aa1e2e66cd5889342a58bb7ca7a12f4d6343cb515a66dbe58caaffe42";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -489,10 +489,10 @@ let
     };
 
     "cryptography" = python.mkDerivation {
-      name = "cryptography-2.4.2";
+      name = "cryptography-2.5";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/f3/39/d3904df7c56f8654691c4ae1bdb270c1c9220d6da79bd3b1fbad91afd0e1/cryptography-2.4.2.tar.gz";
-        sha256 = "05a6052c6a9f17ff78ba78f8e6eb1d777d25db3b763343a1ae89a7a8670386dd";
+        url = "https://files.pythonhosted.org/packages/69/ed/5e97b7f54237a9e4e6291b6e52173372b7fa45ca730d36ea90b790c0059a/cryptography-2.5.tar.gz";
+        sha256 = "4946b67235b9d2ea7d31307be9d5ad5959d6c4a8f98f900157b47abddf698401";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -589,10 +589,10 @@ let
     };
 
     "dill" = python.mkDerivation {
-      name = "dill-0.2.8.2";
+      name = "dill-0.2.9";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/6f/78/8b96476f4ae426db71c6e86a8e6a81407f015b34547e442291cd397b18f3/dill-0.2.8.2.tar.gz";
-        sha256 = "624dc244b94371bb2d6e7f40084228a2edfff02373fe20e018bef1ee92fdd5b3";
+        url = "https://files.pythonhosted.org/packages/fe/42/bfe2e0857bc284cbe6a011d93f2a9ad58a22cb894461b199ae72cfef0f29/dill-0.2.9.tar.gz";
+        sha256 = "f6d6046f9f9195206063dd0415dff185ad593d6ee8b0e67f12597c0f4df4986f";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1486,16 +1486,19 @@ let
     };
 
     "parso" = python.mkDerivation {
-      name = "parso-0.3.1";
+      name = "parso-0.3.2";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/46/31/60de7c9cbb97cac56b193a5b61a1fd4d21df84843a570b370ec34781316b/parso-0.3.1.tar.gz";
-        sha256 = "35704a43a3c113cce4de228ddb39aab374b8004f4f2407d070b6a2ca784ce8a2";
+        url = "https://files.pythonhosted.org/packages/22/50/fa4ffb9b7e0b52f0bea19e5fcc9759eda369efa43a4e4a534a5cf9a00e71/parso-0.3.2.tar.gz";
+        sha256 = "4b8f9ed80c3a4a3191aa3261505d868aa552dd25649cb13a7d73b6b7315edf2d";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+        self."docopt"
+        self."pytest"
+      ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/davidhalter/parso";
         license = licenses.mit;
@@ -1681,10 +1684,10 @@ let
     };
 
     "pyOpenSSL" = python.mkDerivation {
-      name = "pyOpenSSL-18.0.0";
+      name = "pyOpenSSL-19.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/9b/7c/ee600b2a9304d260d96044ab5c5e57aa489755b92bbeb4c0803f9504f480/pyOpenSSL-18.0.0.tar.gz";
-        sha256 = "6488f1423b00f73b7ad5167885312bb0ce410d3312eb212393795b53c8caa580";
+        url = "https://files.pythonhosted.org/packages/40/d0/8efd61531f338a89b4efa48fcf1972d870d2b67a7aea9dcf70783c8464dc/pyOpenSSL-19.0.0.tar.gz";
+        sha256 = "aeca66338f6de19d1aa46ed634c3b9ae519a64b458f8468aec688e7e3c20f200";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
