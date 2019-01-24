@@ -452,22 +452,25 @@ def cmd(ctx,
             deployed_projects.get(project_name)
 
             # update hook for each project
-            if please_cli.config.PROJECTS_CONFIG[project_name]['update'] is True and channel == 'production':
-                update_hook_nix_path_atttribute = f'updateHook.{channel}.scheduled'
-            else:
-                update_hook_nix_path_atttribute = f'updateHook.{channel}.notScheduled'
-            projects_to_deploy.append((
-                project_name,
-                [],
-                'TASKCLUSTER_HOOK',
-                {
-                    'enable': True,
-                    'docker_registry': 'index.docker.io',
-                    'docker_repo': 'mozillareleng/services',
-                    'name-suffix': '-update-dependencies',
-                    'nix_path_attribute': update_hook_nix_path_atttribute,
-                },
-            ))
+            if please_cli.config.PROJECTS_CONFIG[project_name]['update'] is True:
+
+                if channel == 'production':
+                    update_hook_nix_path_atttribute = f'updateHook.{channel}.scheduled'
+                else:
+                    update_hook_nix_path_atttribute = f'updateHook.{channel}.notScheduled'
+
+                projects_to_deploy.append((
+                    project_name,
+                    [],
+                    'TASKCLUSTER_HOOK',
+                    {
+                        'enable': True,
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                        'name-suffix': '-update-dependencies',
+                        'nix_path_attribute': update_hook_nix_path_atttribute,
+                    },
+                ))
 
             if deployed_projects == project_hashes[project_name]:
                 continue
