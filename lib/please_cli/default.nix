@@ -29,8 +29,8 @@ let
       rm -f please_cli/VERSION
       cp ${./../../VERSION} please_cli/VERSION
       sed -i \
-        -e 's|OPENSSL_BIN_DIR = os.environ.get("OPENSSL_BIN_DIR", "")|OPENSSL_BIN_DIR = "${openssl.bin}/bin/"|' \
-        -e 's|OPENSSL_ETC_DIR = os.environ.get("OPENSSL_ETC_DIR", "")|OPENSSL_ETC_DIR = "${openssl.out}/etc/ssl/"|' \
+        -e "s|OPENSSL_BIN_DIR = os.environ.get('OPENSSL_BIN_DIR', ''')|OPENSSL_BIN_DIR = '${openssl.bin}/bin/'|" \
+        -e "s|OPENSSL_ETC_DIR = os.environ.get('OPENSSL_ETC_DIR', ''')|OPENSSL_ETC_DIR = '${openssl.out}/etc/ssl/'|" \
         please_cli/config.py
     '';
     shellHook = ''
