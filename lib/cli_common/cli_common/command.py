@@ -15,11 +15,16 @@ log = cli_common.log.get_logger(__name__)
 
 def hide_secrets(text, secrets):
     if type(text) is bytes:
-        for secret in secrets:
-            text = text.replace(bytes(secret, encoding='utf-8'), b'XXX')
+        encode_secret, xxx = lambda x: bytes(x, encoding='utf-8'), b'XXX'
     elif type(text) is str:
-        for secret in secrets:
-            text = text.replace(secret, 'XXX')
+        encode_secret, xxx = lambda x: x, 'XXX'
+    else:
+        return text
+
+    for secret in secrets:
+        if type(secret) is not str:
+            continue
+        text = text.replace(encode_secret(secret), xxx)
     return text
 
 
