@@ -296,7 +296,7 @@ def trigger_product_details(base_url: str,
     r = requests.post(
         url,
         headers=headers,
-        verify=True,
+        verify=False,
         data=data,
     )
     r.raise_for_status()

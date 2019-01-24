@@ -1202,17 +1202,33 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
               secrets=secrets,
               )
 
-    run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
-    run_check(['git', 'config', '--global', 'user.email', 'release-services+robot@mozilla.com'])
-    run_check(['git', 'config', '--global', 'user.name', 'Release Services Robot'])
+    run_check(['git', 'config', 'http.postBuffer', '12M'],
+              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
+              )
+    run_check(['git', 'config', 'user.email', 'release-services+robot@mozilla.com'],
+              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
+              )
+    run_check(['git', 'config', 'user.name', 'Release Services Robot'],
+              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+              secrets=secrets,
+              )
 
-    # XXX: we need a better commmit message, maybe mention what triggered this update
-    commit_message = 'Updating product details'
-    run_check(['git', 'commit', '-m', commit_message],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-    run_check(['git', 'push'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
+    # check if there is something to commit
+    output = run_check(['git', 'status', '--short'],
+                       cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                       secrets=secrets,
+                       )
+    if output != b'':
+
+        # XXX: we need a better commmit message, maybe mention what triggered this update
+        commit_message = 'Updating product details'
+        run_check(['git', 'commit', '-m', commit_message],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        run_check(['git', 'push', 'origin', f'HEAD:{git_branch}'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
