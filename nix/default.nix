@@ -34,13 +34,19 @@ let
                                                         (filter_dirs (builtins.readDir "${src_dir}/${x}")))
                                      level_one_dirs);
 
+  src-scriptworker-shipitscript = pkgs.fetchFromGitHub {
+    owner = "mozilla-releng";
+    repo = "shipitscript";
+    rev = "b7762c589dde16808d83296009f017010264839f";
+    sha256 = "1l2x0ixcasgkmvgnx895jp3qn6hrsnlxscylibc4ci3a361nbjbi";
+  };
+
   releng_pkgs = {
     inherit pkgs;
     lib = import ./lib/default.nix { inherit releng_pkgs; };
     tools = import ./tools/default.nix { inherit releng_pkgs; };
     gecko-env = import ./gecko_env.nix { inherit releng_pkgs; };
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
-
 
     "postgresql" =
       releng_pkgs.lib.mkProject
@@ -70,6 +76,7 @@ let
     "please-cli" = import ./../lib/please_cli { inherit releng_pkgs; };
     # TODO: backend_common_example = import ./../lib/backend_common/example { inherit releng_pkgs; };
     "frontend-common-example" = import ./../lib/frontend_common/example { inherit releng_pkgs; };
+    "scriptworker/shipitscript" = import "${src-scriptworker-shipitscript}/nix" { inherit (releng_pkgs) pkgs; };
 
   } // (
     # list projects (folders in src/ folder with default.nix) and imports them
