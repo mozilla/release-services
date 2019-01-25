@@ -78,6 +78,7 @@ in gecko.overrideDerivation (old: {
     echo "export LD=${clang_4}/bin/ld" >> $geckoenv
     echo "export LLVM_CONFIG=${llvm_4}/bin/llvm-config" >> $geckoenv
     echo "export LLVMCONFIG=${llvm_4}/bin/llvm-config" >> $geckoenv # we need both
+    echo "export LLVM_OBJDUMP=${llvm_4}/bin/llvm-objdump" >> $geckoenv
     echo "export AUTOCONF=${autoconf213}/bin/autoconf" >> $geckoenv
 
     # Build custom mozconfig
