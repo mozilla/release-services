@@ -46,7 +46,7 @@ def rebuild_product_details(default_git_repo_url,
     )
 
     git_repo_url = secrets.get('PRODUCT_DETAILS_GIT_REPO_URL', default_git_repo_url)
-    default_channel = default_channel or secrets.get('APP_CHANNEL', default_channel)
+    default_channel = default_channel or secrets.get('APP_CHANNEL', os.environ.get('APP_CHANNEL', 'master'))
     default_breakpoint_version = secrets.get('BREAKPOINT_VERSION', default_breakpoint_version)
 
     async def rebuild_product_details_async(channel, body, envelope, properties):
@@ -103,8 +103,7 @@ def rebuild_product_details(default_git_repo_url,
         'staging',
         'production',
     ]),
-    required=True,
-    default=os.environ.get('APP_CHANNEL', 'master'),
+    default=None,
 )
 @click.option(
     '--breakpoint-version',
@@ -114,6 +113,7 @@ def rebuild_product_details(default_git_repo_url,
 @click.option(
     '--clean-working-copy',
     is_flag=True,
+    default=True,
 )
 @flask.cli.with_appcontext
 def cmd(git_repo_url,

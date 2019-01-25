@@ -230,17 +230,18 @@ async def fetch_l10n_data(
             changesets = json.load(f)
     else:
         logger.debug(f'Fetching {url}')
-        async with session.get(url) as response:
-            try:
+        changesets = dict()
+        try:
+            async with session.get(url) as response:
                 response.raise_for_status()
                 logger.debug(f'Fetched {url}')
                 changesets = await response.json()
                 with cache.open('w+') as f:
                     f.write(json.dumps(changesets))
-            except Exception as e:
-                logger.exception(e)
-                if git_branch == 'production':
-                    raise
+        except Exception as e:
+            logger.exception(e)
+            if git_branch == 'production':
+                raise
 
     return (release, changesets)
 
@@ -980,7 +981,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                   git_repo_url: str,
                   folder_in_repo: str,
                   breakpoint_version: typing.Optional[int],
-                  clean_working_copy: bool = False,
+                  clean_working_copy: bool = True,
                   ):
 
     secrets = [urllib.parse.urlparse(git_repo_url).password]
@@ -992,7 +993,23 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     # Clone/pull latest product details
     logger.info(f'Getting latest product details from {git_repo_url}.')
     if shipit_api.config.PRODUCT_DETAILS_DIR.exists():
+        # Checkout the branch we are working on
+        logger.info(f'Checkout {git_branch} branch.')
+        run_check(['git', 'checkout', git_branch],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
         run_check(['git', 'pull'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        # make sure checkout is clean by removing changes to existing files
+        run_check(['git', 'reset', '--hard', 'HEAD'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        # make sure checkout is clean by removing files which are new
+        run_check(['git', 'clean', '-xfd'],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
                   secrets=secrets,
                   )
@@ -1001,24 +1018,24 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR.parent,
                   secrets=secrets,
                   )
-
-    # make sure checkout is clean by removing changes to existing files
-    run_check(['git', 'reset', '--hard', 'HEAD'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-    # make sure checkout is clean by removing files which are new
-    run_check(['git', 'clean', '-xfd'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-
-    # Checkout the branch we are working on
-    logger.info(f'Checkout {git_branch} branch.')
-    run_check(['git', 'checkout', git_branch],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
+        run_check(['git', 'config', 'http.postBuffer', '12M'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        run_check(['git', 'config', 'user.email', 'release-services+robot@mozilla.com'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        run_check(['git', 'config', 'user.name', 'Release Services Robot'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        # Checkout the branch we are working on
+        logger.info(f'Checkout {git_branch} branch.')
+        run_check(['git', 'checkout', '-b', git_branch, f'origin/{git_branch}'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
 
     # XXX: we need to implement how to figure out breakpoint_version from old_product_details
     # if breakpoint_version is not provided we should figure it out from old_product_details
@@ -1208,33 +1225,19 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
               secrets=secrets,
               )
 
-    run_check(['git', 'config', 'http.postBuffer', '12M'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-    run_check(['git', 'config', 'user.email', 'release-services+robot@mozilla.com'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-    run_check(['git', 'config', 'user.name', 'Release Services Robot'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-
     # check if there is something to commit
     output = run_check(['git', 'status', '--short'],
                        cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
                        secrets=secrets,
                        )
     if output != b'':
-
         # XXX: we need a better commmit message, maybe mention what triggered this update
         commit_message = 'Updating product details'
         run_check(['git', 'commit', '-m', commit_message],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
                   secrets=secrets,
                   )
-        run_check(['git', 'push', 'origin', f'HEAD:{git_branch}'],
+        run_check(['git', 'push', 'origin', git_branch],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
                   secrets=secrets,
                   )
