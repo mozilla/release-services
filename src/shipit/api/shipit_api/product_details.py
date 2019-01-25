@@ -364,9 +364,9 @@ def get_releases(breakpoint_version: int,
         #
         # get release details from the JSON files up to breakpoint_version
         #
-        product_file = f'json/1.0/{product.value}.json'
+        product_file = f'1.0/{product.value}.json'
         if product is Product.FENNEC:
-            product_file = 'json/1.0/mobile_android.json'
+            product_file = '1.0/mobile_android.json'
 
         old_releases = typing.cast(typing.Dict[str, ReleaseDetails], old_product_details[product_file].get('releases', dict()))
         for product_with_version in old_releases:
@@ -448,9 +448,9 @@ def get_release_history(breakpoint_version: int,
     #
     # get release history from the JSON files up to breakpoint_version
     #
-    product_file = f'json/1.0/{product.value}_history_{product_category.name.lower()}_releases.json'
+    product_file = f'1.0/{product.value}_history_{product_category.name.lower()}_releases.json'
     if product is Product.FENNEC:
-        product_file = f'json/1.0/mobile_history_{product_category.name.lower()}_releases.json'
+        product_file = f'1.0/mobile_history_{product_category.name.lower()}_releases.json'
 
     old_history = typing.cast(ReleasesHistory, old_product_details[product_file])
     for product_with_version in old_history:
@@ -721,8 +721,8 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
     '''
     regions: ProductDetails = dict()
     for file_, content in old_product_details.items():
-        if file_.startswith('json/1.0/regions/'):
-            regions[file_[len('json/1.0/'):]] = content
+        if file_.startswith('1.0/regions/'):
+            regions[file_[len('1.0/'):]] = content
     return regions
 
 
@@ -755,11 +755,11 @@ def get_l10n(releases: typing.List[shipit_api.models.Release],
                "name": "Firefox-58.0-build6",
            }
     '''
-    # populate with old data first, stripping the 'json/1.0/' prefix
+    # populate with old data first, stripping the '1.0/' prefix
     data: ProductDetails = {
-        file_.replace('json/1.0/', ''): content
+        file_.replace('1.0/', ''): content
         for file_, content in old_product_details.items()
-        if file_.startswith('json/1.0/l10n/')
+        if file_.startswith('1.0/l10n/')
     }
 
     for (release, locales) in releases_l10n.items():
@@ -804,10 +804,10 @@ def get_languages(old_product_details: ProductDetails) -> Languages:
            }
 
     '''
-    languages = old_product_details.get('json/1.0/languages.json')
+    languages = old_product_details.get('1.0/languages.json')
 
     if languages is None:
-        raise click.ClickException('"json/1.0/languages.json" does not exists in old product details"')
+        raise click.ClickException('"1.0/languages.json" does not exists in old product details"')
 
     # I can not use isinstance with generics (like Languages) for this reason
     # I'm casting to output type
@@ -1173,23 +1173,11 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     product_details.update(get_regions(old_product_details))
     product_details.update(get_l10n(releases, releases_l10n, old_product_details))
 
-    #  add 'json/1.0/' infront of each file path
+    #  add '1.0/' infront of each file path
     product_details = {
-        f'json/1.0/{file_}': content
+        f'1.0/{file_}': content
         for file_, content in product_details.items()
     }
-
-    # create json_exports.json to list all the files
-    product_details['json_exports.json'] = {
-        f'/{file_}': os.path.basename(file_)
-        for file_ in (list(product_details.keys()) + ['json_exports.json'])
-    }
-
-    # XXX: to make it compatible with old product details we must remove .json from l10n
-    for (file_, content) in product_details['json_exports.json'].items():
-        content = typing.cast(str, content)
-        if file_.startswith('/json/1.0/l10n') and content.endswith('.json'):
-            product_details['json_exports.json'][file_] = content[:-len('.json')]  # noqa
 
     if shipit_api.config.PRODUCT_DETAILS_NEW_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_NEW_DIR)
@@ -1204,20 +1192,21 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         with new_file.open('w+') as f:
             f.write(json.dumps(content, sort_keys=True, indent=4))
 
-    for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_NEW_DIR):
-        old_item = shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo / item
-        new_item = shipit_api.config.PRODUCT_DETAILS_NEW_DIR / item
-
-        # We remove all top files/folders in PRODUCT_DETAILS_DIR that were
-        # generated in PRODUCT_DETAILS_NEW_DIR
-        if old_item.exists():
-            if old_item.is_dir():
-                shutil.rmtree(old_item)
+    # remove all top level items in folder_in_repo
+    for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo):
+        item = shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo / item
+        if item.exists():
+            if item.is_dir():
+                shutil.rmtree(item)
             else:
-                os.unlink(old_item)
+                os.unlink(item)
 
-        # Move new files to be commited
-        shutil.move(new_item, old_item)
+    # Move new files to be commited
+    for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_NEW_DIR):
+        shutil.move(
+            shipit_api.config.PRODUCT_DETAILS_NEW_DIR / item,
+            shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo / item,
+        )
 
     # Add, commit and push changes
     run_check(['git', 'add', '.'],
