@@ -112,6 +112,10 @@ in skipOverrides {
     };
   };
 
+  "scikit-image" = self: old: {
+    buildInputs = old.buildInputs ++ [ self."Cython" ];
+  };
+
   "taskcluster-urls" = self: old: {
     patchPhase = ''
       # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37

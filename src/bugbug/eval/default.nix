@@ -101,9 +101,11 @@ let
           -E openssl \
           -E pkgconfig \
           -E freetype.dev \
+          -E libjpeg.dev \
           -s numpy \
           -s flit \
           -s intreehooks \
+          -s cython \
           -e pytest-runner \
           -e setuptools-scm \
           -r requirements.txt \

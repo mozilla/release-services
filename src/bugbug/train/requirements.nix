@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -C /app/src/bugbug/train/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E blas -E gfortran -E libffi -E openssl -E pkgconfig -E freetype.dev -s numpy -s flit -s intreehooks -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -C /app/src/bugbug/train/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E blas -E gfortran -E libffi -E openssl -E pkgconfig -E freetype.dev -E libjpeg.dev -s numpy -s flit -s intreehooks -s cython -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -35,7 +35,7 @@ let
       };
   };
 
-  commonBuildInputs = with pkgs; [ blas gfortran libffi openssl pkgconfig freetype.dev ];
+  commonBuildInputs = with pkgs; [ blas gfortran libffi openssl pkgconfig freetype.dev libjpeg.dev ];
   commonDoCheck = false;
 
   withPackages = pkgs':
@@ -106,6 +106,24 @@ let
       };
     };
 
+    "Cython" = python.mkDerivation {
+      name = "Cython-0.29.3";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/02/24/f73045afb049295b34ac55aaf6ea1592604cda3749632a22e563e66604a3/Cython-0.29.3.tar.gz";
+        sha256 = "d687fb1cd9df28c1515666174c62e54bd894a6a6d0862f89705063cd47739f83";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://cython.org/";
+        license = "Apache";
+        description = "The Cython compiler for writing C extensions for the Python language.";
+      };
+    };
+
     "Logbook" = python.mkDerivation {
       name = "Logbook-1.4.3";
       src = pkgs.fetchurl {
@@ -117,6 +135,7 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
+        self."Cython"
         self."pytest"
         self."pytest-cov"
       ];
@@ -124,6 +143,46 @@ let
         homepage = "http://logbook.pocoo.org/";
         license = licenses.bsdOriginal;
         description = "A logging replacement for Python";
+      };
+    };
+
+    "Pillow" = python.mkDerivation {
+      name = "Pillow-5.4.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/3c/7e/443be24431324bd34d22dd9d11cc845d995bcd3b500676bcf23142756975/Pillow-5.4.1.tar.gz";
+        sha256 = "5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://python-pillow.org";
+        license = "Standard PIL License";
+        description = "Python Imaging Library (Fork)";
+      };
+    };
+
+    "PyWavelets" = python.mkDerivation {
+      name = "PyWavelets-1.0.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/b4/42/074c6adcd1586926650d8365bcc3e1ab42f81a68c620c4242aa9297b01d9/PyWavelets-1.0.1.tar.gz";
+        sha256 = "3c5cece36d4e17d395be6e9ac6b80ce7b774a1f71c251756c6163e63b6d878dc";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [
+        self."numpy"
+      ];
+      propagatedBuildInputs = [
+        self."numpy"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/PyWavelets/pywt";
+        license = licenses.mit;
+        description = "PyWavelets, wavelet transform module";
       };
     };
 
@@ -278,10 +337,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.82";
+      name = "boto3-1.9.85";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/fc/56/80b87bff774a5ed3bb01c2cf962c300a624d07157f3d877c9c6b34a8e93c/boto3-1.9.82.tar.gz";
-        sha256 = "65fb08c87bc7fe144f9b74dd4e02ada8b7c2286cd8eb687fa0a249f628fefce2";
+        url = "https://files.pythonhosted.org/packages/05/ab/dd8fa5f22e83a58c18f3e0eef334ed8b54233922eaaf4caa563357b5f73d/boto3-1.9.85.tar.gz";
+        sha256 = "96296871863e0245b04931df7dd5c583e53cadbe1d54197829b34b03b0d048a8";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -300,10 +359,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.82";
+      name = "botocore-1.12.85";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/41/df/4fc4ea7eb97dc67935491b1c00dab23b3ffeb9caecabcd1fde8e00d504df/botocore-1.12.82.tar.gz";
-        sha256 = "d8487bc063482a4f9f394e05bfb790a95566ed31653a89677a889e1237d571f5";
+        url = "https://files.pythonhosted.org/packages/08/7f/ebc721cd3844f29d7d5bc217f0537ada33b210f836e9e6d565f2d55a83e3/botocore-1.12.85.tar.gz";
+        sha256 = "c381fd05b777f41a608ea0846a8d8ecc32077a83e456d05e824cce8d6b213e32";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -325,8 +384,8 @@ let
     "bugbug" = python.mkDerivation {
       name = "bugbug-0.0.1";
       src = pkgs.fetchurl {
-        url = "https://github.com/marco-c/bugbug/archive/9067dd56a426acd3d11d90d0451242ac3e8fc9a7.tar.gz";
-        sha256 = "a48f859435472c082340d0fc63d4933be44cbbb866f5b8317a464241942233c4";
+        url = "https://github.com/marco-c/bugbug/archive/a0a59ee4c53e5360a0501d636fcebffc8c0bd932.tar.gz";
+        sha256 = "0f1538d3f119654b680334cab939949d7b063b6ee73d976900b90d75150da2c5";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -338,6 +397,7 @@ let
         self."libmozdata"
         self."numpy"
         self."pandas"
+        self."parsepatch"
         self."python-hglib"
         self."requests"
         self."scikit-learn"
@@ -427,6 +487,24 @@ let
       };
     };
 
+    "cloudpickle" = python.mkDerivation {
+      name = "cloudpickle-0.7.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/c8/d8/08e40c7d5e2c7232f71cf1245eed47eae4dabaf1fbf5a76fc7d008011f56/cloudpickle-0.7.0.tar.gz";
+        sha256 = "d894ba62b0a04c3ccd482f6bc720dd02d4febcf320f5916c33d258b85d8409b1";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/cloudpipe/cloudpickle";
+        license = "BSD 3-Clause License";
+        description = "Extended pickling support for Python objects";
+      };
+    };
+
     "codecov" = python.mkDerivation {
       name = "codecov-2.0.15";
       src = pkgs.fetchurl {
@@ -489,10 +567,10 @@ let
     };
 
     "cryptography" = python.mkDerivation {
-      name = "cryptography-2.4.2";
+      name = "cryptography-2.5";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/f3/39/d3904df7c56f8654691c4ae1bdb270c1c9220d6da79bd3b1fbad91afd0e1/cryptography-2.4.2.tar.gz";
-        sha256 = "05a6052c6a9f17ff78ba78f8e6eb1d777d25db3b763343a1ae89a7a8670386dd";
+        url = "https://files.pythonhosted.org/packages/69/ed/5e97b7f54237a9e4e6291b6e52173372b7fa45ca730d36ea90b790c0059a/cryptography-2.5.tar.gz";
+        sha256 = "4946b67235b9d2ea7d31307be9d5ad5959d6c4a8f98f900157b47abddf698401";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -570,11 +648,34 @@ let
       };
     };
 
-    "decorator" = python.mkDerivation {
-      name = "decorator-4.3.0";
+    "dask" = python.mkDerivation {
+      name = "dask-1.1.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/6f/24/15a229626c775aae5806312f6bf1e2a73785be3402c0acdec5dbddd8c11e/decorator-4.3.0.tar.gz";
-        sha256 = "c39efa13fbdeb4506c476c9b3babf6a718da943dab7811c206005a4a956c080c";
+        url = "https://files.pythonhosted.org/packages/ac/56/f47e0ae9eb125f0bdf7308c863224c0974dfe95dadc1dd38d0119aca57a4/dask-1.1.0.tar.gz";
+        sha256 = "e76088e8931b326c05a92d2658e07b94a6852b42c13a7560505a8b2354871454";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."cloudpickle"
+        self."numpy"
+        self."pandas"
+        self."toolz"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/dask/dask/";
+        license = licenses.bsdOriginal;
+        description = "Parallel PyData with Task Scheduling";
+      };
+    };
+
+    "decorator" = python.mkDerivation {
+      name = "decorator-4.3.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/c4/26/b48aaa231644bc875bb348e162d156edb18b994da900a10f4493ea995a2f/decorator-4.3.2.tar.gz";
+        sha256 = "33cd704aea07b4c28b3eb2c97d288a06918275dac0ecebdaf1bc8a48d98adb9e";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -589,10 +690,10 @@ let
     };
 
     "dill" = python.mkDerivation {
-      name = "dill-0.2.8.2";
+      name = "dill-0.2.9";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/6f/78/8b96476f4ae426db71c6e86a8e6a81407f015b34547e442291cd397b18f3/dill-0.2.8.2.tar.gz";
-        sha256 = "624dc244b94371bb2d6e7f40084228a2edfff02373fe20e018bef1ee92fdd5b3";
+        url = "https://files.pythonhosted.org/packages/fe/42/bfe2e0857bc284cbe6a011d93f2a9ad58a22cb894461b199ae72cfef0f29/dill-0.2.9.tar.gz";
+        sha256 = "f6d6046f9f9195206063dd0415dff185ad593d6ee8b0e67f12597c0f4df4986f";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1419,6 +1520,30 @@ let
       };
     };
 
+    "networkx" = python.mkDerivation {
+      name = "networkx-2.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/f3/f4/7e20ef40b118478191cec0b58c3192f822cace858c19505c7670961b76b2/networkx-2.2.zip";
+        sha256 = "45e56f7ab6fe81652fb4bc9f44faddb0e9025f469f602df14e3b2551c2ea5c8b";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."decorator"
+        self."matplotlib"
+        self."numpy"
+        self."pandas"
+        self."scipy"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://networkx.github.io/";
+        license = licenses.bsdOriginal;
+        description = "Python package for creating and manipulating graphs and networks";
+      };
+    };
+
     "numpy" = python.mkDerivation {
       name = "numpy-1.16.0";
       src = pkgs.fetchurl {
@@ -1485,17 +1610,40 @@ let
       };
     };
 
-    "parso" = python.mkDerivation {
-      name = "parso-0.3.1";
+    "parsepatch" = python.mkDerivation {
+      name = "parsepatch-0.1.3";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/46/31/60de7c9cbb97cac56b193a5b61a1fd4d21df84843a570b370ec34781316b/parso-0.3.1.tar.gz";
-        sha256 = "35704a43a3c113cce4de228ddb39aab374b8004f4f2407d070b6a2ca784ce8a2";
+        url = "https://files.pythonhosted.org/packages/d2/73/9eaedc53bdf9c5690d22812aaadce997634d74d2fbaf79f91b8f209be121/parsepatch-0.1.3.tar.gz";
+        sha256 = "1f08654d3c737c7f43e5b5a03b078d0bb206684ba106df714db89f8c87fbd58a";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+        self."requests"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/mozilla/parsepatch";
+        license = "MPL";
+        description = "Library to parse patches in an efficient manner";
+      };
+    };
+
+    "parso" = python.mkDerivation {
+      name = "parso-0.3.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/22/50/fa4ffb9b7e0b52f0bea19e5fcc9759eda369efa43a4e4a534a5cf9a00e71/parso-0.3.2.tar.gz";
+        sha256 = "4b8f9ed80c3a4a3191aa3261505d868aa552dd25649cb13a7d73b6b7315edf2d";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."docopt"
+        self."pytest"
+      ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/davidhalter/parso";
         license = licenses.mit;
@@ -1681,10 +1829,10 @@ let
     };
 
     "pyOpenSSL" = python.mkDerivation {
-      name = "pyOpenSSL-18.0.0";
+      name = "pyOpenSSL-19.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/9b/7c/ee600b2a9304d260d96044ab5c5e57aa489755b92bbeb4c0803f9504f480/pyOpenSSL-18.0.0.tar.gz";
-        sha256 = "6488f1423b00f73b7ad5167885312bb0ce410d3312eb212393795b53c8caa580";
+        url = "https://files.pythonhosted.org/packages/40/d0/8efd61531f338a89b4efa48fcf1972d870d2b67a7aea9dcf70783c8464dc/pyOpenSSL-19.0.0.tar.gz";
+        sha256 = "aeca66338f6de19d1aa46ed634c3b9ae519a64b458f8468aec688e7e3c20f200";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2096,6 +2244,33 @@ let
       };
     };
 
+    "scikit-image" = python.mkDerivation {
+      name = "scikit-image-0.14.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/7f/bd/74ed9add17c3c7529c18693c17846753649c6cf2e674e7482fbf85d636cb/scikit-image-0.14.2.tar.gz";
+        sha256 = "1afd0b84eefd77afd1071c5c1c402553d67be2d7db8950b32d6f773f25850c1f";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."Pillow"
+        self."PyWavelets"
+        self."cloudpickle"
+        self."dask"
+        self."matplotlib"
+        self."networkx"
+        self."scipy"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://scikit-image.org";
+        license = "Modified BSD";
+        description = "Image processing routines for SciPy";
+      };
+    };
+
     "scikit-learn" = python.mkDerivation {
       name = "scikit-learn-0.20.2";
       src = pkgs.fetchurl {
@@ -2158,10 +2333,10 @@ let
     };
 
     "shap" = python.mkDerivation {
-      name = "shap-0.27.0";
+      name = "shap-0.28.2";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/fe/93/9d41296314fe7ac42f1f117695d6d17b65b2c00790a88555522e52dbdfbc/shap-0.27.0.tar.gz";
-        sha256 = "f20a9cc17c12d97431acabe0dcf6b3ab8f6cc891264c35f9a207c930278a9f45";
+        url = "https://files.pythonhosted.org/packages/d8/eb/86d431c71e5981a9abcf7dac643a09785b65a5eda56d8f2550859dd6dafe/shap-0.28.2.tar.gz";
+        sha256 = "893a29d883ca73ab1b6ce8599f9520c87252abefb48beb1eaff9dfab089b97fc";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2174,6 +2349,7 @@ let
         self."matplotlib"
         self."numpy"
         self."pandas"
+        self."scikit-image"
         self."scikit-learn"
         self."scipy"
         self."tqdm"
