@@ -21,6 +21,7 @@ def test_coverage_supported_extensions_api(client):
         'hxx', 'js', 'jsm', 'xul', 'xml', 'html', 'xhtml',
     ])
 
+
 def test_coverage_supported_extensions():
     # Positive and negative tests for supported extensions
     from codecoverage_backend.coverage import coverage_supported
@@ -28,6 +29,7 @@ def test_coverage_supported_extensions():
     assert coverage_supported(supported_path)
     unsupported_path = '/path/to/file.xyz'
     assert not coverage_supported(unsupported_path)
+
 
 @pytest.mark.asyncio
 async def test_coverage_latest(coverage_responses):
