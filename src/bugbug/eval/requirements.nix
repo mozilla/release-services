@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -C /app/src/bugbug/eval/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E blas -E gfortran -E libffi -E openssl -E pkgconfig -E freetype.dev -E libjpeg.dev -s numpy -s flit -s intreehooks -s cython -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -C /app/src/bugbug/eval/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E blas -E gfortran -E libffi -E openssl -E pkgconfig -E freetype.dev -E libjpeg.dev -E hdf5 -s numpy -s flit -s intreehooks -s cython -s pkgconfig -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -35,7 +35,7 @@ let
       };
   };
 
-  commonBuildInputs = with pkgs; [ blas gfortran libffi openssl pkgconfig freetype.dev libjpeg.dev ];
+  commonBuildInputs = with pkgs; [ blas gfortran libffi openssl pkgconfig freetype.dev libjpeg.dev hdf5 ];
   commonDoCheck = false;
 
   withPackages = pkgs':
@@ -124,6 +124,75 @@ let
       };
     };
 
+    "Keras" = python.mkDerivation {
+      name = "Keras-2.2.4";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/13/5c/11b1d1e709cfb680cf5cc592f8e37d3db19871ee5c5cc0d9ddbae4e911c7/Keras-2.2.4.tar.gz";
+        sha256 = "90b610a3dbbf6d257b20a079eba3fdf2eed2158f64066a7c6f7227023fd60bc9";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."Keras-Applications"
+        self."Keras-Preprocessing"
+        self."PyYAML"
+        self."h5py"
+        self."numpy"
+        self."scipy"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/keras-team/keras";
+        license = licenses.mit;
+        description = "Deep Learning for humans";
+      };
+    };
+
+    "Keras-Applications" = python.mkDerivation {
+      name = "Keras-Applications-1.0.6";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/0c/f1/8d3dc4b770d51f0591c2913e55dd69e70c2e217835970ffa0b1acc091d8e/Keras_Applications-1.0.6.tar.gz";
+        sha256 = "a03af60ddc9c5afdae4d5c9a8dd4ca857550e0b793733a5072e0725829b87017";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."h5py"
+        self."numpy"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/keras-team/keras-applications";
+        license = licenses.mit;
+        description = "Reference implementations of popular deep learning models";
+      };
+    };
+
+    "Keras-Preprocessing" = python.mkDerivation {
+      name = "Keras-Preprocessing-1.0.5";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/34/ef/808258b8b5e39ae4d7c5606d03d3bbaf68bb8a639ce2e64220ea4ca12ff9/Keras_Preprocessing-1.0.5.tar.gz";
+        sha256 = "ef2e482c4336fcf7180244d06f4374939099daa3183816e82aee7755af35b754";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."numpy"
+        self."scipy"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/keras-team/keras-preprocessing";
+        license = licenses.mit;
+        description = "Easy data preprocessing and data augmentation for deep learning models";
+      };
+    };
+
     "Logbook" = python.mkDerivation {
       name = "Logbook-1.4.3";
       src = pkgs.fetchurl {
@@ -183,6 +252,24 @@ let
         homepage = "https://github.com/PyWavelets/pywt";
         license = licenses.mit;
         description = "PyWavelets, wavelet transform module";
+      };
+    };
+
+    "PyYAML" = python.mkDerivation {
+      name = "PyYAML-3.13";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/9e/a3/1d13970c3f36777c583f136c136f804d70f500168edc1edea6daa7200769/PyYAML-3.13.tar.gz";
+        sha256 = "3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://pyyaml.org/wiki/PyYAML";
+        license = licenses.mit;
+        description = "YAML parser and emitter for Python";
       };
     };
 
@@ -336,11 +423,29 @@ let
       };
     };
 
-    "boto3" = python.mkDerivation {
-      name = "boto3-1.9.85";
+    "boto" = python.mkDerivation {
+      name = "boto-2.49.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/05/ab/dd8fa5f22e83a58c18f3e0eef334ed8b54233922eaaf4caa563357b5f73d/boto3-1.9.85.tar.gz";
-        sha256 = "96296871863e0245b04931df7dd5c583e53cadbe1d54197829b34b03b0d048a8";
+        url = "https://files.pythonhosted.org/packages/c8/af/54a920ff4255664f5d238b5aebd8eedf7a07c7a5e71e27afcfe840b82f51/boto-2.49.0.tar.gz";
+        sha256 = "ea0d3b40a2d852767be77ca343b58a9e3a4b00d9db440efb8da74b4e58025e5a";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/boto/boto/";
+        license = licenses.mit;
+        description = "Amazon Web Services Library";
+      };
+    };
+
+    "boto3" = python.mkDerivation {
+      name = "boto3-1.9.86";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/d2/ae/a3a6a0176e5e29716d5f5f89572525689f0d3eb031fc3091000af9b4200c/boto3-1.9.86.tar.gz";
+        sha256 = "63cd957ba663f5c10ff48ed904575eaa701314f79f18dbc59bd050311cd5f809";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -359,10 +464,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.85";
+      name = "botocore-1.12.86";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/08/7f/ebc721cd3844f29d7d5bc217f0537ada33b210f836e9e6d565f2d55a83e3/botocore-1.12.85.tar.gz";
-        sha256 = "c381fd05b777f41a608ea0846a8d8ecc32077a83e456d05e824cce8d6b213e32";
+        url = "https://files.pythonhosted.org/packages/8e/b3/b9f7ffa347057fa44c65197864eec6a8a53f5a24f613b1b7b3f2b755cc65/botocore-1.12.86.tar.gz";
+        sha256 = "24444e7580f0114c3e9fff5d2032c6f0cfbf88691b1be3ba27c6922507a902ec";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -384,15 +489,17 @@ let
     "bugbug" = python.mkDerivation {
       name = "bugbug-0.0.1";
       src = pkgs.fetchurl {
-        url = "https://github.com/marco-c/bugbug/archive/a0a59ee4c53e5360a0501d636fcebffc8c0bd932.tar.gz";
-        sha256 = "0f1538d3f119654b680334cab939949d7b063b6ee73d976900b90d75150da2c5";
+        url = "https://github.com/marco-c/bugbug/archive/65fb7b04c6787fafd4d8db05e4ec7324e3e7287e.tar.gz";
+        sha256 = "04ae4559b3ae1e0dc6d2bf360878864887ce4ba323d39be2189b316c7bcadbac";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
+        self."Keras"
         self."en-core-web-sm"
+        self."gensim"
         self."imbalanced-learn"
         self."libmozdata"
         self."numpy"
@@ -410,6 +517,24 @@ let
         homepage = "UNKNOWN";
         license = licenses.mpl20;
         description = "ML tools for Mozilla projects";
+      };
+    };
+
+    "bz2file" = python.mkDerivation {
+      name = "bz2file-0.98";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/61/39/122222b5e85cd41c391b68a99ee296584b2a2d1d233e7ee32b4532384f2d/bz2file-0.98.tar.gz";
+        sha256 = "64c1f811e31556ba9931953c8ec7b397488726c63e09a4c67004f43bdd28da88";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/nvawda/bz2file";
+        license = licenses.asl20;
+        description = "Read and write bzip2-compressed files.";
       };
     };
 
@@ -555,6 +680,7 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
+        self."PyYAML"
         self."coverage"
         self."docopt"
         self."requests"
@@ -954,11 +1080,40 @@ let
       };
     };
 
-    "google-api-python-client" = python.mkDerivation {
-      name = "google-api-python-client-1.7.7";
+    "gensim" = python.mkDerivation {
+      name = "gensim-3.7.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/e0/91/0e6a42ea3e0898a75d819a9690c8c8d0eecd31275d8a85503c8fc33949f2/google-api-python-client-1.7.7.tar.gz";
-        sha256 = "9106e7d09d80f59a9472a91edd85c2d6ad420aef28c9440ce1691b4a19ba9ada";
+        url = "https://files.pythonhosted.org/packages/c5/98/84f11922f320035b9ff693d82082a973f37cb1e481e761bb9979bd82f4ca/gensim-3.7.0.tar.gz";
+        sha256 = "3edbfe71bcf4a33eb5a95ae7a930c00480fa19a07ff449d2ab2124f0e019240e";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [
+        self."numpy"
+      ];
+      propagatedBuildInputs = [
+        self."Cython"
+        self."numpy"
+        self."pytest"
+        self."scikit-learn"
+        self."scipy"
+        self."six"
+        self."smart-open"
+        self."testfixtures"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://radimrehurek.com/gensim";
+        license = "LGPLv2.1";
+        description = "Python framework for fast Vector Space Modelling";
+      };
+    };
+
+    "google-api-python-client" = python.mkDerivation {
+      name = "google-api-python-client-1.7.8";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/7a/84/ffde3c95d4162cdc8bae710fecc6873cccb05ac33afc3b2c925c74cc0150/google-api-python-client-1.7.8.tar.gz";
+        sha256 = "06907006ed5ce831018f03af3852d739c0b2489cdacfda6971bcc2075c762858";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1019,6 +1174,32 @@ let
         homepage = "https://github.com/GoogleCloudPlatform/google-auth-library-python-httplib2";
         license = licenses.asl20;
         description = "Google Authentication Library: httplib2 transport";
+      };
+    };
+
+    "h5py" = python.mkDerivation {
+      name = "h5py-2.9.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/43/27/a6e7dcb8ae20a4dbf3725321058923fec262b6f7835179d78ccc8d98deec/h5py-2.9.0.tar.gz";
+        sha256 = "9d41ca62daf36d6b6515ab8765e4c8c4388ee18e2a665701fef2b41563821002";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [
+        self."Cython"
+        self."numpy"
+        self."pkgconfig"
+        self."six"
+      ];
+      propagatedBuildInputs = [
+        self."numpy"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://www.h5py.org";
+        license = licenses.bsdOriginal;
+        description = "Read and write HDF5 files from Python";
       };
     };
 
@@ -1531,6 +1712,7 @@ let
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
+        self."PyYAML"
         self."decorator"
         self."matplotlib"
         self."numpy"
@@ -1587,10 +1769,10 @@ let
     };
 
     "pandas" = python.mkDerivation {
-      name = "pandas-0.23.4";
+      name = "pandas-0.24.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/e9/ad/5e92ba493eff96055a23b0a1323a9a803af71ec859ae3243ced86fcbd0a4/pandas-0.23.4.tar.gz";
-        sha256 = "5b24ca47acf69222e82530e89111dd9d14f9b970ab2cd3a1c2c78f0c4fbba4f4";
+        url = "https://files.pythonhosted.org/packages/d2/1b/dd36a304c9e78b64abf828d261f2e62e1be2447bc3bc06ccad5250265b27/pandas-0.24.0.tar.gz";
+        sha256 = "9bd9ef3e183b7b1ce90b7ab5e8672907cd73dc36f036fc6714f0e7a5f9852da0";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1713,6 +1895,24 @@ let
       };
     };
 
+    "pkgconfig" = python.mkDerivation {
+      name = "pkgconfig-1.4.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/17/b7/b6e2b5798eeadb6bfbebf6c332c8989463166769815f74d6e87ed9951f61/pkgconfig-1.4.0.tar.gz";
+        sha256 = "048c3b457da7b6f686b647ab10bf09e2250e4c50acfe6f215398a8b5e6fcdb52";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/matze/pkgconfig";
+        license = licenses.mit;
+        description = "Interface Python with pkg-config";
+      };
+    };
+
     "plac" = python.mkDerivation {
       name = "plac-0.9.6";
       src = pkgs.fetchurl {
@@ -1770,10 +1970,10 @@ let
     };
 
     "prompt-toolkit" = python.mkDerivation {
-      name = "prompt-toolkit-2.0.7";
+      name = "prompt-toolkit-2.0.8";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/d9/a5/4b2dd1a05403e34c3ba0d9c00f237c01967c0a4f59a427c9b241129cdfe4/prompt_toolkit-2.0.7.tar.gz";
-        sha256 = "fd17048d8335c1e6d5ee403c3569953ba3eb8555d710bfc548faf0712666ea39";
+        url = "https://files.pythonhosted.org/packages/0d/f7/571edf48b2e11678fa21245369678815a965bac1d96e09fa60fe365ff79d/prompt_toolkit-2.0.8.tar.gz";
+        sha256 = "c6655a12e9b08edb8cf5aeab4815fd1e1bdea4ad73d3bbf269cf2e0c4eb75d5e";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1868,10 +2068,10 @@ let
     };
 
     "pyasn1-modules" = python.mkDerivation {
-      name = "pyasn1-modules-0.2.3";
+      name = "pyasn1-modules-0.2.4";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/c8/0e/3fe59edc782faf8b429f4a1db734418d0f68a7e50f43095747c08330e952/pyasn1-modules-0.2.3.tar.gz";
-        sha256 = "d14fcb29dabecba3d7b360bf72327c26c385248a5d603cf6be5f566ce999b261";
+        url = "https://files.pythonhosted.org/packages/bd/a5/ef7bf693e8a8f015386c9167483199f54f8a8ec01d1c737e05524f16e792/pyasn1-modules-0.2.4.tar.gz";
+        sha256 = "a52090e8c5841ebbf08ae455146792d9ef3e8445b21055d3a3b7ed9c712b7c7c";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2333,10 +2533,10 @@ let
     };
 
     "shap" = python.mkDerivation {
-      name = "shap-0.28.2";
+      name = "shap-0.28.3";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/d8/eb/86d431c71e5981a9abcf7dac643a09785b65a5eda56d8f2550859dd6dafe/shap-0.28.2.tar.gz";
-        sha256 = "893a29d883ca73ab1b6ce8599f9520c87252abefb48beb1eaff9dfab089b97fc";
+        url = "https://files.pythonhosted.org/packages/18/16/ef445c7fe3ecfc80b7d20e64a9f7239d11fffa7dd2f3c046061b360a5786/shap-0.28.3.tar.gz";
+        sha256 = "2da76975664c4ef28583a2d64caf222e16b801e5455ff1de365e820f2f4ba9d9";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2394,6 +2594,29 @@ let
         homepage = "http://taskcluster.github.io/slugid.py";
         license = licenses.mpl20;
         description = "Base64 encoded uuid v4 slugs";
+      };
+    };
+
+    "smart-open" = python.mkDerivation {
+      name = "smart-open-1.8.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/ff/c8/de7dcf34d4b5f2ae94fe1055e0d6418fb97a63c9dc3428edd264704983a2/smart_open-1.8.0.tar.gz";
+        sha256 = "a52206bb69c38c5f08709ec2ee5704b0f86fc0a770935b5dad9b5841bfd5f502";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."boto"
+        self."boto3"
+        self."bz2file"
+        self."requests"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/piskvorky/smart_open";
+        license = licenses.mit;
+        description = "Utils for streaming large files (S3, HDFS, gzip, bz2...)";
       };
     };
 
@@ -2491,10 +2714,10 @@ let
     };
 
     "testfixtures" = python.mkDerivation {
-      name = "testfixtures-6.4.3";
+      name = "testfixtures-6.5.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/c2/9f/677eab4c24ba0920469e2e276e5d67a4b9819e1f589a7b390525fd765bd6/testfixtures-6.4.3.tar.gz";
-        sha256 = "b6c05222ce8d3c34a1353ff30c73da55f61ef58153229a5664ef7110ec340cdd";
+        url = "https://files.pythonhosted.org/packages/d3/06/52f46d4e05c5d923e384976d057ca14a0d90c561cd150bebe7e04a9ffe15/testfixtures-6.5.0.tar.gz";
+        sha256 = "cbd0f095d178de578709bcf4cc6eea896964635d2b41386d1cc7583674809b0e";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2558,10 +2781,10 @@ let
     };
 
     "tqdm" = python.mkDerivation {
-      name = "tqdm-4.29.1";
+      name = "tqdm-4.30.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/88/fa/606f84272fcfee9b474c6e8366be8fb8da76b38f019a0a65d7ccb8f6cd2b/tqdm-4.29.1.tar.gz";
-        sha256 = "b856be5cb6cfaee3b2733655c7c5bbc7751291bb5d1a4f54f020af4727570b3e";
+        url = "https://files.pythonhosted.org/packages/df/85/1b4a823ee751ae69d028f2b65f5127b03218dfab3289b6d720578fb724f2/tqdm-4.30.0.tar.gz";
+        sha256 = "dd60ea2567baa013c625153ce41fd274209c69a5814513e1d635f20e5cd61b97";
       };
       doCheck = commonDoCheck;
       checkPhase = "";

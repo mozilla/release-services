@@ -1,5 +1,5 @@
 -e ./../../../lib/cli_common[taskcluster,mercurial,log] #egg=mozilla-cli-common
 
 pyOpenSSL>=0.14  # Could not find a version that satisfies the requirement pyOpenSSL>=0.14; extra == "security" (from requests[security]>=2.7.0->libmozdata==0.1.43)
-https://github.com/marco-c/bugbug/archive/a0a59ee4c53e5360a0501d636fcebffc8c0bd932.tar.gz#egg=bugbug
+https://github.com/marco-c/bugbug/archive/65fb7b04c6787fafd4d8db05e4ec7324e3e7287e.tar.gz#egg=bugbug
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz#egg=en-core-web-sm

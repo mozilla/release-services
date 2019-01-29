@@ -100,10 +100,12 @@ let
           -E pkgconfig \
           -E freetype.dev \
           -E libjpeg.dev \
+          -E hdf5 \
           -s numpy \
           -s flit \
           -s intreehooks \
           -s cython \
+          -s pkgconfig \
           -e pytest-runner \
           -e setuptools-scm \
           -r requirements.txt \
