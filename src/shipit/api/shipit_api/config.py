@@ -38,7 +38,7 @@ ESR_BRANCH_PREFIX = 'releases/mozilla-esr'
 # day).
 # We could have used the in-tree version, but there can be race conditions,
 # e.g. version bumped, but still no builds available.
-FIREFOX_NIGHTLY = '66.0a1'
+FIREFOX_NIGHTLY = '67.0a1'
 # Aurora has been replaced by Dev Edition, but some 3rd party applications may
 # still rely on this value.
 FIREFOX_AURORA = ''
