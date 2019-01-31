@@ -73,8 +73,9 @@ let
           -C $cache_dir \
           -V 3.7 \
           -O ../../../nix/requirements_override.nix \
-          -e pytest-runner \
-          -e setuptools-scm \
+          -s flit \
+          -s pytest-runner \
+          -s setuptools-scm \
           -r requirements.txt \
           -r requirements-dev.txt
         popd
