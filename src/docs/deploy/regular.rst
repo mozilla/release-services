@@ -154,32 +154,29 @@ A good starting point for writing release notes is:
 This step will take some time (~30-60min) also good Internet connection is
 required.
 
-.. warning:: This step currently doesn't work. Please ping @garbas to do this
-             instead of you (for now).
-
-- First we need to create a temporary branch
-- Then apply the tracking Pull Request of deployment to the temporary branch
-- And then we build new base image
-- At the end we can get rid of temporary branch
-
-Generate the docker image using locally running docker daemon:
+First we install docker inside our existing base image:
 
 .. code-block:: console
 
     git clone git@github.com:mozilla/release-services.git
     cd release-services
-    git checkout -b temp origin/staging
+    ./please tools docker-shell
+    nix-env -f /etc/nix/nixpkgs -iA docker
+
+In another terminal we apply the PR to bump the version
+
+.. code-block:: console
+
     curl -L https://github.com/mozilla/release-services/pull/<PR_NUMBER>.patch | git am
+
+Back in our docker shell we then build and then push docker image:
+
+.. code-block:: console
+
     ./please -vv tools build-base-image
         --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
         --taskcluster-client-id="..." \
         --taskcluster-access-token="..."
-    git branch -D temp
-
-Push the image to the registry (docker hub):
-
-.. code-block:: console
-
     ./please -vv tools push-base-image \
         --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
         --taskcluster-client-id="..." \
