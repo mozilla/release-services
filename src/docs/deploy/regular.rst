@@ -88,7 +88,7 @@ You can follow below command to help you push correctly.
 
 .. code-block:: console
 
-    git clone git@github.com/mozilla/release-services.git
+    git clone git@github.com:mozilla/release-services.git
     cd release-services
     git push origin origin/staging:production
     git tag v$(cat ./VERSION)
@@ -166,7 +166,7 @@ Generate the docker image using locally running docker daemon:
 
 .. code-block:: console
 
-    git clone git@github.com/mozilla/release-services.git
+    git clone git@github.com:mozilla/release-services.git
     cd release-services
     git checkout -b temp origin/staging
     curl -L https://github.com/mozilla/release-services/pull/<PR_NUMBER>.patch | git am
@@ -200,7 +200,7 @@ All we need to do now is create a new Pull Request and bump the version.
 
 .. code-block:: console
 
-    git clone git@github.com/mozilla/release-services.git
+    git clone git@github.com:mozilla/release-services.git
     cd release-services
     echo "$((($(cat VERSION)) + 1))" | tee VERSION2
     sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
