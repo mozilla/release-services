@@ -37,9 +37,10 @@ let
           -V 3.7 \
           -O ../../../nix/requirements_override.nix \
           -E postgresql \
-          -e vcversioner \
-          -e pytest-runner \
-          -e setuptools-scm \
+          -s vcversioner \
+          -s pytest-runner \
+          -s setuptools-scm \
+          -s flit \
           -r requirements.txt \
           -r requirements-dev.txt
         popd
