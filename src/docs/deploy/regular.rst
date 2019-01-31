@@ -182,23 +182,28 @@ Back in our docker shell we then build and then push docker image:
         --taskcluster-client-id="..." \
         --taskcluster-access-token="..."
 
-
-9. Bump version
-----------------
-
 Once base image is pushed to Docker Hub we can merged tracking Pull Request of
 this deployment. Before that, hit **Update branch** button to re-trigger Taskcluster
 builds, which would verify if above created base image is working correctly.
 
-If Taskcluster build for the Pull Request turns out green feel free to merge it and
-bump the version with it.
+If Taskcluster build for the Pull Request turns out green go ahead and merge it.
 
-All we need to do now is create a new Pull Request and bump the version.
+
+9. Bump version and create new deployment PR
+--------------------------------------------
+
+All we need to do now is create a new Pull Request and bump the version, which
+is going to be used next time we do deployment.
 
 .. code-block:: console
 
     git clone git@github.com:mozilla/release-services.git
     cd release-services
+    git co -b version-bump origin/master
     echo "$((($(cat VERSION)) + 1))" | tee VERSION2
     sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
     mv VERSION2 VERSION
+    git push origin version-bump -f
+
+Now open a Pull Request from ``version-bump`` to ``master`` branch and copy
+title and description from previous tracking Pull Request.
