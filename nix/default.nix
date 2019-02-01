@@ -37,8 +37,8 @@ let
   src-scriptworker-shipitscript = pkgs.fetchFromGitHub {
     owner = "mozilla-releng";
     repo = "shipitscript";
-    rev = "6b2699da43fbfc3ffce4fc0ab0695d331305b3fd";
-    sha256 = "103nvmzfi6d9lw0x9jwqin1rlxwqfkhhsywxpv58df2lbpxq4xaa";
+    rev = "5db546d7916630a62f8f9f9719b2a3d3a7fa1870";
+    sha256 = "05caga08jd5l2np6h1zi8lx4q89b6pcsj7vs9iv3m3db32d1dkqh";
   };
 
   releng_pkgs = {

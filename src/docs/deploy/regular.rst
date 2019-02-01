@@ -88,7 +88,7 @@ You can follow below command to help you push correctly.
 
 .. code-block:: console
 
-    git clone git@github.com/mozilla/release-services.git
+    git clone git@github.com:mozilla/release-services.git
     cd release-services
     git push origin origin/staging:production
     git tag v$(cat ./VERSION)
@@ -154,54 +154,56 @@ A good starting point for writing release notes is:
 This step will take some time (~30-60min) also good Internet connection is
 required.
 
-.. warning:: This step currently doesn't work. Please ping @garbas to do this
-             instead of you (for now).
-
-- First we need to create a temporary branch
-- Then apply the tracking Pull Request of deployment to the temporary branch
-- And then we build new base image
-- At the end we can get rid of temporary branch
-
-Generate the docker image using locally running docker daemon:
+First we install docker inside our existing base image:
 
 .. code-block:: console
 
-    git clone git@github.com/mozilla/release-services.git
+    git clone git@github.com:mozilla/release-services.git
     cd release-services
-    git checkout -b temp origin/staging
+    ./please tools docker-shell
+    nix-env -f /etc/nix/nixpkgs -iA docker
+
+In another terminal we apply the PR to bump the version
+
+.. code-block:: console
+
     curl -L https://github.com/mozilla/release-services/pull/<PR_NUMBER>.patch | git am
+
+Back in our docker shell we then build and then push docker image:
+
+.. code-block:: console
+
     ./please -vv tools build-base-image
         --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
         --taskcluster-client-id="..." \
         --taskcluster-access-token="..."
-    git branch -D temp
-
-Push the image to the registry (docker hub):
-
-.. code-block:: console
-
     ./please -vv tools push-base-image \
         --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
         --taskcluster-client-id="..." \
         --taskcluster-access-token="..."
 
-
-9. Bump version
-----------------
-
 Once base image is pushed to Docker Hub we can merged tracking Pull Request of
 this deployment. Before that, hit **Update branch** button to re-trigger Taskcluster
 builds, which would verify if above created base image is working correctly.
 
-If Taskcluster build for the Pull Request turns out green feel free to merge it and
-bump the version with it.
+If Taskcluster build for the Pull Request turns out green go ahead and merge it.
 
-All we need to do now is create a new Pull Request and bump the version.
+
+9. Bump version and create new deployment PR
+--------------------------------------------
+
+All we need to do now is create a new Pull Request and bump the version, which
+is going to be used next time we do deployment.
 
 .. code-block:: console
 
-    git clone git@github.com/mozilla/release-services.git
+    git clone git@github.com:mozilla/release-services.git
     cd release-services
+    git co -b version-bump origin/master
     echo "$((($(cat VERSION)) + 1))" | tee VERSION2
     sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
     mv VERSION2 VERSION
+    git push origin version-bump -f
+
+Now open a Pull Request from ``version-bump`` to ``master`` branch and copy
+title and description from previous tracking Pull Request.
