@@ -194,6 +194,7 @@ def get_product_mozilla_version(product: Product,
 async def fetch_l10n_data(
         session: aiohttp.ClientSession,
         release: shipit_api.models.Release,
+        git_branch: str,
         ) -> typing.Tuple[shipit_api.models.Release, typing.Optional[ReleaseL10ns]]:
 
     url_file = {
@@ -229,12 +230,18 @@ async def fetch_l10n_data(
             changesets = json.load(f)
     else:
         logger.debug(f'Fetching {url}')
-        async with session.get(url) as response:
-            response.raise_for_status()
-            logger.debug(f'Fetched {url}')
-            changesets = await response.json()
-            with cache.open('w+') as f:
-                f.write(json.dumps(changesets))
+        changesets = dict()
+        try:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                logger.debug(f'Fetched {url}')
+                changesets = await response.json()
+                with cache.open('w+') as f:
+                    f.write(json.dumps(changesets))
+        except Exception as e:
+            logger.exception(e)
+            if git_branch == 'production':
+                raise
 
     return (release, changesets)
 
@@ -357,9 +364,9 @@ def get_releases(breakpoint_version: int,
         #
         # get release details from the JSON files up to breakpoint_version
         #
-        product_file = f'json/1.0/{product.value}.json'
+        product_file = f'1.0/{product.value}.json'
         if product is Product.FENNEC:
-            product_file = 'json/1.0/mobile_android.json'
+            product_file = '1.0/mobile_android.json'
 
         old_releases = typing.cast(typing.Dict[str, ReleaseDetails], old_product_details[product_file].get('releases', dict()))
         for product_with_version in old_releases:
@@ -441,9 +448,9 @@ def get_release_history(breakpoint_version: int,
     #
     # get release history from the JSON files up to breakpoint_version
     #
-    product_file = f'json/1.0/{product.value}_history_{product_category.name.lower()}_releases.json'
+    product_file = f'1.0/{product.value}_history_{product_category.name.lower()}_releases.json'
     if product is Product.FENNEC:
-        product_file = f'json/1.0/mobile_history_{product_category.name.lower()}_releases.json'
+        product_file = f'1.0/mobile_history_{product_category.name.lower()}_releases.json'
 
     old_history = typing.cast(ReleasesHistory, old_product_details[product_file])
     for product_with_version in old_history:
@@ -714,8 +721,8 @@ def get_regions(old_product_details: ProductDetails) -> ProductDetails:
     '''
     regions: ProductDetails = dict()
     for file_, content in old_product_details.items():
-        if file_.startswith('json/1.0/regions/'):
-            regions[file_[len('json/1.0/'):]] = content
+        if file_.startswith('1.0/regions/'):
+            regions[file_[len('1.0/'):]] = content
     return regions
 
 
@@ -748,11 +755,11 @@ def get_l10n(releases: typing.List[shipit_api.models.Release],
                "name": "Firefox-58.0-build6",
            }
     '''
-    # populate with old data first, stripping the 'json/1.0/' prefix
+    # populate with old data first, stripping the '1.0/' prefix
     data: ProductDetails = {
-        file_.replace('json/1.0/', ''): content
+        file_.replace('1.0/', ''): content
         for file_, content in old_product_details.items()
-        if file_.startswith('json/1.0/l10n/')
+        if file_.startswith('1.0/l10n/')
     }
 
     for (release, locales) in releases_l10n.items():
@@ -797,10 +804,10 @@ def get_languages(old_product_details: ProductDetails) -> Languages:
            }
 
     '''
-    languages = old_product_details.get('json/1.0/languages.json')
+    languages = old_product_details.get('1.0/languages.json')
 
     if languages is None:
-        raise click.ClickException('"json/1.0/languages.json" does not exists in old product details"')
+        raise click.ClickException('"1.0/languages.json" does not exists in old product details"')
 
     # I can not use isinstance with generics (like Languages) for this reason
     # I'm casting to output type
@@ -974,7 +981,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                   git_repo_url: str,
                   folder_in_repo: str,
                   breakpoint_version: typing.Optional[int],
-                  clean_working_copy: bool = False,
+                  clean_working_copy: bool = True,
                   ):
 
     secrets = [urllib.parse.urlparse(git_repo_url).password]
@@ -986,7 +993,23 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     # Clone/pull latest product details
     logger.info(f'Getting latest product details from {git_repo_url}.')
     if shipit_api.config.PRODUCT_DETAILS_DIR.exists():
+        # Checkout the branch we are working on
+        logger.info(f'Checkout {git_branch} branch.')
+        run_check(['git', 'checkout', git_branch],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
         run_check(['git', 'pull'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        # make sure checkout is clean by removing changes to existing files
+        run_check(['git', 'reset', '--hard', 'HEAD'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        # make sure checkout is clean by removing files which are new
+        run_check(['git', 'clean', '-xfd'],
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
                   secrets=secrets,
                   )
@@ -995,24 +1018,24 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                   cwd=shipit_api.config.PRODUCT_DETAILS_DIR.parent,
                   secrets=secrets,
                   )
-
-    # make sure checkout is clean by removing changes to existing files
-    run_check(['git', 'reset', '--hard', 'HEAD'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-    # make sure checkout is clean by removing files which are new
-    run_check(['git', 'clean', '-xfd'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-
-    # Checkout the branch we are working on
-    logger.info(f'Checkout {git_branch} branch.')
-    run_check(['git', 'checkout', git_branch],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
+        run_check(['git', 'config', 'http.postBuffer', '12M'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        run_check(['git', 'config', 'user.email', 'release-services+robot@mozilla.com'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        run_check(['git', 'config', 'user.name', 'Release Services Robot'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        # Checkout the branch we are working on
+        logger.info(f'Checkout {git_branch} branch.')
+        run_check(['git', 'checkout', '-b', git_branch, f'origin/{git_branch}'],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
 
     # XXX: we need to implement how to figure out breakpoint_version from old_product_details
     # if breakpoint_version is not provided we should figure it out from old_product_details
@@ -1037,7 +1060,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     logger.info(f'Getting locales from hg.mozilla.org for each release from database')
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit_per_host=50)) as session:
         releases_l10n = await asyncio.gather(*[
-            fetch_l10n_data(session, release)
+            fetch_l10n_data(session, release, git_branch)
             for release in releases
         ])
     releases_l10n = {
@@ -1150,23 +1173,11 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
     product_details.update(get_regions(old_product_details))
     product_details.update(get_l10n(releases, releases_l10n, old_product_details))
 
-    #  add 'json/1.0/' infront of each file path
+    #  add '1.0/' infront of each file path
     product_details = {
-        f'json/1.0/{file_}': content
+        f'1.0/{file_}': content
         for file_, content in product_details.items()
     }
-
-    # create json_exports.json to list all the files
-    product_details['json_exports.json'] = {
-        f'/{file_}': os.path.basename(file_)
-        for file_ in (list(product_details.keys()) + ['json_exports.json'])
-    }
-
-    # XXX: to make it compatible with old product details we must remove .json from l10n
-    for (file_, content) in product_details['json_exports.json'].items():
-        content = typing.cast(str, content)
-        if file_.startswith('/json/1.0/l10n') and content.endswith('.json'):
-            product_details['json_exports.json'][file_] = content[:-len('.json')]  # noqa
 
     if shipit_api.config.PRODUCT_DETAILS_NEW_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_NEW_DIR)
@@ -1181,20 +1192,21 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         with new_file.open('w+') as f:
             f.write(json.dumps(content, sort_keys=True, indent=4))
 
-    for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_NEW_DIR):
-        old_item = shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo / item
-        new_item = shipit_api.config.PRODUCT_DETAILS_NEW_DIR / item
-
-        # We remove all top files/folders in PRODUCT_DETAILS_DIR that were
-        # generated in PRODUCT_DETAILS_NEW_DIR
-        if old_item.exists():
-            if old_item.is_dir():
-                shutil.rmtree(old_item)
+    # remove all top level items in folder_in_repo
+    for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo):
+        item = shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo / item
+        if item.exists():
+            if item.is_dir():
+                shutil.rmtree(item)
             else:
-                os.unlink(old_item)
+                os.unlink(item)
 
-        # Move new files to be commited
-        shutil.move(new_item, old_item)
+    # Move new files to be commited
+    for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_NEW_DIR):
+        shutil.move(
+            shipit_api.config.PRODUCT_DETAILS_NEW_DIR / item,
+            shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo / item,
+        )
 
     # Add, commit and push changes
     run_check(['git', 'add', '.'],
@@ -1202,17 +1214,19 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
               secrets=secrets,
               )
 
-    run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
-    run_check(['git', 'config', '--global', 'user.email', 'release-services+robot@mozilla.com'])
-    run_check(['git', 'config', '--global', 'user.name', 'Release Services Robot'])
-
-    # XXX: we need a better commmit message, maybe mention what triggered this update
-    commit_message = 'Updating product details'
-    run_check(['git', 'commit', '-m', commit_message],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
-    run_check(['git', 'push'],
-              cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
-              secrets=secrets,
-              )
+    # check if there is something to commit
+    output = run_check(['git', 'status', '--short'],
+                       cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                       secrets=secrets,
+                       )
+    if output != b'':
+        # XXX: we need a better commmit message, maybe mention what triggered this update
+        commit_message = 'Updating product details'
+        run_check(['git', 'commit', '-m', commit_message],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )
+        run_check(['git', 'push', 'origin', git_branch],
+                  cwd=shipit_api.config.PRODUCT_DETAILS_DIR,
+                  secrets=secrets,
+                  )

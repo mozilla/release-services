@@ -46,8 +46,8 @@ let
           "--cache-root"
           "/cache"
         ];
-        deadline = "14 hours";
-        maxRunTime = 14 * 60 * 60;
+        deadline = "21 hours";
+        maxRunTime = 21 * 60 * 60;
         taskArtifacts = {
           "public/bugs.json.xz" = {
             type = "file";
@@ -99,7 +99,13 @@ let
           -E openssl \
           -E pkgconfig \
           -E freetype.dev \
+          -E libjpeg.dev \
+          -E hdf5 \
           -s numpy \
+          -s flit \
+          -s intreehooks \
+          -s cython \
+          -s pkgconfig \
           -e pytest-runner \
           -e setuptools-scm \
           -r requirements.txt \

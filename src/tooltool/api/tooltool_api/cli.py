@@ -177,6 +177,7 @@ async def check_file_pending_uploads(channel, body, envelope, properties):
         for pending_upload in file.pending_uploads:
             check_pending_upload(session, pending_upload)
     session.commit()
+    await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
 
 
 def cmd_check_pending_uploads(app):

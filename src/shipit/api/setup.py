@@ -47,6 +47,7 @@ setuptools.setup(
             'shipit-v1-sync = shipit_api.cli:v1_sync',
             'shipit-download-product-details = shipit_api.cli:download_product_details',
             'shipit-rebuild-product-details = shipit_api.cli:rebuild_product_details',
+            'shipit-trigger-product-details = shipit_api.cli:trigger_product_details',
         ],
     ),
     include_package_data=True,

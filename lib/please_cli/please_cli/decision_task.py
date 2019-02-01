@@ -182,8 +182,10 @@ def get_deploy_task(index,
         try:
             docker_registry = deploy_options['docker_registry']
             docker_repo = deploy_options['docker_repo']
+            docker_stable_tag = deploy_options['docker_stable_tag']
         except KeyError:
-            raise click.ClickException('Missing `docker_registry` or `docker_repo` in deploy options')
+            raise click.ClickException(
+                'Missing `docker_registry` or `docker_repo` or `docker_stable_tag` in deploy options')
 
         project_name = (
             f'{project} ({nix_path_attribute}) to DOCKERHUB '
@@ -196,6 +198,7 @@ def get_deploy_task(index,
             f'--docker-repo={docker_repo}',
             f'--docker-registry={docker_registry}',
             f'--channel={channel}',
+            f'--docker-stable-tag={docker_stable_tag}',
             '--no-interactive',
         ]
 
@@ -449,22 +452,25 @@ def cmd(ctx,
             deployed_projects.get(project_name)
 
             # update hook for each project
-            if please_cli.config.PROJECTS_CONFIG[project_name]['update'] is True and channel == 'production':
-                update_hook_nix_path_atttribute = f'updateHook.{channel}.scheduled'
-            else:
-                update_hook_nix_path_atttribute = f'updateHook.{channel}.notScheduled'
-            projects_to_deploy.append((
-                project_name,
-                [],
-                'TASKCLUSTER_HOOK',
-                {
-                    'enable': True,
-                    'docker_registry': 'index.docker.io',
-                    'docker_repo': 'mozillareleng/services',
-                    'name-suffix': '-update-dependencies',
-                    'nix_path_attribute': update_hook_nix_path_atttribute,
-                },
-            ))
+            if please_cli.config.PROJECTS_CONFIG[project_name]['update'] is True:
+
+                if channel == 'production':
+                    update_hook_nix_path_atttribute = f'updateHook.{channel}.scheduled'
+                else:
+                    update_hook_nix_path_atttribute = f'updateHook.{channel}.notScheduled'
+
+                projects_to_deploy.append((
+                    project_name,
+                    [],
+                    'TASKCLUSTER_HOOK',
+                    {
+                        'enable': True,
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozillareleng/services',
+                        'name-suffix': '-update-dependencies',
+                        'nix_path_attribute': update_hook_nix_path_atttribute,
+                    },
+                ))
 
             if deployed_projects == project_hashes[project_name]:
                 continue

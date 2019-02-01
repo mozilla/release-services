@@ -30,6 +30,10 @@ paths:
               type: integer
             clean_working_copy:
               type: boolean
+            channel:
+              type: string
+            folder_in_repo:
+              type: string
       responses:
         405:
           description: Invalid input

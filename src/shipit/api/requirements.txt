@@ -1,11 +1,11 @@
 -e ./../../../lib/cli_common[log] #egg=mozilla-cli-common
--e ./../../../lib/backend_common[log,security,cors,api,auth0,db] #egg=mozilla-backend-common
+-e ./../../../lib/backend_common[log,security,cors,api,auth0,db,pulse] #egg=mozilla-backend-common
 
 aiohttp
 arrow
 backoff==1.6.0  # all later versions require poetry which is not supported (yet) by pypi2nix
 json-e
-mohawk
+mohawk<0.4,>=0.3.4
 mozilla-version
 
 # deployment
