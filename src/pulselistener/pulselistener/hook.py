@@ -27,6 +27,14 @@ class Hook(object):
 
         return True
 
+    def connect_mercurial_queue(self, queue):
+        '''
+        Save local queue to mercurial worker
+        '''
+        self.mercurial_queue = queue
+
+        return True
+
     def build_consumer(self, *args, **kwargs):
         '''
         Create a consumer runtime for a new thread

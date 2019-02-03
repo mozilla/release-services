@@ -7,6 +7,7 @@ import click
 
 from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
+from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import get_secrets
 from pulselistener import config
 from pulselistener import task_monitoring
@@ -14,10 +15,16 @@ from pulselistener.listener import PulseListener
 
 
 @click.command()
+@click.option(
+    '--cache-root',
+    required=True,
+    help='Cache root, used to pull changesets'
+)
 @taskcluster_options
 def main(taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
+         cache_root
          ):
 
     secrets = get_secrets(taskcluster_secret,
@@ -27,6 +34,8 @@ def main(taskcluster_secret,
                               'PULSE_PASSWORD',
                               'HOOKS',
                               'ADMINS',
+                              'PHABRICATOR',
+                              'MERCURIAL_REMOTE',
                           ),
                           existing=dict(
                               HOOKS=[],
@@ -45,9 +54,17 @@ def main(taskcluster_secret,
 
     task_monitoring.emails = secrets['ADMINS']
 
+    phabricator = PhabricatorAPI(
+        api_key=secrets['PHABRICATOR']['token'],
+        url=secrets['PHABRICATOR']['url'],
+    )
+
     pl = PulseListener(secrets['PULSE_USER'],
                        secrets['PULSE_PASSWORD'],
                        secrets['HOOKS'],
+                       secrets['MERCURIAL_REMOTE'],
+                       phabricator,
+                       cache_root,
                        taskcluster_client_id,
                        taskcluster_access_token,
                        )
