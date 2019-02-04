@@ -92,9 +92,8 @@ class MercurialWorker(object):
             )
 
         # Make a single commit with all these patches
-        # with a try syntax
         _, commit = self.repo.commit(
-            message='try: -b o -p linux64 -t none -u cppunit',
+            message='Code review for {phid}'.format(**diff),
             addremove=True,
             user='pulselistener',
         )
