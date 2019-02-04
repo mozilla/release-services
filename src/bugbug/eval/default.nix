@@ -46,6 +46,7 @@ let
           "--cache-root"
           "/cache"
         ];
+        workerType = "releng-svc-compute";
         taskArtifacts = {
           "public/bug.json" = {
             type = "file";

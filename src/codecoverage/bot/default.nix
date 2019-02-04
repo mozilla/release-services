@@ -89,7 +89,7 @@ let
         ];
         deadline = "4 hours";
         maxRunTime = 4 * 60 * 60;
-        workerType = "releng-svc-compute";
+        workerType = "releng-svc-memory";
         taskArtifacts = {
           "public/chunk_mapping.tar.xz" = {
             type = "file";
