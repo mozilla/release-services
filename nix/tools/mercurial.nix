@@ -8,8 +8,8 @@ let
   hg_tools = mkDerivation {
     name = "mozilla-hg-tools";
     src = fetchurl {
-      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/f260c773c13f.tar.bz2";
-      sha256 = "1llsqvl7mv02mfbjpn35s9hsqjd1414v81qc81kjwi3kzjbllfvn";
+      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/6cd994e30bb1.tar.bz2";
+      sha256 = "0dh82jz7b1qqfv7ghrzf6xdgcgpk10z7338d90inyckk0naiac5g";
     };
     installPhase = ''
       mkdir -p $out
