@@ -46,8 +46,8 @@ let
           "--cache-root"
           "/cache"
         ];
-        deadline = "21 hours";
-        maxRunTime = 21 * 60 * 60;
+        deadline = "28 hours";
+        maxRunTime = 28 * 60 * 60;
         workerType = "releng-svc-compute";
         taskArtifacts = {
           "public/bugs.json.xz" = {
