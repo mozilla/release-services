@@ -50,6 +50,8 @@ in python2Packages.buildPythonApplication {
     
     [extensions]
     purge =
+    strip =
+    rebase =
     robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
     hgmo = ${hg_tools}/hgext/hgmo
     pushlog = ${hg_tools}/hgext/pushlog

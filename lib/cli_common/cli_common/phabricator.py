@@ -380,7 +380,7 @@ class PhabricatorAPI(object):
 
         # When base revision is missing, update to default revision
         if hg_base is None or not revision_available(repo, hg_base):
-            logger.warning('Missing base revision from Phabricator')
+            logger.warning('Missing base revision from Phabricator', rev=hg_base)
             hg_base = default_revision
 
         # Load all patches from their numerical ID

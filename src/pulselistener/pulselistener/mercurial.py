@@ -9,6 +9,8 @@ import io
 import os
 import tempfile
 
+import hglib
+
 from cli_common.log import get_logger
 from cli_common.mercurial import robust_checkout
 from pulselistener.config import REPO_TRY
@@ -49,10 +51,11 @@ class MercurialWorker(object):
         logger.info('Removed ssh key')
 
     async def run(self):
-
-        # Update to tip
-        logger.info('Checking out tip of {}'.format(self.repo_url))
+        # Start by updating the repo
+        logger.info('Checking out tip', repo=self.repo_url)
         self.repo = robust_checkout(self.repo_url, self.repo_dir)
+        self.repo.setcbout(lambda msg: logger.info('Mercurial', stdout=msg))
+        self.repo.setcberr(lambda msg: logger.info('Mercurial', stderr=msg))
         logger.info('Initial clone finished')
 
         # Wait for phabricator diffs to apply
@@ -63,14 +66,33 @@ class MercurialWorker(object):
 
             try:
                 await self.handle_diff(diff)
+
+            except hglib.error.CommandError as e:
+                logger.warn('Mercurial error on diff', error=e.err, args=e.args, phid=diff['phid'])
+
+                # Remove uncommited changes
+                self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
+
             except Exception as e:
-                logger.info('Failed to process diff', error=e, phid=diff['phid'])
+                logger.warn('Failed to process diff', error=e, phid=diff['phid'])
 
                 # Remove uncommited changes
                 self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
 
             # Notify the queue that the message has been processed
             self.queue.task_done()
+
+    def clean(self):
+        '''
+        Steps to clean the mercurial repo
+        '''
+        logger.info('Remove all mercurial drafts')
+        try:
+            cmd = hglib.util.cmdbuilder(b'strip', rev=b'roots(outgoing())', force=True)
+            self.repo.rawcommand(cmd)
+        except hglib.error.CommandError as e:
+            if b'abort: empty revision set' not in e.err:
+                raise
 
     async def handle_diff(self, diff):
         '''
@@ -80,28 +102,47 @@ class MercurialWorker(object):
         '''
         logger.info('Received diff {phid}'.format(**diff))
 
+        # Start by cleaning the repo
+        self.clean()
+
         # Get the stack of patches
-        patches = self.phabricator_api.load_patches_stack(self.repo, diff)
+        patches = self.phabricator_api.load_patches_stack(self.repo, diff, default_revision='central')
+        assert len(patches) > 0, 'No patches to apply'
+
+        # Get current revision
+        base = self.repo.tip()
 
         # Apply the patches, without commiting
         for diff_phid, patch in patches:
             logger.info('Applying patch', phid=diff_phid)
             self.repo.import_(
                 patches=io.BytesIO(patch.encode('utf-8')),
-                nocommit=True,
+                message='Patch {}'.format(diff_phid),
+                user='pulselistener',
             )
 
-        # Make a single commit with all these patches
-        _, commit = self.repo.commit(
-            message='Code review for {phid}'.format(**diff),
-            addremove=True,
-            user='pulselistener',
-        )
+        # Rebase multiple patches into a single commit
+        if len(patches) > 1:
+            rebase_msg = '"Patches {}"'.format(', '.join(p[0] for p in patches)).encode('utf-8')
+            cmd = hglib.util.cmdbuilder(
+                b'rebase',
+                dest=base.node,
+                collapse=True,
+                message=rebase_msg
+            )
+
+            logger.info('Rebasing multiple patches into a single commit', msg=rebase_msg)
+            self.repo.rawcommand(cmd)
 
         # Push the commit on try
-        logger.info('Pushing patches to try', rev=commit)
+        commit = self.repo.tip()
+        assert commit.node != base.node, 'Commit is the same as base ({}), nothing changed !'.format(commit.node)
+        logger.info('Pushing patches to try', rev=commit.node)
         self.repo.push(
             dest=REPO_TRY,
-            rev=commit,
+            rev=commit.node,
             ssh=self.ssh_conf,
+            force=True,
         )
+
+        logger.info('Diff has been pushed !')
