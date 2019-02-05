@@ -124,20 +124,7 @@ class MercurialWorker(object):
                 user='pulselistener',
             )
 
-        # Rebase multiple patches into a single commit
-        if len(patches) > 1:
-            rebase_msg = '"Patches {}"'.format(', '.join(p[0] for p in patches)).encode('utf-8')
-            cmd = hglib.util.cmdbuilder(
-                b'rebase',
-                dest=base.node,
-                collapse=True,
-                message=rebase_msg
-            )
-
-            logger.info('Rebasing multiple patches into a single commit', msg=rebase_msg)
-            self.repo.rawcommand(cmd)
-
-        # Push the commit on try
+        # Push the commits on try
         commit = self.repo.tip()
         assert commit.node != base.node, 'Commit is the same as base ({}), nothing changed !'.format(commit.node)
         logger.info('Pushing patches to try', rev=commit.node)
