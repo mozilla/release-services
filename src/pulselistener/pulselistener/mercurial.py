@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 class MercurialWorker(object):
     '''
-    Mercurial worker maintaining a local clone of Mozilla-Central
+    Mercurial worker maintaining a local clone of mozilla-unified
     '''
     def __init__(self, phabricator_api, ssh_user, ssh_key, repo_url, repo_dir):
         self.repo_url = repo_url
@@ -94,6 +94,9 @@ class MercurialWorker(object):
             if b'abort: empty revision set' not in e.err:
                 raise
 
+        logger.info('Pull updates from remote repo')
+        self.repo.pull()
+
     async def handle_diff(self, diff):
         '''
         Handle a new diff received from Phabricator:
@@ -112,7 +115,7 @@ class MercurialWorker(object):
         # Get current revision
         base = self.repo.tip()
 
-        # Apply the patches, without commiting
+        # Apply the patches and commit them one by one
         for diff_phid, patch in patches:
             logger.info('Applying patch', phid=diff_phid)
             self.repo.import_(

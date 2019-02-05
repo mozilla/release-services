@@ -30,7 +30,7 @@ def revision_exists_on_central(revision):
 
 def revision_available(repo, revision):
     '''
-    Check a revision is available on a Mercurial repo
+    Check if a revision is available on a Mercurial repo
     '''
     try:
         repo.identify(revision)

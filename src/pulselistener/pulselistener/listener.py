@@ -53,6 +53,7 @@ class HookPhabricator(Hook):
 
         # Start by getting top id
         diffs = self.api.search_diffs(limit=1)
+        assert len(diffs) == 1
         self.latest_id = diffs[0]['id']
 
     def list_differential(self):
