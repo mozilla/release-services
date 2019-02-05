@@ -3,6 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+import tempfile
+
 import click
 
 from cli_common.cli import taskcluster_options
@@ -17,8 +20,9 @@ from pulselistener.listener import PulseListener
 @click.command()
 @click.option(
     '--cache-root',
-    required=True,
-    help='Cache root, used to pull changesets'
+    required=False,
+    help='Cache root, used to pull changesets',
+    default=os.path.join(tempfile.gettempdir(), 'pulselistener'),
 )
 @click.option(
     '--phab-revision',
