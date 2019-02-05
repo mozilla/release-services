@@ -280,3 +280,17 @@ class PulseListener(object):
             raise Exception('Unsupported hook {}'.format(conf['type']))
 
         return hook_class(conf)
+
+    def add_revision(self, revision):
+        '''
+        Fetch a phabricator revision and push it in the mercurial queue
+        '''
+        rev = self.phabricator_api.load_revision(rev_id=revision)
+        logger.info('Found revision', title=rev['fields']['title'])
+
+        diffs = self.phabricator_api.search_diffs(diff_phid=rev['fields']['diffPHID'])
+        assert len(diffs) == 1
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.mercurial.queue.put(diffs[0]))
+        logger.info('Pushed revision in queue', rev=revision)

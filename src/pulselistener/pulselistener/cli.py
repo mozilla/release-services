@@ -20,11 +20,18 @@ from pulselistener.listener import PulseListener
     required=True,
     help='Cache root, used to pull changesets'
 )
+@click.option(
+    '--phab-revision',
+    type=int,
+    required=False,
+    help='A Phabricator revision ID to test'
+)
 @taskcluster_options
 def main(taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
-         cache_root
+         cache_root,
+         phab_revision,
          ):
 
     secrets = get_secrets(taskcluster_secret,
@@ -69,6 +76,10 @@ def main(taskcluster_secret,
                        taskcluster_access_token,
                        )
     click.echo('Listening to pulse messages...')
+
+    if phab_revision:
+        pl.add_revision(phab_revision)
+
     pl.run()
 
 
