@@ -3,11 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-import typing
-
 import flask
+import os
 import werkzeug.exceptions
+import typing
 
 import backend_common
 import backend_common.api
@@ -49,8 +48,16 @@ def create_app(config: dict = None) -> flask.Flask:
     for code, exception in werkzeug.exceptions.default_exceptions.items():
         app.register_error_handler(exception, custom_handle_default_exceptions)
 
-    app.cli.add_command(tooltool_api.cli.cmd_worker, 'worker')
-    app.cli.add_command(tooltool_api.cli.cmd_replicate, 'replicate')
-    app.cli.add_command(tooltool_api.cli.cmd_check_pending_uploads, 'check_pending_uploads')
+    @app.cli.command()
+    def worker():
+        tooltool_api.cli.cmd_worker(app)
+
+    @app.cli.command()
+    def replicate():
+        tooltool_api.cli.cmd_replicate(app)
+
+    @app.cli.command()
+    def check_pending_uploads():
+        tooltool_api.cli.cmd_check_pending_uploads(app)
 
     return app
