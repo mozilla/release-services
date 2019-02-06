@@ -55,16 +55,18 @@ async def test_monitoring(QueueMock, NotifyMock):
     await monitoring.check_task()
     assert monitoring.stats['Hook1']['exception'] == []
     assert monitoring.stats['Hook2']['exception'] == ['Task-exception']
-    assert monitoring.tasks.qsize() == 2
+
+    # A new task has been retried, replacing the exception
+    assert monitoring.tasks.qsize() == 3
 
     # Task failed.
     await monitoring.check_task()
     assert monitoring.stats['Hook1']['failed'] == ['Task-failed']
-    assert monitoring.tasks.qsize() == 1
+    assert monitoring.tasks.qsize() == 2
 
     # Task is pending, put it back in the queue.
     await monitoring.check_task()
-    assert monitoring.tasks.qsize() == 1
+    assert monitoring.tasks.qsize() == 2
 
     content = '''# Hook1 tasks for the last period
 
