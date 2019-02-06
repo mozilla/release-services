@@ -7,14 +7,14 @@ from datetime import datetime
 from datetime import timedelta
 
 import pytest
-from taskcluster.utils import slugId
 from taskcluster.utils import stringDate
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture
 def QueueMock():
     class Mock():
-        created_tasks = []
+        def __init__(self):
+            self.created_tasks = []
 
         def status(self, task_id):
             for status in ['failed', 'completed', 'exception', 'pending']:
@@ -28,6 +28,12 @@ def QueueMock():
 
         def task(self, task_id):
             now = datetime.utcnow()
+
+            if 'retry:' in task_id:
+                retry = int(task_id[task_id.index('retry:')+6])
+            else:
+                retry = 3
+
             return {
                 'created': stringDate(now),
                 'deadline': stringDate(now + timedelta(hours=2)),
@@ -42,9 +48,9 @@ def QueueMock():
                 'priority': 'lowest',
                 'provisionerId': 'aws-provisioner-v1',
                 'requires': 'all-completed',
-                'retries': 3,
+                'retries': retry,
                 'scopes': [],
-                'taskGroupId': slugId().decode('utf-8'),
+                'taskGroupId': 'group-{}'.format(task_id),
                 'workerType': 'niceWorker'
             }
 
