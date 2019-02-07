@@ -2,7 +2,7 @@
 
 let
   inherit (releng_pkgs.lib) mkRustPlatform ;
-  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib;
+  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_7 llvm_7 llvmPackages_7 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib nasm;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
   # Rust 1.31.1
@@ -73,20 +73,20 @@ in gecko.overrideDerivation (old: {
     echo "export JAVA_HOME=${openjdk}" >> $geckoenv
 
     # Setup Clang & Autoconf
-    echo "export CC=${clang_4}/bin/clang" >> $geckoenv
-    echo "export CXX=${clang_4}/bin/clang++" >> $geckoenv
-    echo "export LD=${clang_4}/bin/ld" >> $geckoenv
-    echo "export LLVM_CONFIG=${llvm_4}/bin/llvm-config" >> $geckoenv
-    echo "export LLVMCONFIG=${llvm_4}/bin/llvm-config" >> $geckoenv # we need both
-    echo "export LLVM_OBJDUMP=${llvm_4}/bin/llvm-objdump" >> $geckoenv
+    echo "export CC=${clang_7}/bin/clang" >> $geckoenv
+    echo "export CXX=${clang_7}/bin/clang++" >> $geckoenv
+    echo "export LD=${clang_7}/bin/ld" >> $geckoenv
+    echo "export LLVM_CONFIG=${llvm_7}/bin/llvm-config" >> $geckoenv
+    echo "export LLVMCONFIG=${llvm_7}/bin/llvm-config" >> $geckoenv # we need both
+    echo "export LLVM_OBJDUMP=${llvm_7}/bin/llvm-objdump" >> $geckoenv
     echo "export AUTOCONF=${autoconf213}/bin/autoconf" >> $geckoenv
 
     # Build custom mozconfig
     mozconfig=$out/conf/mozconfig
     echo > $mozconfig "
     ac_add_options --enable-debug
-    ac_add_options --with-clang-path=${clang_4}/bin/clang
-    ac_add_options --with-libclang-path=${llvmPackages_4.libclang}/lib
+    ac_add_options --with-clang-path=${clang_7}/bin/clang
+    ac_add_options --with-libclang-path=${llvmPackages_7.libclang}/lib
     mk_add_options AUTOCLOBBER=1
     "
 
@@ -114,5 +114,6 @@ in gecko.overrideDerivation (old: {
       python2Packages.pyyaml
       sqlite
       zlib
+      nasm
     ];
 })

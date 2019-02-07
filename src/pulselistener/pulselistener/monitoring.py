@@ -3,6 +3,9 @@ import asyncio
 from datetime import datetime
 from datetime import timedelta
 
+from taskcluster.utils import slugId
+from taskcluster.utils import stringDate
+
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 
@@ -95,6 +98,11 @@ class Monitoring(object):
         task_status = status['status']['state']
 
         if task_status in ('failed', 'completed', 'exception'):
+
+            # Retry tasks in exception
+            if task_status == 'exception':
+                await self.retry_task(group_id, hook_id, task_id)
+
             # Add to report
             if hook_id not in self.stats:
                 self.stats[hook_id] = {'failed': [], 'completed': [], 'exception': []}
@@ -103,6 +111,46 @@ class Monitoring(object):
         else:
             # Push back into queue so it get checked later on
             await self.tasks.put((group_id, hook_id, task_id))
+
+    async def retry_task(self, group_id, hook_id, task_id):
+        '''
+        Retry a Taskcluster task by:
+        - fetching its definition
+        - updating its dates & retry count
+        - creating a new task
+        Do NOT use rerunTask as it's deprecated AND not recommended
+        https://docs.taskcluster.net/docs/reference/platform/taskcluster-queue/references/api#rerunTask
+        '''
+        assert self.queue is not None
+
+        # Fetch task definition
+        definition = self.queue.task(task_id)
+
+        # Update timestamps
+        date_format = '%Y-%m-%dT%H:%M:%S.%f%z'
+        now = datetime.utcnow()
+        created = datetime.strptime(definition['created'], date_format)
+        deadline = datetime.strptime(definition['deadline'], date_format)
+        expires = datetime.strptime(definition['expires'], date_format)
+        definition['created'] = stringDate(now)
+        definition['deadline'] = stringDate(now + (deadline - created))
+        definition['expires'] = stringDate(now + (expires - created))
+
+        # Decrement retries count
+        definition['retries'] -= 1
+        if definition['retries'] < 0:
+            logger.warn('Will not retry task, no more retries left', task_id=task_id, group_id=group_id, hook_id=hook_id)
+            return
+
+        # Trigger a new task with the updated definition
+        new_task_id = slugId().decode('utf-8')
+        logger.info('Retry task', old_task=task_id, new_task=new_task_id)
+        self.queue.createTask(new_task_id, definition)
+
+        # Monitor new task
+        await self.add_task(group_id, hook_id, new_task_id)
+
+        return new_task_id
 
     def send_report(self):
         '''
