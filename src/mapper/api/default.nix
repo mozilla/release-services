@@ -58,6 +58,7 @@ let
           -V 3.7 \
           -O ../../../nix/requirements_override.nix \
           -E postgresql \
+          -s intreehooks \
           -s flit \
           -s vcversioner \
           -s pytest-runner \
