@@ -38,7 +38,6 @@ let
                 ];
                 deadline = "4 hours";
                 maxRunTime = 4 * 60 * 60;
-                workerType = "releng-svc";
               };
             in
               writeText "taskcluster-hook-${hook_name}.json" (builtins.toJSON hook);
@@ -73,6 +72,7 @@ let
           -V 3.7 \
           -O ../../../nix/requirements_override.nix \
           -E postgresql \
+          -s intreehooks \
           -s flit \
           -s vcversioner \
           -s pytest-runner \

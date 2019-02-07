@@ -38,6 +38,7 @@ let
           -C $cache_dir \
           -V 3.7 \
           -O ../../../nix/requirements_override.nix \
+          -s intreehooks \
           -s flit \
           -s vcversioner \
           -s pytest-runner \
