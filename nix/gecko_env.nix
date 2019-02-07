@@ -2,7 +2,7 @@
 
 let
   inherit (releng_pkgs.lib) mkRustPlatform ;
-  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_7 llvm_7 llvmPackages_7 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib;
+  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_7 llvm_7 llvmPackages_7 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib nasm;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
   # Rust 1.31.1
@@ -114,5 +114,6 @@ in gecko.overrideDerivation (old: {
       python2Packages.pyyaml
       sqlite
       zlib
+      nasm
     ];
 })
