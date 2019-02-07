@@ -7,6 +7,7 @@ import itertools
 
 from static_analysis_bot.clang.format import ClangFormatIssue
 from static_analysis_bot.clang.tidy import ClangTidyIssue
+from static_analysis_bot.coverity.coverity import CoverityIssue
 from static_analysis_bot.infer.infer import InferIssue
 from static_analysis_bot.lint import MozLintIssue
 
@@ -19,9 +20,13 @@ COMMENT_PARTS = {
         'defect': ' - {nb} found by infer',
         'analyzer': ' - `./mach static-analysis check-java path/to/file.java` (Java)',
     },
+    CoverityIssue: {
+        'defect': ' - {nb} found by Coverity',
+        'analyzer': ' - Coverity Scan Analysis cannot be ran locally.',
+    },
     ClangFormatIssue: {
         'defect': ' - {nb} found by clang-format',
-        'analyzer': ' - `./mach clang-format -p path/to/file.cpp` (C/C++)',
+        'analyzer': ' - `./mach clang-format -s -p path/to/file.cpp` (C/C++)',
     },
     MozLintIssue: {
         'defect': ' - {nb} found by mozlint',
