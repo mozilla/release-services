@@ -52,19 +52,23 @@ async def test_monitoring(QueueMock, NotifyMock):
     assert monitoring.tasks.qsize() == 3
 
     # Task exception.
+    assert len(monitoring.queue.created_tasks) == 0
     await monitoring.check_task()
     assert monitoring.stats['Hook1']['exception'] == []
     assert monitoring.stats['Hook2']['exception'] == ['Task-exception']
-    assert monitoring.tasks.qsize() == 2
+
+    # A new task has been retried, replacing the exception
+    assert len(monitoring.queue.created_tasks) == 1
+    assert monitoring.tasks.qsize() == 3
 
     # Task failed.
     await monitoring.check_task()
     assert monitoring.stats['Hook1']['failed'] == ['Task-failed']
-    assert monitoring.tasks.qsize() == 1
+    assert monitoring.tasks.qsize() == 2
 
     # Task is pending, put it back in the queue.
     await monitoring.check_task()
-    assert monitoring.tasks.qsize() == 1
+    assert monitoring.tasks.qsize() == 2
 
     content = '''# Hook1 tasks for the last period
 
@@ -206,3 +210,38 @@ async def test_monitoring_whiteline_between_failed_and_hook(QueueMock, NotifyMoc
     assert NotifyMock.email_obj['content'] == content
     assert NotifyMock.email_obj['template'] == 'fullscreen'
     assert monitoring.stats == {}
+
+
+@pytest.mark.asyncio
+async def test_monitoring_retry_exceptions(QueueMock, NotifyMock):
+    monitoring = Monitoring(1)
+    monitoring.emails = ['pinco@pallino']
+    await monitoring.add_task('Group1', 'Hook1', 'Task-exception-retry:2')
+    await monitoring.add_task('Group1', 'Hook2', 'Task-exception-retry:0')
+    assert monitoring.tasks.qsize() == 2
+
+    monitoring.queue = QueueMock
+    assert len(monitoring.queue.created_tasks) == 0
+    monitoring.notify = NotifyMock
+
+    # Task exception with 2 retries
+    await monitoring.check_task()
+    assert monitoring.stats['Hook1']['exception'] == ['Task-exception-retry:2']
+    assert len(monitoring.queue.created_tasks) == 1
+    assert monitoring.tasks.qsize() == 2
+
+    # The retried task should maintain the original taskGroupId
+    old_task = monitoring.queue.task('Task-exception-retry:2')
+    new_task_id, new_task = monitoring.queue.created_tasks[0]
+    assert new_task_id != 'Task-exception-retry:2'
+    assert new_task != old_task
+    assert new_task['taskGroupId'] == old_task['taskGroupId']
+    assert new_task['payload'] == old_task['payload']
+    assert new_task['created'] != old_task['created']
+
+    # Task exception with 0 retries
+    # No new task should be created
+    await monitoring.check_task()
+    assert monitoring.stats['Hook2']['exception'] == ['Task-exception-retry:0']
+    assert len(monitoring.queue.created_tasks) == 1
+    assert monitoring.tasks.qsize() == 1
