@@ -38,7 +38,6 @@ let
                 ];
                 deadline = "4 hours";
                 maxRunTime = 4 * 60 * 60;
-                workerType = "releng-svc";
               };
             in
               writeText "taskcluster-hook-${hook_name}.json" (builtins.toJSON hook);
