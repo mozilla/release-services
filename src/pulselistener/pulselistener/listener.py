@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import os.path
 
 import requests
 
 from cli_common.log import get_logger
-from cli_common.phabricator import PhabricatorAPI
 from cli_common.pulse import run_consumer
 from cli_common.utils import retry
 from pulselistener import task_monitoring
+from pulselistener.config import REPO_UNIFIED
 from pulselistener.hook import Hook
 from pulselistener.hook import PulseHook
+from pulselistener.mercurial import MercurialWorker
 
 logger = get_logger(__name__)
+
+ACTION_TASKCLUSTER = 'taskcluster'
+ACTION_TRY = 'try'
 
 
 class HookPhabricator(Hook):
@@ -29,12 +34,8 @@ class HookPhabricator(Hook):
         )
 
         # Connect to Phabricator API
-        assert 'phabricator_url' in configuration
-        assert 'phabricator_token' in configuration
-        self.api = PhabricatorAPI(
-            api_key=configuration['phabricator_token'],
-            url=configuration['phabricator_url'],
-        )
+        assert 'phabricator_api' in configuration
+        self.api = configuration['phabricator_api']
 
         # List enabled repositories
         enabled = configuration.get('repositories', ['mozilla-central', ])
@@ -45,6 +46,10 @@ class HookPhabricator(Hook):
         }
         assert len(self.repos) > 0, 'No repositories enabled'
         logger.info('Enabled Phabricator repositories', repos=[r['fields']['name'] for r in self.repos.values()])
+
+        # Get actions to do on new diff
+        self.actions = configuration.get('actions', [ACTION_TASKCLUSTER, ])
+        logger.info('Enabled actions', actions=self.actions)
 
         # Start by getting top id
         diffs = self.api.search_diffs(limit=1)
@@ -96,10 +101,19 @@ class HookPhabricator(Hook):
                     continue
 
                 # Create new task
-                await self.create_task({
-                    'ANALYSIS_SOURCE': 'phabricator',
-                    'ANALYSIS_ID': diff['phid']
-                })
+                if ACTION_TASKCLUSTER in self.actions:
+                    await self.create_task({
+                        'ANALYSIS_SOURCE': 'phabricator',
+                        'ANALYSIS_ID': diff['phid']
+                    })
+                else:
+                    logger.info('Skipping Taskcluster task', diff=diff['phid'])
+
+                # Put message in mercurial queue for try jobs
+                if ACTION_TRY in self.actions:
+                    await self.mercurial_queue.put(diff)
+                else:
+                    logger.info('Skipping Try job', diff=diff['phid'])
 
             # Sleep a bit before trying new diffs
             await asyncio.sleep(60)
@@ -193,6 +207,9 @@ class PulseListener(object):
                  pulse_user,
                  pulse_password,
                  hooks_configuration,
+                 mercurial_conf,
+                 phabricator_api,
+                 cache_root,
                  taskcluster_client_id=None,
                  taskcluster_access_token=None,
                  ):
@@ -202,10 +219,20 @@ class PulseListener(object):
         self.hooks_configuration = hooks_configuration
         self.taskcluster_client_id = taskcluster_client_id
         self.taskcluster_access_token = taskcluster_access_token
+        self.phabricator_api = phabricator_api
 
         task_monitoring.connect_taskcluster(
             self.taskcluster_client_id,
             self.taskcluster_access_token,
+        )
+
+        # Build mercurial worker & queue for mozilla unified
+        self.mercurial = MercurialWorker(
+            self.phabricator_api,
+            ssh_user=mercurial_conf['ssh_user'],
+            ssh_key=mercurial_conf['ssh_key'],
+            repo_url=REPO_UNIFIED,
+            repo_dir=os.path.join(cache_root, 'sa-unified'),
         )
 
     def run(self):
@@ -226,11 +253,14 @@ class PulseListener(object):
             if hook.connect_taskcluster(
                 self.taskcluster_client_id,
                 self.taskcluster_access_token,
-            )
+            ) and hook.connect_mercurial_queue(self.mercurial.queue)
         ]
 
         # Add monitoring process
         consumers.append(task_monitoring.run())
+
+        # Add mercurial process
+        consumers.append(self.mercurial.run())
 
         # Run all consumers together
         run_consumer(asyncio.gather(*consumers))
@@ -241,6 +271,7 @@ class PulseListener(object):
         '''
         assert isinstance(conf, dict)
         assert 'type' in conf
+        conf['phabricator_api'] = self.phabricator_api
         classes = {
             'static-analysis-phabricator': HookPhabricator,
             'code-coverage': HookCodeCoverage,
@@ -250,3 +281,17 @@ class PulseListener(object):
             raise Exception('Unsupported hook {}'.format(conf['type']))
 
         return hook_class(conf)
+
+    def add_revision(self, revision):
+        '''
+        Fetch a phabricator revision and push it in the mercurial queue
+        '''
+        rev = self.phabricator_api.load_revision(rev_id=revision)
+        logger.info('Found revision', title=rev['fields']['title'])
+
+        diffs = self.phabricator_api.search_diffs(diff_phid=rev['fields']['diffPHID'])
+        assert len(diffs) == 1
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.mercurial.queue.put(diffs[0]))
+        logger.info('Pushed revision in queue', rev=revision)

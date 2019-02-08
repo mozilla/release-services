@@ -4,38 +4,30 @@
 let
 
   inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper mercurial cacert ;
+  inherit (releng_pkgs.pkgs) writeScript openssh;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
-  inherit (releng_pkgs.tools) pypi2nix;
+  inherit (releng_pkgs.tools) pypi2nix mercurial;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "pulselistener";
-
-  mercurial' = mercurial.overrideDerivation (old: {
-    postInstall = old.postInstall + ''
-      mkdir -p $out/etc/mercurial
-      cat > $out/etc/mercurial/hgrc <<EOF
-      [web]
-      cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
-
-      [extensions]
-      purge =
-      EOF
-    '';
-  });
 
   self = mkPython {
     inherit python project_name;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit (self) name; };
     buildInputs =
+      [ mercurial ] ++
       (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
+      [ openssh ] ++
       (fromRequirementsFile ./requirements.txt python.packages);
+    shellHook = ''
+      export PATH="${mercurial}/bin:$PATH"
+    '';
     postInstall = ''
       mkdir -p $out/bin
-      ln -s ${mercurial'}/bin/hg $out/bin
+      ln -s ${mercurial}/bin/hg $out/bin
     '';
     dockerCmd = [
       "/bin/pulselistener"
