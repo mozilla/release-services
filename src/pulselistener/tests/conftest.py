@@ -134,7 +134,12 @@ def PhabricatorMock():
         assert 'diffID' in params
         return (200, json_headers, _response('raw-{}'.format(params['diffID'])))
 
-    with responses.RequestsMock() as resp:
+    def _edges(request):
+        params = _phab_params(request)
+        assert 'sourcePHIDs' in params
+        return (200, json_headers, _response('edges-{}'.format(params['sourcePHIDs'][0])))
+
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as resp:
 
         resp.add(
             responses.POST,
@@ -143,11 +148,10 @@ def PhabricatorMock():
             content_type='application/json',
         )
 
-        resp.add(
+        resp.add_callback(
             responses.POST,
             'http://phabricator.test/api/edge.search',
-            body=_response('edges'),
-            content_type='application/json',
+            callback=_edges,
         )
 
         resp.add_callback(
