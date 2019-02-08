@@ -51,7 +51,6 @@ let
           env = {
             "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
             "APP_CHANNEL" = branch;
-            "MOZ_AUTOMATION" = "1";
           };
         };
 
@@ -150,8 +149,6 @@ let
     shellHook = ''
       export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python36}/bin:${nodejs}/bin:$PATH"
 
-      # Setup mach automation
-      export MOZ_AUTOMATION=1
 
       # Use clang mozconfig from gecko-env
       export MOZCONFIG=${gecko-env}/conf/mozconfig
@@ -178,7 +175,6 @@ let
         "MOZCONFIG=${gecko-env}/conf/mozconfig"
         "CODESPELL=${python.packages.codespell}/bin/codespell"
         "SHELLCHECK=${shellcheck}/bin/shellcheck"
-        "MOZ_AUTOMATION=1"
         "MOZBUILD_STATE_PATH=/tmp/mozilla-state"
         "_JAVA_OPTIONS=-Duser.home=/tmp/mozilla-state"
         "SHELL=xterm"
