@@ -214,7 +214,7 @@ class PhabricatorRevision(Revision):
         * Apply previous needed patches from Phabricator
         '''
         try:
-            patches = self.api.load_patches_stack(repo, self.diff)
+            _, patches = self.api.load_patches_stack(repo, self.diff)
         except Exception as e:
             raise AnalysisException('mercurial', str(e))
 

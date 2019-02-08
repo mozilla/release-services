@@ -88,7 +88,7 @@ class MercurialWorker(object):
         '''
         logger.info('Remove all mercurial drafts')
         try:
-            cmd = hglib.util.cmdbuilder(b'strip', rev=b'roots(outgoing())', force=True)
+            cmd = hglib.util.cmdbuilder(b'strip', rev=b'roots(outgoing())', force=True, backup=False)
             self.repo.rawcommand(cmd)
         except hglib.error.CommandError as e:
             if b'abort: empty revision set' not in e.err:
@@ -109,11 +109,8 @@ class MercurialWorker(object):
         self.clean()
 
         # Get the stack of patches
-        patches = self.phabricator_api.load_patches_stack(self.repo, diff, default_revision='central')
+        base, patches = self.phabricator_api.load_patches_stack(self.repo, diff, default_revision='central')
         assert len(patches) > 0, 'No patches to apply'
-
-        # Get current revision
-        base = self.repo.tip()
 
         # Apply the patches and commit them one by one
         for diff_phid, patch in patches:

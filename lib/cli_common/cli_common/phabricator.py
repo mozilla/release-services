@@ -397,5 +397,10 @@ class PhabricatorAPI(object):
         except hglib.error.CommandError:
             raise Exception('Failed to update to revision {}'.format(hg_base))
 
-        # Outputs patches from the bottom one up to the target
-        return list(reversed(patches.items()))
+        # Get current revision using full informations tuple from hglib
+        revision = repo.identify(id=True).strip()
+        revision = repo.log(revision, limit=1)[0]
+        logger.info('Updated repo to revision', revision=revision.node)
+
+        # Outputs base revision and patches from the bottom one up to the target
+        return (revision, list(reversed(patches.items())))
