@@ -47,11 +47,11 @@ class GitHubUtils(object):
             r = requests.get('{}/gecko-dev/rev/hg/{}'.format(self.hg_git_mapper, mercurial_commit))
 
             if not r.ok:
-                for email in secrets[secrets.EMAIL_ADDRESSES]:
+                for email in secrets[secrets.REPO_MAPPER_EMAIL_ADDRESSES]:
                     self.notify_service.email({
                         'address': email,
-                        'subject': 'Commit missing on Git',
-                        'content': 'HG commit {} is missing on Git'.format(mercurial_commit),
+                        'subject': 'Missing commit in the mapper service',
+                        'content': f"Mercurial commit {mercurial_commit} is missing on the mapper service.",
                         'template': 'fullscreen',
                     })
                 raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
