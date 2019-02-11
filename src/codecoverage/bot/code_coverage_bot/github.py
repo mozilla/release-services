@@ -18,6 +18,7 @@ class GitHubUtils(object):
         self.hg_git_mapper = secrets[secrets.HG_GIT_MAPPER] if secrets.HG_GIT_MAPPER in secrets else 'https://mapper.mozilla-releng.net'
         self.client_id = client_id
         self.access_token = access_token
+        self.notify_service = get_service('notify', client_id, access_token)
 
     def update_geckodev_repo(self):
         if self.gecko_dev_user is None or self.gecko_dev_pwd is None:
@@ -46,6 +47,13 @@ class GitHubUtils(object):
             r = requests.get('{}/gecko-dev/rev/hg/{}'.format(self.hg_git_mapper, mercurial_commit))
 
             if not r.ok:
+                for email in secrets[secrets.EMAIL_ADDRESSES]:
+                    self.notify_service.email({
+                        'address': email,
+                        'subject': 'Commit missing on Git',
+                        'content': 'HG commit {} is missing on Git'.format(mercurial_commit),
+                        'template': 'fullscreen',
+                    })
                 raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
 
             return r.text.split(' ')[0]
