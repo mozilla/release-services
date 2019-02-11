@@ -38,6 +38,9 @@ class Secrets(dict):
                 Secrets.PHABRICATOR_URL,
                 Secrets.PHABRICATOR_TOKEN,
             ),
+            existing={
+                REPO_MAPPER_EMAIL_ADDRESSES:[]
+            },
             taskcluster_client_id=taskcluster_client_id,
             taskcluster_access_token=taskcluster_access_token,
         )

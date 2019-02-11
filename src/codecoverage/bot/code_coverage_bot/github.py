@@ -51,7 +51,7 @@ class GitHubUtils(object):
                     self.notify_service.email({
                         'address': email,
                         'subject': 'Missing commit in the mapper service',
-                        'content': f"Mercurial commit {mercurial_commit} is missing on the mapper service.",
+                        'content': f'Mercurial commit {mercurial_commit} is missing on the mapper service.',
                         'template': 'fullscreen',
                     })
                 raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
