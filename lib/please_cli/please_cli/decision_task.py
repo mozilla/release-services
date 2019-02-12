@@ -206,6 +206,7 @@ def get_deploy_task(index,
         try:
             docker_registry = deploy_options['docker_registry']
             docker_repo = deploy_options['docker_repo']
+            docker_stable_tag = deploy_options.get('docker_stable_tag')
         except KeyError:
             raise click.ClickException('Missing `docker_registry` or `docker_repo` in deploy options')
         hook_group_id = 'project-releng'
@@ -224,6 +225,8 @@ def get_deploy_task(index,
             f'--nix-path-attribute={nix_path_attribute}',
             '--no-interactive',
         ]
+        if docker_stable_tag is not None:
+            command.append(f'--docker-stable-tag={docker_stable_tag}')
         scopes += [
           f'assume:hook-id:project-releng/services-{channel}-*',
           f'hooks:modify-hook:project-releng/services-{channel}-*',

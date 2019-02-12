@@ -396,6 +396,11 @@ def cmd_HEROKU(ctx,
     help='Docker repository.',
     )
 @click.option(
+    '--docker-stable-tag',
+    required=False,
+    help='Optional docker image tag that we overwrite with every push. Helps tracking a project using a single tag',
+    )
+@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -412,6 +417,7 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                          taskcluster_access_token,
                          docker_registry,
                          docker_repo,
+                         docker_stable_tag,
                          interactive,
                          ):
 
@@ -472,20 +478,25 @@ def cmd_TASKCLUSTER_HOOK(ctx,
         image = hook.get('task', {}).get('payload', {}).get('image', '')
         if image.startswith('/nix/store'):
 
-            image_tag = '-'.join(reversed(image[11:-7].split('-', 1)))
-            click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, image_tag), nl=False)
-            with click_spinner.spinner():
-                please_cli.utils.push_docker_image(
-                    registry=docker_registry,
-                    username=docker_username,
-                    password=docker_password,
-                    image=f'docker-archive://{image}',
-                    repo=docker_repo,
-                    tag=image_tag,
-                    interactive=interactive,
-                )
+            versioned_image_tag = '-'.join(reversed(image[11:-7].split('-', 1)))
+            image_tags = [versioned_image_tag]
+            if docker_stable_tag:
+                image_tags.append(docker_stable_tag)
 
-            hook['task']['payload']['image'] = '{}:{}'.format(docker_repo, image_tag)
+            for image_tag in image_tags:
+                click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, image_tag), nl=False)
+                with click_spinner.spinner():
+                    please_cli.utils.push_docker_image(
+                        registry=docker_registry,
+                        username=docker_username,
+                        password=docker_password,
+                        image=f'docker-archive://{image}',
+                        repo=docker_repo,
+                        tag=image_tag,
+                        interactive=interactive,
+                    )
+
+            hook['task']['payload']['image'] = '{}:{}'.format(docker_repo, versioned_image_tag)
 
         if hook_exists:
             click.echo(' => Updating hook `{}/{}` ... '.format(hook_group_id, hook_id), nl=False)
