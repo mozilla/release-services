@@ -96,13 +96,17 @@ GROUPS = {
 }
 
 AUTH0_AUTH_SCOPES = {
-    f'{shipit_api.config.SCOPE_PREFIX}/add_release': GROUPS['admin'],
-    f'{shipit_api.config.SCOPE_PREFIX}/schedule_phase': GROUPS['admin'],
-    f'{shipit_api.config.SCOPE_PREFIX}/abandon_release': GROUPS['admin'],
-    f'{shipit_api.config.SCOPE_PREFIX}/sync_releases': GROUPS['admin'],
-    f'{shipit_api.config.SCOPE_PREFIX}/rebuild_product_details': GROUPS['admin'],
-    f'{shipit_api.config.SCOPE_PREFIX}/sync_release_datetimes': GROUPS['admin'],
-    f'{shipit_api.config.SCOPE_PREFIX}/update_release_status': GROUPS['admin'],
-    f'{shipit_api.config.SCOPE_PREFIX}/phase_signoff': GROUPS['admin'],
+    'add_release': GROUPS['admin'],
+    'schedule_phase': GROUPS['admin'],
+    'abandon_release': GROUPS['admin'],
+    'sync_releases': GROUPS['admin'],
+    'rebuild_product_details': GROUPS['admin'],
+    'sync_release_datetimes': GROUPS['admin'],
+    'update_release_status': GROUPS['admin'],
+    'phase_signoff': GROUPS['admin'],
+}
+AUTH0_AUTH_SCOPES = {
+    f'{shipit_api.config.SCOPE_PREFIX}/{scope}': users
+    for scope, users in AUTH0_AUTH_SCOPES.items()
 }
 
