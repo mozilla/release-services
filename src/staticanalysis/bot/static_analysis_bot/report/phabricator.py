@@ -6,6 +6,7 @@
 from cli_common import log
 from cli_common.phabricator import PhabricatorAPI
 from static_analysis_bot import CLANG_FORMAT
+from static_analysis_bot import COVERAGE
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.report.base import Reporter
@@ -59,28 +60,42 @@ class PhabricatorReporter(Reporter):
             if patch.analyzer in analyzers_available
         ]
 
-        if issues:
+        coverage_issues = [issue for issue in issues if issue.ANALYZER == COVERAGE]
 
+        if issues:
             # First publish inlines as drafts
             inlines = list(filter(None, [
                 self.comment_inline(revision, issue, existing_comments)
                 for issue in issues
-                if issue.ANALYZER != CLANG_FORMAT
+                if issue.ANALYZER not in [CLANG_FORMAT, COVERAGE]
             ]))
-            if not inlines and not patches:
+            if not inlines and not patches and not coverage_issues:
                 logger.info('No new comments found, skipping Phabricator publication')
                 return
             logger.info('Added inline comments', ids=[i['id'] for i in inlines])
 
             # Then publish top comment
-            self.api.comment(
-                revision.id,
-                self.build_comment(
-                    issues=issues,
-                    patches=patches,
-                    bug_report_url=BUG_REPORT_URL,
-                ),
-            )
+            non_coverage_issues = [issue for issue in issues if issue.ANALYZER != COVERAGE]
+            if len(non_coverage_issues):
+                self.api.comment(
+                    revision.id,
+                    self.build_comment(
+                        issues=non_coverage_issues,
+                        patches=patches,
+                        bug_report_url=BUG_REPORT_URL,
+                    ),
+                )
+
+            # Then publish top coverage comment
+            if len(coverage_issues):
+                self.api.comment(
+                    revision.id,
+                    self.build_coverage_comment(
+                        issues=coverage_issues,
+                        bug_report_url=BUG_REPORT_URL,
+                    ),
+                )
+
             stats.api.increment('report.phabricator.issues', len(inlines))
             stats.api.increment('report.phabricator')
             logger.info('Published phabricator comment')
