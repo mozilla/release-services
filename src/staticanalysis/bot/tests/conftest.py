@@ -298,9 +298,9 @@ def mock_workflow(tmpdir, mock_repository, mock_config, mock_phabricator):
     '''
     Mock the full workflow, without cloning
     '''
-    from static_analysis_bot.workflow import Workflow
+    from static_analysis_bot.workflows import LocalWorkflow
 
-    class MockWorkflow(Workflow):
+    class MockWorkflow(LocalWorkflow):
         def clone(self):
             return hglib.open(mock_config.repo_dir)
 

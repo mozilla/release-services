@@ -79,7 +79,8 @@ class Settings(object):
         except KeyError:
             raise Exception('Publication mode should be {}'.format('|'.join(map(lambda p: p .name, Publication))))
 
-        assert os.path.isdir(cache_root)
+        if not os.path.isdir(cache_root):
+            os.makedirs(cache_root)
         self.cache_root = cache_root
         self.repo_dir = os.path.join(self.cache_root, 'sa-unified')
         self.repo_shared_dir = os.path.join(self.cache_root, 'sa-unified-shared')

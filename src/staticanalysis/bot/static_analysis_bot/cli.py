@@ -3,6 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os.path
+import tempfile
+
 import click
 
 from cli_common.cli import taskcluster_options
@@ -17,9 +20,15 @@ from static_analysis_bot import stats
 from static_analysis_bot.config import settings
 from static_analysis_bot.report import get_reporters
 from static_analysis_bot.revisions import PhabricatorRevision
-from static_analysis_bot.workflow import Workflow
+from static_analysis_bot.workflows import LocalWorkflow
+from static_analysis_bot.workflows import RemoteWorkflow
 
 logger = get_logger(__name__)
+
+SOURCE_WORKFLOWS = {
+    'phabricator': LocalWorkflow,
+    'try': RemoteWorkflow,
+}
 
 
 @click.command()
@@ -33,18 +42,28 @@ logger = get_logger(__name__)
     envvar='ANALYSIS_ID',
 )
 @click.option(
+    '--task-id',
+    envvar='TASK_ID',
+)
+@click.option(
     '--cache-root',
-    required=True,
+    default=os.path.join(
+        tempfile.gettempdir(),
+        'staticanalysis',
+    ),
     help='Cache root, used to pull changesets'
 )
 @stats.api.timer('runtime.analysis')
 def main(source,
          id,
+         task_id,
          cache_root,
          taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
          ):
+    assert source in SOURCE_WORKFLOWS.keys(), \
+        'Unsupported analysis source: {}'.format(source)
 
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
@@ -111,14 +130,13 @@ def main(source,
         reporters['phabricator'].setup_api(phabricator_api)
 
     # Load unique revision
-    if source == 'phabricator':
-        revision = PhabricatorRevision(id, phabricator_api)
-    else:
-        raise Exception('Unsupported analysis source: {}'.format(source))
+    revision = PhabricatorRevision(id, phabricator_api)
 
+    # Run workflow according to source
+    Workflow = SOURCE_WORKFLOWS[source]
     w = Workflow(reporters, secrets['ANALYZERS'], index_service, queue_service, phabricator_api)
     try:
-        w.run(revision)
+        w.run(revision, task_id)
     except Exception as e:
         # Log errors to papertrail
         logger.error(
