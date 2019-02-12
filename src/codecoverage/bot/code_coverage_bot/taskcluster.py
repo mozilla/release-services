@@ -7,9 +7,12 @@ from zipfile import is_zipfile
 import requests
 
 from cli_common.utils import retry
+from cli_common.taskcluster import get_service
 
 index_base = 'https://index.taskcluster.net/v1/'
 queue_base = 'https://queue.taskcluster.net/v1/'
+index_service = get_service('index')
+queue_service = get_service('queue')
 
 
 class TaskclusterException(Exception):
@@ -44,15 +47,13 @@ def get_task(branch, revision, platform):
 
 
 def get_task_details(task_id):
-    r = requests.get(queue_base + 'task/{}'.format(task_id))
-    r.raise_for_status()
-    return r.json()
+    task_details_json = queue_service.task(task_id)
+    return task_details_json
 
 
 def get_task_status(task_id):
-    r = requests.get(queue_base + 'task/{}/status'.format(task_id))
-    r.raise_for_status()
-    return r.json()
+    task_status_json = queue_service.task(task_id)
+    return task_status_json
 
 
 def get_task_artifacts(task_id):
@@ -62,21 +63,13 @@ def get_task_artifacts(task_id):
 
 
 def get_tasks_in_group(group_id):
-    list_url = queue_base + 'task-group/{}/list'.format(group_id)
-
-    r = requests.get(list_url, params={
-        'limit': 200
-    })
-    r.raise_for_status()
-    reply = r.json()
+    reply = queue_service.listTaskGroup(group_id,{'limit': 200})
     tasks = reply['tasks']
     while 'continuationToken' in reply:
-        r = requests.get(list_url, params={
+        reply = queue_service.listTaskGroup(group_id,{
             'limit': 200,
             'continuationToken': reply['continuationToken']
         })
-        r.raise_for_status()
-        reply = r.json()
         tasks += reply['tasks']
     return tasks
 
