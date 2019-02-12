@@ -111,6 +111,8 @@ class HookPhabricator(Hook):
 
                 # Put message in mercurial queue for try jobs
                 if ACTION_TRY in self.actions:
+                    assert self.mercurial_queue is not None, \
+                        'No mercurial queue to push on try!'
                     await self.mercurial_queue.put(diff)
                 else:
                     logger.info('Skipping Try job', diff=diff['phid'])
@@ -227,13 +229,17 @@ class PulseListener(object):
         )
 
         # Build mercurial worker & queue for mozilla unified
-        self.mercurial = MercurialWorker(
-            self.phabricator_api,
-            ssh_user=mercurial_conf['ssh_user'],
-            ssh_key=mercurial_conf['ssh_key'],
-            repo_url=REPO_UNIFIED,
-            repo_dir=os.path.join(cache_root, 'sa-unified'),
-        )
+        if mercurial_conf.get('enabled', False):
+            self.mercurial = MercurialWorker(
+                self.phabricator_api,
+                ssh_user=mercurial_conf['ssh_user'],
+                ssh_key=mercurial_conf['ssh_key'],
+                repo_url=REPO_UNIFIED,
+                repo_dir=os.path.join(cache_root, 'sa-unified'),
+            )
+        else:
+            self.mercurial = None
+            logger.info('Mercurial worker is disabled')
 
     def run(self):
 
@@ -247,20 +253,26 @@ class PulseListener(object):
 
         # Run hooks pulse listeners together
         # but only use hooks with active definitions
+        def _connect(hook):
+            out = hook.connect_taskcluster(
+                self.taskcluster_client_id,
+                self.taskcluster_access_token,
+            )
+            if self.mercurial is not None:
+                out &= hook.connect_mercurial_queue(self.mercurial.queue)
+            return out
         consumers = [
             hook.build_consumer(self.pulse_user, self.pulse_password)
             for hook in hooks
-            if hook.connect_taskcluster(
-                self.taskcluster_client_id,
-                self.taskcluster_access_token,
-            ) and hook.connect_mercurial_queue(self.mercurial.queue)
+            if _connect(hook)
         ]
 
         # Add monitoring process
         consumers.append(task_monitoring.run())
 
         # Add mercurial process
-        consumers.append(self.mercurial.run())
+        if self.mercurial is not None:
+            consumers.append(self.mercurial.run())
 
         # Run all consumers together
         run_consumer(asyncio.gather(*consumers))
@@ -286,6 +298,10 @@ class PulseListener(object):
         '''
         Fetch a phabricator revision and push it in the mercurial queue
         '''
+        if self.mercurial is None:
+            logger.warn('Skip adding revision, mercurial worker is disabled', revision=revision)
+            return
+
         rev = self.phabricator_api.load_revision(rev_id=revision)
         logger.info('Found revision', title=rev['fields']['title'])
 
