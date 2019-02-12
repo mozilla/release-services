@@ -116,6 +116,35 @@ class TaskclusterUser(BaseUser):
         return taskcluster.utils.scopeMatch(self.get_permissions(), permissions)
 
 
+class Auth0User(BaseUser):
+
+    type = 'auth0'
+
+    def __init__(self, token, userinfo):
+        assert 'email' in userinfo
+
+        self.token = token
+        self.userinfo = userinfo
+
+    def get_id(self):
+        return self.userinfo['email']
+
+    def get_permissions(self):
+        user = self.get_id()
+        all_permissions = flask.current_app.config.get('AUTH0_AUTH_SCOPES', dict())
+        return [
+            permission
+            for permission, users in all_permissions
+            if user in users
+        ]
+
+    def has_permissions(self, permissions):
+        if not isinstance(permissions, (tuple, list)):
+            permissions = [permissions]
+        user_permissions = self.get_permissions()
+        return all(map(lambda p: p in user_permissions, permissions))
+
+
 class RelengapiTokenUser(BaseUser):
 
     type = 'relengapi-token'
@@ -153,19 +182,6 @@ class Auth(object):
         self.app = app
         self.login_manager.init_app(app)
 
-    def _require_scopes(self, scopes):
-        if not self._require_login():
-            return False
-
-        with flask.current_app.app_context():
-            user_scopes = flask_login.current_user.get_permissions()
-            if not taskcluster.utils.scopeMatch(user_scopes, scopes):
-                diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]  # noqa
-                logger.error('User {} misses some scopes: {}'.format(flask_login.current_user.get_id(), ' OR '.join(diffs)))  # noqa
-                return False
-
-        return True
-
     def _require_login(self):
         with flask.current_app.app_context():
             try:
@@ -184,7 +200,24 @@ class Auth(object):
             return 'Unauthorized', 401
         return wrapper
 
-    def require_scopes(self, scopes):
+    def _require_permissions(self, permissions):
+        if not self._require_login():
+            return False
+
+        with flask.current_app.app_context():
+            if not flask_login.current_user.has_permissions(permissions):
+                user = flask_login.current_user.get_id()
+                user_permissions = flask_login.current_user.get_permissions()
+                diff = ' OR '.join([
+                    ', '.join(set(p).difference(user_permissions))
+                    for p in permissions
+                ])
+                logger.error(f'User {user} misses some scopes: {diff}')
+                return False
+
+        return True
+
+    def require_permissions(self, scopes):
         '''Decorator to check if user has required scopes or set of scopes
         '''
 
@@ -197,7 +230,7 @@ class Auth(object):
             @functools.wraps(method)
             def wrapper(*args, **kwargs):
                 logger.info('Checking scopes', scopes=scopes)
-                if self._require_scopes(scopes):
+                if self._require_permissions(scopes):
                     # Validated scopes, running method
                     logger.info('Validated scopes, processing api request')
                     return method(*args, **kwargs)
@@ -206,6 +239,8 @@ class Auth(object):
                     return flask.jsonify(UNAUTHORIZED_JSON), 401
             return wrapper
         return decorator
+
+    require_scopes = require_permissions
 
 
 auth = Auth(
@@ -365,6 +400,40 @@ def parse_header_taskcluster(request):
     return TaskclusterUser(resp)
 
 
+def parse_header_auth0(request):
+    if 'access_token' in request.form:
+        return request.form['access_token']
+    if 'access_token' in request.args:
+        return request.args['access_token']
+
+    auth = request.headers.get('Authorization')
+    if not auth:
+        return NO_AUTH
+
+    parts = auth.split()
+
+    if parts[0].lower() != 'bearer' or \
+       len(parts) == 1 or \
+       len(parts) > 2:
+        return NO_AUTH
+
+    token = parts[1]
+
+    auth_domain = flask.current_app.config.get('AUTH_DOMAIN')
+    url = auth0.client_secrets.get('userinfo_uri', f'https://{auth_domain}/userinfo')
+
+    payload = {'access_token': token}
+    response = requests.get(url, params=payload)
+
+    # Because auth0 returns http 200 even if the token is invalid.
+    if response.content == b'Unauthorized' or not response.ok:
+        return NO_AUTH
+
+    userinfo = json.loads(str(response.content, 'utf-8'))
+
+    return Auth0User(token, userinfo)
+
+
 def parse_header_relengapi(request):
 
     auth_header = request.headers.get('Authorization')
@@ -497,6 +566,11 @@ def parse_header(request):
 
     if flask.current_app.config.get('RELENGAPI_AUTH') is True:
         user = parse_header_relengapi(request)
+        if user != NO_AUTH:
+            return user
+
+    if flask.current_app.config.get('AUTH0_AUTH') is True:
+        user = parse_header_auth0(request)
         if user != NO_AUTH:
             return user
 

@@ -8,14 +8,13 @@ import functools
 
 from flask import abort
 from flask import current_app
-from flask import g
 from flask import jsonify
+from flask_login import current_user
 from mozilla_version.gecko import FirefoxVersion
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
 from backend_common.auth import auth
-from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from shipit_api.config import PROJECT_NAME
@@ -60,33 +59,9 @@ def notify_via_irc(message):
         })
 
 
-def validate_user(key, checker):
-    def wrapper(view_func):
-        @functools.wraps(view_func)
-        def decorated(*args, **kwargs):
-            has_permissions = False
-            try:
-                has_permissions = checker(g.userinfo[key])
-            except (AttributeError, KeyError):
-                response_body = {'error': 'missing_userinfo',
-                                 'error_description': 'Userinfo is missing'}
-                return response_body, 401, {'WWW-Authenticate': 'Bearer'}
-
-            if has_permissions:
-                return view_func(*args, **kwargs)
-            else:
-                response_body = {'error': 'invalid_permissions',
-                                 'error_description': 'Check your permissions'}
-                return response_body, 401, {'WWW-Authenticate': 'Bearer'}
-        return decorated
-    return wrapper
-
-
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/add_release'])
 def add_release(body):
-    session = g.db.session
+    session = current_app.db.session
     r = Release(
         product=body['product'],
         version=body['version'],
@@ -115,7 +90,7 @@ def add_release(body):
 
 def list_releases(product=None, branch=None, version=None, build_number=None,
                   status=['scheduled']):
-    session = g.db.session
+    session = current_app.db.session
     releases = session.query(Release)
     if product:
         releases = releases.filter(Release.product == product)
@@ -136,7 +111,7 @@ def list_releases(product=None, branch=None, version=None, build_number=None,
 
 
 def get_release(name):
-    session = g.db.session
+    session = current_app.db.session
     try:
         release = session.query(Release).filter(Release.name == name).one()
         return release.json
@@ -145,7 +120,7 @@ def get_release(name):
 
 
 def get_phase(name, phase):
-    session = g.db.session
+    session = current_app.db.session
     try:
         phase = session.query(Phase) \
             .filter(Release.id == Phase.release_id) \
@@ -156,11 +131,9 @@ def get_phase(name, phase):
         abort(404)
 
 
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/schedule_phase'])
 def schedule_phase(name, phase):
-    session = g.db.session
+    session = current_app.db.session
     try:
         phase = session.query(Phase) \
             .filter(Release.id == Phase.release_id) \
@@ -194,7 +167,7 @@ def schedule_phase(name, phase):
         queue.createTask(phase.task_id, phase.rendered(extra_context=extra_context))
 
     phase.submitted = True
-    phase.completed_by = g.userinfo['email']
+    phase.completed_by = current_user.get_id()
     completed = datetime.datetime.utcnow()
     phase.completed = completed
     if all([ph.submitted for ph in phase.release.phases]):
@@ -210,11 +183,9 @@ def schedule_phase(name, phase):
     return phase.json
 
 
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'vpn_cloudops_shipit' in xs)
+@auth.require_scopes([SCOPE_PREFIX + '/abandon_release'])
 def abandon_release(name):
-    session = g.db.session
+    session = current_user.db.session
     try:
         r = session.query(Release).filter(Release.name == name).one()
         # Cancel all submitted task groups first
@@ -258,7 +229,7 @@ def abandon_release(name):
 
 @auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
 def sync_releases(releases):
-    session = g.db.session
+    session = current_app.db.session
     for release in releases:
         try:
             session.query(Release).filter(Release.name == release['name']).one()
@@ -284,7 +255,7 @@ def sync_releases(releases):
     return jsonify({'ok': 'ok'})
 
 
-@auth.require_scopes([SCOPE_PREFIX + '/rebuild-product-details'])
+@auth.require_scopes([SCOPE_PREFIX + '/rebuild_product_details'])
 def rebuild_product_details(options):
     pulse_user = current_app.config['PULSE_USER']
     exchange = f'exchange/{pulse_user}/{PROJECT_NAME}'
@@ -302,9 +273,9 @@ def rebuild_product_details(options):
     return jsonify({'ok': 'ok'})
 
 
-@auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
+@auth.require_scopes([SCOPE_PREFIX + '/sync_release_datetimes'])
 def sync_release_datetimes(releases):
-    session = g.db.session
+    session = current_app.db.session
     for release in releases:
         try:
             r = session.query(Release).filter(Release.name == release['name']).one()
@@ -319,7 +290,7 @@ def sync_release_datetimes(releases):
 
 @auth.require_scopes([SCOPE_PREFIX + '/update_release_status'])
 def update_release_status(name, body):
-    session = g.db.session
+    session = current_app.db.session
     try:
         r = session.query(Release).filter(Release.name == name).one()
     except NoResultFound:
@@ -338,7 +309,7 @@ def update_release_status(name, body):
 
 
 def get_phase_signoff(name, phase):
-    session = g.db.session
+    session = current_app.db.session
     try:
         phase = session.query(Phase) \
             .filter(Release.id == Phase.release_id) \
@@ -350,9 +321,9 @@ def get_phase_signoff(name, phase):
         abort(404)
 
 
-@mozilla_accept_token()
+@auth.require_scopes([SCOPE_PREFIX + '/phase_signoff'])
 def phase_signoff(name, phase, uid):
-    session = g.db.session
+    session = current_app.db.session
     try:
         signoff = session.query(Signoff) \
             .filter(Signoff.uid == uid).one()
@@ -362,14 +333,10 @@ def phase_signoff(name, phase, uid):
     if signoff.signed:
         abort(409, 'Already signed off')
 
-    who = g.userinfo['email']
-    try:
-        # TODO: temporarily use LDAP groups instead of scopes
-        groups = g.userinfo['https://sso.mozilla.com/claim/groups']
-        if signoff.permissions not in groups:
-            abort(401, f'Required LDAP group: `{signoff.permissions}`')
-    except KeyError:
-        abort(401, 'Auth failure')
+    who = current_user.get_id()
+    permissions = [i for i in signoff.permissions]
+    if not current_user.has_permissions(permissions):
+        abort(401, f'Required LDAP group: `{signoff.permissions}`')
 
     try:
         # Prevent the same user signing off for multiple signoffs

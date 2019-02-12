@@ -62,3 +62,47 @@ args = [
     secrets['APP_URL'],
 ]
 OIDC_CLIENT_SECRETS = backend_common.auth0.create_auth0_secrets_file(*args)
+
+# XXX: scopes/groups are hardcoded for now
+GROUPS = {
+    'admin': [
+        'asasaki@mozilla.com',
+        'bhearsum@mozilla.com',
+        'catlee@mozilla.com',
+        'jlorenzo@mozilla.com',
+        'jlund@mozilla.com',
+        'jwood@mozilla.com',
+        'mhentges@mozilla.com',
+        'mtabara@mozilla.com',
+        'nthomas@mozilla.com',
+        'raliiev@mozilla.com',
+        'rgarbas@mozilla.com',
+        'sfraser@mozilla.com',
+        'tprince@mozilla.com',
+    ],
+    'firefox-signoff': [
+        'rkothari@mozilla.com',
+        'ehenry@mozilla.com',
+        'jcristau@mozilla.com',
+        'pchevrel@mozilla.com',
+        'sylvestre@debian.org',
+        'rvandermeulen@mozilla.com',
+    ],
+    'thunderbird-signoff': [
+        'vseerror@lehigh.edu',
+        'mozilla@jorgk.com',
+        'thunderbird@calypsoblue.org',
+    ],
+}
+
+AUTH0_AUTH_SCOPES = {
+    f'{shipit_api.config.SCOPE_PREFIX}/add_release': GROUPS['admin'],
+    f'{shipit_api.config.SCOPE_PREFIX}/schedule_phase': GROUPS['admin'],
+    f'{shipit_api.config.SCOPE_PREFIX}/abandon_release': GROUPS['admin'],
+    f'{shipit_api.config.SCOPE_PREFIX}/sync_releases': GROUPS['admin'],
+    f'{shipit_api.config.SCOPE_PREFIX}/rebuild_product_details': GROUPS['admin'],
+    f'{shipit_api.config.SCOPE_PREFIX}/sync_release_datetimes': GROUPS['admin'],
+    f'{shipit_api.config.SCOPE_PREFIX}/update_release_status': GROUPS['admin'],
+    f'{shipit_api.config.SCOPE_PREFIX}/phase_signoff': GROUPS['admin'],
+}
+
