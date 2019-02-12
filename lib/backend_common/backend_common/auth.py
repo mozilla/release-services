@@ -219,7 +219,7 @@ def jti2id(jti):
     return int(jti[1:])
 
 
-EMPTY = object()
+NO_AUTH = object()
 RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'tooltool/': 'tooltool/api/',
@@ -259,7 +259,7 @@ def initial_data():
                 doc=permission_doc,
             ))
 
-    if getattr(flask_login.current_user, 'authenticated_email', EMPTY) != EMPTY:
+    if getattr(flask_login.current_user, 'authenticated_email', NO_AUTH) != NO_AUTH:
         user['authenticated_email'] = flask_login.current_user.authenticated_email
 
     return dict(
@@ -321,7 +321,63 @@ class RelengapiToken(backend_common.db.db.Model):
         return tok
 
 
-def is_relengapi_token(token_str):
+def parse_header_taskcluster(request):
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        auth_header = request.headers.get('Authentication')
+        if not auth_header:
+            return NO_AUTH
+        header = auth_header.split()
+        if len(header) == 2:
+                return user
+
+    # Get Endpoint configuration
+    if ':' in request.host:
+        host, port = request.host.split(':')
+    else:
+        host = request.host
+        port = request.environ.get('HTTP_X_FORWARDED_PORT')
+        if port is None:
+            port = request.scheme == 'https' and 443 or 80
+    method = request.method.lower()
+
+    # Build taskcluster payload
+    payload = {
+        'resource': request.path,
+        'method': method,
+        'host': host,
+        'port': int(port),
+        'authorization': auth_header,
+    }
+
+    # Auth with taskcluster
+    auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
+    try:
+        resp = auth.authenticateHawk(payload)
+        if not resp.get('status') == 'auth-success':
+            raise Exception('Taskcluster rejected the authentication')
+    except Exception as e:
+        logger.error('TC auth error: {}'.format(e))
+        logger.error('TC auth details: {}'.format(payload))
+        return NO_AUTH
+
+    return TaskclusterUser(resp)
+
+
+def parse_header_relengapi(request):
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        auth_header = request.headers.get('Authentication')
+        if not auth_header:
+            return NO_AUTH
+
+    header = auth_header.split()
+    if len(header) != 2:
+        return NO_AUTH
+
+    token_str = header[1]
 
     try:
         claims = flask.current_app.auth_relengapi_serializer.loads(token_str)
@@ -329,18 +385,18 @@ def is_relengapi_token(token_str):
     except itsdangerous.BadData as e:
         logger.warning('Got invalid signature in token %r', token_str)
         logger.exception(e)
-        return EMPTY
+        return NO_AUTH
 
     except Exception as e:
         logger.error('Error processing signature in token %r: %s', token_str, e)
-        return EMPTY
+        return NO_AUTH
 
     # convert v1 to ra2
     if claims.get('v') == 1:
         claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
 
     if claims.get('iss') != RELENGAPI_TOKENAUTH_ISSUER:
-        return EMPTY
+        return NO_AUTH
 
     if claims['typ'] == 'prm':
         token_id = jti2id(claims['jti'])
@@ -353,7 +409,7 @@ def is_relengapi_token(token_str):
     elif claims['typ'] == 'tmp':
         now = time.time()
         if now < claims['nbf'] or now > claims['exp']:
-            return EMPTY
+            return NO_AUTH
         permissions = [i for i in claims['prm'] if i]
         return RelengapiTokenUser(claims, permissions=permissions)
 
@@ -436,56 +492,25 @@ def get_taskcluster_credentials():
 
 @auth.login_manager.request_loader
 def parse_header(request):
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        auth_header = request.headers.get('Authentication')
-        if not auth_header:
-            return
+    '''Parse header and try to authenticate
+    '''
 
-    if flask.current_app.config.get('CHECK_FOR_RELENGAPI_TOKEN') is True:
-        header = auth_header.split()
-        if len(header) == 2:
-            user = is_relengapi_token(header[1])
-            if user != EMPTY:
-                return user
+    if flask.current_app.config.get('RELENGAPI_AUTH') is True:
+        user = parse_header_relengapi(request)
+        if user != NO_AUTH:
+            return user
 
-    # Get Endpoint configuration
-    if ':' in request.host:
-        host, port = request.host.split(':')
-    else:
-        host = request.host
-        port = request.environ.get('HTTP_X_FORWARDED_PORT')
-        if port is None:
-            port = request.scheme == 'https' and 443 or 80
-    method = request.method.lower()
-
-    # Build taskcluster payload
-    payload = {
-        'resource': request.path,
-        'method': method,
-        'host': host,
-        'port': int(port),
-        'authorization': auth_header,
-    }
-
-    # Auth with taskcluster
-    auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
-    try:
-        resp = auth.authenticateHawk(payload)
-        if not resp.get('status') == 'auth-success':
-            raise Exception('Taskcluster rejected the authentication')
-    except Exception as e:
-        logger.error('TC auth error: {}'.format(e))
-        logger.error('TC auth details: {}'.format(payload))
-        return
-
-    return TaskclusterUser(resp)
+    if flask.current_app.config.get('TASKCLUSTER_AUTH', True) is True:
+        user = parse_header_taskcluster(request)
+        if user != NO_AUTH:
+            return user
 
 
 def init_app(app):
     if app.config.get('SECRET_KEY') is None:
         raise Exception('When using `auth` extention you need to specify SECRET_KEY.')
-    if app.config.get('CHECK_FOR_RELENGAPI_TOKEN') is True:
+
+    if app.config.get('RELENGAPI_AUTH') is True:
         app.auth_relengapi_serializer = itsdangerous.JSONWebSignatureSerializer(app.config.get('SECRET_KEY'))
 
     auth.init_app(app)
