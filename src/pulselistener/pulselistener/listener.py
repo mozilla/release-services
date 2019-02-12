@@ -110,7 +110,9 @@ class HookPhabricator(Hook):
                     logger.info('Skipping Taskcluster task', diff=diff['phid'])
 
                 # Put message in mercurial queue for try jobs
-                if ACTION_TRY in self.actions and self.mercurial_queue:
+                if ACTION_TRY in self.actions:
+                    assert self.mercurial_queue is not None, \
+                        'No mercurial queue to push on try!'
                     await self.mercurial_queue.put(diff)
                 else:
                     logger.info('Skipping Try job', diff=diff['phid'])
