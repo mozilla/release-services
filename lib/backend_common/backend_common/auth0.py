@@ -13,7 +13,6 @@ issues with validating tokens for certain application types.
 '''
 
 import base64
-import functools
 import hmac
 import json
 import os
@@ -22,15 +21,11 @@ import time
 import urllib.parse
 
 import flask
-import flask_oidc
-import jose.jwt
 import requests
 
-import backend_common.dockerflow
 import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
-auth0 = flask_oidc.OpenIDConnect()
 
 SETTINGS_REQUIRED = (
     'SECRET_KEY',
@@ -39,18 +34,6 @@ SETTINGS_REQUIRED = (
     'AUTH_REDIRECT_URI',
     'AUTH_DOMAIN',
 )
-
-
-class AuthError(Exception):
-    def __init__(self, error, status_code):
-        self.error = error
-        self.status_code = status_code
-
-
-def handle_auth_error(e):
-    response = flask.jsonify(e.error)
-    response.status_code = e.status_code
-    return response
 
 
 def build_state(seed=None, size=8):
@@ -142,15 +125,6 @@ def auth0_check():
     }
 
 
-def init_app(app):
-    for setting in SETTINGS_REQUIRED:
-        if app.config.get(setting) is None:
-            raise Exception('When using `auth0` extention you need to specify {}.'.format(setting))  # noqa
-    app.register_error_handler(AuthError, handle_auth_error)
-    auth0.init_app(app)
-    return auth0
-
-
 def create_auth0_secrets_file(AUTH_CLIENT_ID, AUTH_CLIENT_SECRET, APP_URL,
                               USERINFO_URI='https://auth.mozilla.auth0.com/userinfo'):
     secrets_file = tempfile.mkstemp()[1]
@@ -169,12 +143,3 @@ def create_auth0_secrets_file(AUTH_CLIENT_ID, AUTH_CLIENT_SECRET, APP_URL,
             }
         }))
     return secrets_file
-
-
-def app_heartbeat():
-    try:
-        r = requests.get('https://auth.mozilla.auth0.com/test')
-        assert 'clock' in r.json()
-    except Exception as e:
-        logger.exception(e)
-        raise backend_common.dockerflow.HeartbeatException('Cannot connect to the mozilla auth0 service.')

@@ -5,13 +5,16 @@
 
 import datetime
 import functools
+import json
 import os
 import time
 
 import flask
 import flask_login
+import flask_oidc
 import itsdangerous
 import pytz
+import requests
 import sqlalchemy as sa
 import taskcluster.utils
 
@@ -243,6 +246,7 @@ class Auth(object):
     require_scopes = require_permissions
 
 
+auth0 = flask_oidc.OpenIDConnect()
 auth = Auth(
     anonymous_user=AnonymousUser,
 )
@@ -364,8 +368,8 @@ def parse_header_taskcluster(request):
         if not auth_header:
             return NO_AUTH
         header = auth_header.split()
-        if len(header) == 2:
-                return user
+        if len(header) != 2:
+            return NO_AUTH
 
     # Get Endpoint configuration
     if ':' in request.host:
@@ -402,22 +406,22 @@ def parse_header_taskcluster(request):
 
 def parse_header_auth0(request):
     if 'access_token' in request.form:
-        return request.form['access_token']
-    if 'access_token' in request.args:
-        return request.args['access_token']
+        token = request.form['access_token']
+    elif 'access_token' in request.args:
+        token = request.args['access_token']
+    else:
+        auth = request.headers.get('Authorization')
+        if not auth:
+            return NO_AUTH
 
-    auth = request.headers.get('Authorization')
-    if not auth:
-        return NO_AUTH
+        parts = auth.split()
 
-    parts = auth.split()
+        if parts[0].lower() != 'bearer' or \
+           len(parts) == 1 or \
+           len(parts) > 2:
+            return NO_AUTH
 
-    if parts[0].lower() != 'bearer' or \
-       len(parts) == 1 or \
-       len(parts) > 2:
-        return NO_AUTH
-
-    token = parts[1]
+        token = parts[1]
 
     auth_domain = flask.current_app.config.get('AUTH_DOMAIN')
     url = auth0.client_secrets.get('userinfo_uri', f'https://{auth_domain}/userinfo')
@@ -587,15 +591,29 @@ def init_app(app):
     if app.config.get('RELENGAPI_AUTH') is True:
         app.auth_relengapi_serializer = itsdangerous.JSONWebSignatureSerializer(app.config.get('SECRET_KEY'))
 
+    if app.config.get('AUTH0_AUTH') is True:
+        auth0.init_app(app)
+
     auth.init_app(app)
     return auth
 
 
 def app_heartbeat():
-    auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
-    try:
-        ping = auth.ping()
-        assert ping['alive'] is True
-    except Exception as e:
-        logger.exception(e)
-        raise backend_common.dockerflow.HeartbeatException('Cannot connect to the taskcluster auth service.')
+    config = flask.current_app.config
+
+    if config.get('AUTH0_AUTH') is True:
+        try:
+            r = requests.get('https://auth.mozilla.auth0.com/test')
+            assert 'clock' in r.json()
+        except Exception as e:
+            logger.exception(e)
+            raise backend_common.dockerflow.HeartbeatException('Cannot connect to the mozilla auth0 service.')
+
+    if config.get('TASKCLUSTER_AUTH') is True:
+        auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
+        try:
+            ping = auth.ping()
+            assert ping['alive'] is True
+        except Exception as e:
+            logger.exception(e)
+            raise backend_common.dockerflow.HeartbeatException('Cannot connect to the taskcluster auth service.')

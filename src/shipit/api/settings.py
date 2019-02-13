@@ -109,4 +109,5 @@ AUTH0_AUTH_SCOPES = {
     f'{shipit_api.config.SCOPE_PREFIX}/{scope}': users
     for scope, users in AUTH0_AUTH_SCOPES.items()
 }
-
+AUTH0_AUTH = True
+TASKCLUSTER_AUTH = False
