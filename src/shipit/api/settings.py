@@ -98,7 +98,7 @@ GROUPS = {
 AUTH0_AUTH_SCOPES = dict()
 
 # releng signoff scopes
-for product in ['firefox', 'firefox_rc', 'fennec', 'fennec_rc', 'devedition']:
+for product in ['firefox', 'fennec', 'devedition']:
     scopes = {
         'add_release/{product}': GROUPS['firefox-signoff'],
         'abandon_release/{product}': GROUPS['firefox-signoff'],
