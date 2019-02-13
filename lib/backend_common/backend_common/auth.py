@@ -604,6 +604,28 @@ def parse_header(request):
             return user
 
 
+def get_permissions():
+    response = dict(
+        description='Permissions of a logged in user',
+        user_id=None,
+        permissions=[],
+    )
+    user = flask_login.current_user
+
+    if user.is_authenticated:
+        response['user_id'] = user.get_id()
+        response['permissions'] = user.get_permissions()
+
+    return flask.Response(
+        status=200,
+        response=json.dumps(response),
+        headers={
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=60',
+        },
+    )
+
+
 def init_app(app):
     if app.config.get('SECRET_KEY') is None:
         raise Exception('When using `auth` extention you need to specify SECRET_KEY.')
@@ -615,6 +637,9 @@ def init_app(app):
         auth0.init_app(app)
 
     auth.init_app(app)
+
+    app.add_url_rule('/__permissions__', view_func=get_permissions)
+
     return auth
 
 
