@@ -103,6 +103,7 @@ class Coverage(DefaultAnalyzer):
 
         # Download zero coverage report.
         r = requests.get('https://index.taskcluster.net/v1/task/project.releng.services.project.production.code_coverage_bot.latest/artifacts/public/zero_coverage_report.json')  # noqa
+        r.raise_for_status()
         report = r.json()
         zero_coverage_files = set(file_info['name'] for file_info in report['files'] if file_info['uncovered'])
 
