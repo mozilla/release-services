@@ -45,9 +45,9 @@ def test_taskcluster_user():
     assert not user.is_anonymous
 
     # Test invalid input
-    with pytest.raises(AssertionError):
+    with pytest.raises(Exception):
         user = backend_common.auth.TaskclusterUser({})
-    with pytest.raises(AssertionError):
+    with pytest.raises(Exception):
         user = backend_common.auth.TaskclusterUser({'clientId': '', 'scopes': None})
 
 

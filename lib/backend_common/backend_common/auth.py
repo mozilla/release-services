@@ -91,12 +91,23 @@ class TaskclusterUser(BaseUser):
     type = 'taskcluster'
 
     def __init__(self, credentials):
-        assert isinstance(credentials, dict)
-        assert 'clientId' in credentials
-        assert 'scopes' in credentials
-        assert isinstance(credentials['scopes'], list)
+        if not isinstance(credentials, dict):
+            raise Exception('credentials should be a dict')
+
+        if 'clientId' not in credentials:
+            raise Exception(f'credentials should contain clientId, {credentials}')
+
+        if not isinstance(credentials['clientId'], str):
+            raise Exception('credentials["clientId"] should be a string')
+
+        if 'scopes' not in credentials:
+            raise Exception('credentials should contain scopes')
+
+        if not isinstance(credentials['scopes'], list):
+            raise Exception('credentials["scopes"] should be a list')
 
         self.credentials = credentials
+
         logger.info('Init user {}'.format(self.get_id()))
 
     def get_id(self):
@@ -124,10 +135,19 @@ class Auth0User(BaseUser):
     type = 'auth0'
 
     def __init__(self, token, userinfo):
-        assert 'email' in userinfo
+        if not isinstance(token, str):
+            raise Exception('token should be a string')
+
+        if 'email' not in userinfo:
+            raise Exception('userinfo should contain email')
+
+        if not isinstance(userinfo['email'], str):
+            raise Exception('userinfo["email"] should be a string')
 
         self.token = token
         self.userinfo = userinfo
+
+        logger.info('Init user {}'.format(self.get_id()))
 
     def get_id(self):
         return self.userinfo['email']
