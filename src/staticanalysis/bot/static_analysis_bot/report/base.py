@@ -21,8 +21,7 @@ COMMENT_PARTS = {
         'analyzer': ' - `./mach static-analysis check-java path/to/file.java` (Java)',
     },
     CoverityIssue: {
-        'defect': ' - {nb} found by Coverity',
-        'analyzer': ' - Coverity Scan Analysis cannot be ran locally.',
+        'defect': ' - {nb} found by Coverity'
     },
     ClangFormatIssue: {
         'defect': ' - {nb} found by clang-format',
@@ -36,7 +35,8 @@ COMMENT_PARTS = {
 COMMENT_FAILURE = '''
 Code analysis found {defects_total} in this patch{extras_comments}:
 {defects}
-
+'''
+COMMENT_RUN_ANALYZERS = '''
 You can run this analysis locally with:
 {analyzers}
 '''
@@ -125,7 +125,8 @@ class Reporter(object):
             defects.append(part['defect'].format(
                 nb=pluralize('defect', cls_stats['publishable'])
             ))
-            analyzers.append(part['analyzer'])
+            if 'analyzer' in part:
+                analyzers.append(part['analyzer'])
 
         # Build top comment
         nb = len(issues)
@@ -138,8 +139,11 @@ class Reporter(object):
             extras_comments=extras,
             defects_total=pluralize('defect', nb),
             defects='\n'.join(defects),
-            analyzers='\n'.join(analyzers),
         )
+
+        if analyzers:
+            comment += COMMENT_RUN_ANALYZERS.format(analyzers='\n'.join(analyzers))
+
         for patch in patches:
             comment += COMMENT_DIFF_DOWNLOAD.format(
                 analyzer=patch.analyzer,
