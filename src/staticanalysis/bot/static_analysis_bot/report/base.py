@@ -130,7 +130,6 @@ class Reporter(object):
         # Build top comment
         nb = len(issues)
         extras = ''
-        
 
         body = COMMENT_FAILURE
         comment = body.format(
