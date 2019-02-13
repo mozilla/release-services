@@ -88,6 +88,7 @@ def get_deploy_task(index,
                     owner,
                     channel,
                     taskcluster_secret,
+                    nix_hash,
                     ):
 
     scopes = []
@@ -235,6 +236,19 @@ def get_deploy_task(index,
     else:
         raise click.ClickException(f'Unknown deployment target `{deploy_target}` for project `{project}`')
 
+    # store revision and nix hash into taskcluster index service
+    routes = [
+        'index.project.releng.services.deployment.{channel}.{project}'
+    ]
+    extra = dict(
+        index = dict(
+            data = dict(
+                revision = github_commit,
+                nix_hash = nix_hash,
+            )
+        )
+    )
+
     return get_task(
         task_group_id,
         [parent_task],
@@ -252,7 +266,9 @@ def get_deploy_task(index,
             'source': 'https://github.com/mozilla/release-services/tree/' + channel,
 
         },
-        scopes,
+        scopes=scopes,
+        routes=routes,
+        extra=extra,
     )
 
 
@@ -266,6 +282,8 @@ def get_task(task_group_id,
              scopes=[],
              deadline=dict(hours=5),
              max_run_time_in_hours=1,
+             routes=[],
+             extra=dict(),
              ):
     priority = 'high'
     if channel == 'production':
@@ -298,6 +316,7 @@ def get_task(task_group_id,
           'secrets:get:' + taskcluster_secret,
           'docker-worker:capability:privileged',
         ] + scopes,
+        'routes': routes,
         'priority': priority,
         'payload': {
             'maxRunTime': 60 * 60 * max_run_time_in_hours,
@@ -320,6 +339,7 @@ def get_task(task_group_id,
             ],
         },
         'metadata': metadata,
+        'extra': extra,
     }
 
 
@@ -575,6 +595,7 @@ def cmd(ctx,
                 owner,
                 channel,
                 taskcluster_secret,
+                project_hashes[project],
             )
             if project_task:
                 deploy_tasks[project_uuid] = project_task
