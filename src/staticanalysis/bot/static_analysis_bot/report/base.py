@@ -40,6 +40,14 @@ COMMENT_RUN_ANALYZERS = '''
 You can run this analysis locally with:
 {analyzers}
 '''
+COMMENT_COVERAGE = '''
+In our previous code coverage analysis run, we found some files which had no coverage and are being modified in this patch:
+{paths}
+
+Should they have tests, or are they dead code?
+You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415824 for untested files that should be tested.
+You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415819 for untested files that should be removed.
+'''
 BUG_REPORT = '''
 If you see a problem in this automated review, [please report it here]({bug_report_url}).
 '''
@@ -104,7 +112,7 @@ class Reporter(object):
             for cls, items in groups
         ])
 
-    def build_comment(self, issues, bug_report_url, patches=[], max_comments=None):
+    def build_comment(self, issues, bug_report_url, patches=[]):
         '''
         Build a Markdown comment about published issues
         '''
@@ -131,11 +139,8 @@ class Reporter(object):
         # Build top comment
         nb = len(issues)
         extras = ''
-        if max_comments is not None and nb > max_comments:
-            extras = ' (only the first {} are reported here)'.format(max_comments)
 
-        body = COMMENT_FAILURE
-        comment = body.format(
+        comment = COMMENT_FAILURE.format(
             extras_comments=extras,
             defects_total=pluralize('defect', nb),
             defects='\n'.join(defects),
@@ -149,6 +154,18 @@ class Reporter(object):
                 analyzer=patch.analyzer,
                 url=patch.url or patch.path,
             )
+        comment += BUG_REPORT.format(bug_report_url=bug_report_url)
+
+        return comment
+
+    def build_coverage_comment(self, issues, bug_report_url):
+        '''
+        Build a Markdown comment about coverage-related issues
+        '''
+        comment = COMMENT_COVERAGE.format(
+            paths='\n'.join(issue.path for issue in issues),
+        )
+
         comment += BUG_REPORT.format(bug_report_url=bug_report_url)
 
         return comment

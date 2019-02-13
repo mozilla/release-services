@@ -16,6 +16,7 @@ class Secrets(dict):
     GECKO_DEV_PWD = 'GECKO_DEV_PWD'
     HG_GIT_MAPPER = 'HG_GIT_MAPPER'
     EMAIL_ADDRESSES = 'EMAIL_ADDRESSES'
+    REPO_MAPPER_EMAIL_ADDRESSES = 'REPO_MAPPER_EMAIL_ADDRESSES'
     APP_CHANNEL = 'APP_CHANNEL'
     BACKEND_HOST = 'BACKEND_HOST'
     PHABRICATOR_ENABLED = 'PHABRICATOR_ENABLED'
@@ -37,6 +38,9 @@ class Secrets(dict):
                 Secrets.PHABRICATOR_URL,
                 Secrets.PHABRICATOR_TOKEN,
             ),
+            existing={
+                Secrets.REPO_MAPPER_EMAIL_ADDRESSES: []
+            },
             taskcluster_client_id=taskcluster_client_id,
             taskcluster_access_token=taskcluster_access_token,
         )
