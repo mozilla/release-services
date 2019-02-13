@@ -70,7 +70,7 @@ class LocalWorkflow(Workflow):
 
         return client
 
-    def run(self, revision):
+    def run(self, revision, *args, **kwargs):
         '''
         Run the static analysis workflow:
          * Pull revision from review

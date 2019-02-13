@@ -7,6 +7,7 @@ import os
 import requests
 
 from cli_common.log import get_logger
+from static_analysis_bot.lint import MozLintIssue
 from static_analysis_bot.workflows.base import Workflow
 
 logger = get_logger(__name__)
@@ -31,18 +32,35 @@ class RemoteWorkflow(Workflow):
         task = self.queue_service.task(task_id)
         assert len(task['dependencies']) > 0, 'No task dependencies to analyze'
 
-        # Lookup dependencies
+        # Find issues in dependencies
+        issues = []
         for dep_id in task['dependencies']:
-            self.load_analysis_task(dep_id)
+            try:
+                dep_issues = self.load_analysis_task(dep_id, revision)
+            except Exception as e:
+                logger.warn('Failure during task analysis', task=task_id, error=e)
+                continue
 
-    def load_analysis_task(self, task_id):
+            if dep_issues is not None:
+                issues += dep_issues
+
+        if not issues:
+            logger.info('No issues found, revision is OK', revision=revision)
+            return
+
+        # Publish using reporters
+        for reporter in self.reporters.values():
+            reporter.publish(issues, revision)
+
+    def load_analysis_task(self, task_id, revision):
         '''
         Load artifacts and issues from an analysis task
         '''
 
         # Load base task
         task = self.queue_service.task(task_id)
-        logger.info('Lookup task dependency', id=task_id, name=task['metadata'].get('name', 'unknown'))
+        task_name = task['metadata'].get('name', 'unknown')
+        logger.info('Lookup task dependency', id=task_id, name=task_name)
 
         # Load task status
         status = self.queue_service.status(task_id)
@@ -74,7 +92,19 @@ class RemoteWorkflow(Workflow):
             logger.warn('No issues found on failed task.', task_id=task_id, run_id=run_id)
             return
 
-        # Debug
+        # Convert to Issue instances
         logger.info('Found {} issues !'.format(len(issues)))
-        for issue in issues:
-            logger.info(issue)
+        return [
+            self.build_issue(task_name, issue, revision)
+            for issue in issues
+        ]
+
+    def build_issue(self, task_name, issue, revision):
+        '''
+        Convert a raw text issue into an Issue instance
+        TODO: this should be simplified by using mach JSON output
+        '''
+        if task_name.startswith(MozLintIssue.TRY_PREFIX):
+            return MozLintIssue.from_try(task_name, issue, revision)
+        else:
+            raise Exception('Unsupported task type', type=task_name)

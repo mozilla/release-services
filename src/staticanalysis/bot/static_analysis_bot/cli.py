@@ -121,6 +121,9 @@ def main(source,
     else:
         index_service = None
 
+    # Local clone available when not running on try
+    settings.has_local_clone = source != 'try'
+
     # Load queue service
     queue_service = get_service(
         'queue',

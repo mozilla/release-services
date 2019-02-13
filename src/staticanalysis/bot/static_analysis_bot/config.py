@@ -44,6 +44,7 @@ class Settings(object):
         self.publication = None
 
         # Paths
+        self.has_local_clone = True
         self.cache_root = None
         self.repo_dir = None
         self.repo_shared_dir = None
