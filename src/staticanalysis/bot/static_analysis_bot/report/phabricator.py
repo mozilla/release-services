@@ -14,6 +14,9 @@ from static_analysis_bot.revisions import PhabricatorRevision
 
 BUG_REPORT_URL = 'https://github.com/mozilla/release-services/issues/new?title=Problem%20with%20an%20automated%20review:%20SUMMARY&labels=app:staticanalysis/bot&body=**Phabricator%20URL:**%20https://phabricator.services.mozilla.com/D%E2%80%A6%0A%0A**Problem:**%20%E2%80%A6'  # noqa
 
+# These analyzers generate issues for which we should not write inline comments.
+ANALYZERS_WITHOUT_INLINES = [CLANG_FORMAT, COVERAGE]
+
 logger = log.get_logger(__name__)
 
 
@@ -67,7 +70,7 @@ class PhabricatorReporter(Reporter):
             inlines = list(filter(None, [
                 self.comment_inline(revision, issue, existing_comments)
                 for issue in issues
-                if issue.ANALYZER not in [CLANG_FORMAT, COVERAGE]
+                if issue.ANALYZER not in ANALYZERS_WITHOUT_INLINES
             ]))
             if not inlines and not patches and not coverage_issues:
                 logger.info('No new comments found, skipping Phabricator publication')
