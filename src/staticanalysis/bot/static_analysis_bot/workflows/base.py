@@ -61,7 +61,7 @@ class Workflow(abc.ABC):
         '''
         assert isinstance(revision, Revision)
 
-        if settings.taskcluster.local:
+        if settings.taskcluster.local or self.index_service is None:
             logger.info('Skipping taskcluster indexing', rev=str(revision), **kwargs)
             return
 

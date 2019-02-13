@@ -111,11 +111,15 @@ def main(source,
     )
 
     # Load index service
-    index_service = get_service(
-        'index',
-        taskcluster_client_id,
-        taskcluster_access_token,
-    )
+    # but not on try, we don't have the scopes for that yet
+    if source != 'try':
+        index_service = get_service(
+            'index',
+            taskcluster_client_id,
+            taskcluster_access_token,
+        )
+    else:
+        index_service = None
 
     # Load queue service
     queue_service = get_service(
