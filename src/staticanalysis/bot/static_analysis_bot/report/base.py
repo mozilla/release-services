@@ -104,7 +104,7 @@ class Reporter(object):
             for cls, items in groups
         ])
 
-    def build_comment(self, issues, bug_report_url, patches=[], max_comments=None):
+    def build_comment(self, issues, bug_report_url, patches=[]):
         '''
         Build a Markdown comment about published issues
         '''
@@ -130,8 +130,7 @@ class Reporter(object):
         # Build top comment
         nb = len(issues)
         extras = ''
-        if max_comments is not None and nb > max_comments:
-            extras = ' (only the first {} are reported here)'.format(max_comments)
+        
 
         body = COMMENT_FAILURE
         comment = body.format(
