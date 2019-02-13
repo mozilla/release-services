@@ -58,8 +58,13 @@ def notify_via_irc(message):
         })
 
 
-@auth.require_scopes([SCOPE_PREFIX + '/add_release'])
 def add_release(body):
+    # we must require scope which depends on product
+    required_permission = f'{SCOPE_PREFIX}/add_release/{body["product"]}'
+    if not current_user.has_permissions(required_permission):
+        user_permissions = ', '.join(current_user.get_permissions())
+        abort(401, f'required permission: {required_permission}, user permissions: {user_permissions}')
+
     session = current_app.db.session
     r = Release(
         product=body['product'],
@@ -130,7 +135,6 @@ def get_phase(name, phase):
         abort(404)
 
 
-@auth.require_scopes([SCOPE_PREFIX + '/schedule_phase'])
 def schedule_phase(name, phase):
     session = current_app.db.session
     try:
@@ -140,6 +144,12 @@ def schedule_phase(name, phase):
             .filter(Phase.name == phase).one()
     except NoResultFound:
         abort(404)
+
+    # we must require scope which depends on product
+    required_permission = f'{SCOPE_PREFIX}/schedule_phase/{phase.release.product}/{phase.name}'
+    if not current_user.has_permissions(required_permission):
+        user_permissions = ', '.join(current_user.get_permissions())
+        abort(401, f'required permission: {required_permission}, user permissions: {user_permissions}')
 
     if phase.submitted:
         abort(409, 'Already submitted!')
@@ -182,13 +192,19 @@ def schedule_phase(name, phase):
     return phase.json
 
 
-@auth.require_scopes([SCOPE_PREFIX + '/abandon_release'])
 def abandon_release(name):
     session = current_user.db.session
     try:
-        r = session.query(Release).filter(Release.name == name).one()
+        release = session.query(Release).filter(Release.name == name).one()
+
+        # we must require scope which depends on product
+        required_permission = f'{SCOPE_PREFIX}/abandon_release/{release.product}'
+        if not current_user.has_permissions(required_permission):
+            user_permissions = ', '.join(current_user.get_permissions())
+            abort(401, f'required permission: {required_permission}, user permissions: {user_permissions}')
+
         # Cancel all submitted task groups first
-        for phase in filter(lambda x: x.submitted, r.phases):
+        for phase in filter(lambda x: x.submitted, release.phases):
             try:
                 actions = fetch_actions_json(phase.task_id)
             except ActionsJsonNotFound:
@@ -215,13 +231,13 @@ def abandon_release(name):
                     hook['hook_group_id'], hook['hook_id'], hook_payload_rendered)
             logger.debug('Done: %s', res)
 
-        r.status = 'aborted'
+        release.status = 'aborted'
         session.commit()
-        release = r.json
+        release = release.json
     except NoResultFound:
         abort(404)
 
-    notify_via_irc(f'Release {r.product} {r.version} build{r.build_number} was just canceled.')
+    notify_via_irc(f'Release {release.product} {release.version} build{release.build_number} was just canceled.')
 
     return release
 
@@ -320,7 +336,6 @@ def get_phase_signoff(name, phase):
         abort(404)
 
 
-@auth.require_scopes([SCOPE_PREFIX + '/phase_signoff'])
 def phase_signoff(name, phase, uid):
     session = current_app.db.session
     try:
@@ -332,10 +347,11 @@ def phase_signoff(name, phase, uid):
     if signoff.signed:
         abort(409, 'Already signed off')
 
-    who = current_user.get_id()
-    permissions = [i for i in signoff.permissions]
-    if not current_user.has_permissions(permissions):
-        abort(401, f'Required LDAP group: `{signoff.permissions}`')
+    # we must require scope which depends on product and phase name
+    required_permission = f'{SCOPE_PREFIX}/phase_signoff/{signoff.phase.release.product}/{signoff.phase.name}'
+    if not current_user.has_permissions(required_permission):
+        user_permissions = ', '.join(current_user.get_permissions())
+        abort(401, f'required permission: {required_permission}, user permissions: {user_permissions}')
 
     try:
         # Prevent the same user signing off for multiple signoffs
@@ -346,6 +362,7 @@ def phase_signoff(name, phase, uid):
     except NoResultFound:
         abort(404, 'Phase not found')
 
+    who = current_user.get_id()
     if who in [s.completed_by for s in phase_obj.signoffs]:
         abort(409, f'Already signed off by {who}')
 

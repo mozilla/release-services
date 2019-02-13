@@ -95,18 +95,44 @@ GROUPS = {
     ],
 }
 
-AUTH0_AUTH_SCOPES = {
-    'add_release': GROUPS['admin'],
-    'schedule_phase': GROUPS['admin'],
-    'abandon_release': GROUPS['admin'],
-    'sync_releases': GROUPS['admin'],
-    'rebuild_product_details': GROUPS['admin'],
-    'sync_release_datetimes': GROUPS['admin'],
-    'update_release_status': GROUPS['admin'],
-    'phase_signoff': GROUPS['admin'],
+AUTH0_AUTH_SCOPES = dict()
+
+# releng signoff scopes
+for product in ['firefox', 'firefox_rc', 'fennec', 'fennec_rc', 'devedition']:
+    scopes = {
+        'add_release/{product}': GROUPS['firefox-signoff'],
+        'abandon_release/{product}': GROUPS['firefox-signoff'],
+    }
+    for phase in shipit_api.config.SUPPORTED_FLAVORS.get(product, []):
+        scopes.update({
+            'schedule_phase/{product}/{phase["name"]}': GROUPS['firefox-signoff'],
+            'phase_signoff/{product}/{phase["name"]}': GROUPS['firefox-signoff'],
+        })
+    AUTH0_AUTH_SCOPES.update(scopes)
+
+# thunderbird signoff scopes
+scopes = {
+    'add_release/thunderbird': GROUPS['thunderbird-signoff'],
+    'abandon_release/thunderbird': GROUPS['thunderbird-signoff'],
 }
+for phase in shipit_api.config.SUPPORTED_FLAVORS.get('thunderbird', []):
+    scopes.update({
+        'schedule_phase/thunderbird/{phase["name"]}': GROUPS['thunderbird-signoff'],
+        'phase_signoff/thunderbird/{phase["name"]}': GROUPS['thunderbird-signoff'],
+    })
+AUTH0_AUTH_SCOPES.update(scopes)
+
+# other scopes
+AUTH0_AUTH_SCOPES.update({
+    'sync_releases': [],
+    'rebuild_product_details': [],
+    'sync_release_datetimes': [],
+    'update_release_status': [],
+})
+
+# append scopes with scope prefix and add admin group of users
 AUTH0_AUTH_SCOPES = {
-    f'{shipit_api.config.SCOPE_PREFIX}/{scope}': users
+    f'{shipit_api.config.SCOPE_PREFIX}/{scope}': list(set(users + GROUPS['admin']))
     for scope, users in AUTH0_AUTH_SCOPES.items()
 }
 AUTH0_AUTH = True
