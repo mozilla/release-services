@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
+
 import responses
 
 from static_analysis_bot.coverage import Coverage
@@ -7,17 +9,6 @@ from static_analysis_bot.coverage import Coverage
 @responses.activate
 def test_coverage(mock_config, mock_repository, mock_revision, mock_coverage):
     cov = Coverage()
-
-    import os
-    MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
-    path = os.path.join(MOCK_DIR, 'zero_coverage_report.json')
-    assert os.path.exists(path)
-    responses.add(
-        responses.GET,
-        'https://index.taskcluster.net/v1/task/project.releng.services.project.production.code_coverage_bot.latest/artifacts/public/zero_coverage_report.json',
-        body=open(path).read(),
-        content_type='application/json',
-    )
 
     mock_revision.files = [
         # Uncovered file

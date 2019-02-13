@@ -443,8 +443,8 @@ def mock_coverity_output():
     return os.path.join(MOCK_DIR, 'coverity.json')
 
 
-@pytest.fixture
 @responses.activate
+@pytest.fixture
 def mock_coverage():
     path = os.path.join(MOCK_DIR, 'zero_coverage_report.json')
     assert os.path.exists(path)
