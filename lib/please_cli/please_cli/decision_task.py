@@ -241,10 +241,10 @@ def get_deploy_task(index,
         'index.project.releng.services.deployment.{channel}.{project}'
     ]
     extra = dict(
-        index = dict(
-            data = dict(
-                revision = github_commit,
-                nix_hash = nix_hash,
+        index=dict(
+            data=dict(
+                revision=github_commit,
+                nix_hash=nix_hash,
             )
         )
     )
