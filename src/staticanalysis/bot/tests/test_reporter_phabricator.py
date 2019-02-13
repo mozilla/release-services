@@ -35,8 +35,12 @@ If you see a problem in this automated review, [please report it here](https://g
 
 
 VALID_COVERAGE_MESSAGE = '''
-In our previous code coverage analysis run, we found some files which had zero coverage and are being modified in this patch:
+In our previous code coverage analysis run, we found some files which had no coverage and are being modified in this patch:
 test.txt
+
+Should they have tests, or are they dead code?
+You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415824 for untested files that should be tested.
+You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415819 for untested files that should be removed.
 
 If you see a problem in this automated review, [please report it here](https://github.com/mozilla/release-services/issues/new?title=Problem%20with%20an%20automated%20review:%20SUMMARY&labels=app:staticanalysis/bot&body=**Phabricator%20URL:**%20https://phabricator.services.mozilla.com/D%E2%80%A6%0A%0A**Problem:**%20%E2%80%A6).
 '''  # noqa

@@ -41,8 +41,12 @@ You can run this analysis locally with:
 {analyzers}
 '''
 COMMENT_COVERAGE = '''
-In our previous code coverage analysis run, we found some files which had zero coverage and are being modified in this patch:
+In our previous code coverage analysis run, we found some files which had no coverage and are being modified in this patch:
 {paths}
+
+Should they have tests, or are they dead code?
+You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415824 for untested files that should be tested.
+You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415819 for untested files that should be removed.
 '''
 BUG_REPORT = '''
 If you see a problem in this automated review, [please report it here]({bug_report_url}).
