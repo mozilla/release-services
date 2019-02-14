@@ -14,6 +14,59 @@ logger = get_logger(__name__)
 ISSUE_MARKER = 'TEST-UNEXPECTED-ERROR | '
 
 
+class AnalysisTask(object):
+    '''
+    An analysis CI task running on Taskcluster
+    '''
+    def __init__(self, task_id):
+        self.task_id = task_id
+        self.run_id = None
+        self.task = None
+
+    def load_logs(self, queue_service):
+
+        # Load base task
+        self.task = queue_service.task(self.task_id)
+        self.name = self.task['metadata'].get('name', 'unknown')
+        logger.info('Lookup task dependency', id=self.task_id, name=self.name)
+
+        # Load task status
+        status = queue_service.status(self.task_id)
+        assert 'status' in status, 'No status data for {}'.format(self.task_id)
+        state = status['status']['state']
+
+        # Process only the failed tasks
+        # A completed task here means the analyzer did not find any issues
+        if state == 'completed':
+            logger.info('No issues detected by completed task', id=self.task_id)
+            return
+        elif state != 'failed':
+            logger.warn('Unsupported task state', state=state, id=self.task_id)
+            return
+
+        # Load artifact logs from the last run
+        self.run_id = status['status']['runs'][-1]['runId']
+        artifacts = queue_service.listArtifacts(self.task_id, self.run_id)
+        assert 'artifacts' in artifacts, 'Missing artifacts'
+        logs = [
+            artifact['name']
+            for artifact in artifacts['artifacts']
+            if artifact['storageType'] != 'reference' and artifact['contentType'].startswith('text/')
+        ]
+
+        # Load logs from artifact API
+        out = {}
+        for log in logs:
+            logger.info('Reading log', task_id=self.task_id, log=log)
+            try:
+                artifact = queue_service.getArtifact(self.task_id, self.run_id, log)
+                assert 'response' in artifact, 'Failed loading artifact'
+                out[log] = artifact['response'].content
+            except Exception as e:
+                logger.warn('Failed to read log', task_id=self.task_id, run_id=self.run_id, log=log, error=e)
+        return out
+
+
 class RemoteWorkflow(Workflow):
     '''
     Secondary workflow to analyze the output from a try task group
@@ -34,13 +87,16 @@ class RemoteWorkflow(Workflow):
         issues = []
         for dep_id in task['dependencies']:
             try:
-                dep_issues = self.load_analysis_task(dep_id, revision)
+                task = AnalysisTask(dep_id)
+                logs = task.load_logs(self.queue_service)
+                if logs is None:
+                    continue
+
+                for log in logs.values():
+                    issues += self.parse_issues(task, log, revision)
             except Exception as e:
                 logger.warn('Failure during task analysis', task=task_id, error=e)
                 continue
-
-            if dep_issues is not None:
-                issues += dep_issues
 
         if not issues:
             logger.info('No issues found, revision is OK', revision=revision)
@@ -50,73 +106,26 @@ class RemoteWorkflow(Workflow):
         for reporter in self.reporters.values():
             reporter.publish(issues, revision)
 
-    def load_analysis_task(self, task_id, revision):
+    def parse_issues(self, task, log_content, revision):
         '''
-        Load artifacts and issues from an analysis task
+        Parse issues from a log file content
         '''
-
-        # Load base task
-        task = self.queue_service.task(task_id)
-        task_name = task['metadata'].get('name', 'unknown')
-        logger.info('Lookup task dependency', id=task_id, name=task_name)
-
-        # Load task status
-        status = self.queue_service.status(task_id)
-        assert 'status' in status, 'No status data for {}'.format(task_id)
-        state = status['status']['state']
-
-        # Process only the failed tasks
-        # A completed task here means the analyzer did not find any issues
-        if state == 'completed':
-            logger.info('No issues detected by completed task', id=task_id)
-            return
-        elif state != 'failed':
-            logger.warn('Unsupported task state', state=state, id=task_id)
-            return
-
-        # Load artifact logs from the last run
-        run_id = status['status']['runs'][-1]['runId']
-        artifacts = self.queue_service.listArtifacts(task_id, run_id)
-        assert 'artifacts' in artifacts, 'Missing artifacts'
-        logs = [
-            artifact['name']
-            for artifact in artifacts['artifacts']
-            if artifact['storageType'] != 'reference' and artifact['contentType'].startswith('text/')
-        ]
-
-        # Read and parse issues from log files
-        out = []
-        for log in logs:
-            try:
-                out += self.read_log(task_id, task_name, run_id, log, revision)
-            except Exception as e:
-                logger.warn('Failed to read log', task_id=task_id, run_id=run_id, log=log, error=e)
-        return out
-
-    def read_log(self, task_id, task_name, run_id, artifact_name, revision):
-        '''
-        Read a log file from a dependant task
-        '''
-        logger.info('Reading log', task_id=task_id, log=artifact_name)
-
-        # Load log from artifact API
-        artifact = self.queue_service.getArtifact(task_id, run_id, artifact_name)
-        assert 'response' in artifact, 'Failed loading artifact'
+        assert isinstance(task, AnalysisTask)
 
         # Lookup issues using marker
         issues = [
             line[line.index(ISSUE_MARKER) + len(ISSUE_MARKER):]
-            for line in artifact['response'].content.decode('utf-8').split('\r\n')
+            for line in log_content.decode('utf-8').split('\r\n')
             if ISSUE_MARKER in line
         ]
         if not issues:
-            logger.warn('No issues found on failed task.', task_id=task_id, run_id=run_id)
-            return
+            logger.warn('No issues found in log')
+            return []
 
         # Convert to Issue instances
         logger.info('Found {} issues !'.format(len(issues)))
         return [
-            self.build_issue(task_name, issue, revision)
+            self.build_issue(task.name, issue, revision)
             for issue in issues
         ]
 
