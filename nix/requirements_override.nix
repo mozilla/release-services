@@ -116,6 +116,12 @@ in skipOverrides {
     buildInputs = old.buildInputs ++ [ self."Cython" ];
   };
 
+  "bugbug" = self: old: {
+    patchPhase = ''
+      sed -i 's/python-dateutil==2.8.0/python-dateutil/' requirements.txt
+    '';
+  };
+
   "taskcluster-urls" = self: old: {
     patchPhase = ''
       # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37
