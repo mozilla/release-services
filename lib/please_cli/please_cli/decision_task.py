@@ -463,6 +463,19 @@ def cmd(ctx,
         if not project_exists_in_cache:
             build_projects.append(project)
 
+    click.echo(' => Checking github for project revisions')
+    urls = []
+    project_revisions = dict()
+    for project in sorted(PROJECTS):
+        project_path = '/'.join(project.split('/')[:-1])
+        urls.append(f'https://api.github.com/repos/mozilla/release-services/contents/src/{}?ref={github_commit}')
+    urls = list(set(urls))
+
+    for url in urls:
+        rev = github_commit
+        # TODO: fetch revisions from url
+        project_revisions[project] = rev
+
     projects_to_deploy = []
 
     if channel in please_cli.config.DEPLOY_CHANNELS:
