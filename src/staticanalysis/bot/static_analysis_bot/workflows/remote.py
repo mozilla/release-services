@@ -4,8 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
 
-import requests
-
 from cli_common.log import get_logger
 from static_analysis_bot.lint import MozLintIssue
 from static_analysis_bot.workflows.base import Workflow
@@ -76,16 +74,39 @@ class RemoteWorkflow(Workflow):
             logger.warn('Unsupported task state', state=state, id=task_id)
             return
 
-        # Load artifact log from the last run
+        # Load artifact logs from the last run
         run_id = status['status']['runs'][-1]['runId']
-        artifact_url = self.queue_service.buildUrl('getArtifact', task_id, run_id, 'public/logs/live.log')
-        resp = requests.get(artifact_url, allow_redirects=True)
-        resp.raise_for_status()
+        artifacts = self.queue_service.listArtifacts(task_id, run_id)
+        assert 'artifacts' in artifacts, 'Missing artifacts'
+        logs = [
+            artifact['name']
+            for artifact in artifacts['artifacts']
+            if artifact['storageType'] != 'reference' and artifact['contentType'].startswith('text/')
+        ]
+
+        # Read and parse issues from log files
+        out = []
+        for log in logs:
+            try:
+                out += self.read_log(task_id, task_name, run_id, log, revision)
+            except Exception as e:
+                logger.warn('Failed to read log', task_id=task_id, run_id=run_id, log=log, error=e)
+        return out
+
+    def read_log(self, task_id, task_name, run_id, artifact_name, revision):
+        '''
+        Read a log file from a dependant task
+        '''
+        logger.info('Reading log', task_id=task_id, log=artifact_name)
+
+        # Load log from artifact API
+        artifact = self.queue_service.getArtifact(task_id, run_id, artifact_name)
+        assert 'response' in artifact, 'Failed loading artifact'
 
         # Lookup issues using marker
         issues = [
             line[line.index(ISSUE_MARKER) + len(ISSUE_MARKER):]
-            for line in resp.content.decode('utf-8').split('\r\n')
+            for line in artifact['response'].content.decode('utf-8').split('\r\n')
             if ISSUE_MARKER in line
         ]
         if not issues:
