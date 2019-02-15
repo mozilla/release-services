@@ -17,6 +17,7 @@ class Hook(object):
         self.group_id = group_id
         self.hook_id = hook_id
         self.hooks = None  # TC hooks
+        self.mercurial_queue = None
 
     def connect_taskcluster(self, client_id=None, access_token=None):
         '''
@@ -24,6 +25,14 @@ class Hook(object):
         '''
         # Get taskcluster hooks
         self.hooks = get_service('hooks', client_id, access_token)
+
+        return True
+
+    def connect_mercurial_queue(self, queue):
+        '''
+        Save local queue to mercurial worker
+        '''
+        self.mercurial_queue = queue
 
         return True
 

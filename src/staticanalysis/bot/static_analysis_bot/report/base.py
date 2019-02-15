@@ -7,6 +7,7 @@ import itertools
 
 from static_analysis_bot.clang.format import ClangFormatIssue
 from static_analysis_bot.clang.tidy import ClangTidyIssue
+from static_analysis_bot.coverity.coverity import CoverityIssue
 from static_analysis_bot.infer.infer import InferIssue
 from static_analysis_bot.lint import MozLintIssue
 
@@ -19,9 +20,12 @@ COMMENT_PARTS = {
         'defect': ' - {nb} found by infer',
         'analyzer': ' - `./mach static-analysis check-java path/to/file.java` (Java)',
     },
+    CoverityIssue: {
+        'defect': ' - {nb} found by Coverity'
+    },
     ClangFormatIssue: {
         'defect': ' - {nb} found by clang-format',
-        'analyzer': ' - `./mach clang-format -p path/to/file.cpp` (C/C++)',
+        'analyzer': ' - `./mach clang-format -s -p path/to/file.cpp` (C/C++)',
     },
     MozLintIssue: {
         'defect': ' - {nb} found by mozlint',
@@ -31,9 +35,18 @@ COMMENT_PARTS = {
 COMMENT_FAILURE = '''
 Code analysis found {defects_total} in this patch{extras_comments}:
 {defects}
-
+'''
+COMMENT_RUN_ANALYZERS = '''
 You can run this analysis locally with:
 {analyzers}
+'''
+COMMENT_COVERAGE = '''
+In our previous code coverage analysis run, we found some files which had no coverage and are being modified in this patch:
+{paths}
+
+Should they have tests, or are they dead code?
+You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415824 for untested files that should be tested.
+You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415819 for untested files that should be removed.
 '''
 BUG_REPORT = '''
 If you see a problem in this automated review, [please report it here]({bug_report_url}).
@@ -99,7 +112,7 @@ class Reporter(object):
             for cls, items in groups
         ])
 
-    def build_comment(self, issues, bug_report_url, patches=[], max_comments=None):
+    def build_comment(self, issues, bug_report_url, patches=[]):
         '''
         Build a Markdown comment about published issues
         '''
@@ -120,26 +133,39 @@ class Reporter(object):
             defects.append(part['defect'].format(
                 nb=pluralize('defect', cls_stats['publishable'])
             ))
-            analyzers.append(part['analyzer'])
+            if 'analyzer' in part:
+                analyzers.append(part['analyzer'])
 
         # Build top comment
         nb = len(issues)
         extras = ''
-        if max_comments is not None and nb > max_comments:
-            extras = ' (only the first {} are reported here)'.format(max_comments)
 
-        body = COMMENT_FAILURE
-        comment = body.format(
+        comment = COMMENT_FAILURE.format(
             extras_comments=extras,
             defects_total=pluralize('defect', nb),
             defects='\n'.join(defects),
-            analyzers='\n'.join(analyzers),
         )
+
+        if analyzers:
+            comment += COMMENT_RUN_ANALYZERS.format(analyzers='\n'.join(analyzers))
+
         for patch in patches:
             comment += COMMENT_DIFF_DOWNLOAD.format(
                 analyzer=patch.analyzer,
                 url=patch.url or patch.path,
             )
+        comment += BUG_REPORT.format(bug_report_url=bug_report_url)
+
+        return comment
+
+    def build_coverage_comment(self, issues, bug_report_url):
+        '''
+        Build a Markdown comment about coverage-related issues
+        '''
+        comment = COMMENT_COVERAGE.format(
+            paths='\n'.join(issue.path for issue in issues),
+        )
+
         comment += BUG_REPORT.format(bug_report_url=bug_report_url)
 
         return comment

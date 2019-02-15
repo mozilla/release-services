@@ -5,17 +5,19 @@
 
 import functools
 import json
-import logging
+from collections import OrderedDict
 from urllib.parse import urlencode
 from urllib.parse import urlparse
 
+import hglib
 import requests
+
+from cli_common import log
 
 HGMO_JSON_REV_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-rev/{}'
 MOZILLA_PHABRICATOR_PROD = 'https://phabricator.services.mozilla.com/api/'
 
-
-logger = logging.getLogger(__name__)
+logger = log.get_logger(__name__)
 
 
 @functools.lru_cache(maxsize=2048)
@@ -24,6 +26,17 @@ def revision_exists_on_central(revision):
     resp = requests.get(url)
     resp.raise_for_status()
     return resp.ok
+
+
+def revision_available(repo, revision):
+    '''
+    Check if a revision is available on a Mercurial repo
+    '''
+    try:
+        repo.identify(revision)
+        return True
+    except hglib.error.CommandError:
+        return False
 
 
 # Descriptions of the fields are available at
@@ -324,3 +337,70 @@ class PhabricatorAPI(object):
         # Outputs result
         assert 'result' in data
         return data['result']
+
+    def load_patches_stack(self, repo, diff, default_revision='central'):
+        '''
+        Load full stack of patches from Phabricator into a mercurial repository:
+        * uses a diff dict from search_diffs
+        * setup repo to base revision from Mozilla Central
+        * Apply previous needed patches from Phabricator
+        '''
+        assert isinstance(repo, hglib.client.hgclient)
+        assert isinstance(diff, dict)
+        assert 'phid' in diff
+        assert 'id' in diff
+        assert 'revisionPHID' in diff
+        assert 'baseRevision' in diff
+
+        # Diff PHIDs from our patch to its base
+        patches = OrderedDict()
+        patches[diff['phid']] = diff['id']
+
+        parents = self.load_parents(diff['revisionPHID'])
+        if parents:
+
+            # Load all parent diffs
+            for parent in parents:
+                logger.info('Loading parent diff', phid=parent)
+
+                # Sort parent diffs by their id to load the most recent patch
+                parent_diffs = sorted(
+                    self.search_diffs(revision_phid=parent),
+                    key=lambda x: x['id'],
+                )
+                last_diff = parent_diffs[-1]
+                patches[last_diff['phid']] = last_diff['id']
+
+                # Use base revision of last parent
+                hg_base = last_diff['baseRevision']
+
+        else:
+            # Use base revision from top diff
+            hg_base = diff['baseRevision']
+
+        # When base revision is missing, update to default revision
+        if hg_base is None or not revision_available(repo, hg_base):
+            logger.warning('Missing base revision from Phabricator', rev=hg_base)
+            hg_base = default_revision
+
+        # Load all patches from their numerical ID
+        for diff_phid, diff_id in patches.items():
+            patches[diff_phid] = self.load_raw_diff(diff_id)
+
+        # Update the repo to base revision
+        try:
+            logger.info('Updating repo to revision', rev=hg_base)
+            repo.update(
+                rev=hg_base,
+                clean=True,
+            )
+        except hglib.error.CommandError:
+            raise Exception('Failed to update to revision {}'.format(hg_base))
+
+        # Get current revision using full informations tuple from hglib
+        revision = repo.identify(id=True).strip()
+        revision = repo.log(revision, limit=1)[0]
+        logger.info('Updated repo to revision', revision=revision.node)
+
+        # Outputs base revision and patches from the bottom one up to the target
+        return (revision, list(reversed(patches.items())))

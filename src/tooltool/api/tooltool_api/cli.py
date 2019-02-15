@@ -8,6 +8,7 @@ import datetime
 import hashlib
 import json
 
+import click
 import flask
 import pytz
 import sqlalchemy as sa
@@ -180,23 +181,27 @@ async def check_file_pending_uploads(channel, body, envelope, properties):
     await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
 
 
-def cmd_check_pending_uploads(app):
+@click.command()
+@flask.cli.with_appcontext
+def cmd_check_pending_uploads():
     '''Check for any pending uploads and verify them if found.
     '''
-    session = app.db.session
+    session = flask.current_app.db.session
     pending_uploads = tooltool_api.models.PendingUpload.query.all()
     for pending_upload in pending_uploads:
         check_pending_upload(session, pending_upload)
     session.commit()
 
 
-def cmd_replicate(app):
+@click.command()
+@flask.cli.with_appcontext
+def cmd_replicate():
     '''Replicate objects between regions as necessary.
     '''
     # fetch all files with at least one instance, but not a full complement
     # of instances
-    regions = app.config['S3_REGIONS']
-    session = app.db.session
+    regions = flask.current_app.config['S3_REGIONS']
+    session = flask.current_app.db.session
     subq = session.query(
         tooltool_api.models.FileInstance.file_id,
         sa.func.count('*').label('instance_count'),
@@ -210,11 +215,13 @@ def cmd_replicate(app):
     q = q.all()
 
     for file in q:
-        replicate_file(session, file, regions, app.aws)
+        replicate_file(session, file, regions, flask.current_app.aws)
     session.commit()
 
 
-def cmd_worker(app):
+@click.command()
+@flask.cli.with_appcontext
+def cmd_worker():
     '''Check for pending uploads for a single file.
     '''
     pulse_user = flask.current_app.config['PULSE_USER']

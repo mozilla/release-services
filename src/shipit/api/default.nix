@@ -40,6 +40,7 @@ let
           -s vcversioner \
           -s pytest-runner \
           -s setuptools-scm \
+          -s intreehooks \
           -s flit \
           -r requirements.txt \
           -r requirements-dev.txt

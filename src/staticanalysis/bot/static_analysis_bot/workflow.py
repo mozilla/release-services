@@ -17,6 +17,8 @@ from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import TASKCLUSTER_DATE_FORMAT
 from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import CLANG_TIDY
+from static_analysis_bot import COVERAGE
+from static_analysis_bot import COVERITY
 from static_analysis_bot import INFER
 from static_analysis_bot import MOZLINT
 from static_analysis_bot import AnalysisException
@@ -27,6 +29,9 @@ from static_analysis_bot.clang.tidy import ClangTidy
 from static_analysis_bot.config import REPO_UNIFIED
 from static_analysis_bot.config import Publication
 from static_analysis_bot.config import settings
+from static_analysis_bot.coverage import Coverage
+from static_analysis_bot.coverity import setup as setup_coverity
+from static_analysis_bot.coverity.coverity import Coverity
 from static_analysis_bot.infer import setup as setup_infer
 from static_analysis_bot.infer.infer import Infer
 from static_analysis_bot.lint import MozLint
@@ -179,6 +184,19 @@ class Workflow(object):
                 else:
                     logger.info('Skip clang-format')
 
+                # Run Coverity Scan
+                if COVERITY in self.analyzers:
+                    logger.info('Setup Taskcluster coverity build...')
+                    setup_coverity(self.index_service)
+                    analyzers.append(Coverity)
+                else:
+                    logger.info('Skip Coverity')
+
+                if COVERAGE in self.analyzers:
+                    analyzers.append(Coverage)
+                else:
+                    logger.info('Skip coverage analysis')
+
             if revision.has_infer_files:
                 if INFER in self.analyzers:
                     analyzers.append(Infer)
@@ -212,7 +230,7 @@ class Workflow(object):
         with stats.api.timer('runtime.issues'):
             # Detect initial issues
             if settings.publication == Publication.BEFORE_AFTER:
-                before_patch = self.detect_issues(analyzers, revision)
+                before_patch = self.detect_issues(analyzers, revision, True)
                 logger.info('Detected {} issue(s) before patch'.format(len(before_patch)))
                 stats.api.increment('analysis.issues.before', len(before_patch))
                 revision.reset()
@@ -259,28 +277,42 @@ class Workflow(object):
 
         self.index(revision, state='done', issues=nb_issues, issues_publishable=nb_publishable)
 
-    def detect_issues(self, analyzers, revision):
+    def detect_issues(self, analyzers, revision, is_before=False):
         '''
         Detect issues for this revision
         '''
         issues = []
         for analyzer_class in analyzers:
             # Build analyzer
-            logger.info('Run {}'.format(analyzer_class.__name__))
             analyzer = analyzer_class()
+            analyzer_issues = []
+            try:
+                if is_before:
+                    if analyzer.can_run_before_patch():
+                        # Run analyzer on revision and store generated issues
+                        logger.info('Run {} with no patch applied'.format(analyzer_class.__name__))
+                        analyzer_issues = analyzer.run(revision)
+                    else:
+                        logger.info('Skipped running {} with no patch applied'.format(analyzer_class.__name__))
+                        continue
+                else:
+                    logger.info('Run {}'.format(analyzer_class.__name__))
+                    analyzer_issues = analyzer.run(revision)
 
-            # Run analyzer on revision and store generated issues
-            analyzer_issues = analyzer.run(revision)
+            except AnalysisException as ex:
+                # Log the error to Sentry
+                logger.error('Analyzer thrown exceptions during runtime', analyzer=analyzer_class.__name__, exception=ex)
 
-            # Clean up any uncommitted changes left behind by this analyzer.
-            self.hg.revert(settings.repo_dir.encode('utf-8'), all=True)
-            logger.info('Reverted all uncommitted changes in repo', rev=self.hg.identify())
+            finally:
+                # Clean up any uncommitted changes left behind by this analyzer.
+                self.hg.revert(settings.repo_dir.encode('utf-8'), all=True)
+                logger.info('Reverted all uncommitted changes in repo', rev=self.hg.identify())
 
-            # Compute line hashes now before anything else changes the code.
-            for issue in analyzer_issues:
-                issue.build_lines_hash()
+                # Compute line hashes now before anything else changes the code.
+                for issue in analyzer_issues:
+                    issue.build_lines_hash()
 
-            issues += analyzer_issues
+                issues += analyzer_issues
 
         return issues
 
