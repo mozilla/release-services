@@ -137,6 +137,8 @@ export default new Vuex.Store({
             check = issue.bug_type
           } else if (issue.analyzer === 'mozlint') {
             check = issue.rule
+          } else if (issue.analyzer === 'Coverity') {
+            check = issue.kind
           } else {
             console.warn('Unsupported analyzer', issue.analyzer)
             return
