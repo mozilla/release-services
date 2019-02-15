@@ -91,7 +91,7 @@ You can follow below command to help you push correctly.
     git clone git@github.com:mozilla/release-services.git
     cd release-services
     git push origin origin/staging:production
-    git tag v$(cat ./VERSION)
+    git tag v$(cat ./VERSION) origin/staging
     git push origin v$(cat ./VERSION)
 
 Once deployment starts record the taskcluster graph to the tracking Pull
@@ -143,7 +143,7 @@ A good starting point for writing release notes is:
     git log --oneline v$((($(cat VERSION)) - 1)).. HEAD \
         | cut -d' ' -f2- \
         | sort \
-        | grep -v 'setup: bumping to'
+        | grep -v '^Deploying '
 
 .. _`Create the release notes`: https://github.com/mozilla/release-services/releases/new
 
@@ -203,6 +203,7 @@ is going to be used next time we do deployment.
     echo "$((($(cat VERSION)) + 1))" | tee VERSION2
     sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
     mv VERSION2 VERSION
+    git commit -a -m "Deploying v$(cat VERSION) (and bumping version to v$((($(cat VERSION)) + 1)))"
     git push origin version-bump -f
 
 Now open a Pull Request from ``version-bump`` to ``master`` branch and copy

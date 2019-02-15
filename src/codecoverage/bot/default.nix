@@ -156,6 +156,7 @@ let
           -E openssl \
           -E pkgconfig \
           -E freetype.dev \
+          -s flit \
           -e pytest-runner \
           -e setuptools-scm \
           -r requirements.txt \
