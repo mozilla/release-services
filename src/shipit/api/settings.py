@@ -105,11 +105,11 @@ for product in ['firefox', 'fennec', 'devedition']:
     }
     phases = []
     for flavor in [product, f'{product}_rc']:
-        phases += shipit_api.config.SUPPORTED_FLAVORS.get(flavor, [])
+        phases += [i['name'] for i in shipit_api.config.SUPPORTED_FLAVORS.get(flavor, [])]
     for phase in set(phases):
         scopes.update({
-            f'schedule_phase/{product}/{phase["name"]}': GROUPS['firefox-signoff'],
-            f'phase_signoff/{product}/{phase["name"]}': GROUPS['firefox-signoff'],
+            f'schedule_phase/{product}/{phase}': GROUPS['firefox-signoff'],
+            f'phase_signoff/{product}/{phase}': GROUPS['firefox-signoff'],
         })
     AUTH0_AUTH_SCOPES.update(scopes)
 
@@ -120,11 +120,11 @@ scopes = {
 }
 phases = []
 for flavor in ['thunderbird', 'thunderbird_rc']:
-    phases += shipit_api.config.SUPPORTED_FLAVORS.get(flavor, [])
+    phases += [i['name'] for i in shipit_api.config.SUPPORTED_FLAVORS.get(flavor, [])]
 for phase in set(phases):
     scopes.update({
-        f'schedule_phase/thunderbird/{phase["name"]}': GROUPS['thunderbird-signoff'],
-        f'phase_signoff/thunderbird/{phase["name"]}': GROUPS['thunderbird-signoff'],
+        f'schedule_phase/thunderbird/{phase}': GROUPS['thunderbird-signoff'],
+        f'phase_signoff/thunderbird/{phase}': GROUPS['thunderbird-signoff'],
     })
 AUTH0_AUTH_SCOPES.update(scopes)
 
