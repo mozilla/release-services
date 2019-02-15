@@ -91,7 +91,7 @@ You can follow below command to help you push correctly.
     git clone git@github.com:mozilla/release-services.git
     cd release-services
     git push origin origin/staging:production
-    git tag v$(cat ./VERSION)
+    git tag v$(cat ./VERSION) origin/staging
     git push origin v$(cat ./VERSION)
 
 Once deployment starts record the taskcluster graph to the tracking Pull
