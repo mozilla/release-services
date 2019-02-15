@@ -20,7 +20,8 @@ PROJECT_NAME = 'static-analysis-bot'
 CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_UNIFIED = b'https://hg.mozilla.org/mozilla-unified'
-
+SOURCE_PHABRICATOR = 'phabricator'
+SOURCE_TRY = 'try'
 
 logger = get_logger(__name__)
 
@@ -41,6 +42,7 @@ class Settings(object):
     def __init__(self):
         self.config = None
         self.app_channel = None
+        self.source = None
         self.publication = None
 
         # Paths
@@ -61,10 +63,14 @@ class Settings(object):
     def setup(self,
               app_channel,
               cache_root,
+              source,
               publication,
               allowed_paths,
-              cov_config=None):
+              cov_config=None,
+              task_id=None,
+              ):
         self.app_channel = app_channel
+        self.source = source
         self.download({
             'cpp_extensions': frozenset(['.c', '.cpp', '.cc', '.cxx', '.m', '.mm']),
             'cpp_header_extensions': frozenset(['.h', '.hh', '.hpp', '.hxx']),
@@ -90,7 +96,7 @@ class Settings(object):
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
             self.taskcluster = TaskCluster('/tmp/results', os.environ['TASK_ID'], os.environ['RUN_ID'], False)
         else:
-            self.taskcluster = TaskCluster(tempfile.mkdtemp(), 'local instance', 0, True)
+            self.taskcluster = TaskCluster(tempfile.mkdtemp(), task_id or 'local instance', 0, True)
         if not os.path.isdir(self.taskcluster.results_dir):
             os.makedirs(self.taskcluster.results_dir)
 

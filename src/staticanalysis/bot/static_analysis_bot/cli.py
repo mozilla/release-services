@@ -17,18 +17,14 @@ from cli_common.taskcluster import get_service
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import config
 from static_analysis_bot import stats
+from static_analysis_bot.config import SOURCE_PHABRICATOR
+from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import settings
 from static_analysis_bot.report import get_reporters
 from static_analysis_bot.revisions import PhabricatorRevision
-from static_analysis_bot.workflows import LocalWorkflow
-from static_analysis_bot.workflows import RemoteWorkflow
+from static_analysis_bot.workflows import Workflow
 
 logger = get_logger(__name__)
-
-SOURCE_WORKFLOWS = {
-    'phabricator': LocalWorkflow,
-    'try': RemoteWorkflow,
-}
 
 
 @click.command()
@@ -62,7 +58,7 @@ def main(source,
          taskcluster_client_id,
          taskcluster_access_token,
          ):
-    assert source in SOURCE_WORKFLOWS.keys(), \
+    assert source in (SOURCE_TRY, SOURCE_PHABRICATOR), \
         'Unsupported analysis source: {}'.format(source)
 
     secrets = get_secrets(taskcluster_secret,
@@ -95,9 +91,13 @@ def main(source,
     # Setup settings before stats
     settings.setup(
         secrets['APP_CHANNEL'],
-        cache_root, secrets['PUBLICATION'],
+        cache_root,
+        source,
+        secrets['PUBLICATION'],
         secrets['ALLOWED_PATHS'],
-        secrets.get('COVERITY_CONFIG'))
+        secrets.get('COVERITY_CONFIG'),
+        task_id,
+    )
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')
     if datadog_api_key:
@@ -140,10 +140,9 @@ def main(source,
     revision = PhabricatorRevision(id, phabricator_api)
 
     # Run workflow according to source
-    Workflow = SOURCE_WORKFLOWS[source]
     w = Workflow(reporters, secrets['ANALYZERS'], index_service, queue_service, phabricator_api)
     try:
-        w.run(revision, task_id)
+        w.run(revision)
     except Exception as e:
         # Log errors to papertrail
         logger.error(

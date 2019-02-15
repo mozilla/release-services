@@ -32,15 +32,25 @@ from static_analysis_bot.coverity.coverity import Coverity
 from static_analysis_bot.infer import setup as setup_infer
 from static_analysis_bot.infer.infer import Infer
 from static_analysis_bot.lint import MozLint
-from static_analysis_bot.workflows.base import Workflow
 
 logger = get_logger(__name__)
 
 
-class LocalWorkflow(Workflow):
+class LocalWorkflow(object):
     '''
     Run analyers in current task
     '''
+    def __init__(self, parent, analyzers, index_service):
+        self.parent = parent
+        assert isinstance(analyzers, list)
+        assert len(analyzers) > 0, \
+            'No analyzers specified, will not run.'
+        self.analyzers = analyzers
+        assert 'MOZCONFIG' in os.environ, \
+            'Missing MOZCONFIG in environment'
+
+        # Use TC services client
+        self.index_service = index_service
 
     @stats.api.timed('runtime.clone')
     def clone(self):
@@ -70,18 +80,14 @@ class LocalWorkflow(Workflow):
 
         return client
 
-    def run(self, revision, *args, **kwargs):
+    def run(self, revision):
         '''
-        Run the static analysis workflow:
+        Run the local static analysis workflow:
          * Pull revision from review
          * Checkout revision
-         * Run static analysis
-         * Publish results
+         * Run static analyzers
         '''
         analyzers = []
-
-        # Index ASAP Taskcluster task for this revision
-        self.index(revision, state='started')
 
         # Add log to find Taskcluster task in papertrail
         logger.info(
@@ -102,7 +108,7 @@ class LocalWorkflow(Workflow):
             try:
                 # Start by cloning the mercurial repository
                 self.hg = self.clone()
-                self.index(revision, state='cloned')
+                self.parent.index(revision, state='cloned')
 
                 # Force cleanup to reset top of MU
                 # otherwise previous pull are there
@@ -177,7 +183,7 @@ class LocalWorkflow(Workflow):
             logger.error('No analyzers to use on revision')
             return
 
-        self.index(revision, state='analyzing')
+        self.parent.index(revision, state='analyzing')
         with stats.api.timer('runtime.issues'):
             # Detect initial issues
             if settings.publication == Publication.BEFORE_AFTER:
@@ -204,33 +210,8 @@ class LocalWorkflow(Workflow):
                     issue.is_new = issue not in before_patch
 
         # Avoid duplicates
-        issues = set(issues)
-
-        if not issues:
-            logger.info('No issues, stopping there.')
-            self.index(revision, state='done', issues=0)
-            return
-
-        # Publish patches on Taskcluster
-        # or write locally for local development
-        for patch in revision.improvement_patches:
-            if settings.taskcluster.local:
-                patch.write()
-            else:
-                patch.publish(self.queue_service)
-
-        # Report issues publication stats
-        nb_issues = len(issues)
-        nb_publishable = len([i for i in issues if i.is_publishable()])
-        self.index(revision, state='analyzed', issues=nb_issues, issues_publishable=nb_publishable)
-        stats.api.increment('analysis.issues.publishable', nb_publishable)
-
-        # Publish reports about these issues
-        with stats.api.timer('runtime.reports'):
-            for reporter in self.reporters.values():
-                reporter.publish(issues, revision)
-
-        self.index(revision, state='done', issues=nb_issues, issues_publishable=nb_publishable)
+        # but still output a list to be compatible with LocalWorkflow
+        return list(set(issues))
 
     @stats.api.timer('runtime.mach.setup')
     def do_build_setup(self):

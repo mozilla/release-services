@@ -2,11 +2,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import os
 
 from cli_common.log import get_logger
+from static_analysis_bot.config import settings
 from static_analysis_bot.lint import MozLintIssue
-from static_analysis_bot.workflows.base import Workflow
 
 logger = get_logger(__name__)
 
@@ -67,20 +66,19 @@ class AnalysisTask(object):
         return out
 
 
-class RemoteWorkflow(Workflow):
+class RemoteWorkflow(object):
     '''
     Secondary workflow to analyze the output from a try task group
     '''
-    def run(self, revision, task_id):
+    def __init__(self, queue_service):
+        # Use TC services client
+        self.queue_service = queue_service
 
-        # Task id is provided (dev) or from env (task)
-        if task_id is None:
-            task_id = os.environ.get('TASK_ID')
-
-        assert task_id is not None, 'Missing Taskcluster task id'
+    def run(self, revision):
+        assert settings.taskcluster.task_id is not None, 'Missing Taskcluster task id'
 
         # Load task description
-        task = self.queue_service.task(task_id)
+        task = self.queue_service.task(settings.taskcluster.task_id)
         assert len(task['dependencies']) > 0, 'No task dependencies to analyze'
 
         # Find issues in dependencies
@@ -95,16 +93,10 @@ class RemoteWorkflow(Workflow):
                 for log in logs.values():
                     issues += self.parse_issues(task, log, revision)
             except Exception as e:
-                logger.warn('Failure during task analysis', task=task_id, error=e)
+                logger.warn('Failure during task analysis', task=settings.taskcluster.task_id, error=e)
                 continue
 
-        if not issues:
-            logger.info('No issues found, revision is OK', revision=revision)
-            return
-
-        # Publish using reporters
-        for reporter in self.reporters.values():
-            reporter.publish(issues, revision)
+        return issues
 
     def parse_issues(self, task, log_content, revision):
         '''

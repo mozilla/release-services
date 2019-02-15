@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import abc
 import os
 from datetime import datetime
 from datetime import timedelta
@@ -11,9 +10,13 @@ from datetime import timedelta
 from cli_common.log import get_logger
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import TASKCLUSTER_DATE_FORMAT
+from static_analysis_bot import stats
+from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import settings
 from static_analysis_bot.report.debug import DebugReporter
 from static_analysis_bot.revisions import Revision
+from static_analysis_bot.workflows.local import LocalWorkflow
+from static_analysis_bot.workflows.remote import RemoteWorkflow
 
 logger = get_logger(__name__)
 
@@ -21,9 +24,12 @@ TASKCLUSTER_NAMESPACE = 'project.releng.services.project.{channel}.static_analys
 TASKCLUSTER_INDEX_TTL = 7  # in days
 
 
-class Workflow(abc.ABC):
+class Workflow(object):
     '''
-    Static analysis workflow
+    Full static analysis workflow
+    - setup local and remote analysis workflows
+    - runs them to build issues
+    - publish issues
     '''
     def __init__(self, reporters, analyzers, index_service, queue_service, phabricator_api):
         assert isinstance(analyzers, list)
@@ -49,11 +55,60 @@ class Workflow(abc.ABC):
         self.index_service = index_service
         self.queue_service = queue_service
 
-    @abc.abstractmethod
-    def run(self, *args, **kwargs):
+        # Build analysis workflows to run
+        self.workflows = []
+
+    def run(self, revision):
         '''
-        Main workflow method to implement in subclasses
+        Build analysis workflows and directly run them
         '''
+        issues = []
+
+        # Index ASAP Taskcluster task for this revision
+        self.index(revision, state='started')
+
+        # Use remote when we are on try
+        if settings.source == SOURCE_TRY:
+            remote = RemoteWorkflow(self.queue_service)
+            issues += remote.run(revision)
+
+        # Always use local workflow
+        # until we have all analyzers in-tree
+        local = LocalWorkflow(self, self.analyzers, self.index_service)
+        issues += local.run(revision)
+
+        if not issues:
+            logger.info('No issues, stopping there.')
+            self.index(revision, state='done', issues=0)
+            return
+
+        # Publish all issues from both workflows at once
+        self.publish(revision, issues)
+
+    def publish(self, revision, issues):
+        '''
+        Publish issues on selected reporters
+        '''
+        # Publish patches on Taskcluster
+        # or write locally for local development
+        for patch in revision.improvement_patches:
+            if settings.taskcluster.local:
+                patch.write()
+            else:
+                patch.publish(self.queue_service)
+
+        # Report issues publication stats
+        nb_issues = len(issues)
+        nb_publishable = len([i for i in issues if i.is_publishable()])
+        self.index(revision, state='analyzed', issues=nb_issues, issues_publishable=nb_publishable)
+        stats.api.increment('analysis.issues.publishable', nb_publishable)
+
+        # Publish reports about these issues
+        with stats.api.timer('runtime.reports'):
+            for reporter in self.reporters.values():
+                reporter.publish(issues, revision)
+
+        self.index(revision, state='done', issues=nb_issues, issues_publishable=nb_publishable)
 
     def index(self, revision, **kwargs):
         '''
