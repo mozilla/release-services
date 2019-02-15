@@ -103,7 +103,7 @@ class Revision(object):
 
     def contains(self, issue):
         '''
-        Check if the issue is this patch
+        Check if the issue is in this patch
         '''
         assert isinstance(issue, Issue)
 

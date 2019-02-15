@@ -35,7 +35,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-54"
+      image: "mozillareleng/services:base-55"
       features:
         taskclusterProxy: true
       capabilities:
@@ -74,7 +74,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-54"
+      image: "mozillareleng/services:base-55"
       features:
         taskclusterProxy: true
       capabilities:
@@ -114,7 +114,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-54"
+      image: "mozillareleng/services:base-55"
       features:
         taskclusterProxy: true
       capabilities:
@@ -154,7 +154,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-54"
+      image: "mozillareleng/services:base-55"
       features:
         taskclusterProxy: true
       capabilities:
@@ -194,7 +194,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-54"
+      image: "mozillareleng/services:base-55"
       features:
         taskclusterProxy: true
       capabilities:
