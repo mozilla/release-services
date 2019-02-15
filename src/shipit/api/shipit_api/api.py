@@ -193,7 +193,7 @@ def schedule_phase(name, phase):
 
 
 def abandon_release(name):
-    session = current_user.db.session
+    session = current_app.db.session
     try:
         release = session.query(Release).filter(Release.name == name).one()
 

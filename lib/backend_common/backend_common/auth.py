@@ -157,7 +157,7 @@ class Auth0User(BaseUser):
         all_permissions = flask.current_app.config.get('AUTH0_AUTH_SCOPES', dict())
         return [
             permission
-            for permission, users in all_permissions
+            for permission, users in all_permissions.items()
             if user in users
         ]
 
