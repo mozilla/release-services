@@ -233,13 +233,13 @@ def abandon_release(name):
 
         release.status = 'aborted'
         session.commit()
-        release = release.json
+        release_json = release.json
     except NoResultFound:
         abort(404)
 
     notify_via_irc(f'Release {release.product} {release.version} build{release.build_number} was just canceled.')
 
-    return release
+    return release_json
 
 
 @auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
