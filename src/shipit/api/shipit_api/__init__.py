@@ -24,7 +24,6 @@ def create_app(config=None):
             'cors',
             'api',
             'auth',
-            'auth0',
             'db',
             'pulse',
         ],
