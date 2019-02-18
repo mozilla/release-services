@@ -107,7 +107,7 @@ class RemoteWorkflow(object):
         # Lookup issues using marker
         issues = [
             line[line.index(ISSUE_MARKER) + len(ISSUE_MARKER):]
-            for line in log_content.decode('utf-8').split('\r\n')
+            for line in log_content.decode('utf-8').splitlines()
             if ISSUE_MARKER in line
         ]
         if not issues:
