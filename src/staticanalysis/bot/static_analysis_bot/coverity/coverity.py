@@ -6,7 +6,8 @@
 import json
 import os
 import shutil
-import subprocess
+
+import click
 
 from cli_common.command import run_check
 from cli_common.log import get_logger
@@ -111,19 +112,23 @@ class Coverity(DefaultAnalyzer):
         assert commands_list is not [], 'Commands List is empty'
         logger.info('Built commands for {} files'.format(len(commands_list)))
 
+        if len(commands_list) == 0:
+            logger.info('Coverity didn\'t find any compilation units to use.')
+            return []
+
         cmd = ['gecko-env', self.cov_run_desktop, '--setup']
         logger.info('Running Coverity Setup', cmd=cmd)
         try:
             run_check(cmd, cwd=self.cov_path)
-        except subprocess.CalledProcessError as e:
-            raise AnalysisException('coverity', 'Coverity Setup failed: {}'.format(e.output))
+        except click.ClickException:
+            raise AnalysisException('coverity', 'Coverity Setup failed!')
 
         cmd = ['gecko-env', self.cov_configure, '--clang']
         logger.info('Running Coverity Configure', cmd=cmd)
         try:
             run_check(cmd, cwd=self.cov_path)
-        except subprocess.CalledProcessError as e:
-            raise AnalysisException('coverity', 'Coverity Configure failed: {}'.format(e.output))
+        except click.ClickException:
+            raise AnalysisException('coverity', 'Coverity Configure failed!')
 
         # For each element in commands_list run `cov-translate`
         for element in commands_list:
@@ -134,8 +139,8 @@ class Coverity(DefaultAnalyzer):
             logger.info('Running Coverity Tranlate', cmd=cmd)
             try:
                 run_check(cmd, cwd=element['directory'])
-            except subprocess.CalledProcessError as e:
-                raise AnalysisException('coverity', 'Coverity Translate failed: {}'.format(e.output))
+            except click.ClickException:
+                raise AnalysisException('coverity', 'Coverity Translate failed!')
 
         # Once the capture is performed we need to do the actual Coverity Desktop analysis
         cmd = [
@@ -146,8 +151,8 @@ class Coverity(DefaultAnalyzer):
         logger.info('Running Coverity Analysis', cmd=cmd)
         try:
             run_check(cmd, cwd=self.cov_state_path)
-        except subprocess.CalledProcessError as e:
-            raise AnalysisException('coverity', 'Coverity Analysis failed: {}'.format(e.output))
+        except click.ClickException:
+            raise AnalysisException('coverity', 'Coverity Analysis failed!')
 
         # Write the results.json to the artifact directory to have it later on for debug
         coverity_results_path = os.path.join(self.cov_state_path, 'cov-results.json')
@@ -175,7 +180,19 @@ class Coverity(DefaultAnalyzer):
                 logger.info('Coverity did not find any issues')
                 return []
 
-            return [CoverityIssue(issue, revision) for issue in result['issues']]
+            def _is_local_issue(issue):
+                '''
+                The given coverity issue should be only locally stored and not in the
+                remote snapshot
+                '''
+                stateOnServer = issue['stateOnServer']
+                # According to Coverity manual:
+                # presentInReferenceSnapshot - True if the issue is present in the reference
+                # snapshot specified in the cov-run-desktop command, false if not.
+                return stateOnServer is not None and 'presentInReferenceSnapshot' in stateOnServer \
+                    and stateOnServer['presentInReferenceSnapshot'] is False
+
+            return [CoverityIssue(issue, revision) for issue in result['issues'] if _is_local_issue(issue)]
 
     def can_run_before_patch(self):
         '''

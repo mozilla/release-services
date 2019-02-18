@@ -17,15 +17,17 @@
         "mozilla-cli-common[log]"
     ],
     "auth": [
-        "python-dateutil<2.7.0,>=2.1",
-        "Flask",
         "Flask",
         "Flask-Login",
         "Flask-Migrate",
         "Flask-SQLAlchemy",
         "SQLAlchemy",
+        "flask-oidc",
         "itsdangerous==0.24",
         "mozilla-cli-common[log]",
+        "python-dateutil<2.7.0,>=2.1",
+        "python-jose",
+        "requests",
         "taskcluster"
     ],
     "auth0": [

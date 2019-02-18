@@ -62,3 +62,84 @@ args = [
     secrets['APP_URL'],
 ]
 OIDC_CLIENT_SECRETS = backend_common.auth0.create_auth0_secrets_file(*args)
+
+# XXX: scopes/groups are hardcoded for now
+GROUPS = {
+    'admin': [
+        'asasaki@mozilla.com',
+        'bhearsum@mozilla.com',
+        'catlee@mozilla.com',
+        'jlorenzo@mozilla.com',
+        'jlund@mozilla.com',
+        'jwood@mozilla.com',
+        'mhentges@mozilla.com',
+        'mtabara@mozilla.com',
+        'nthomas@mozilla.com',
+        'raliiev@mozilla.com',
+        'rgarbas@mozilla.com',
+        'sfraser@mozilla.com',
+        'tprince@mozilla.com',
+    ],
+    'firefox-signoff': [
+        'rkothari@mozilla.com',
+        'ehenry@mozilla.com',
+        'jcristau@mozilla.com',
+        'pchevrel@mozilla.com',
+        'sylvestre@debian.org',
+        'rvandermeulen@mozilla.com',
+    ],
+    'thunderbird-signoff': [
+        'vseerror@lehigh.edu',
+        'mozilla@jorgk.com',
+        'thunderbird@calypsoblue.org',
+    ],
+}
+
+AUTH0_AUTH_SCOPES = dict()
+
+# releng signoff scopes
+for product in ['firefox', 'fennec', 'devedition']:
+    scopes = {
+        f'add_release/{product}': GROUPS['firefox-signoff'],
+        f'abandon_release/{product}': GROUPS['firefox-signoff'],
+    }
+    phases = []
+    for flavor in [product, f'{product}_rc']:
+        phases += [i['name'] for i in shipit_api.config.SUPPORTED_FLAVORS.get(flavor, [])]
+    for phase in set(phases):
+        scopes.update({
+            f'schedule_phase/{product}/{phase}': GROUPS['firefox-signoff'],
+            f'phase_signoff/{product}/{phase}': GROUPS['firefox-signoff'],
+        })
+    AUTH0_AUTH_SCOPES.update(scopes)
+
+# thunderbird signoff scopes
+scopes = {
+    'add_release/thunderbird': GROUPS['thunderbird-signoff'],
+    'abandon_release/thunderbird': GROUPS['thunderbird-signoff'],
+}
+phases = []
+for flavor in ['thunderbird', 'thunderbird_rc']:
+    phases += [i['name'] for i in shipit_api.config.SUPPORTED_FLAVORS.get(flavor, [])]
+for phase in set(phases):
+    scopes.update({
+        f'schedule_phase/thunderbird/{phase}': GROUPS['thunderbird-signoff'],
+        f'phase_signoff/thunderbird/{phase}': GROUPS['thunderbird-signoff'],
+    })
+AUTH0_AUTH_SCOPES.update(scopes)
+
+# other scopes
+AUTH0_AUTH_SCOPES.update({
+    'sync_releases': [],
+    'rebuild_product_details': [],
+    'sync_release_datetimes': [],
+    'update_release_status': [],
+})
+
+# append scopes with scope prefix and add admin group of users
+AUTH0_AUTH_SCOPES = {
+    f'{shipit_api.config.SCOPE_PREFIX}/{scope}': list(set(users + GROUPS['admin']))
+    for scope, users in AUTH0_AUTH_SCOPES.items()
+}
+AUTH0_AUTH = True
+TASKCLUSTER_AUTH = False

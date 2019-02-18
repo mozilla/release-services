@@ -134,6 +134,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Release'
+
   /releases/{name}:
     get:
       summary: Release info

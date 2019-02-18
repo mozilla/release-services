@@ -4,12 +4,12 @@ import lzma
 import os
 import shutil
 from datetime import datetime
-from datetime import timedelta
 
 import hglib
 from bugbug import bugzilla
 from bugbug import labels
 from bugbug import repository
+from dateutil.relativedelta import relativedelta
 
 from bugbug_data.secrets import secrets
 from cli_common.log import get_logger
@@ -50,7 +50,8 @@ class Retriever(object):
 
         logger.info('mozilla-central cloned')
 
-        repository.download_commits(self.repo_dir)
+        two_years_and_six_months_ago = datetime.utcnow() - relativedelta(years=2, months=6)
+        repository.download_commits(self.repo_dir, two_years_and_six_months_ago)
 
         logger.info('commit data extracted from repository')
 
@@ -59,8 +60,8 @@ class Retriever(object):
     def retrieve_bugs(self):
         bugzilla.set_token(secrets[secrets.BUGZILLA_TOKEN])
 
-        six_months_ago = datetime.utcnow() - timedelta(182)
-        two_years_and_six_months_ago = six_months_ago - timedelta(365)
+        six_months_ago = datetime.utcnow() - relativedelta(months=6)
+        two_years_and_six_months_ago = six_months_ago - relativedelta(years=2)
         logger.info('Downloading bugs from {} to {}'.format(two_years_and_six_months_ago, six_months_ago))
         bugzilla.download_bugs_between(two_years_and_six_months_ago, six_months_ago)
 
@@ -90,6 +91,6 @@ class Retriever(object):
                 'taskId': os.environ['TASK_ID'],
                 'rank': 0,
                 'data': {},
-                'expires': (datetime.utcnow() + timedelta(31)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                'expires': (datetime.utcnow() + relativedelta(days=31)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             }
         )
