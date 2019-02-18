@@ -25,6 +25,10 @@ def test_coverity(mock_config, mock_repository, mock_revision, mock_coverity, mo
     assert issue.bug_type == 'Dummy Category'
     assert issue.message == 'Some dummy event'
 
+    # Assert it's local, hence publishable
+    assert issue.is_local()
+    assert issue.validates()
+
     # Testing it as_text
     assert issue.as_text() == 'Some dummy event'
 
