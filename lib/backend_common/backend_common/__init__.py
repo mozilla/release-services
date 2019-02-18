@@ -18,7 +18,6 @@ EXTENSIONS = [
     'cors',
     'api',
     'auth',
-    'auth0',
     'cache',
     'pulse',
     'db',

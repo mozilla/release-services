@@ -5,13 +5,16 @@
 
 import datetime
 import functools
+import json
 import os
 import time
 
 import flask
 import flask_login
+import flask_oidc
 import itsdangerous
 import pytz
+import requests
 import sqlalchemy as sa
 import taskcluster.utils
 
@@ -88,12 +91,23 @@ class TaskclusterUser(BaseUser):
     type = 'taskcluster'
 
     def __init__(self, credentials):
-        assert isinstance(credentials, dict)
-        assert 'clientId' in credentials
-        assert 'scopes' in credentials
-        assert isinstance(credentials['scopes'], list)
+        if not isinstance(credentials, dict):
+            raise Exception('credentials should be a dict')
+
+        if 'clientId' not in credentials:
+            raise Exception(f'credentials should contain clientId, {credentials}')
+
+        if not isinstance(credentials['clientId'], str):
+            raise Exception('credentials["clientId"] should be a string')
+
+        if 'scopes' not in credentials:
+            raise Exception('credentials should contain scopes')
+
+        if not isinstance(credentials['scopes'], list):
+            raise Exception('credentials["scopes"] should be a list')
 
         self.credentials = credentials
+
         logger.info('Init user {}'.format(self.get_id()))
 
     def get_id(self):
@@ -114,6 +128,44 @@ class TaskclusterUser(BaseUser):
             permissions = [permissions]
 
         return taskcluster.utils.scopeMatch(self.get_permissions(), permissions)
+
+
+class Auth0User(BaseUser):
+
+    type = 'auth0'
+
+    def __init__(self, token, userinfo):
+        if not isinstance(token, str):
+            raise Exception('token should be a string')
+
+        if 'email' not in userinfo:
+            raise Exception('userinfo should contain email')
+
+        if not isinstance(userinfo['email'], str):
+            raise Exception('userinfo["email"] should be a string')
+
+        self.token = token
+        self.userinfo = userinfo
+
+        logger.info('Init user {}'.format(self.get_id()))
+
+    def get_id(self):
+        return self.userinfo['email']
+
+    def get_permissions(self):
+        user = self.get_id()
+        all_permissions = flask.current_app.config.get('AUTH0_AUTH_SCOPES', dict())
+        return [
+            permission
+            for permission, users in all_permissions.items()
+            if user in users
+        ]
+
+    def has_permissions(self, permissions):
+        if not isinstance(permissions, (tuple, list)):
+            permissions = [permissions]
+        user_permissions = self.get_permissions()
+        return all(map(lambda p: p in user_permissions, permissions))
 
 
 class RelengapiTokenUser(BaseUser):
@@ -153,19 +205,6 @@ class Auth(object):
         self.app = app
         self.login_manager.init_app(app)
 
-    def _require_scopes(self, scopes):
-        if not self._require_login():
-            return False
-
-        with flask.current_app.app_context():
-            user_scopes = flask_login.current_user.get_permissions()
-            if not taskcluster.utils.scopeMatch(user_scopes, scopes):
-                diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]  # noqa
-                logger.error('User {} misses some scopes: {}'.format(flask_login.current_user.get_id(), ' OR '.join(diffs)))  # noqa
-                return False
-
-        return True
-
     def _require_login(self):
         with flask.current_app.app_context():
             try:
@@ -184,7 +223,24 @@ class Auth(object):
             return 'Unauthorized', 401
         return wrapper
 
-    def require_scopes(self, scopes):
+    def _require_permissions(self, permissions):
+        if not self._require_login():
+            return False
+
+        with flask.current_app.app_context():
+            if not flask_login.current_user.has_permissions(permissions):
+                user = flask_login.current_user.get_id()
+                user_permissions = flask_login.current_user.get_permissions()
+                diff = ' OR '.join([
+                    ', '.join(set(p).difference(user_permissions))
+                    for p in permissions
+                ])
+                logger.error(f'User {user} misses some scopes: {diff}')
+                return False
+
+        return True
+
+    def require_permissions(self, scopes):
         '''Decorator to check if user has required scopes or set of scopes
         '''
 
@@ -197,7 +253,7 @@ class Auth(object):
             @functools.wraps(method)
             def wrapper(*args, **kwargs):
                 logger.info('Checking scopes', scopes=scopes)
-                if self._require_scopes(scopes):
+                if self._require_permissions(scopes):
                     # Validated scopes, running method
                     logger.info('Validated scopes, processing api request')
                     return method(*args, **kwargs)
@@ -207,7 +263,10 @@ class Auth(object):
             return wrapper
         return decorator
 
+    require_scopes = require_permissions
 
+
+auth0 = flask_oidc.OpenIDConnect()
 auth = Auth(
     anonymous_user=AnonymousUser,
 )
@@ -219,7 +278,7 @@ def jti2id(jti):
     return int(jti[1:])
 
 
-EMPTY = object()
+NO_AUTH = object()
 RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'tooltool/': 'tooltool/api/',
@@ -259,7 +318,7 @@ def initial_data():
                 doc=permission_doc,
             ))
 
-    if getattr(flask_login.current_user, 'authenticated_email', EMPTY) != EMPTY:
+    if getattr(flask_login.current_user, 'authenticated_email', NO_AUTH) != NO_AUTH:
         user['authenticated_email'] = flask_login.current_user.authenticated_email
 
     return dict(
@@ -321,7 +380,97 @@ class RelengapiToken(backend_common.db.db.Model):
         return tok
 
 
-def is_relengapi_token(token_str):
+def parse_header_taskcluster(request):
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        auth_header = request.headers.get('Authentication')
+        if not auth_header:
+            return NO_AUTH
+        header = auth_header.split()
+        if len(header) != 2:
+            return NO_AUTH
+
+    # Get Endpoint configuration
+    if ':' in request.host:
+        host, port = request.host.split(':')
+    else:
+        host = request.host
+        port = request.environ.get('HTTP_X_FORWARDED_PORT')
+        if port is None:
+            port = request.scheme == 'https' and 443 or 80
+    method = request.method.lower()
+
+    # Build taskcluster payload
+    payload = {
+        'resource': request.path,
+        'method': method,
+        'host': host,
+        'port': int(port),
+        'authorization': auth_header,
+    }
+
+    # Auth with taskcluster
+    auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
+    try:
+        resp = auth.authenticateHawk(payload)
+        if not resp.get('status') == 'auth-success':
+            raise Exception('Taskcluster rejected the authentication')
+    except Exception as e:
+        logger.error('TC auth error: {}'.format(e))
+        logger.error('TC auth details: {}'.format(payload))
+        return NO_AUTH
+
+    return TaskclusterUser(resp)
+
+
+def parse_header_auth0(request):
+    if 'access_token' in request.form:
+        token = request.form['access_token']
+    elif 'access_token' in request.args:
+        token = request.args['access_token']
+    else:
+        auth = request.headers.get('Authorization')
+        if not auth:
+            return NO_AUTH
+
+        parts = auth.split()
+
+        if parts[0].lower() != 'bearer' or \
+           len(parts) == 1 or \
+           len(parts) > 2:
+            return NO_AUTH
+
+        token = parts[1]
+
+    auth_domain = flask.current_app.config.get('AUTH_DOMAIN')
+    url = auth0.client_secrets.get('userinfo_uri', f'https://{auth_domain}/userinfo')
+
+    payload = {'access_token': token}
+    response = requests.get(url, params=payload)
+
+    # Because auth0 returns http 200 even if the token is invalid.
+    if response.content == b'Unauthorized' or not response.ok:
+        return NO_AUTH
+
+    userinfo = json.loads(str(response.content, 'utf-8'))
+
+    return Auth0User(token, userinfo)
+
+
+def parse_header_relengapi(request):
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        auth_header = request.headers.get('Authentication')
+        if not auth_header:
+            return NO_AUTH
+
+    header = auth_header.split()
+    if len(header) != 2:
+        return NO_AUTH
+
+    token_str = header[1]
 
     try:
         claims = flask.current_app.auth_relengapi_serializer.loads(token_str)
@@ -329,18 +478,18 @@ def is_relengapi_token(token_str):
     except itsdangerous.BadData as e:
         logger.warning('Got invalid signature in token %r', token_str)
         logger.exception(e)
-        return EMPTY
+        return NO_AUTH
 
     except Exception as e:
         logger.error('Error processing signature in token %r: %s', token_str, e)
-        return EMPTY
+        return NO_AUTH
 
     # convert v1 to ra2
     if claims.get('v') == 1:
         claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
 
     if claims.get('iss') != RELENGAPI_TOKENAUTH_ISSUER:
-        return EMPTY
+        return NO_AUTH
 
     if claims['typ'] == 'prm':
         token_id = jti2id(claims['jti'])
@@ -353,7 +502,7 @@ def is_relengapi_token(token_str):
     elif claims['typ'] == 'tmp':
         now = time.time()
         if now < claims['nbf'] or now > claims['exp']:
-            return EMPTY
+            return NO_AUTH
         permissions = [i for i in claims['prm'] if i]
         return RelengapiTokenUser(claims, permissions=permissions)
 
@@ -436,67 +585,80 @@ def get_taskcluster_credentials():
 
 @auth.login_manager.request_loader
 def parse_header(request):
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        auth_header = request.headers.get('Authentication')
-        if not auth_header:
-            return
+    '''Parse header and try to authenticate
+    '''
 
-    if flask.current_app.config.get('CHECK_FOR_RELENGAPI_TOKEN') is True:
-        header = auth_header.split()
-        if len(header) == 2:
-            user = is_relengapi_token(header[1])
-            if user != EMPTY:
-                return user
+    if flask.current_app.config.get('RELENGAPI_AUTH') is True:
+        user = parse_header_relengapi(request)
+        if user != NO_AUTH:
+            return user
 
-    # Get Endpoint configuration
-    if ':' in request.host:
-        host, port = request.host.split(':')
-    else:
-        host = request.host
-        port = request.environ.get('HTTP_X_FORWARDED_PORT')
-        if port is None:
-            port = request.scheme == 'https' and 443 or 80
-    method = request.method.lower()
+    if flask.current_app.config.get('AUTH0_AUTH') is True:
+        user = parse_header_auth0(request)
+        if user != NO_AUTH:
+            return user
 
-    # Build taskcluster payload
-    payload = {
-        'resource': request.path,
-        'method': method,
-        'host': host,
-        'port': int(port),
-        'authorization': auth_header,
-    }
+    if flask.current_app.config.get('TASKCLUSTER_AUTH', True) is True:
+        user = parse_header_taskcluster(request)
+        if user != NO_AUTH:
+            return user
 
-    # Auth with taskcluster
-    auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
-    try:
-        resp = auth.authenticateHawk(payload)
-        if not resp.get('status') == 'auth-success':
-            raise Exception('Taskcluster rejected the authentication')
-    except Exception as e:
-        logger.error('TC auth error: {}'.format(e))
-        logger.error('TC auth details: {}'.format(payload))
-        return
 
-    return TaskclusterUser(resp)
+def get_permissions():
+    response = dict(
+        description='Permissions of a logged in user',
+        user_id=None,
+        permissions=[],
+    )
+    user = flask_login.current_user
+
+    if user.is_authenticated:
+        response['user_id'] = user.get_id()
+        response['permissions'] = user.get_permissions()
+
+    return flask.Response(
+        status=200,
+        response=json.dumps(response),
+        headers={
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=60',
+        },
+    )
 
 
 def init_app(app):
     if app.config.get('SECRET_KEY') is None:
         raise Exception('When using `auth` extention you need to specify SECRET_KEY.')
-    if app.config.get('CHECK_FOR_RELENGAPI_TOKEN') is True:
+
+    if app.config.get('RELENGAPI_AUTH') is True:
         app.auth_relengapi_serializer = itsdangerous.JSONWebSignatureSerializer(app.config.get('SECRET_KEY'))
 
+    if app.config.get('AUTH0_AUTH') is True:
+        auth0.init_app(app)
+
     auth.init_app(app)
+
+    app.add_url_rule('/__permissions__', view_func=get_permissions)
+
     return auth
 
 
 def app_heartbeat():
-    auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
-    try:
-        ping = auth.ping()
-        assert ping['alive'] is True
-    except Exception as e:
-        logger.exception(e)
-        raise backend_common.dockerflow.HeartbeatException('Cannot connect to the taskcluster auth service.')
+    config = flask.current_app.config
+
+    if config.get('AUTH0_AUTH') is True:
+        try:
+            r = requests.get('https://auth.mozilla.auth0.com/test')
+            assert 'clock' in r.json()
+        except Exception as e:
+            logger.exception(e)
+            raise backend_common.dockerflow.HeartbeatException('Cannot connect to the mozilla auth0 service.')
+
+    if config.get('TASKCLUSTER_AUTH') is True:
+        auth = cli_common.taskcluster.get_service('auth', **get_taskcluster_credentials())
+        try:
+            ping = auth.ping()
+            assert ping['alive'] is True
+        except Exception as e:
+            logger.exception(e)
+            raise backend_common.dockerflow.HeartbeatException('Cannot connect to the taskcluster auth service.')

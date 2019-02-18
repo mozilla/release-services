@@ -11,43 +11,10 @@ import slugid
 
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
+from shipit_api.config import SUPPORTED_FLAVORS
 from shipit_api.release import is_rc
 
 log = get_logger(__name__)
-
-# Phases per product, ordered
-SUPPORTED_FLAVORS = {
-    'firefox': [
-        {'name': 'promote_firefox', 'in_previous_graph_ids': True},
-        {'name': 'push_firefox', 'in_previous_graph_ids': True},
-        {'name': 'ship_firefox', 'in_previous_graph_ids': True},
-    ],
-    'firefox_rc': [
-        {'name': 'promote_firefox_rc', 'in_previous_graph_ids': True},
-        {'name': 'ship_firefox_rc', 'in_previous_graph_ids': False},
-        {'name': 'push_firefox', 'in_previous_graph_ids': True},
-        {'name': 'ship_firefox', 'in_previous_graph_ids': True},
-    ],
-    'fennec': [
-        {'name': 'promote_fennec', 'in_previous_graph_ids': True},
-        {'name': 'ship_fennec', 'in_previous_graph_ids': True},
-    ],
-    'fennec_rc': [
-        {'name': 'promote_fennec', 'in_previous_graph_ids': True},
-        {'name': 'ship_fennec_rc', 'in_previous_graph_ids': True},
-        {'name': 'ship_fennec', 'in_previous_graph_ids': True},
-    ],
-    'devedition': [
-        {'name': 'promote_devedition', 'in_previous_graph_ids': True},
-        {'name': 'push_devedition', 'in_previous_graph_ids': True},
-        {'name': 'ship_devedition', 'in_previous_graph_ids': True},
-    ],
-    'thunderbird': [
-        {'name': 'promote_thunderbird', 'in_previous_graph_ids': True},
-        {'name': 'push_thunderbird', 'in_previous_graph_ids': True},
-        {'name': 'ship_thunderbird', 'in_previous_graph_ids': True},
-    ],
-}
 
 
 class UnsupportedFlavor(Exception):

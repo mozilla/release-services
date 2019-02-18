@@ -61,11 +61,6 @@ def app():
     def scopes():
         return app.response_class('Your scopes are ok.')
 
-    @app.route('/test-auth0-userinfo')
-    @backend_common.auth0.mozilla_accept_token()
-    def auth0_token():
-        return app.response_class('OK')
-
     # Add fake swagger url, used by redirect
     app.api.swagger_url = '/'
 

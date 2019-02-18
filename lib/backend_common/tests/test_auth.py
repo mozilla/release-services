@@ -5,7 +5,6 @@
 
 import json
 
-import flask
 import pytest
 
 
@@ -46,9 +45,9 @@ def test_taskcluster_user():
     assert not user.is_anonymous
 
     # Test invalid input
-    with pytest.raises(AssertionError):
+    with pytest.raises(Exception):
         user = backend_common.auth.TaskclusterUser({})
-    with pytest.raises(AssertionError):
+    with pytest.raises(Exception):
         user = backend_common.auth.TaskclusterUser({'clientId': '', 'scopes': None})
 
 
@@ -135,25 +134,3 @@ def test_scopes_admin(client):
     resp = client.get('/test-auth-scopes', headers=[('Authorization', header)])
     assert resp.status_code == 200
     assert resp.data == b'Your scopes are ok.'
-
-
-def test_auth0_access_token(client):
-    '''
-    Test the validation of an access_token using the auth0 userinfo endpoint
-    '''
-    resp = client.get('/test-auth0-userinfo',
-                      query_string={'access_token': 'abcdef123456'})
-    assert resp.status_code == 200
-    # side effect of the auth
-    assert 'userinfo' in flask.g
-    assert flask.g.get('userinfo').get('email') == 'lmoran@mozilla.com'
-
-
-def test_auth0_access_token_invalid(client):
-    '''
-    Test the validation of an access_token using the auth0 userinfo endpoint
-    '''
-    resp = client.get('/test-auth0-userinfo',
-                      query_string={'access_token': 'badtoken'})
-    assert resp.status_code == 401
-    assert json.loads(str(resp.data, 'utf-8')) == {'error': 'invalid_token', 'error_description': 'Unauthorized'}

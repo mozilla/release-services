@@ -18,7 +18,7 @@ Code analysis found 1 defect in this patch:
 You can run this analysis locally with:
  - `./mach static-analysis check path/to/file.cpp` (C/C++)
 
-If you see a problem in this automated review, [please report it here](https://github.com/mozilla/release-services/issues/new?title=Problem%20with%20an%20automated%20review:%20SUMMARY&labels=app:staticanalysis/bot&body=**Phabricator%20URL:**%20https://phabricator.services.mozilla.com/D%E2%80%A6%0A%0A**Problem:**%20%E2%80%A6).
+If you see a problem in this automated review, [please report it here](https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox+Build+System&component=Source+Code+Analysis&short_desc=[Automated+review]+UPDATE&comment=**Phabricator+URL:**+https://phabricator.services.mozilla.com/...&format=__default__).
 '''  # noqa
 
 VALID_CLANG_FORMAT_MESSAGE = '''
@@ -30,7 +30,7 @@ You can run this analysis locally with:
 
 For your convenience, [here is a patch]({results}/clang-format-PHID-DIFF-abcdef.diff) that fixes all the clang-format defects (use it in your repository with `hg import` or `git apply`).
 
-If you see a problem in this automated review, [please report it here](https://github.com/mozilla/release-services/issues/new?title=Problem%20with%20an%20automated%20review:%20SUMMARY&labels=app:staticanalysis/bot&body=**Phabricator%20URL:**%20https://phabricator.services.mozilla.com/D%E2%80%A6%0A%0A**Problem:**%20%E2%80%A6).
+If you see a problem in this automated review, [please report it here](https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox+Build+System&component=Source+Code+Analysis&short_desc=[Automated+review]+UPDATE&comment=**Phabricator+URL:**+https://phabricator.services.mozilla.com/...&format=__default__).
 '''  # noqa
 
 
@@ -42,7 +42,7 @@ Should they have tests, or are they dead code?
 You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415824 for untested files that should be tested.
 You can file a bug blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1415819 for untested files that should be removed.
 
-If you see a problem in this automated review, [please report it here](https://github.com/mozilla/release-services/issues/new?title=Problem%20with%20an%20automated%20review:%20SUMMARY&labels=app:staticanalysis/bot&body=**Phabricator%20URL:**%20https://phabricator.services.mozilla.com/D%E2%80%A6%0A%0A**Problem:**%20%E2%80%A6).
+If you see a problem in this automated review, [please report it here](https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox+Build+System&component=Source+Code+Analysis&short_desc=[Automated+review]+UPDATE&comment=**Phabricator+URL:**+https://phabricator.services.mozilla.com/...&format=__default__).
 '''  # noqa
 
 
@@ -196,7 +196,7 @@ def test_phabricator_coverage(mock_config, mock_repository, mock_phabricator):
         revision = PhabricatorRevision('PHID-DIFF-abcdef', api)
         revision.lines = {
             # Add dummy lines diff
-            'test.txt': [41, 42, 43],
+            'test.txt': [0],
             'dom/test.cpp': [42, ],
         }
         reporter = PhabricatorReporter({'analyzers': ['coverage']}, api=api)
@@ -276,7 +276,7 @@ def test_phabricator_clang_tidy_and_coverage(mock_config, mock_repository, mock_
         revision = PhabricatorRevision('PHID-DIFF-abcdef', api)
         revision.lines = {
             # Add dummy lines diff
-            'test.txt': [41, 42, 43],
+            'test.txt': [0],
             'test.cpp': [41, 42, 43],
         }
         reporter = PhabricatorReporter({'analyzers': ['coverage', 'clang-tidy']}, api=api)
@@ -316,6 +316,7 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
     from static_analysis_bot.infer.infer import InferIssue
     from static_analysis_bot.clang.tidy import ClangTidyIssue
     from static_analysis_bot.lint import MozLintIssue
+    from static_analysis_bot.coverage import CoverageIssue
 
     # needed by Mozlint issue
     with open(os.path.join(mock_config.repo_dir, 'test.cpp'), 'w') as f:
@@ -325,7 +326,7 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
         # Always use the same setup, only varies the analyzers
         revision = PhabricatorRevision('PHID-DIFF-abcdef', api)
         revision.lines = {
-            'test.cpp': [41, 42, 43],
+            'test.cpp': [0, 41, 42, 43],
             'dom/test.cpp': [42, ],
         }
         reporter = PhabricatorReporter({'analyzers': analyzers}, api=api)
@@ -342,6 +343,7 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
                 'qualifier': 'dummy message.',
             }, revision),
             MozLintIssue('test.cpp', 1, 'danger', 42, 'flake8', 'Python error', 'EXXX', revision),
+            CoverageIssue('test.cpp', 0, 'This file is uncovered', revision),
         ]
 
         assert all(i.is_publishable() for i in issues)
@@ -392,6 +394,11 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
         assert len(patches) == 1
         assert [p.analyzer for p in patches] == ['mozlint']
 
+        # Only coverage
+        issues, patches = _test_reporter(api, ['coverage'])
+        assert len(issues) == 1
+        assert len(patches) == 0
+
         # clang-format + clang-tidy
         issues, patches = _test_reporter(api, ['clang-tidy', 'clang-format'])
         assert len(issues) == 2
@@ -399,7 +406,7 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
         assert [p.analyzer for p in patches] == ['clang-tidy', 'clang-format']
 
         # All of them
-        issues, patches = _test_reporter(api, ['clang-tidy', 'clang-format', 'infer', 'mozlint'])
-        assert len(issues) == 4
+        issues, patches = _test_reporter(api, ['clang-tidy', 'clang-format', 'infer', 'mozlint', 'coverage'])
+        assert len(issues) == 5
         assert len(patches) == 4
         assert [p.analyzer for p in patches] == ['clang-tidy', 'clang-format', 'infer', 'mozlint']
