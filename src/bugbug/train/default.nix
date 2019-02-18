@@ -52,6 +52,10 @@ let
             type = "file";
             path = "/bugmodel.xz";
           };
+          "public/componentmodel.xz" = {
+            type = "file";
+            path = "/componentmodel.xz";
+          };
           "public/regressionmodel.xz" = {
             type = "file";
             path = "/regressionmodel.xz";
