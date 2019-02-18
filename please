@@ -32,7 +32,7 @@ if uname -a | grep -q Darwin; then
 fi
 
 if [ "$USE_NIX" = "1" ]; then
-  drv=$(nix-instantiate nix/default.nix -A please-cli) 2> /dev/null
+  drv=$(nix-instantiate nix/default.nix -A please-cli)
   nix_store_file=$(cut -c17-91 < "$drv")
   building_please_cli=0
   if [ ! -e "$nix_store_file" ]; then
@@ -58,6 +58,7 @@ else
             --name "$DOCKER_NAME" \
             --volume="$(pwd)":/app \
             --volume=/var/run/docker.sock:/var/run/docker.sock \
+            --volume=$HOME/.pleaserc:/home/app/.pleaserc:rw \
             --workdir=/app \
             $NETWORK_OPTIONS \
             "mozillareleng/services:base-$(cat ./VERSION)"
