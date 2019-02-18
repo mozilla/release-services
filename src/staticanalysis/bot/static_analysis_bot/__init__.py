@@ -166,8 +166,8 @@ class Issue(abc.ABC):
     def is_third_party(self):
         '''
         Is this issue in a third party path ?
+        Once we are using only try, we should not need this check anymore
         '''
-        # TODO: download the third party file from hgweb and use it here
         if not settings.has_local_clone:
             return False
 
