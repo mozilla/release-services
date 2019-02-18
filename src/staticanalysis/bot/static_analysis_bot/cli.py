@@ -111,15 +111,11 @@ def main(source,
     )
 
     # Load index service
-    # but not on try, we don't have the scopes for that yet
-    if source != 'try':
-        index_service = get_service(
-            'index',
-            taskcluster_client_id,
-            taskcluster_access_token,
-        )
-    else:
-        index_service = None
+    index_service = get_service(
+        'index',
+        taskcluster_client_id,
+        taskcluster_access_token,
+    )
 
     # Local clone available when not running on try
     settings.has_local_clone = source != 'try'
