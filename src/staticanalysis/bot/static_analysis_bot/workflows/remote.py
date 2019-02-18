@@ -110,9 +110,7 @@ class RemoteWorkflow(object):
             for line in log_content.decode('utf-8').splitlines()
             if ISSUE_MARKER in line
         ]
-        if not issues:
-            logger.warn('No issues found in log')
-            return []
+        assert len(issues) > 0, 'No issues found in failure log'
 
         # Convert to Issue instances
         logger.info('Found {} issues !'.format(len(issues)))
