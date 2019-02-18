@@ -71,6 +71,7 @@ structlog==18.2.0
 taskcluster==5.0.0
 taskcluster-urls==10.1.0
 testfixtures==6.3.0
+toml==0.10.0
 typed-ast==1.1.0
 urllib3==1.24.1
 whichcraft==0.5.2
