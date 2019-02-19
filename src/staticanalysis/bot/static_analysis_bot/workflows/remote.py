@@ -116,10 +116,10 @@ class RemoteWorkflow(object):
 
         # Convert to Issue instances
         logger.info('Found {} issues !'.format(len(issues)))
-        return [
+        return list(filter(None, [
             self.build_issue(task.name, issue, revision)
             for issue in issues
-        ]
+        ]))
 
     def build_issue(self, task_name, issue, revision):
         '''
@@ -129,4 +129,4 @@ class RemoteWorkflow(object):
         if task_name.startswith(MozLintIssue.TRY_PREFIX):
             return MozLintIssue.from_try(task_name, issue, revision)
         else:
-            raise Exception('Unsupported task type {}'.format(task_name))
+            logger.warn('Unsupported task type', name=task_name)

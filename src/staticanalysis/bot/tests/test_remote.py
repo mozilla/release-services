@@ -210,6 +210,5 @@ def test_unsupported_analyzer(mock_config, mock_revision):
         'extra-task': {},
     }
     workflow = RemoteWorkflow(MockQueue(tasks))
-    with pytest.raises(Exception) as e:
-        workflow.run(mock_revision)
-        assert e.message == 'Unsupported task type custom-analyzer-from-vendor'
+    issues = workflow.run(mock_revision)
+    assert len(issues) == 0
