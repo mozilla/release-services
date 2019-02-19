@@ -324,6 +324,10 @@ def mock_workflow(tmpdir, mock_phabricator, mock_repository, mock_config):
     '''
     from static_analysis_bot.workflows.base import Workflow
 
+    # Needed for Taskcluster build
+    if 'MOZCONFIG' not in os.environ:
+        os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
+
     with mock_phabricator as api:
         return Workflow(
             reporters={},
