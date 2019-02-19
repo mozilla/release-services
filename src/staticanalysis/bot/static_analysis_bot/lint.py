@@ -63,7 +63,7 @@ class MozLintIssue(Issue):
         assert task_name.startswith(MozLintIssue.TRY_PREFIX)
 
         linter = task_name[len(MozLintIssue.TRY_PREFIX) + 1:]
-        match = re.match(r'^(.+):(\d+):(\d+) \| (.+) \((\w+)\)$', line)
+        match = re.match(r'^(.+):(\d+):(\d+) \| (.+) \(([\w\s\-]+)\)$', line)
         assert match is not None, 'Unsupported line format: {}'.format(line)
         path, line, column, message, rule = match.groups()
 

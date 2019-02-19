@@ -63,6 +63,7 @@ class AnalysisTask(object):
                 out[log] = artifact['response'].content
             except Exception as e:
                 logger.warn('Failed to read log', task_id=self.task_id, run_id=self.run_id, log=log, error=e)
+                raise
         return out
 
 
@@ -94,6 +95,7 @@ class RemoteWorkflow(object):
                     issues += self.parse_issues(task, log, revision)
             except Exception as e:
                 logger.warn('Failure during task analysis', task=settings.taskcluster.task_id, error=e)
+                raise
                 continue
 
         return issues
@@ -127,4 +129,4 @@ class RemoteWorkflow(object):
         if task_name.startswith(MozLintIssue.TRY_PREFIX):
             return MozLintIssue.from_try(task_name, issue, revision)
         else:
-            raise Exception('Unsupported task type', type=task_name)
+            raise Exception('Unsupported task type {}'.format(task_name))
