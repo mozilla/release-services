@@ -45,7 +45,7 @@ def mock_config():
 
     from static_analysis_bot.config import settings
     tempdir = tempfile.mkdtemp()
-    settings.setup('test', tempdir, 'phabricator', 'IN_PATCH', ['dom/*', 'tests/*.py', 'test/*.c'])
+    settings.setup('test', tempdir, 'phabricator', 'IN_PATCH', ['dom/*', 'tests/*.py', 'test/*.c'], task_id='123abc')
 
     return settings
 
