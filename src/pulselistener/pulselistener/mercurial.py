@@ -12,7 +12,7 @@ import tempfile
 import hglib
 
 from cli_common.log import get_logger
-from cli_common.mercurial import robust_checkout
+from cli_common.mercurial import batch_checkout
 from pulselistener.config import REPO_TRY
 
 logger = get_logger(__name__)
@@ -22,10 +22,11 @@ class MercurialWorker(object):
     '''
     Mercurial worker maintaining a local clone of mozilla-unified
     '''
-    def __init__(self, phabricator_api, ssh_user, ssh_key, repo_url, repo_dir):
+    def __init__(self, phabricator_api, ssh_user, ssh_key, repo_url, repo_dir, batch_size):
         self.repo_url = repo_url
         self.repo_dir = repo_dir
         self.phabricator_api = phabricator_api
+        self.batch_size = batch_size
 
         # Build asyncio shared queue
         self.queue = asyncio.Queue()
@@ -53,7 +54,7 @@ class MercurialWorker(object):
     async def run(self):
         # Start by updating the repo
         logger.info('Checking out tip', repo=self.repo_url)
-        self.repo = robust_checkout(self.repo_url, self.repo_dir)
+        self.repo = batch_checkout(self.repo_url, self.repo_dir, batch_size=self.batch_size)
         self.repo.setcbout(lambda msg: logger.info('Mercurial', stdout=msg))
         self.repo.setcberr(lambda msg: logger.info('Mercurial', stderr=msg))
         logger.info('Initial clone finished')
