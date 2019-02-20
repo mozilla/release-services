@@ -9,9 +9,6 @@ import cli_common.log
 
 log = cli_common.log.get_logger(__name__)
 
-MOZILLA_CENTRAL = 'https://hg.mozilla.org/mozilla-central'
-MOZILLA_UNIFIED = 'https://hg.mozilla.org/mozilla-unified'
-
 
 def hg_run(cmd):
     '''
