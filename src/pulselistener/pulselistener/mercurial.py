@@ -12,7 +12,7 @@ import tempfile
 import hglib
 
 from cli_common.log import get_logger
-from cli_common.mercurial import robust_checkout
+from cli_common.mercurial import batch_checkout
 from pulselistener.config import REPO_TRY
 
 logger = get_logger(__name__)
@@ -53,7 +53,7 @@ class MercurialWorker(object):
     async def run(self):
         # Start by updating the repo
         logger.info('Checking out tip', repo=self.repo_url)
-        self.repo = robust_checkout(self.repo_url, self.repo_dir)
+        self.repo = batch_checkout(self.repo_url, self.repo_dir)
         self.repo.setcbout(lambda msg: logger.info('Mercurial', stdout=msg))
         self.repo.setcberr(lambda msg: logger.info('Mercurial', stderr=msg))
         logger.info('Initial clone finished')
