@@ -53,7 +53,7 @@ def batch_checkout(repo_url, repo_dir, revision=b'tip', batch_size=100000):
     assert isinstance(batch_size, int)
     assert batch_size > 1
 
-    log.info('Batch checkout', url=repo_url, dir=repo_dir)
+    log.info('Batch checkout', url=repo_url, dir=repo_dir, size=batch_size)
     cmd = hglib.util.cmdbuilder('clone',
                                 repo_url,
                                 repo_dir,

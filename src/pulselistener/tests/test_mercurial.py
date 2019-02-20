@@ -27,6 +27,7 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
             ssh_key='privateSSHkey',
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
+            batch_size=100,
         )
         worker.repo = RepoMock
 
@@ -94,6 +95,7 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
             ssh_key='privateSSHkey',
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
+            batch_size=100,
         )
         worker.repo = RepoMock
 
