@@ -38,7 +38,7 @@ setuptools.setup(
     description=DESCRIPTION,
     author='Mozilla Release Services Team',
     author_email='release-services@mozilla.com',
-    url='https://api.shipit.mozilla-releng.net',
+    url='https://shipit-api.mozilla-releng.net',
     tests_require=read_requirements('requirements-dev.txt'),
     install_requires=read_requirements('requirements.txt'),
     packages=setuptools.find_packages(),
