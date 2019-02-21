@@ -32,7 +32,7 @@ if uname -a | grep -q Darwin; then
 fi
 
 if [ "$USE_NIX" = "1" ]; then
-  drv=$(nix-instantiate nix/default.nix -A please-cli)
+  drv=$(nix-instantiate nix/default.nix -A please-cli) 2> /dev/null
   nix_store_file=$(cut -c17-91 < "$drv")
   building_please_cli=0
   if [ ! -e "$nix_store_file" ]; then
@@ -50,6 +50,8 @@ else
   if [ "$USE_DOCKER" = "1" ]; then
     DOCKER_HASH="$(pwd)$(git rev-parse --abbrev-ref HEAD)"
     DOCKER_NAME="mozilla-releng-services-v$(cat ./VERSION)-$(printf "%s" "$DOCKER_HASH" | $SHASUM | cut -d ' ' -f 1)"
+    USER_FOLDER="${XDG_CONFIG_HOME:-$HOME/.config}/please"
+    if [ ! -d $USER_FOLDER ] ; then mkdir -p $USER_FOLDER; fi
     if [ ! "$(docker ps -q -f name="$DOCKER_NAME")" ]; then
       if [ ! "$(docker ps -qa -f name="$DOCKER_NAME")" ]; then
         docker run \
@@ -58,7 +60,7 @@ else
             --name "$DOCKER_NAME" \
             --volume="$(pwd)":/app \
             --volume=/var/run/docker.sock:/var/run/docker.sock \
-            --volume=$HOME/.pleaserc:/home/app/.pleaserc:rw \
+            --volume=$USER_FOLDER:/home/app/.config/please:rw \
             --workdir=/app \
             $NETWORK_OPTIONS \
             "mozillareleng/services:base-$(cat ./VERSION)"

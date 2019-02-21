@@ -11,7 +11,6 @@ import click
 
 import cli_common.cli
 import cli_common.log
-from please_cli.config import LOCAL
 
 log = cli_common.log.get_logger(__name__)
 
@@ -32,8 +31,7 @@ class TaskclusterSigninServer(BaseHTTPRequestHandler):
         assert 'accessToken' in credentials, 'Missing accessToken'
 
         # Save in local config
-        LOCAL['taskcluster'] = credentials
-        LOCAL.write()
+        self.server.taskcluster_credentials = credentials
 
         # Send text response to browser
         self.send_response(200)
@@ -50,13 +48,15 @@ class TaskclusterSigninServer(BaseHTTPRequestHandler):
     required=True,
     default=9000,
 )
-def cmd(server_port):
-
-    if 'taskcluster' in LOCAL:
+@click.pass_context
+def cmd(ctx, server_port):
+    config = ctx.obj['config']
+    if 'taskcluster' in config:
         click.secho('Taskcluster credentials, already set, they will be erased !', fg='red')
 
     # Start webserver
     httpd = HTTPServer(('localhost', server_port), TaskclusterSigninServer)
+    httpd.taskcluster_credentials = {}
 
     callback_url = 'http://localhost:{}'.format(server_port)
 
@@ -73,4 +73,11 @@ def cmd(server_port):
 
     # Wait for credentials
     click.echo('Waiting for HTTP request...')
-    httpd.handle_request()
+    while not httpd.taskcluster_credentials:
+        httpd.handle_request()
+
+    # Write credentials
+    config.write_user_config({
+        'taskcluster': httpd.taskcluster_credentials,
+    })
+    click.secho('Tasklcluster credentials saved !', fg='green')

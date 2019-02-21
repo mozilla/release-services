@@ -8,8 +8,6 @@ import os
 
 import click
 
-from please_cli.local_config import LocalConfig
-
 CWD_DIR = os.path.abspath(os.getcwd())
 
 NO_ROOT_DIR_ERROR = '''Project root directory couldn't be detected.
@@ -66,8 +64,6 @@ PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
 PROJECTS += ['scriptworker/shipitscript']
 PROJECTS += DEV_PROJECTS
-
-LOCAL = LocalConfig()
 
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside

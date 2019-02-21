@@ -17,6 +17,7 @@ import please_cli.decision_task
 import please_cli.deploy
 import please_cli.maintanance
 import please_cli.nagios_config
+import please_cli.project
 import please_cli.run
 import please_cli.shell
 import please_cli.signin
@@ -85,6 +86,10 @@ def cmd(ctx, verbose):
         log_level = logbook.DEBUG
 
     cli_common.log.init_logger('please-cli', level=log_level)
+
+    # Load please config
+    ctx.ensure_object(dict)
+    ctx.obj['config'] = please_cli.project.ProjectConfig()
 
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
