@@ -61,10 +61,12 @@ TEMPLATES = {
 
 DEV_PROJECTS = ['postgresql', 'redis']
 OUTSIDE_PROJECTS = ['scriptworker/shipitscript']
-PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
-                    filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
-                           glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
-PROJECTS += OUTSIDE_PROJECTS + DEV_PROJECTS
+
+PROJECTS = OUTSIDE_PROJECTS + DEV_PROJECTS
+PROJECTS += list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
+                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
+                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
+PROJECTS = sorted(PROJECTS)
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
