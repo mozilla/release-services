@@ -236,6 +236,7 @@ class PulseListener(object):
                 ssh_key=mercurial_conf['ssh_key'],
                 repo_url=REPO_UNIFIED,
                 repo_dir=os.path.join(cache_root, 'sa-unified'),
+                batch_size=mercurial_conf.get('batch_size', 100000),
             )
         else:
             self.mercurial = None

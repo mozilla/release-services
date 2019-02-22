@@ -162,7 +162,12 @@ class Coverity(DefaultAnalyzer):
 
         # Parsing the issues from coverity_results_path
         logger.info('Parsing Coverity issues')
-        return self.return_issues(coverity_results_path, revision)
+        issues = self.return_issues(coverity_results_path, revision)
+
+        # Report stats for these issues
+        stats.report_issues('coverity', issues)
+
+        return issues
 
     def return_issues(self, coverity_results_path, revision):
         '''
@@ -180,19 +185,10 @@ class Coverity(DefaultAnalyzer):
                 logger.info('Coverity did not find any issues')
                 return []
 
-            def _is_local_issue(issue):
-                '''
-                The given coverity issue should be only locally stored and not in the
-                remote snapshot
-                '''
-                stateOnServer = issue['stateOnServer']
-                # According to Coverity manual:
-                # presentInReferenceSnapshot - True if the issue is present in the reference
-                # snapshot specified in the cov-run-desktop command, false if not.
-                return stateOnServer is not None and 'presentInReferenceSnapshot' in stateOnServer \
-                    and stateOnServer['presentInReferenceSnapshot'] is False
-
-            return [CoverityIssue(issue, revision) for issue in result['issues'] if _is_local_issue(issue)]
+            return [
+                CoverityIssue(issue, revision)
+                for issue in result['issues']
+            ]
 
     def can_run_before_patch(self):
         '''
@@ -210,6 +206,7 @@ class CoverityIssue(Issue):
     def __init__(self, issue, revision):
         assert not settings.repo_dir.endswith('/')
         self.revision = revision
+
         # We look only for main event
         event_path = next((event for event in issue['events'] if event['main'] is True), None)
 
@@ -227,6 +224,7 @@ class CoverityIssue(Issue):
         self.message = event_path['eventDescription']
         self.body = None
         self.nb_lines = 1
+        self.state_on_server = issue['stateOnServer']
 
         if settings.cov_full_stack:
             self.message += ISSUE_RELATION
@@ -251,14 +249,32 @@ class CoverityIssue(Issue):
             'line': self.line,
         }
 
-    def is_problem(self):
-        return True
+    def is_publishable(self):
+        '''
+        We don't use the default `is_publishable` implementation from `Issue`
+        because for CoverityIssue we don't apply the same logic to filter issues
+        as we do with the rest of our Analyzers, for IN_PATCH or BEFORE_AFTER methods,
+        since Coverity performs most of the checks on the servers and provides us a
+        snapshot with the checks that can be filtered only by the is_local function.
+        '''
+        return self.is_local()
+
+    def is_local(self):
+        '''
+        The given coverity issue should be only locally stored and not in the
+        remote snapshot
+        '''
+        # According to Coverity manual:
+        # presentInReferenceSnapshot - True if the issue is present in the reference
+        # snapshot specified in the cov-run-desktop command, false if not.
+        return self.state_on_server is not None and 'presentInReferenceSnapshot' in self.state_on_server \
+            and self.state_on_server['presentInReferenceSnapshot'] is False
 
     def validates(self):
         '''
-        Publish Coverity issues all the time
+        Publish only local Coverity issues
         '''
-        return True
+        return self.is_local()
 
     def as_text(self):
         '''
@@ -292,6 +308,7 @@ class CoverityIssue(Issue):
             'body': self.body,
             'in_patch': self.revision.contains(self),
             'is_new': self.is_new,
+            'is_local': self.is_local(),
             'validates': self.validates(),
             'publishable': True,
         }
