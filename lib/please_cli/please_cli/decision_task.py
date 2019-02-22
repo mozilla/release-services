@@ -246,7 +246,7 @@ def get_deploy_task(index,
 
     # store revision and nix hash into taskcluster index service
     routes = [
-        'index.project.releng.services.deployment.{channel}.{project}'
+        f'index.project.releng.services.deployment.{channel}.{project}'
     ]
     extra = dict(
         index=dict(
@@ -458,16 +458,15 @@ def cmd(ctx,
     project_hashes = dict()
     for project in sorted(PROJECTS):
         click.echo('     => ' + project)
-        project_exists_in_cache, project_hash = False, 'xxx'
-        # project_exists_in_cache, project_hash = ctx.invoke(
-        #     please_cli.check_cache.cmd,
-        #     project=project,
-        #     cache_urls=cache_urls,
-        #     nix_instantiate=nix_instantiate,
-        #     channel=channel,
-        #     indent=8,
-        #     interactive=False,
-        # )
+        project_exists_in_cache, project_hash = ctx.invoke(
+            please_cli.check_cache.cmd,
+            project=project,
+            cache_urls=cache_urls,
+            nix_instantiate=nix_instantiate,
+            channel=channel,
+            indent=8,
+            interactive=False,
+        )
         project_hashes[project] = project_hash
         if not project_exists_in_cache:
             build_projects.append(project)
