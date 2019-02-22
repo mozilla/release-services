@@ -8,6 +8,7 @@ import json
 
 import click
 import click_spinner
+import requests
 import slugid
 
 import cli_common.taskcluster
@@ -27,14 +28,17 @@ def get_build_task(index,
                    taskcluster_secret,
                    cache_bucket=None,
                    cache_region=None,
+                   project_github_commit=None,
                    ):
 
+    if project_github_commit is None:
+        project_github_commit = github_commit
     command = [
         './please', '-vv', 'tools', 'build', project,
         '--taskcluster-secret=' + taskcluster_secret,
         '--no-interactive',
         '--task-group-id', task_group_id,
-        '--github-commit', github_commit,
+        '--github-commit', project_github_commit,
     ]
 
     nix_path_attributes = [project]
@@ -89,9 +93,13 @@ def get_deploy_task(index,
                     channel,
                     taskcluster_secret,
                     nix_hash,
+                    project_github_commit=None,
                     ):
 
     scopes = []
+
+    if project_github_commit is None:
+        project_github_commit = github_commit
 
     nix_path_attribute = deploy_options.get('nix_path_attribute')
     if nix_path_attribute:
@@ -243,7 +251,7 @@ def get_deploy_task(index,
     extra = dict(
         index=dict(
             data=dict(
-                revision=github_commit,
+                revision=project_github_commit,
                 nix_hash=nix_hash,
             )
         )
@@ -450,31 +458,47 @@ def cmd(ctx,
     project_hashes = dict()
     for project in sorted(PROJECTS):
         click.echo('     => ' + project)
-        project_exists_in_cache, project_hash = ctx.invoke(
-            please_cli.check_cache.cmd,
-            project=project,
-            cache_urls=cache_urls,
-            nix_instantiate=nix_instantiate,
-            channel=channel,
-            indent=8,
-            interactive=False,
-        )
+        project_exists_in_cache, project_hash = False, 'xxx'
+        # project_exists_in_cache, project_hash = ctx.invoke(
+        #     please_cli.check_cache.cmd,
+        #     project=project,
+        #     cache_urls=cache_urls,
+        #     nix_instantiate=nix_instantiate,
+        #     channel=channel,
+        #     indent=8,
+        #     interactive=False,
+        # )
         project_hashes[project] = project_hash
         if not project_exists_in_cache:
             build_projects.append(project)
 
     click.echo(' => Checking github for project revisions')
-    urls = []
-    project_revisions = dict()
-    for project in sorted(PROJECTS):
-        project_path = '/'.join(project.split('/')[:-1])
-        urls.append(f'https://api.github.com/repos/mozilla/release-services/contents/src/{}?ref={github_commit}')
-    urls = list(set(urls))
 
-    for url in urls:
-        rev = github_commit
-        # TODO: fetch revisions from url
-        project_revisions[project] = rev
+    project_revisions = {p: github_commit for p in PROJECTS}
+    project_url_cache = dict()
+    for project in sorted(PROJECTS):
+
+        # skip project defined outside
+        if project in please_cli.config.OUTSIDE_PROJECTS:
+            continue
+
+        project_path = '/'.join(project.split('/')[:-1])
+        project_path_end = project.split('/')[-1]
+
+        url = f'https://api.github.com/repos/mozilla/release-services/contents/src/{project_path}?ref={github_commit}'
+
+        if url in project_url_cache:
+            response = project_url_cache[url]
+        else:
+            r = requests.get(url)
+            r.raise_for_status()
+            response = r.json()
+            project_url_cache[url] = response
+
+        for item in response:
+            if project_path_end == item['name']:
+                project_revisions[project] = item['sha']
+                break
 
     projects_to_deploy = []
 
@@ -555,6 +579,7 @@ def cmd(ctx,
             taskcluster_secret,
             pull_request is None and secrets.get('CACHE_BUCKET') or None,
             pull_request is None and secrets.get('CACHE_REGION') or None,
+            project_revisions[project],
         )
         tasks.append((project_uuid, build_tasks[project_uuid]))
 
@@ -609,6 +634,7 @@ def cmd(ctx,
                 channel,
                 taskcluster_secret,
                 project_hashes[project],
+                project_revisions[project],
             )
             if project_task:
                 deploy_tasks[project_uuid] = project_task

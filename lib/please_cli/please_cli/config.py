@@ -51,20 +51,20 @@ OPENSSL_ETC_DIR = os.environ.get('OPENSSL_ETC_DIR', '')  # must end with /
 POSTGRESQL_BIN_DIR = os.environ.get('POSTGRESQL_BIN_DIR', '')  # must end with /
 
 IN_DOCKER = False
-with open('/proc/1/cgroup', 'rt') as ifh:
-    IN_DOCKER = 'docker' in ifh.read()
+if os.path.isdir('/proc/1'):
+    with open('/proc/1/cgroup', 'rt') as ifh:
+        IN_DOCKER = 'docker' in ifh.read()
 
 TEMPLATES = {
     'backend-json-api': {}
 }
 
 DEV_PROJECTS = ['postgresql', 'redis']
+OUTSIDE_PROJECTS = ['scriptworker/shipitscript']
 PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
-PROJECTS += ['scriptworker/shipitscript']
-PROJECTS += DEV_PROJECTS
-
+PROJECTS += OUTSIDE_PROJECTS + DEV_PROJECTS
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
