@@ -17,8 +17,10 @@ import please_cli.decision_task
 import please_cli.deploy
 import please_cli.maintanance
 import please_cli.nagios_config
+import please_cli.project
 import please_cli.run
 import please_cli.shell
+import please_cli.signin
 import please_cli.terraform_route53_config
 import please_cli.update_dependencies
 import please_cli.utils
@@ -85,6 +87,10 @@ def cmd(ctx, verbose):
 
     cli_common.log.init_logger('please-cli', level=log_level)
 
+    # Load please config
+    ctx.ensure_object(dict)
+    ctx.obj['config'] = please_cli.project.ProjectConfig()
+
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
@@ -120,6 +126,7 @@ cmd_tools.add_command(please_cli.deploy.cmd_DOCKERHUB, 'deploy:DOCKERHUB')
 cmd_tools.add_command(please_cli.maintanance.cmd_off, 'maintanance:off')
 cmd_tools.add_command(please_cli.maintanance.cmd_on, 'maintanance:on')
 cmd_tools.add_command(please_cli.nagios_config.cmd, 'nagios-config')
+cmd_tools.add_command(please_cli.signin.cmd, 'signin')
 cmd_tools.add_command(please_cli.terraform_route53_config.cmd, 'terraform-route53-config')
 cmd_tools.add_command(please_cli.update_dependencies.cmd, 'update-dependencies')
 
