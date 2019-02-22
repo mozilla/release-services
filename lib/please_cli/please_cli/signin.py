@@ -51,7 +51,7 @@ class TaskclusterSigninServer(BaseHTTPRequestHandler):
 @click.pass_context
 def cmd(ctx, server_port):
     config = ctx.obj['config']
-    if 'taskcluster' in config:
+    if 'common' in config and 'taskcluster_client_id' in config['common']:
         click.secho('Taskcluster credentials, already set, they will be erased !', fg='red')
 
     # Start webserver
@@ -78,6 +78,9 @@ def cmd(ctx, server_port):
 
     # Write credentials
     config.write_user_config({
-        'taskcluster': httpd.taskcluster_credentials,
+        'common': {
+            'taskcluster_client_id': httpd.taskcluster_credentials['clientId'],
+            'taskcluster_access_token': httpd.taskcluster_credentials['accessToken'],
+        }
     })
     click.secho('Taskcluster credentials saved !', fg='green')
