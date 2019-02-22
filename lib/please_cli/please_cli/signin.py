@@ -80,4 +80,4 @@ def cmd(ctx, server_port):
     config.write_user_config({
         'taskcluster': httpd.taskcluster_credentials,
     })
-    click.secho('Tasklcluster credentials saved !', fg='green')
+    click.secho('Taskcluster credentials saved !', fg='green')
