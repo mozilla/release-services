@@ -73,6 +73,9 @@ class Retriever(object):
         # Try to re-download inconsistent bugs, up to three times.
         for i in range(3):
             bug_ids = bug_snapshot.get_inconsistencies()
+            if len(bug_ids) == 0:
+                break
+
             logger.info(f'Re-downloading {len(bug_ids)} bugs, as they were inconsistent')
             bugzilla.delete_bugs(bug_ids)
             bugzilla.download_bugs(bug_ids)
