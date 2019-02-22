@@ -8,6 +8,7 @@ from datetime import timedelta
 from urllib.request import urlretrieve
 
 from bugbug.models.bug import BugModel
+from bugbug.models.component import ComponentModel
 from bugbug.models.regression import RegressionModel
 from bugbug.models.tracking import TrackingModel
 
@@ -46,6 +47,12 @@ class Trainer(object):
         model.train()
         self.compress_file('bugmodel')
 
+    def train_component(self):
+        logger.info('Training *component* model')
+        model = ComponentModel()
+        model.train()
+        self.compress_file('componentmodel')
+
     def train_regression(self):
         logger.info('Training *regression vs non-regression* model')
         model = RegressionModel()
@@ -70,6 +77,9 @@ class Trainer(object):
 
         # Train classifier for bug-vs-nonbug.
         self.train_bug()
+
+        # Train classifier for the component of a bug.
+        self.train_component()
 
         # Train classifier for regression-vs-nonregression.
         self.train_regression()
