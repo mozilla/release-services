@@ -8,3 +8,4 @@ mozdef-client
 requests
 slugid
 taskcluster
+toml
