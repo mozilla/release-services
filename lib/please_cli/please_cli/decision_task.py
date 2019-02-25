@@ -477,7 +477,8 @@ def cmd(ctx,
     project_revisions = {p: github_commit for p in PROJECTS}
     project_url_cache = dict()
     for project in sorted(PROJECTS):
-        # skip project defined outside
+        # TODO: how should we handle outside projects?
+        #       skip project defined outside for now
         if project in please_cli.config.OUTSIDE_PROJECTS:
             continue
 
@@ -501,16 +502,31 @@ def cmd(ctx,
                 project_revisions[project] = item['sha']
                 break
 
-    projects_to_deploy = []
+    deployed_projects = {}
+    for project in sorted(PROJECTS):
+        # TODO: how should we handle outside projects?
+        #       skip project defined outside for now
+        if project in please_cli.config.OUTSIDE_PROJECTS:
+            continue
 
+        project = common_naming.Project(project)
+        url = f'https://index.taskcluster.net/v1/task/project.releng.services.deployment.staging.{project.taskcluster_route_name}'
+
+        r = requests.get(url)
+        r.raise_for_status()
+        response = r.json()
+
+        deployed_projects[project] = response['data']
+
+    projects_to_deploy = []
     if channel in please_cli.config.DEPLOY_CHANNELS:
         click.echo(' => Checking which project needs to be redeployed')
 
-        # TODO: get status for our index branch
-        deployed_projects = {}
-
         for project_name in sorted(PROJECTS):
-            deployed_projects.get(project_name)
+            if project_name in deployed_projects and \
+               project_name in project_hashes and \
+               deployed_projects[project_name]['revision'] == project_hashes[project_name]:
+                continue
 
             # update hook for each project
             if please_cli.config.PROJECTS_CONFIG[project_name]['update'] is True:
@@ -532,9 +548,6 @@ def cmd(ctx,
                         'nix_path_attribute': update_hook_nix_path_atttribute,
                     },
                 ))
-
-            if deployed_projects == project_hashes[project_name]:
-                continue
 
             if 'deploys' not in please_cli.config.PROJECTS_CONFIG[project_name]:
                 continue
