@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import os.path
 
 import pytest
@@ -15,10 +16,12 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
     # Get initial tip commit in repo
     initial = RepoMock.tip()
 
-    # The patched file should not exists at first
+    # The patched and config files should not exist at first
     repo_dir = RepoMock.root().decode('utf-8')
+    config = os.path.join(repo_dir, 'try_task_config.json')
     target = os.path.join(repo_dir, 'test.txt')
     assert not os.path.exists(target)
+    assert not os.path.exists(config)
 
     with PhabricatorMock as api:
         worker = MercurialWorker(
@@ -44,8 +47,20 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
     assert os.path.exists(target)
     assert open(target).read() == 'First Line\nSecond Line\n'
 
+    # Check the try_task_config file
+    assert os.path.exists(config)
+    assert json.load(open(config)) == {
+        'version': 1,
+        'tasks': [],
+        'templates': {
+            'env': {
+                'PHABRICATOR_DIFF': 'PHID-DIFF-test123',
+            }
+        }
+    }
+
     # Get tip commit in repo
-    # It should be different from the initial one (patches have applied)
+    # It should be different from the initial one (patches + config have applied)
     tip = RepoMock.tip()
     assert tip.node != initial.node
 
@@ -81,12 +96,11 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
     base = _readme('Local base for diffs')
     extra = _readme('EXTRA')
 
-    print('base', base)
-    print('extra', extra)
-
-    # The patched file should not exists at first
+    # The patched and config files should not exist at first
     target = os.path.join(repo_dir, 'solo.txt')
+    config = os.path.join(repo_dir, 'try_task_config.json')
     assert not os.path.exists(target)
+    assert not os.path.exists(config)
 
     with PhabricatorMock as api:
         worker = MercurialWorker(
@@ -112,10 +126,23 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
     assert os.path.exists(target)
     assert open(target).read() == 'Solo PATCH\n'
 
+    # Check the try_task_config file
+    assert os.path.exists(config)
+    assert json.load(open(config)) == {
+        'version': 1,
+        'tasks': [],
+        'templates': {
+            'env': {
+                'PHABRICATOR_DIFF': 'PHID-DIFF-solo',
+            }
+        }
+    }
+
     # Get tip commit in repo
-    # It should be different from the initial one (patches have applied)
+    # It should be different from the initial one (patches and config have applied)
     tip = RepoMock.tip()
     assert tip.node != base
+    assert tip.desc == b'try_task_config for PHID-DIFF-solo'
 
     # Check the push to try has been called
     # with tip commit
@@ -127,12 +154,19 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
         ssh=ssh_conf.encode('utf-8'),
     )
 
-    # Check the parent is our base (not extra)
+    # Check the parent is the solo patch commit
     parents = RepoMock.parents(tip.node)
     assert len(parents) == 1
     parent = parents[0]
-    assert parent.node == base
+    assert parent.desc == b'Patch PHID-DIFF-solo'
+
+    # Check the grand parent is the base, not extra
+    great_parents = RepoMock.parents(parent.node)
+    assert len(great_parents) == 1
+    great_parent = great_parents[0]
+    assert great_parent.node == base
 
     # Extra commit should not appear
     assert parent.node != extra
+    assert great_parent.node != extra
     assert 'EXTRA' not in open(os.path.join(repo_dir, 'README.md')).read()
