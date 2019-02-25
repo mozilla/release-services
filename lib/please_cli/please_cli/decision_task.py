@@ -12,6 +12,7 @@ import requests
 import slugid
 
 import cli_common.taskcluster
+import common_naming
 import please_cli.config
 import please_cli.utils
 
@@ -34,20 +35,20 @@ def get_build_task(index,
     if project_github_commit is None:
         project_github_commit = github_commit
     command = [
-        './please', '-vv', 'tools', 'build', project,
+        './please', '-vv', 'tools', 'build', project.name,
         '--taskcluster-secret=' + taskcluster_secret,
         '--no-interactive',
         '--task-group-id', task_group_id,
         '--github-commit', project_github_commit,
     ]
 
-    nix_path_attributes = [project]
-    deployments = please_cli.config.PROJECTS_CONFIG[project].get('deploys', [])
+    nix_path_attributes = [project.name]
+    deployments = please_cli.config.PROJECTS_CONFIG[project.name].get('deploys', [])
     for deployment in deployments:
         for channel in deployment['options']:
             if 'nix_path_attribute' in deployment['options'][channel]:
                 nix_path_attributes.append('{}.{}'.format(
-                    project,
+                    project.name,
                     deployment['options'][channel]['nix_path_attribute'],
                 ))
     nix_path_attributes = list(set(nix_path_attributes))
@@ -70,7 +71,7 @@ def get_build_task(index,
         {
             'name': '1.{index:02}. Building {project}'.format(
                 index=index + 1,
-                project=project,
+                project=project.name,
             ),
             'description': '',
             'owner': owner,
@@ -103,9 +104,9 @@ def get_deploy_task(index,
 
     nix_path_attribute = deploy_options.get('nix_path_attribute')
     if nix_path_attribute:
-        nix_path_attribute = '{}.{}'.format(project, nix_path_attribute)
+        nix_path_attribute = '{}.{}'.format(project.name, nix_path_attribute)
     else:
-        nix_path_attribute = project
+        nix_path_attribute = project.name
 
     if deploy_target == 'S3':
         subfolder = []
@@ -148,14 +149,14 @@ def get_deploy_task(index,
             project_envs += require_urls
 
         project_name = '{}{} to AWS S3 ({})'.format(
-            project,
+            project.name,
             ' ({})'.format(nix_path_attribute),
             deploy_options['s3_bucket'],
         )
         command = [
             './please', '-vv',
             'tools', 'deploy:S3',
-            project,
+            project.name,
             '--s3-bucket=' + deploy_options['s3_bucket'],
             '--taskcluster-secret=' + taskcluster_secret,
             '--nix-path-attribute=' + nix_path_attribute,
@@ -164,7 +165,7 @@ def get_deploy_task(index,
 
     elif deploy_target == 'HEROKU':
         project_name = '{}{} to HEROKU ({}/{})'.format(
-            project,
+            project.name,
             ' ({})'.format(nix_path_attribute),
             deploy_options['heroku_app'],
             deploy_options['heroku_dyno_type'],
@@ -172,7 +173,7 @@ def get_deploy_task(index,
         command = [
             './please', '-vv',
             'tools', 'deploy:HEROKU',
-            project,
+            project.name,
             '--heroku-app=' + deploy_options['heroku_app'],
             '--heroku-dyno-type=' + deploy_options['heroku_dyno_type'],
         ]
@@ -197,11 +198,11 @@ def get_deploy_task(index,
                 'Missing `docker_registry` or `docker_repo` or `docker_stable_tag` in deploy options')
 
         project_name = (
-            f'{project} ({nix_path_attribute}) to DOCKERHUB '
-            f'({docker_registry}/{docker_repo}:{project}-{nix_path_attribute}-{channel})'
+            f'{project.name} ({nix_path_attribute}) to DOCKERHUB '
+            f'({docker_registry}/{docker_repo}:{project.name}-{nix_path_attribute}-{channel})'
         )
         command = [
-            './please', '-vv', 'tools', 'deploy:DOCKERHUB', project,
+            './please', '-vv', 'tools', 'deploy:DOCKERHUB', project.name,
             f'--taskcluster-secret={taskcluster_secret}',
             f'--nix-path-attribute={nix_path_attribute}',
             f'--docker-repo={docker_repo}',
@@ -220,12 +221,12 @@ def get_deploy_task(index,
             raise click.ClickException('Missing `docker_registry` or `docker_repo` in deploy options')
         hook_group_id = 'project-releng'
         name_suffix = deploy_options.get('name-suffix', '')
-        hook_id = f'services-{channel}-{project}{name_suffix}'
-        project_name = f'{project} ({nix_path_attribute}) to TASKCLUSTER HOOK ({hook_group_id}/{hook_id})'
+        hook_id = f'services-{channel}-{project.name}{name_suffix}'
+        project_name = f'{project.name} ({nix_path_attribute}) to TASKCLUSTER HOOK ({hook_group_id}/{hook_id})'
         command = [
             './please', '-vv',
             'tools', 'deploy:TASKCLUSTER_HOOK',
-            project,
+            project.name,
             f'--docker-registry={docker_registry}',
             f'--docker-repo={docker_repo}',
             f'--hook-group-id={hook_group_id}',
@@ -242,11 +243,11 @@ def get_deploy_task(index,
         ]
 
     else:
-        raise click.ClickException(f'Unknown deployment target `{deploy_target}` for project `{project}`')
+        raise click.ClickException(f'Unknown deployment target `{deploy_target}` for project `{project.name}`')
 
     # store revision and nix hash into taskcluster index service
     routes = [
-        f'index.project.releng.services.deployment.{channel}.{project}'
+        f'index.project.releng.services.deployment.{channel}.{project.taskcluster_route_name}'
     ]
     extra = dict(
         index=dict(
@@ -449,9 +450,9 @@ def cmd(ctx,
 
     '''This message will only be sent when channel is production.
     '''
-    if channel is 'production':
+    if channel == 'production':
         for msgChannel in ['#ci', '#moc']:
-                taskcluster_notify.irc(dict(channel=msgChannel, message=message))
+            taskcluster_notify.irc(dict(channel=msgChannel, message=message))
 
     click.echo(' => Checking cache which project needs to be rebuilt')
     build_projects = []
@@ -476,10 +477,11 @@ def cmd(ctx,
     project_revisions = {p: github_commit for p in PROJECTS}
     project_url_cache = dict()
     for project in sorted(PROJECTS):
-
         # skip project defined outside
         if project in please_cli.config.OUTSIDE_PROJECTS:
             continue
+
+        click.echo('     => ' + project)
 
         project_path = '/'.join(project.split('/')[:-1])
         project_path_end = project.split('/')[-1]
@@ -569,7 +571,7 @@ def cmd(ctx,
         )
         build_tasks[project_uuid] = get_build_task(
             index,
-            project,
+            common_naming.Project(project),
             task_group_id,
             task_id,
             github_commit,
@@ -622,7 +624,7 @@ def cmd(ctx,
             project_uuid = slugid.nice().decode('utf-8')
             project_task = get_deploy_task(
                 index,
-                project,
+                common_naming.Project(project),
                 project_requires,
                 deploy_target,
                 deploy_options,
