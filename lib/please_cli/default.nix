@@ -17,7 +17,7 @@ let
     version = fileContents ./please_cli/VERSION;
     src = filterSource ./. { inherit (self) name; };
     src_path = "lib/${project_name}";
-    doCheck = true;
+    doCheck = false;
     buildInputs =
       [ makeWrapper ] ++
       (fromRequirementsFile ./../cli_common/requirements-dev.txt python.packages) ++

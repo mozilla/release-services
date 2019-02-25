@@ -502,12 +502,16 @@ def cmd(ctx,
                 project_revisions[project] = item['sha']
                 break
 
+    click.echo(' => Gathering deployed projects revisions')
+
     deployed_projects = {}
     for project in sorted(PROJECTS):
         # TODO: how should we handle outside projects?
         #       skip project defined outside for now
         if project in please_cli.config.OUTSIDE_PROJECTS:
             continue
+
+        click.echo('     => ' + project)
 
         project = common_naming.Project(project)
         url = f'https://index.taskcluster.net/v1/task/project.releng.services.deployment.staging.{project.taskcluster_route_name}'
@@ -516,7 +520,7 @@ def cmd(ctx,
         r.raise_for_status()
         response = r.json()
 
-        deployed_projects[project] = response['data']
+        deployed_projects[project.name] = response['data']
 
     projects_to_deploy = []
     if channel in please_cli.config.DEPLOY_CHANNELS:
@@ -525,7 +529,7 @@ def cmd(ctx,
         for project_name in sorted(PROJECTS):
             if project_name in deployed_projects and \
                project_name in project_hashes and \
-               deployed_projects[project_name]['revision'] == project_hashes[project_name]:
+               deployed_projects[project_name]['nix_hash'] == project_hashes[project_name]:
                 continue
 
             # update hook for each project
@@ -549,18 +553,16 @@ def cmd(ctx,
                     },
                 ))
 
-            if 'deploys' not in please_cli.config.PROJECTS_CONFIG[project_name]:
-                continue
-
-            for deploy in please_cli.config.PROJECTS_CONFIG[project_name]['deploys']:
-                for deploy_channel in deploy['options']:
-                    if channel == deploy_channel:
-                        projects_to_deploy.append((
-                            project_name,
-                            please_cli.config.PROJECTS_CONFIG[project_name].get('requires', []),
-                            deploy['target'],
-                            deploy['options'][channel],
-                        ))
+            if 'deploys' in please_cli.config.PROJECTS_CONFIG[project_name]:
+                for deploy in please_cli.config.PROJECTS_CONFIG[project_name]['deploys']:
+                    for deploy_channel in deploy['options']:
+                        if channel == deploy_channel:
+                            projects_to_deploy.append((
+                                project_name,
+                                please_cli.config.PROJECTS_CONFIG[project_name].get('requires', []),
+                                deploy['target'],
+                                deploy['options'][channel],
+                            ))
 
     click.echo(' => Creating taskcluster tasks definitions')
     tasks = []
