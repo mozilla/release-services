@@ -6,6 +6,7 @@
 import asyncio
 import atexit
 import io
+import json
 import os
 import tempfile
 
@@ -102,6 +103,7 @@ class MercurialWorker(object):
         '''
         Handle a new diff received from Phabricator:
         - apply revision to mercurial repo
+        - build a custom try_task_config.json
         - trigger push-to-try
         '''
         logger.info('Received diff {phid}'.format(**diff))
@@ -121,6 +123,25 @@ class MercurialWorker(object):
                 message='Patch {}'.format(diff_phid),
                 user='pulselistener',
             )
+
+        # Build and commit try_task_config.json
+        config_path = os.path.join(self.repo_dir, 'try_task_config.json')
+        config = {
+            'version': 1,
+            'tasks': [],
+            'templates': {
+                'env': {
+                    'PHABRICATOR_DIFF': diff['phid'],
+                }
+            }
+        }
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+        self.repo.add(config_path.encode('utf-8'))
+        self.repo.commit(
+            message='try_task_config for {}'.format(diff['phid']),
+            user='pulselistener',
+        )
 
         # Push the commits on try
         commit = self.repo.tip()
