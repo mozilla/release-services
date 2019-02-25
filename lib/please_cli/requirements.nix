@@ -828,16 +828,18 @@ let
     };
 
     "isort" = python.mkDerivation {
-      name = "isort-4.3.7";
+      name = "isort-4.3.8";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/b3/87/bae811d0161a350e936c86bc336bf46e937e1eb155e4745fa60b039fe8ab/isort-4.3.7.tar.gz";
-        sha256 = "bbdb9c4d97dcabaa937511f1bf4d2b2bdbf0370053a4b587ad1adf19f83c1a5c";
+        url = "https://files.pythonhosted.org/packages/ea/a7/af4a78fb8676e831d7d43396b072c24f7e12ec65047f7359bad42b25cbea/isort-4.3.8.tar.gz";
+        sha256 = "78ebda8283402dbe15e1fe8dc73e6d72e5d3c6a0c5e8dc489b2a4372280037af";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+        self."toml"
+      ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/timothycrosley/isort";
         license = licenses.mit;
@@ -1576,6 +1578,24 @@ let
         homepage = "https://github.com/Simplistix/testfixtures";
         license = licenses.mit;
         description = "A collection of helpers and mock objects for unit tests and doc tests.";
+      };
+    };
+
+    "toml" = python.mkDerivation {
+      name = "toml-0.10.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/b9/19/5cbd78eac8b1783671c40e34bb0fa83133a06d340a38b55c645076d40094/toml-0.10.0.tar.gz";
+        sha256 = "229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/uiri/toml";
+        license = licenses.mit;
+        description = "Python Library for Tom's Obvious, Minimal Language";
       };
     };
 

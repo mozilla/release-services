@@ -6,6 +6,7 @@ import shutil
 from datetime import datetime
 
 import hglib
+from bugbug import bug_snapshot
 from bugbug import bugzilla
 from bugbug import labels
 from bugbug import repository
@@ -68,6 +69,16 @@ class Retriever(object):
         logger.info('Downloading labelled bugs')
         bug_ids = labels.get_all_bug_ids()
         bugzilla.download_bugs(bug_ids)
+
+        # Try to re-download inconsistent bugs, up to three times.
+        for i in range(3):
+            bug_ids = bug_snapshot.get_inconsistencies()
+            if len(bug_ids) == 0:
+                break
+
+            logger.info(f'Re-downloading {len(bug_ids)} bugs, as they were inconsistent')
+            bugzilla.delete_bugs(bug_ids)
+            bugzilla.download_bugs(bug_ids)
 
         self.compress_file('data/bugs.json')
 

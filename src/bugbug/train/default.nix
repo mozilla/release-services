@@ -46,11 +46,17 @@ let
           "--cache-root"
           "/cache"
         ];
+        deadline = "7 hours";
+        maxRunTime = 7 * 60 * 60;
         workerType = "releng-svc-compute";
         taskArtifacts = {
           "public/bugmodel.xz" = {
             type = "file";
             path = "/bugmodel.xz";
+          };
+          "public/componentmodel.xz" = {
+            type = "file";
+            path = "/componentmodel.xz";
           };
           "public/regressionmodel.xz" = {
             type = "file";

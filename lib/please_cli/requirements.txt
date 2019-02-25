@@ -9,3 +9,4 @@ mozdef-client
 requests
 slugid<2,>=1.0.7
 taskcluster
+toml

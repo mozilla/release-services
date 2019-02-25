@@ -444,10 +444,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.94";
+      name = "boto3-1.9.96";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/61/03/faa6f7b4979811e3d06ddee25827a3fbcd37042bcaabb67df2e5a748da61/boto3-1.9.94.tar.gz";
-        sha256 = "fa81dc71b23f98abe9a90de3c42ffcd98451b29ad7408465eb7c0a63e1fba95e";
+        url = "https://files.pythonhosted.org/packages/4b/16/e3201b3bf3985c27bc526116fec6be9ac068b9eae4d8717d1301f319b708/boto3-1.9.96.tar.gz";
+        sha256 = "c103241394d396ee08548b03d5d1f0f89a7ad1dfa7ccca88a47131f329cca093";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -466,10 +466,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.94";
+      name = "botocore-1.12.96";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/dc/df/f5d03e7c452b53f00d0dfa3d639e0ed7f7386310b11b24c51698c7b9715e/botocore-1.12.94.tar.gz";
-        sha256 = "48f780477904795b0ce559b335d0aab4c3bb9efa96fbdf24c418e22ef0745e08";
+        url = "https://files.pythonhosted.org/packages/73/04/121bebe0a97f0d4f2ce84b9cb68cdfd572b6abe6753b04ed80b4cddc58a9/botocore-1.12.96.tar.gz";
+        sha256 = "55c1594041e6716847d5a8b38181e3cc44e245edbf4598ae2b99e3040073b2cf";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -491,8 +491,8 @@ let
     "bugbug" = python.mkDerivation {
       name = "bugbug-0.0.1";
       src = pkgs.fetchurl {
-        url = "https://github.com/marco-c/bugbug/archive/34c4f06d092dea45642e7e8655f93b0337a8ca65.tar.gz";
-        sha256 = "1q2w1axkzf3rp7vjgn6m73cqv7la1zrmh5a65p4h91q7nxi297av";
+        url = "https://github.com/marco-c/bugbug/archive/6ce0163bb7dac1cf6c602a3ef4fbd451bb964a6f.tar.gz";
+        sha256 = "1lq9hlkpg00nc7sbk4q319bx4dzxndlg374dd9brc7l2avv93z36";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -579,10 +579,10 @@ let
     };
 
     "cffi" = python.mkDerivation {
-      name = "cffi-1.12.0";
+      name = "cffi-1.12.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/10/fe/b6362c613a70ac29cf7cac36307d85f08ebe4a96d9d54b895b10a807e39b/cffi-1.12.0.tar.gz";
-        sha256 = "08090454ff236239e583a9119d0502a6b9817594c0a3714dd1d8593f2350ba11";
+        url = "https://files.pythonhosted.org/packages/bc/81/47bd0404f2cb5363edb371e3b15da6387b5e9b80122e5b81be8b8f411e9b/cffi-1.12.1.tar.gz";
+        sha256 = "9b6f7ba4e78c52c1a291d0c0c0bd745d19adde1a9e1c03cb899f0c6efd6f8033";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1225,10 +1225,10 @@ let
     };
 
     "httplib2" = python.mkDerivation {
-      name = "httplib2-0.12.0";
+      name = "httplib2-0.12.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/ce/ed/803905d670b52fa0edfdd135337e545b4496c2ab3a222f1449b7256eb99f/httplib2-0.12.0.tar.gz";
-        sha256 = "f61fb838a94ce3b349aa32c92fd8430f7e3511afdb18bf9640d647e30c90a6d6";
+        url = "https://files.pythonhosted.org/packages/75/d0/f213003c9deec99fb4f46e54580b93a3b121c487d9d6d888fc12267eb2a2/httplib2-0.12.1.tar.gz";
+        sha256 = "4ba6b8fd77d0038769bf3c33c9a96a6f752bc4cdf739701fdcaf210121f399d4";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1447,10 +1447,10 @@ let
     };
 
     "libmozdata" = python.mkDerivation {
-      name = "libmozdata-0.1.49";
+      name = "libmozdata-0.1.50";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/71/df/75eaf89b523e5ad79877b0b575f4b3708ca3a3eebe12eae4931352b8b5f7/libmozdata-0.1.49.tar.gz";
-        sha256 = "80e75d5ca293a8c7f05d5fc596fd28fd087506c37b563c704bad3c0212e62cb6";
+        url = "https://files.pythonhosted.org/packages/eb/d2/c98b9140e523df31e2d17e0d708782217123861d2b5099001098b9b6daaa/libmozdata-0.1.50.tar.gz";
+        sha256 = "3977e48c75ebc161e5febaf5855555f4fa2466fcd54f13ed2f544e86b5fc60d9";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1853,10 +1853,10 @@ let
     };
 
     "pdbpp" = python.mkDerivation {
-      name = "pdbpp-0.9.5";
+      name = "pdbpp-0.9.6";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/cc/23/b398cf535b44fcc5ce278581a78cf7e0e1b6cefaf5b1acbd842293803bdb/pdbpp-0.9.5.tar.gz";
-        sha256 = "57eaea444394056c62a28d02280766b8ef3d09077dc194e25079fe49b92912c0";
+        url = "https://files.pythonhosted.org/packages/6b/56/e797b18bfaa3632c5d4c928b72fe65b7be93967e7210b5b88addb7418bca/pdbpp-0.9.6.tar.gz";
+        sha256 = "438bb2c885e40e9dcf649d9b598e4fe30fd1e3558c89a6ad3f447a9839a04e9f";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2226,10 +2226,10 @@ let
     };
 
     "pytest-runner" = python.mkDerivation {
-      name = "pytest-runner-4.3.1";
+      name = "pytest-runner-4.4";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/27/d7/45ab6de2b302e6cc307d94e9b41ebaff7b9fcf3adb5e77bdcd0e2af24e4c/pytest-runner-4.3.1.tar.gz";
-        sha256 = "526285a49f102c02198b175b3f85f5e34eb66602a5ac5c18f8a4b166863433e0";
+        url = "https://files.pythonhosted.org/packages/15/0a/1e73c3a3d3f4f5faf5eacac4e55675c1627b15d84265b80b8fef3f8a3fb5/pytest-runner-4.4.tar.gz";
+        sha256 = "00ad6cd754ce55b01b868a6d00b77161e4d2006b3918bde882376a0a884d0df4";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2552,10 +2552,10 @@ let
     };
 
     "shap" = python.mkDerivation {
-      name = "shap-0.28.3";
+      name = "shap-0.28.5";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/18/16/ef445c7fe3ecfc80b7d20e64a9f7239d11fffa7dd2f3c046061b360a5786/shap-0.28.3.tar.gz";
-        sha256 = "2da76975664c4ef28583a2d64caf222e16b801e5455ff1de365e820f2f4ba9d9";
+        url = "https://files.pythonhosted.org/packages/30/b3/866b0101cbd1829844c35964af68c14ba522a5cce7a1e8d0f7937411d910/shap-0.28.5.tar.gz";
+        sha256 = "027bb397f03e1066be3de3cf89a8438c9e113a8ab780ba87858d365832c7f200";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
