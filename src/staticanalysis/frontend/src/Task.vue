@@ -32,6 +32,13 @@ export default {
     Choice
   },
   mounted () {
+    // Update filters from query string
+    let publishable = parseInt(this.$route.query.issue)
+    this.filters.publishable = isNaN(publishable) ? null : this.choices.publishable[publishable]
+    this.filters.path = this.$route.query.path || null
+    this.filters.analyzer = this.$route.query.analyzer || null
+
+    // Load report
     var report = this.$store.dispatch('load_report', this.$route.params.taskId)
     report.then(
       (response) => {
