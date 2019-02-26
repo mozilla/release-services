@@ -1,5 +1,8 @@
 <script>
 import Bool from './Bool.vue'
+import _ from 'lodash'
+import Choice from './Choice.vue'
+
 export default {
   name: 'Task',
   data () {
@@ -8,7 +11,8 @@ export default {
     }
   },
   components: {
-    Bool
+    Bool,
+    Choice
   },
   mounted () {
     var report = this.$store.dispatch('load_report', this.$route.params.taskId)
@@ -30,6 +34,12 @@ export default {
         return 0
       }
       return this.report.issues.filter(i => i.publishable).length
+    },
+    issues () {
+      let issues = this.report ? this.report.issues : []
+
+      // Always display publishable first
+      return _.sortBy(issues, i => !i.publishable)
     }
   },
   filters: {
@@ -76,7 +86,7 @@ export default {
         </div>
       </nav>
 
-      <table class="table is-fullwidth" v-if="report && report.issues">
+      <table class="table is-fullwidth" v-if="issues">
         <thead>
           <tr>
             <td>Analyzer</td>
@@ -90,7 +100,7 @@ export default {
         </thead>
 
         <tbody>
-          <tr v-for="issue in report.issues" :class="{'publishable': issue.publishable}">
+          <tr v-for="issue in issues" :class="{'publishable': issue.publishable}">
             <td>
               <span v-if="issue.analyzer == 'mozlint'">{{ issue.linter }}<br />by Mozlint</span>
               <span v-else>{{ issue.analyzer }}</span>
@@ -109,11 +119,13 @@ export default {
             <td>
               <span v-if="issue.analyzer == 'mozlint'">{{ issue.rule }}</span>
               <span v-if="issue.analyzer == 'clang-tidy'">{{ issue.check }}</span>
+              <span v-if="issue.analyzer == 'clang-format'">Style issue</span>
               <span v-if="issue.analyzer == 'infer'">{{ issue.bug_type }}</span>
+              <span v-if="issue.analyzer == 'Coverity'">{{ issue.bug_type }}<br /><code>{{ issue.kind }}</code></span>
             </td>
             <td>
-              <span v-if="issue.level == 'error' || issue.type == 'error' || issue.kind == 'ERROR'" class="tag is-danger">Error</span>
-              <span v-if="issue.level == 'warning' || issue.type == 'warning' || issue.kind == 'WARNING'" class="tag is-warning">Warning</span>
+              <span v-if="issue.level == 'error' || issue.type == 'error' || issue.kind == 'ERROR' || issue.analyzer == 'Coverity'" class="tag is-danger">Error</span>
+              <span v-if="issue.level == 'warning' || issue.type == 'warning' || issue.kind == 'WARNING' || issue.analyzer == 'clang-format'" class="tag is-warning">Warning</span>
             </td>
             <td>
               <pre v-if="issue.analyzer == 'Coverity'">{{ issue.message }}</pre>
