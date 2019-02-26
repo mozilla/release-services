@@ -10,6 +10,7 @@ export default {
       state: 'loading',
       filters: {
         publishable: null,
+        analyzer: null,
         path: null
       },
       choices: {
@@ -49,9 +50,17 @@ export default {
       if (!this.report) {
         return null
       }
-      // List sorted unique path as choices
+      // List sorted unique paths as choices
       let paths = _.sortBy(_.uniq(_.map(this.report.issues, 'path')))
       return _.map(paths, path => Object({ 'name': path }))
+    },
+    analyzers () {
+      if (!this.report) {
+        return null
+      }
+      // List sorted unique analyzers as choices
+      let analyzers = _.sortBy(_.uniq(_.map(this.report.issues, 'analyzer')))
+      return _.map(analyzers, analyzer => Object({ 'name': analyzer }))
     },
     nb_publishable () {
       if (!this.report || !this.report.issues) {
@@ -70,6 +79,11 @@ export default {
       // Filter by path
       if (this.filters.path !== null) {
         issues = _.filter(issues, i => i.path === this.filters.path.name)
+      }
+
+      // Filter by analyzer
+      if (this.filters.analyzer !== null) {
+        issues = _.filter(issues, i => i.analyzer === this.filters.analyzer.name)
       }
 
       // Always display publishable first
@@ -123,7 +137,7 @@ export default {
       <table class="table is-fullwidth" v-if="issues">
         <thead>
           <tr>
-            <td>Analyzer</td>
+            <td><Choice :choices="analyzers" name="analyzer" v-on:new-choice="filters.analyzer = $event"/></td>
             <td><Choice :choices="paths" name="path" v-on:new-choice="filters.path = $event"/></td>
             <td>Lines</td>
             <td><Choice :choices="choices.publishable" name="issue" v-on:new-choice="filters.publishable = $event"/></td>
