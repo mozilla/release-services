@@ -7,7 +7,22 @@ export default {
   name: 'Task',
   data () {
     return {
-      state: 'loading'
+      state: 'loading',
+      filters: {
+        publishable: null
+      },
+      choices: {
+        publishable: [
+          {
+            name: 'Publishable',
+            func: i => i.publishable
+          },
+          {
+            name: 'Non publishable',
+            func: i => !i.publishable
+          }
+        ]
+      }
     }
   },
   components: {
@@ -37,6 +52,11 @@ export default {
     },
     issues () {
       let issues = this.report ? this.report.issues : []
+
+      // Filter by publishable
+      if (this.filters.publishable !== null) {
+        issues = _.filter(issues, this.filters.publishable.func)
+      }
 
       // Always display publishable first
       return _.sortBy(issues, i => !i.publishable)
@@ -92,7 +112,7 @@ export default {
             <td>Analyzer</td>
             <td>Path</td>
             <td>Lines</td>
-            <td>Publication</td>
+            <td><Choice :choices="choices.publishable" name="issue" v-on:new-choice="filters.publishable = $event"/></td>
             <td>Check</td>
             <td>Level</td>
             <td>Message</td>
