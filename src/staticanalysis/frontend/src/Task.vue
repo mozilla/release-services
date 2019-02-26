@@ -51,16 +51,14 @@ export default {
         return null
       }
       // List sorted unique paths as choices
-      let paths = _.sortBy(_.uniq(_.map(this.report.issues, 'path')))
-      return _.map(paths, path => Object({ 'name': path }))
+      return _.sortBy(_.uniq(_.map(this.report.issues, 'path')))
     },
     analyzers () {
       if (!this.report) {
         return null
       }
       // List sorted unique analyzers as choices
-      let analyzers = _.sortBy(_.uniq(_.map(this.report.issues, 'analyzer')))
-      return _.map(analyzers, analyzer => Object({ 'name': analyzer }))
+      return _.sortBy(_.uniq(_.map(this.report.issues, 'analyzer')))
     },
     nb_publishable () {
       if (!this.report || !this.report.issues) {
@@ -78,12 +76,12 @@ export default {
 
       // Filter by path
       if (this.filters.path !== null) {
-        issues = _.filter(issues, i => i.path === this.filters.path.name)
+        issues = _.filter(issues, i => i.path === this.filters.path)
       }
 
       // Filter by analyzer
       if (this.filters.analyzer !== null) {
-        issues = _.filter(issues, i => i.analyzer === this.filters.analyzer.name)
+        issues = _.filter(issues, i => i.analyzer === this.filters.analyzer)
       }
 
       // Always display publishable first
