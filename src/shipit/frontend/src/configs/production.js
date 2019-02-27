@@ -79,5 +79,20 @@ module.exports = {
       ],
       enablePartials: true,
     },
+    {
+      product: 'thunderbird',
+      prettyName: 'Thunderbird',
+      appName: 'mail',
+      branches: [
+        {
+          prettyName: 'Beta',
+          project: 'comm-beta',
+          branch: 'releases/comm-beta',
+          repo: 'https://hg.mozilla.org/releases/comm-beta',
+          enableReleaseEta: false,
+        },
+      ],
+      enablePartials: true,
+    },
   ],
 };
