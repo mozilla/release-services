@@ -15,6 +15,10 @@ class Project:
         self.name = name
 
     @property
+    def flask_app_name(self):
+        return LETTERS.sub('_', self.name)
+
+    @property
     def python_module_name(self):
         return LETTERS.sub('_', self.name)
 
@@ -23,5 +27,5 @@ class Project:
         return f'mozilla-release-{LETTERS.sub("-", self.name)}'
 
     @property
-    def flask_app_name(self):
-        return LETTERS.sub('_', self.name)
+    def taskcluster_route_name(self):
+        return LETTERS.sub('.', self.name)
