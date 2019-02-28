@@ -189,7 +189,7 @@ Back in our docker shell we then build and then push docker image:
 
 .. code-block:: console
 
-    ./please -vv tools build-base-image
+    ./please -vv tools build-base-image \
         --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
         --taskcluster-client-id="..." \
         --taskcluster-access-token="..."
@@ -215,7 +215,7 @@ is going to be used next time we do deployment.
 
     git clone git@github.com:mozilla/release-services.git
     cd release-services
-    git co -b version-bump origin/master
+    git checkout -b version-bump origin/master
     echo "$((($(cat VERSION)) + 1))" | tee VERSION2
     sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
     mv VERSION2 VERSION
