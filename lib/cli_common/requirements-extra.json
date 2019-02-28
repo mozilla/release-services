@@ -34,8 +34,8 @@
         "structlog"
     ],
     "taskcluster": [
-        "Click",
         "Logbook",
+        "Click",
         "mozdef-client",
         "raven",
         "structlog",

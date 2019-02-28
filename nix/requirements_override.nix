@@ -31,11 +31,6 @@ let
     then ./../lib/backend_common/default.nix
     else ./../../lib/backend_common/default.nix;
 
-  common_path =
-    if builtins.pathExists ./../src/common
-    then ./../src/common
-    else ./../../src/common;
-
 in skipOverrides {
 
   # enable test for common packages
