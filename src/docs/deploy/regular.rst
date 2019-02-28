@@ -163,6 +163,22 @@ First we install docker inside our existing base image:
     ./please tools docker-shell
     nix-env -f /etc/nix/nixpkgs -iA docker
 
+You now have `docker` in your Docker shell. But you *may* not have read access to the Docker socket.
+To check this, simply type:
+
+.. code-block:: console
+
+    docker ps
+
+If you do not see the list of your running containers but a connection error, you need to do the following (in your docker shell, not on your host machine):
+
+.. code-block:: console
+
+    sudo addgroup --gid 999 docker
+    sudo adduser app docker
+
+This will add the current user to the docker group, thus granting him access (after opening another shell to check your new rights !)
+
 In another terminal we apply the PR to bump the version
 
 .. code-block:: console
