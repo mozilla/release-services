@@ -79,7 +79,9 @@ import please_cli.utils
     '--interactive/--no-interactive',
     default=True,
     )
-def cmd(project,
+@click.pass_context
+def cmd(ctx,
+        project,
         github_commit,
         task_group_id,
         nix_path_attributes,
@@ -125,6 +127,7 @@ def cmd(project,
         temp_files.append(temp_file)
 
     outputs = []
+    trace = ctx.obj['verbose'] > 1 and ['--show-trace'] or []
     for nix_path_attribute in nix_path_attributes:
         click.echo(' => Building {} ... '.format(nix_path_attribute), nl=False)
 
@@ -147,7 +150,7 @@ def cmd(project,
                     please_cli.config.ROOT_DIR + '/nix/default.nix',
                     '-A', nix_path_attribute,
                     '-o', output,
-                ] + nix_cache_secret_keys + argstrs,
+                ] + nix_cache_secret_keys + argstrs + trace,
                 stream=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
