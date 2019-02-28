@@ -19,9 +19,38 @@ let
     '';
  } );
 
+
+  fullTaskEnv = { env }:
+    let
+      # Taskcluster support for triggerHook
+      tcEnv = mkTaskclusterMergeEnv env;
+
+      # Taskcluster support for pulseMessage
+      pulseEnv = {
+        "$if" = "firedBy == 'pulseMessage'";
+        "then" = {
+          "TRY_TASK_ID" = {
+            "$eval" = "payload.status.taskId";
+          };
+          "TRY_TASK_GROUP_ID" = {
+            "$eval" = "payload.status.taskGroupId";
+          };
+          "TRY_RUN_ID" = {
+            "$eval" = "payload.runId";
+          };
+        };
+        "else" = {};
+      };
+    in 
+      {
+        "$merge" = tcEnv["$merge"] + pulseEnv;
+      };
+
+
   mkBot = branch:
     let
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
+      cacheKey = "services-" + branch + "-static-analysis-bot";
       hook = mkTaskclusterHook {
         name = "Static analysis automated tests";
         owner = "babadie@mozilla.com";
@@ -45,7 +74,10 @@ let
           # Needed to download the Android sdks for Infer
           "queue:get-artifact:project/gecko/android-*"
         ];
-        taskEnv = mkTaskclusterMergeEnv {
+        cache = {
+          "${cacheKey}" = "/cache";
+        };
+        taskEnv = fullTaskEnv {
           env = {
             "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
             "APP_CHANNEL" = branch;
