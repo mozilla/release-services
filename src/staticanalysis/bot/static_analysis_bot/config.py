@@ -46,10 +46,13 @@ class Settings(object):
         self.publication = None
 
         # Paths
-        self.has_local_clone = True
+        self.has_local_clone = False
         self.repo_dir = None
         self.repo_shared_dir = None
         self.taskcluster = None
+
+        # For remote analysis
+        self.try_task_id = None
 
         # For Coverity Analysis package info
         self.cov_analysis_url = None
@@ -59,17 +62,24 @@ class Settings(object):
         self.cov_auth = None
         self.cov_full_stack = False
 
+        # Detect source from env
+        if os.environ.get('ANALYSIS_SOURCE') == SOURCE_PHABRICATOR:
+            self.source = SOURCE_PHABRICATOR
+        elif 'TRY_TASK_ID' in os.environ and 'TRY_TASK_GROUP_ID' in os.environ:
+            self.source = SOURCE_TRY
+            self.try_task_id = os.environ['TRY_TASK_ID']
+        else:
+            raise Exception('Unknown analysis source')
+
     def setup(self,
               app_channel,
               work_dir,
-              source,
               publication,
               allowed_paths,
               cov_config=None,
               task_id=None,
               ):
         self.app_channel = app_channel
-        self.source = source
         self.download({
             'cpp_extensions': frozenset(['.c', '.cpp', '.cc', '.cxx', '.m', '.mm']),
             'cpp_header_extensions': frozenset(['.h', '.hh', '.hpp', '.hxx']),
