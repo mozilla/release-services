@@ -92,7 +92,7 @@ module.exports = {
           enableReleaseEta: false,
         },
       ],
-      enablePartials: true,
+      enablePartials: false,
     },
   ],
 };
