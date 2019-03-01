@@ -17,8 +17,6 @@ from cli_common.taskcluster import get_service
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import config
 from static_analysis_bot import stats
-from static_analysis_bot.config import SOURCE_PHABRICATOR
-from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import settings
 from static_analysis_bot.report import get_reporters
 from static_analysis_bot.revisions import PhabricatorRevision

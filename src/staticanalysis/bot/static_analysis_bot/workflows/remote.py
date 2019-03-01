@@ -4,8 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common.log import get_logger
-from static_analysis_bot.config import settings
 from static_analysis_bot.config import SOURCE_TRY
+from static_analysis_bot.config import settings
 from static_analysis_bot.lint import MozLintIssue
 
 logger = get_logger(__name__)
