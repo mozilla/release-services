@@ -219,7 +219,7 @@ is going to be used next time we do deployment.
     echo "$((($(cat VERSION)) + 1))" | tee VERSION2
     sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
     mv VERSION2 VERSION
-    git commit -a -m "Deploying v$(cat VERSION) (and bumping version to v$((($(cat VERSION)) + 1)))"
+    git commit -a -m "Deploying v$((($(cat VERSION)) - 1)) (and bumping version to v$(cat VERSION))"
     git push origin version-bump -f
 
 Now open a Pull Request from ``version-bump`` to ``master`` branch and copy
