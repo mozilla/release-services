@@ -87,7 +87,6 @@ def main(id,
         secrets['PUBLICATION'],
         secrets['ALLOWED_PATHS'],
         secrets.get('COVERITY_CONFIG'),
-        task_id,
     )
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')
