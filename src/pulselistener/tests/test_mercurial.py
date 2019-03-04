@@ -50,12 +50,11 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
     # Check the try_task_config file
     assert os.path.exists(config)
     assert json.load(open(config)) == {
-        'version': 1,
-        'tasks': [],
-        'templates': {
-            'env': {
-                'PHABRICATOR_DIFF': 'PHID-DIFF-test123',
-            }
+        'version': 2,
+        'parameters': {
+            'target_tasks_method': 'codereview',
+            'optimize_target_tasks': True,
+            'phabricator_diff': 'PHID-DIFF-test123',
         }
     }
 
@@ -129,12 +128,11 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
     # Check the try_task_config file
     assert os.path.exists(config)
     assert json.load(open(config)) == {
-        'version': 1,
-        'tasks': [],
-        'templates': {
-            'env': {
-                'PHABRICATOR_DIFF': 'PHID-DIFF-solo',
-            }
+        'version': 2,
+        'parameters': {
+            'target_tasks_method': 'codereview',
+            'optimize_target_tasks': True,
+            'phabricator_diff': 'PHID-DIFF-solo',
         }
     }
 
