@@ -65,9 +65,12 @@ class BaseUser(object):
         raise NotImplementedError
 
     def has_permissions(self, permissions):
+
         if not isinstance(permissions, (tuple, list)):
             permissions = [permissions]
+
         user_permissions = self.get_permissions()
+
         return all([
             permission in list(user_permissions)
             for permission in permissions
@@ -245,9 +248,6 @@ class Auth(object):
         '''
 
         assert isinstance(scopes, (tuple, list))
-
-        if len(scopes) > 0 and not isinstance(scopes[0], (tuple, list)):
-            scopes = [scopes]
 
         def decorator(method):
             @functools.wraps(method)
