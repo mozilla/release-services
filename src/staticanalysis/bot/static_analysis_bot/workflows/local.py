@@ -5,8 +5,11 @@
 
 from __future__ import absolute_import
 
+import fcntl
 import os
 import shutil
+import subprocess
+import time
 
 import hglib
 
@@ -64,15 +67,41 @@ class LocalWorkflow(object):
                                     purge=True,
                                     sharebase=settings.repo_shared_dir,
                                     branch=b'central')
-
         cmd.insert(0, hglib.HGPATH)
-        proc = hglib.util.popen(cmd)
+
+        # Start process
+        start = time.time()
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+        # Set process stdout as non blocking
+        fcntl.fcntl(
+            proc.stdout.fileno(),
+            fcntl.F_SETFL,
+            fcntl.fcntl(proc.stdout.fileno(), fcntl.F_GETFL) | os.O_NONBLOCK,
+        )
+
+        while proc.poll() is None:
+
+            # Read and display every lines
+            out = proc.stdout.read(512)
+            if out is not None:
+                text = filter(None, out.decode('utf-8').split('\n'))
+                for line in text:
+                    logger.info('clone: {}'.format(line))
+
+            time.sleep(1)
+
         out, err = proc.communicate()
-        if proc.returncode:
-            raise hglib.error.CommandError(cmd, proc.returncode, out, err)
+        if proc.returncode != 0:
+            raise Exception('oh noes')
+        logger.info('Clone finished', time=(time.time() - start), out=out, err=err)
 
         # Open new hg client
         client = hglib.open(settings.repo_dir)
+
+        # Attach logger
+        client.setcbout(lambda msg: logger.info('Mercurial out={}'.format(msg.decode('utf-8'))))
+        client.setcberr(lambda msg: logger.info('Mercurial err={}'.format(msg.decode('utf-8'))))
 
         # Store MC top revision after robustcheckout
         self.top_revision = client.log('reverse(public())', limit=1)[0].node
