@@ -38,7 +38,7 @@ RUN apt-get -q update \
 #
 RUN groupadd app \
  && useradd --create-home -g app -G sudo app \
- && sed -i -e "s|%sudo	ALL=(ALL:ALL) ALL|%sudo	ALL=(ALL) NOPASSWD: ALL|" /etc/sudoers
+ && sed -i -e "s|%sudo	ALL=(ALL:ALL) ALL|%sudo	ALL=(ALL) NOPASSWD: ALL|" /etc/sudoers \
  && mkdir -p /home/app/.config/please && chown -R app:app /home/app/.config/please
 
 
