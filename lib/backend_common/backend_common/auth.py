@@ -244,7 +244,8 @@ class Auth(object):
         return True
 
     def require_permissions(self, permissions):
-        '''Decorator to check if user has required permissions or set of permissions 
+        '''Decorator to check if user has required permissions or set of
+           permissions
         '''
 
         def decorator(method):
