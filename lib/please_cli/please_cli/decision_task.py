@@ -451,7 +451,7 @@ def cmd(ctx,
     '''This message will only be sent when channel is production.
     '''
     if channel == 'production':
-        for msgChannel in ['#ci', '#moc']:
+        for msgChannel in ['#ci']:
             taskcluster_notify.irc(dict(channel=msgChannel, message=message))
 
     click.echo(' => Checking cache which project needs to be rebuilt')

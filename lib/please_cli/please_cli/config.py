@@ -269,6 +269,35 @@ PROJECTS_CONFIG = {
         ],
         'deploys': [
             {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'url': 'https://mapper.testing.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'mapper_api_dockerflow_testing',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'url': 'https://mapper.staging.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'mapper_api_dockerflow_staging',
+                    },
+                    'production': {
+                        'enable': True,
+                        'url': 'https://mapper.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'mapper_api_dockerflow_production',
+                    },
+                },
+            },
+            {
                 'target': 'HEROKU',
                 'options': {
                     'testing': {
@@ -310,6 +339,35 @@ PROJECTS_CONFIG = {
         ],
         'deploys': [
             {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'url': 'https://tokens.testing.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'tokens_api_dockerflow_testing',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'url': 'https://tokens.staging.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'tokens_api_dockerflow_staging',
+                    },
+                    'production': {
+                        'enable': True,
+                        'url': 'https://tokens.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'tokens_api_dockerflow_production',
+                    },
+                },
+            },
+            {
                 'target': 'HEROKU',
                 'options': {
                     'testing': {
@@ -350,6 +408,35 @@ PROJECTS_CONFIG = {
             'postgresql',
         ],
         'deploys': [
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'url': 'https://tooltool.testing.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'tooltool_api_dockerflow_testing',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'url': 'https://tooltool.staging.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'tooltool_api_dockerflow_staging',
+                    },
+                    'production': {
+                        'enable': True,
+                        'url': 'https://tooltool.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'tooltool_api_dockerflow_production',
+                    },
+                },
+            },
             {
                 'target': 'HEROKU',
                 'options': {
@@ -469,6 +556,35 @@ PROJECTS_CONFIG = {
             'postgresql',
         ],
         'deploys': [
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'url': 'https://treestatus.testing.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'treestatus_api_dockerflow_testing',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'url': 'https://treestatus.staging.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'treestatus_api_dockerflow_staging',
+                    },
+                    'production': {
+                        'enable': True,
+                        'url': 'https://treestatus.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'treestatus_api_dockerflow_production',
+                    },
+                },
+            },
             {
                 'target': 'HEROKU',
                 'options': {

@@ -89,6 +89,7 @@ def cmd(ctx, verbose):
 
     # Load please config
     ctx.ensure_object(dict)
+    ctx.obj['verbose'] = verbose
     ctx.obj['config'] = please_cli.project.ProjectConfig()
 
     if ctx.invoked_subcommand is None:
