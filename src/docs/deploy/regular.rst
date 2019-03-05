@@ -123,8 +123,7 @@ verified and tested before deploying to production.
 
 An automatic IRC message has been sent by Taskcluster when starting the deployment. You need to announce that deployment to production is now done:
 
-- on ``#ci`` IRC channel. when
-- and on ``#moc`` IRC channel
+- on ``#ci`` IRC channel.
 
 You can use the following message:::
 
