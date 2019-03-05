@@ -127,12 +127,11 @@ class MercurialWorker(object):
         # Build and commit try_task_config.json
         config_path = os.path.join(self.repo_dir, 'try_task_config.json')
         config = {
-            'version': 1,
-            'tasks': [],
-            'templates': {
-                'env': {
-                    'PHABRICATOR_DIFF': diff['phid'],
-                }
+            'version': 2,
+            'parameters': {
+                'target_tasks_method': 'codereview',
+                'optimize_target_tasks': True,
+                'phabricator_diff': diff['phid'],
             }
         }
         with open(config_path, 'w') as f:
