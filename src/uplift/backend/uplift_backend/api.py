@@ -98,7 +98,7 @@ def update_analysis(analysis_id):
     return serialize_analysis(analysis, bugs_nb)
 
 
-@auth.require_scopes(SCOPES_USER)
+@auth.require_scopes([SCOPES_USER])
 def update_bug(bugzilla_id):
     '''
     Update a bug after modifications on Bugzilla
@@ -184,7 +184,7 @@ def update_bug(bugzilla_id):
     return serialize_bug(bug)
 
 
-@auth.require_scopes(SCOPES_BOT)
+@auth.require_scopes([SCOPES_BOT])
 def create_bug():
     '''
     Create a new bug, or update its payload
@@ -266,7 +266,7 @@ def create_bug():
     return serialize_bug(bug)
 
 
-@auth.require_scopes(SCOPES_BOT)
+@auth.require_scopes([SCOPES_BOT])
 def delete_bug(bugzilla_id):
     '''
     Delete a bug when it's not in Bugzilla analysis
@@ -281,7 +281,7 @@ def delete_bug(bugzilla_id):
     bug.delete()
 
 
-@auth.require_scopes(SCOPES_ADMIN)
+@auth.require_scopes([SCOPES_ADMIN])
 def update_contributor(contributor_id):
     '''
     Update a contributor after modifications on frontend
@@ -308,7 +308,7 @@ def update_contributor(contributor_id):
     return serialize_contributor(contributor)
 
 
-@auth.require_scopes(SCOPES_BOT)
+@auth.require_scopes([SCOPES_BOT])
 def list_patch_status(bugzilla_id):
     '''
     List all patches status for a bug
@@ -323,7 +323,7 @@ def list_patch_status(bugzilla_id):
     return [serialize_patch_status(ps) for ps in patch_status]
 
 
-@auth.require_scopes(SCOPES_BOT)
+@auth.require_scopes([SCOPES_BOT])
 def create_patch_status(bugzilla_id):
     '''
     Create or Update a patch status for a bug
