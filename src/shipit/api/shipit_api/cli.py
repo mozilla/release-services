@@ -300,4 +300,6 @@ def trigger_product_details(base_url: str,
         data=data,
     )
     r.raise_for_status()
+    # TODO: check that triggering was a success
+    import pdb; pdb.set_trace()
     click.echo(click.style('OK', fg='green'))
