@@ -219,7 +219,7 @@ def get_file(digest: str) -> dict:
     return row.to_dict(include_instances=True)
 
 
-@backend_common.auth.auth.require_scopes([tooltool_api.config.SCOPE_PREFIX + '/manage'])
+@backend_common.auth.auth.require_permissions([tooltool_api.config.SCOPE_PREFIX + '/manage'])
 def patch_file(digest: str, body: dict) -> dict:
     S3_REGIONS = flask.current_app.config['S3_REGIONS']  # type: typing.Dict[str, str]
     if type(S3_REGIONS) is not dict:

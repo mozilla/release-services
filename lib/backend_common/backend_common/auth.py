@@ -27,8 +27,8 @@ logger = cli_common.log.get_logger(__name__)
 
 UNAUTHORIZED_JSON = {
     'status': 401,
-    'title': '401 Unauthorized: Invalid user scopes',
-    'detail': 'Invalid user scopes',
+    'title': '401 Unauthorized: Invalid user permissions',
+    'detail': 'Invalid user permissions',
     'instance': 'about:blank',
     'type': 'about:blank',
 }
@@ -238,32 +238,28 @@ class Auth(object):
                     ', '.join(set(p).difference(user_permissions))
                     for p in permissions
                 ])
-                logger.error(f'User {user} misses some scopes: {diff}')
+                logger.error(f'User {user} misses some permissions: {diff}')
                 return False
 
         return True
 
-    def require_permissions(self, scopes):
-        '''Decorator to check if user has required scopes or set of scopes
+    def require_permissions(self, permissions):
+        '''Decorator to check if user has required permissions or set of permissions 
         '''
-
-        assert isinstance(scopes, (tuple, list))
 
         def decorator(method):
             @functools.wraps(method)
             def wrapper(*args, **kwargs):
-                logger.info('Checking scopes', scopes=scopes)
-                if self._require_permissions(scopes):
-                    # Validated scopes, running method
-                    logger.info('Validated scopes, processing api request')
+                logger.info('Checking permissions', permissions=permissions)
+                if self._require_permissions(permissions):
+                    # Validated permissions, running method
+                    logger.info('Validated permissions, processing api request')
                     return method(*args, **kwargs)
                 else:
                     # Abort with a 401 status code
                     return flask.jsonify(UNAUTHORIZED_JSON), 401
             return wrapper
         return decorator
-
-    require_scopes = require_permissions
 
 
 auth0 = flask_oidc.OpenIDConnect()

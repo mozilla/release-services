@@ -5,3 +5,5 @@
 
 PROJECT_NAME = 'treestatus/api'
 APP_NAME = 'treestatus_api'
+
+SCOPE_PREFIX = 'project:releng:treestatus'
