@@ -18,7 +18,6 @@ import cli_common.log
 import treestatus_api.config
 import treestatus_api.models
 
-
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5
 
@@ -100,7 +99,7 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
 def v0_get_tree(tree, format=None):
     t = flask.current_app.db.session.query(treestatus_api.models.Tree).get(tree)
     if not t:
-        raise wekzeug.exceptions.NotFound('No such tree')
+        raise werkzeug.exceptions.NotFound('No such tree')
     return t.to_dict()
 
 
@@ -116,7 +115,7 @@ def get_trees2():
     return dict(result=[i for i in get_trees()['result'].values()])
 
 
-@backend_common.auth.auth.require_permissions([f'{shipit_api.config.SCOPE_PREFIX}/trees/update'])
+@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/trees/update'])
 def update_trees(body):
     session = flask.current_app.db.session
     trees = [
@@ -124,15 +123,15 @@ def update_trees(body):
         for t in body['trees']
     ]
     if not all(trees):
-        raise wekzeug.exceptions.NotFound('one or more trees not found')
+        raise werkzeug.exceptions.NotFound('one or more trees not found')
 
     if _is_unset(body, 'tags') \
             and _get(body, 'status') == 'closed':
-        raise wekzeug.exceptions.BadRequest('tags are required when closing a tree')
+        raise werkzeug.exceptions.BadRequest('tags are required when closing a tree')
 
     if not _is_unset(body, 'remember') and body['remember'] is True:
         if _is_unset(body, 'status') or _is_unset(body, 'reason'):
-            raise wekzeug.exceptions.BadRequest(
+            raise werkzeug.exceptions.BadRequest(
                 'must specify status and reason to remember the change')
         # add a new stack entry with the new and existing states
         ch = treestatus_api.models.StatusChange(who=flask_login.current_user.get_id(),
@@ -176,11 +175,11 @@ def update_trees(body):
     return None, 204
 
 
-@backend_common.auth.auth.require_permissions([f'{shipit_api.config.SCOPE_PREFIX}/trees/create'])
+@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/trees/create'])
 def make_tree(tree, body):
     session = flask.current_app.db.session
     if body['tree'] != tree:
-        raise wekzeug.exceptions.BadRequest('Tree names must match')
+        raise werkzeug.exceptions.BadRequest('Tree names must match')
     t = treestatus_api.models.Tree(tree=tree,
                                    status=body['status'],
                                    reason=body['reason'],
@@ -190,7 +189,7 @@ def make_tree(tree, body):
         session.add(t)
         session.commit()
     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-        raise wekzeug.exceptions.BadRequest('tree already exists')
+        raise werkzeug.exceptions.BadRequest('tree already exists')
     return None, 204
 
 
@@ -198,7 +197,7 @@ def _kill_tree(tree):
     session = flask.current_app.db.session
     t = session.query(treestatus_api.models.Tree).get(tree)
     if not t:
-        raise wekzeug.exceptions.NotFound('No such tree')
+        raise werkzeug.exceptions.NotFound('No such tree')
     session.delete(t)
     # delete from logs and change stack, too
     treestatus_api.models.Log.query.filter_by(tree=tree).delete()
@@ -207,13 +206,13 @@ def _kill_tree(tree):
     backend_common.cache.cache.delete_memoized(v0_get_tree, tree)
 
 
-@backend_common.auth.auth.require_permissions([f'{shipit_api.config.SCOPE_PREFIX}/trees/delete'])
+@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/trees/delete'])
 def kill_tree(tree):
     _kill_tree(tree)
     return None, 204
 
 
-@backend_common.auth.auth.require_permissions([f'{shipit_api.config.SCOPE_PREFIX}/trees/delete'])
+@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/trees/delete'])
 def kill_trees(trees):
     for tree in trees:
         _kill_tree(tree)
@@ -226,7 +225,7 @@ def get_logs(tree, all=0):
     # verify the tree exists first
     t = session.query(treestatus_api.models.Tree).get(tree)
     if not t:
-        raise wekzeug.exceptions.NotFound('No such tree')
+        raise werkzeug.exceptions.NotFound('No such tree')
 
     logs = []
     q = session.query(treestatus_api.models.Log).filter_by(tree=tree)
@@ -258,12 +257,12 @@ def get_stack():
 
 def _revert_change(id, revert=None):
     if revert not in (0, 1, None):
-        raise wekzeug.exceptions.BadRequest('Unexpected value for `revert`')
+        raise werkzeug.exceptions.BadRequest('Unexpected value for `revert`')
 
     session = flask.current_app.db.session
     ch = session.query(treestatus_api.models.StatusChange).get(id)
     if not ch:
-        raise wekzeug.exceptions.NotFound
+        raise werkzeug.exceptions.NotFound
 
     trees_status_change = []
 
@@ -294,16 +293,16 @@ def _revert_change(id, revert=None):
     return None, 204
 
 
-@backend_common.auth.auth.require_permissions([f'{shipit_api.config.SCOPE_PREFIX}/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/recent_changes/revert'])
 def revert_change(id, revert=None):
     return _revert_change(id, revert)
 
 
-@backend_common.auth.auth.require_permissions([f'{shipit_api.config.SCOPE_PREFIX}/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/recent_changes/revert'])
 def restore_change(id):
     return _revert_change(id, 1)
 
 
-@backend_common.auth.auth.require_permissions([f'{shipit_api.config.SCOPE_PREFIX}/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/recent_changes/revert'])
 def discard_change(id):
     return _revert_change(id, 0)
