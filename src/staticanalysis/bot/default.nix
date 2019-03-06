@@ -28,7 +28,7 @@ let
         taskImage = self.docker;
         workerType = if branch == "production" then "releng-svc-prod" else "releng-svc";
 
-        // These parameters must stay in sync with src/staticanalysis/frontend/src/store.js MAX_TTL constant
+        # These parameters must stay in sync with src/staticanalysis/frontend/src/store.js MAX_TTL constant
         deadline = "2 hours";
         maxRunTime = 2 * 60 * 60;
 
