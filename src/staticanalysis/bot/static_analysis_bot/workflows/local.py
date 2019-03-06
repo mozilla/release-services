@@ -86,7 +86,7 @@ class LocalWorkflow(object):
             fcntl.fcntl(
                 output.fileno(),
                 fcntl.F_SETFL,
-                fcntl.fcntl(proc.stdout.fileno(), fcntl.F_GETFL) | os.O_NONBLOCK,
+                fcntl.fcntl(output, fcntl.F_GETFL) | os.O_NONBLOCK,
             )
 
         while proc.poll() is None:
