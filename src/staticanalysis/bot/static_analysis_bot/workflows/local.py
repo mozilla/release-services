@@ -8,7 +8,6 @@ from __future__ import absolute_import
 import fcntl
 import os
 import shutil
-import subprocess
 import time
 
 import hglib
@@ -69,31 +68,35 @@ class LocalWorkflow(object):
                                     branch=b'central')
         cmd.insert(0, hglib.HGPATH)
 
+        def _log_process(output, name):
+            # Read and display every line
+            out = output.read()
+            if out is None:
+                return
+            text = filter(None, out.decode('utf-8').splitlines())
+            for line in text:
+                logger.info('{}: {}'.format(name, line))
+
         # Start process
         start = time.time()
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc = hglib.util.popen(cmd)
 
-        # Set process stdout as non blocking
-        fcntl.fcntl(
-            proc.stdout.fileno(),
-            fcntl.F_SETFL,
-            fcntl.fcntl(proc.stdout.fileno(), fcntl.F_GETFL) | os.O_NONBLOCK,
-        )
+        # Set process outputs as non blocking
+        for output in (proc.stdout, proc.stderr):
+            fcntl.fcntl(
+                output.fileno(),
+                fcntl.F_SETFL,
+                fcntl.fcntl(proc.stdout.fileno(), fcntl.F_GETFL) | os.O_NONBLOCK,
+            )
 
         while proc.poll() is None:
-
-            # Read and display every lines
-            out = proc.stdout.read(512)
-            if out is not None:
-                text = filter(None, out.decode('utf-8').split('\n'))
-                for line in text:
-                    logger.info('clone: {}'.format(line))
-
+            _log_process(proc.stdout, 'clone')
+            _log_process(proc.stderr, 'clone (err)')
             time.sleep(1)
 
         out, err = proc.communicate()
         if proc.returncode != 0:
-            raise Exception('oh noes')
+            raise Exception('Mercurial clone failed with exit code {}'.format(proc.returncode))
         logger.info('Clone finished', time=(time.time() - start), out=out, err=err)
 
         # Open new hg client
