@@ -9,7 +9,10 @@ const TASKCLUSTER_INDEX = 'https://index.taskcluster.net/v1'
 const TASKCLUSTER_QUEUE = 'https://queue.taskcluster.net/v1'
 const TASKS_SLICE = 10
 const FINAL_STATES = ['done', 'error']
-const MAX_TTL = 2 * 3600 * 1000 // 2 hours in ms
+
+// Must stay in sync with src/staticanalysis/bot/default.nix maxRunTime & deadline parameters
+// This is currently set to 2 hours in ms
+const MAX_TTL = 2 * 3600 * 1000
 
 export default new Vuex.Store({
   state: {

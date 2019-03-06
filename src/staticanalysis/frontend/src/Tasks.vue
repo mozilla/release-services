@@ -127,7 +127,7 @@ export default {
             <span class="tag is-info" v-else-if="task.data.state == 'analyzing'">Analyzing</span>
             <span class="tag is-primary" v-else-if="task.data.state == 'analyzed'">Analyzed</span>
             <span class="tag is-danger" v-else-if="task.data.state == 'killed'">
-              Killed
+              Killed for timeout
             </span>
             <span class="tag is-danger" v-else-if="task.data.state == 'error'" :title="task.data.error_message">
               Error: {{ task.data.error_code || 'unknown' }}
