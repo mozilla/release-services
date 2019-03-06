@@ -50,36 +50,34 @@ def rebuild_product_details(default_git_repo_url,
     default_breakpoint_version = secrets.get('BREAKPOINT_VERSION', default_breakpoint_version)
 
     async def rebuild_product_details_async(channel, body, envelope, properties):
-        try:
-            body = json.loads(body.decode('utf-8'))
+        await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
+        logger.info('Marked pulse message as acknowledged.')
 
-            logger.debug('Get rebuild parameters from request payload', body=body)
-            breakpoint_version = body.get('breakpoint_version', default_breakpoint_version)
-            clean_working_copy = body.get('clean_working_copy', default_clean_working_copy)
-            channel_ = body.get('channel', default_channel)
-            folder_in_repo = body.get('folder_in_repo', default_folder_in_repo)
+        body = json.loads(body.decode('utf-8'))
 
-            logger.debug('Rebuild parameters',
-                         channel=channel_,
-                         folder_in_repo=folder_in_repo,
-                         breakpoint_version=breakpoint_version,
-                         clean_working_copy=clean_working_copy,
-                         )
-            if None in (channel_, git_repo_url, folder_in_repo):
-                raise click.ClickException('One of the rebuild product details parameters is not set correctly.')
+        logger.debug('Get rebuild parameters from request payload', body=body)
+        breakpoint_version = body.get('breakpoint_version', default_breakpoint_version)
+        clean_working_copy = body.get('clean_working_copy', default_clean_working_copy)
+        channel_ = body.get('channel', default_channel)
+        folder_in_repo = body.get('folder_in_repo', default_folder_in_repo)
 
-            await shipit_api.product_details.rebuild(flask.current_app.db.session,
-                                                     channel_,
-                                                     git_repo_url,
-                                                     folder_in_repo,
-                                                     breakpoint_version,
-                                                     clean_working_copy,
-                                                     )
-            logger.debug('Product details rebuilt')
+        logger.debug('Rebuild parameters',
+                     channel=channel_,
+                     folder_in_repo=folder_in_repo,
+                     breakpoint_version=breakpoint_version,
+                     clean_working_copy=clean_working_copy,
+                     )
+        if None in (channel_, git_repo_url, folder_in_repo):
+            raise click.ClickException('One of the rebuild product details parameters is not set correctly.')
 
-        finally:
-            await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
-            logger.debug('Marked pulse message as acknowledged.')
+        await shipit_api.product_details.rebuild(flask.current_app.db.session,
+                                                 channel_,
+                                                 git_repo_url,
+                                                 folder_in_repo,
+                                                 breakpoint_version,
+                                                 clean_working_copy,
+                                                 )
+        logger.info('Product details rebuilt')
 
     return rebuild_product_details_async
 
