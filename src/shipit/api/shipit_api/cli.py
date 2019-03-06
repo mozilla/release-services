@@ -86,7 +86,7 @@ async def download_product_details(url: str, download_dir: str):
                 f'{download_dir}{path}',
             )
             for path in paths
-            if path.endswith('.json')
+            if path.endswith('.json') and not os.path.exists(f'{download_dir}{path}')
         ])
 
     click.echo('All files were downloaded successfully!')
