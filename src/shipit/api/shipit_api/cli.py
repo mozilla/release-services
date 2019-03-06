@@ -214,6 +214,11 @@ def get_taskcluster_headers(request_url,
     required=True,
 )
 @click.option(
+    '--product-prefix',
+    default='Thunbderbird',
+    help='Product name prefix',
+)
+@click.option(
     '--timestamps-only',
     is_flag=True,
 )
@@ -223,6 +228,7 @@ def v1_sync(ldap_username,
             taskcluster_access_token,
             api_from,
             api_to,
+            product_prefix,
             timestamps_only,
             ):
     s = requests.Session()
@@ -230,7 +236,8 @@ def v1_sync(ldap_username,
 
     click.echo('Fetching release list...', nl=False)
     req = s.get(f'{api_from}/releases')
-    releases = req.json()['releases']
+    releases = [r for r in req.json()['releases'] if r.startswith(product_prefix)]
+    click.echo(f'Syncing release with prefix {product_prefix}...', nl=False)
     click.echo(click.style('OK', fg='green'))
 
     releases_json = []
