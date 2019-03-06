@@ -6,7 +6,6 @@
 import itertools
 import os.path
 import subprocess
-import tempfile
 import time
 from contextlib import contextmanager
 from distutils.spawn import find_executable
@@ -15,6 +14,7 @@ from unittest.mock import Mock
 import hglib
 import pytest
 import responses
+
 
 from cli_common.phabricator import PhabricatorAPI
 
@@ -31,7 +31,7 @@ int main(void){
 
 @pytest.fixture(scope='session')
 @responses.activate
-def mock_config():
+def mock_config(tmpdir):
     '''
     Mock configuration for bot
     '''
@@ -44,7 +44,7 @@ def mock_config():
     )
 
     from static_analysis_bot.config import settings
-    tempdir = tempfile.mkdtemp()
+    tempdir = tmpdir.strpath
     settings.setup('test', tempdir, 'phabricator', 'IN_PATCH', ['dom/*', 'tests/*.py', 'test/*.c'], task_id='123abc')
 
     return settings
