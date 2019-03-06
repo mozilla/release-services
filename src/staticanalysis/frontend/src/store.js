@@ -8,6 +8,8 @@ const PREFERENCES_KEY = 'mozilla-sa-dashboard'
 const TASKCLUSTER_INDEX = 'https://index.taskcluster.net/v1'
 const TASKCLUSTER_QUEUE = 'https://queue.taskcluster.net/v1'
 const TASKS_SLICE = 10
+const FINAL_STATES = ['done', 'error']
+const MAX_TTL = 2 * 3600 * 1000 // 2 hours in ms
 
 export default new Vuex.Store({
   state: {
@@ -57,6 +59,8 @@ export default new Vuex.Store({
       this.commit('save_preferences')
     },
     use_tasks (state, payload) {
+      var now = new Date()
+
       // Save url
       state.indexes.push(payload.url)
 
@@ -65,11 +69,18 @@ export default new Vuex.Store({
         payload.tasks.filter(task => task.data.indexed !== undefined)
       )
 
-      // Add a descriptive state key name to tasks
       currentTasks.map(task => {
+        // Add a descriptive state key name to tasks
         task.state_full = task.data.state
         if (task.state_full === 'error' && task.data.error_code) {
           task.state_full += '.' + task.data.error_code
+        }
+
+        // Detect and update invalid state when a task got killed by Taskcluster
+        let date = new Date(task.data.indexed)
+        if (now - date > MAX_TTL && FINAL_STATES.indexOf(task.data.state) === -1) {
+          task.data.state = 'killed'
+          task.state_full = 'killed'
         }
         return task
       })
