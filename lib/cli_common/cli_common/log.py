@@ -133,6 +133,7 @@ def init_logger(project_name,
                 SENTRY_DSN=None,
                 MOZDEF=None,
                 flask_app=None,
+                timestamp=False,
                 ):
 
     if not channel:
@@ -167,6 +168,8 @@ def init_logger(project_name,
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
     ]
+    if timestamp is True:
+        processors.append(structlog.processors.TimeStamper(fmt='%Y-%m-%d %H:%M:%S'))
 
     # send to mozdef before formatting into a string
     if channel and MOZDEF:
