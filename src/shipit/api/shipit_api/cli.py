@@ -86,7 +86,7 @@ async def download_product_details(url: str, download_dir: str):
                 f'{download_dir}{path}',
             )
             for path in paths
-            if path.endswith('.json')
+            if path.endswith('.json') and not os.path.exists(f'{download_dir}{path}')
         ])
 
     click.echo('All files were downloaded successfully!')
@@ -290,9 +290,11 @@ def trigger_product_details(base_url: str,
                             taskcluster_client_id: str,
                             taskcluster_access_token: str,
                             ):
-    url = f'{base_url}/product-details'
     data = '{}'
+    url = f'{base_url}/product-details'
+
     click.echo(f'Triggering product details rebuild on {url} url ... ', nl=False)
+
     headers = get_taskcluster_headers(
         url,
         'post',
@@ -300,11 +302,22 @@ def trigger_product_details(base_url: str,
         taskcluster_client_id,
         taskcluster_access_token,
     )
+
+    # skip ssl verification when working against development instances
+    verify = not any(map(lambda x: x in base_url, ['localhost', '127.0.0.1']))
+
     r = requests.post(
         url,
         headers=headers,
-        verify=False,
+        verify=verify,
         data=data,
     )
+
     r.raise_for_status()
-    click.echo(click.style('OK', fg='green'))
+
+    if r.json() != {'ok': 'ok'}:
+        click.secho('ERROR: Something went wrong', fg='red')
+        click.echo(f'  URL={url}')
+        click.echo(f'  RESPONSE={r.content}')
+
+    click.echo(click.style('Product details triggered successfully!', fg='green'))
