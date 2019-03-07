@@ -115,7 +115,7 @@ def get_trees2():
     return dict(result=[i for i in get_trees()['result'].values()])
 
 
-@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/trees/update'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_TREES_UPDATE])
 def update_trees(body):
     session = flask.current_app.db.session
     trees = [
@@ -175,7 +175,7 @@ def update_trees(body):
     return None, 204
 
 
-@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/trees/create'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_TREES_CREATE])
 def make_tree(tree, body):
     session = flask.current_app.db.session
     if body['tree'] != tree:
@@ -206,13 +206,13 @@ def _kill_tree(tree):
     backend_common.cache.cache.delete_memoized(v0_get_tree, tree)
 
 
-@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/trees/delete'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_TREES_DELETE])
 def kill_tree(tree):
     _kill_tree(tree)
     return None, 204
 
 
-@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/trees/delete'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_TREES_DELETE])
 def kill_trees(trees):
     for tree in trees:
         _kill_tree(tree)
@@ -293,16 +293,16 @@ def _revert_change(id, revert=None):
     return None, 204
 
 
-@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_REVERT_CHANGES])
 def revert_change(id, revert=None):
     return _revert_change(id, revert)
 
 
-@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_REVERT_CHANGES])
 def restore_change(id):
     return _revert_change(id, 1)
 
 
-@backend_common.auth.auth.require_permissions([f'{treestatus_api.config.SCOPE_PREFIX}/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_REVERT_CHANGES])
 def discard_change(id):
     return _revert_change(id, 0)
