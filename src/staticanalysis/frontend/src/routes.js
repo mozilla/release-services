@@ -15,6 +15,11 @@ export default new VueRouter({
       component: Tasks
     },
     {
+      path: '/rev/:revision',
+      name: 'tasks',
+      component: Tasks
+    },
+    {
       path: '/task/:taskId',
       name: 'task',
       component: Task

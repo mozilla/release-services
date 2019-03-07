@@ -204,7 +204,14 @@ export default new Vuex.Store({
 
     // Load Phabricator indexed tasks summary from Taskcluster
     load_index (state, payload) {
-      let url = TASKCLUSTER_INDEX + '/tasks/project.releng.services.project.' + this.state.channel + '.static_analysis_bot.phabricator.diff'
+      let url = TASKCLUSTER_INDEX + '/tasks/project.releng.services.project.' + this.state.channel + '.static_analysis_bot.phabricator.'
+      if (payload && payload.revision) {
+        // Remove potential leading 'D' from phabricator revision
+        url += payload.revision.startsWith('D') ? payload.revision.substring(1) : payload.revision
+      } else {
+        url += 'diff'
+      }
+
       url += '?limit=200'
       if (payload && payload.continuationToken) {
         url += '&continuationToken=' + payload.continuationToken

@@ -5,7 +5,14 @@ import Choice from './Choice.vue'
 
 export default {
   mounted () {
-    this.$store.dispatch('load_index')
+    var payload = {}
+
+    // Load a specific revision only
+    if (this.$route.params.revision) {
+      payload['revision'] = this.$route.params.revision
+    }
+
+    this.$store.dispatch('load_index', payload)
   },
   components: {
     Choice: Choice
