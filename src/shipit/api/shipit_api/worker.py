@@ -50,6 +50,9 @@ def rebuild_product_details(default_git_repo_url,
     default_breakpoint_version = secrets.get('BREAKPOINT_VERSION', default_breakpoint_version)
 
     async def rebuild_product_details_async(channel, body, envelope, properties):
+        await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
+        logger.info('Marked pulse message as acknowledged.')
+
         body = json.loads(body.decode('utf-8'))
 
         logger.debug('Get rebuild parameters from request payload', body=body)
@@ -74,10 +77,7 @@ def rebuild_product_details(default_git_repo_url,
                                                  breakpoint_version,
                                                  clean_working_copy,
                                                  )
-        logger.debug('Product details rebuilt')
-
-        await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
-        logger.debug('Marked pulse message as acknowledged.')
+        logger.info('Product details rebuilt')
 
     return rebuild_product_details_async
 
