@@ -20,10 +20,10 @@ let
  } );
 
 
-  fullTaskEnv = { env }:
+  fullTaskEnv = mergeEnv:
     let
       # Taskcluster support for triggerHook
-      tcEnv = mkTaskclusterMergeEnv env;
+      tcEnv = mkTaskclusterMergeEnv { env = mergeEnv; };
 
       # Taskcluster support for pulseMessage
       pulseEnv = {
@@ -43,7 +43,7 @@ let
       };
     in
       {
-        "$merge" = tcEnv["$merge"] + pulseEnv;
+        "$merge" = tcEnv."$merge" ++ [ pulseEnv ];
       };
 
 
@@ -82,11 +82,9 @@ let
           "queue:get-artifact:project/gecko/android-*"
         ];
         taskEnv = fullTaskEnv {
-          env = {
-            "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
-            "APP_CHANNEL" = branch;
-            "MOZ_AUTOMATION" = "1";
-          };
+          "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
+          "MOZ_AUTOMATION" = "1";
         };
 
         taskRoutes = [
