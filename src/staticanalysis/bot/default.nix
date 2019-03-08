@@ -41,7 +41,7 @@ let
         };
         "else" = {};
       };
-    in 
+    in
       {
         "$merge" = tcEnv["$merge"] + pulseEnv;
       };
@@ -60,6 +60,14 @@ let
         # These parameters must stay in sync with src/staticanalysis/frontend/src/store.js MAX_TTL constant
         deadline = "2 hours";
         maxRunTime = 2 * 60 * 60;
+
+        # Trigger through Try ending task pulse message
+        bindings = [
+          {
+            exchange = "exchange/taskcluster-queue/v1/task-completed";
+            routingKeyPattern = "route.project.relman.codereview.v1.try_ending";
+          }
+        ];
 
         scopes = [
           # Used by taskclusterProxy
