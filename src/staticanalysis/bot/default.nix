@@ -50,7 +50,6 @@ let
   mkBot = branch:
     let
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
-      cacheKey = "services-" + branch + "-static-analysis-bot";
       hook = mkTaskclusterHook {
         name = "Static analysis automated tests";
         owner = "babadie@mozilla.com";
@@ -82,9 +81,6 @@ let
           # Needed to download the Android sdks for Infer
           "queue:get-artifact:project/gecko/android-*"
         ];
-        cache = {
-          "${cacheKey}" = "/cache";
-        };
         taskEnv = fullTaskEnv {
           env = {
             "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
