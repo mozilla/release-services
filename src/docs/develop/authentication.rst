@@ -53,12 +53,12 @@ This process is exposed to your backend python code through a single decorator:
     from flask import jsonify
     from flask_login import current_user
 
-    @auth.require_scopes(['project/test/user', 'project/test/resource'])
+    @auth.require_permissions(['project/test/user', 'project/test/resource'])
     def api_endpoint():
         return jsonify({"user" : current_user.get_id()})
 
 
-The :code:`require_scopes` decorator supports:
+The :code:`require_permissions` decorator supports:
 
  * a list of scopes, to describe a single role
  * a list of list of scopes, to describe several roles who can access the endpoint
@@ -136,7 +136,7 @@ Once the new scopes acquired on your account, you will be able to:
 
 The authentication strategy and resources repartition is up to you, but you should geenrally end up with several roles (one for user, one for admins, one for bots, ...) embedding different scopes.
 
-Those scopes should then be required in your backend through the previously explained :code:`require_scopes`.
+Those scopes should then be required in your backend through the previously explained :code:`require_permissions`.
 
 To learn more about scopes & roles in Taskcluster, read the `official documentation <https://docs.taskcluster.net/manual/apis/scopes>`_.
 

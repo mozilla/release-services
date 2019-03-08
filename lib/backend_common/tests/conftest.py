@@ -54,7 +54,7 @@ def app():
         return flask.jsonify(data)
 
     @app.route('/test-auth-scopes')
-    @backend_common.auth.auth.require_scopes([
+    @backend_common.auth.auth.require_permissions([
         ['project/test/A', 'project/test/B'],
         ['project/test-admin/*'],
     ])
