@@ -444,10 +444,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.107";
+      name = "boto3-1.9.111";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/87/0a/e9b9c33a44b726b2f54f2eb0d929367ac558fd2170c13ebe42076b84261a/boto3-1.9.107.tar.gz";
-        sha256 = "76d6c2d955d9a799a8d9cf8754ad377059e7809dd1820bace07e600f0a7c4ad6";
+        url = "https://files.pythonhosted.org/packages/83/70/b83cfe44f922c15ebcd185217ebc05d27e879d5a2ccca59f1c4f49d09938/boto3-1.9.111.tar.gz";
+        sha256 = "06414c75d1f62af7d04fd652b38d1e4fd3cfd6b35bad978466af88e2aaecd00d";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -466,10 +466,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.107";
+      name = "botocore-1.12.111";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/65/3a/7f458ec618ed9b9c9410617633ec8c1feb8a3191929c364956eadd561aeb/botocore-1.12.107.tar.gz";
-        sha256 = "0c2bd4cf18c8790983e9df3198125d16578195e93401c28edbda4e4d6d0475ae";
+        url = "https://files.pythonhosted.org/packages/2b/85/53393530cdf42b3b8daa42ce498cb0feee79892d02983fac8d090622c111/botocore-1.12.111.tar.gz";
+        sha256 = "6af473c52d5e3e7ff82de5334e9fee96b2d5ec2df5d78bc00cd9937e2573a7a8";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -489,10 +489,10 @@ let
     };
 
     "bugbug" = python.mkDerivation {
-      name = "bugbug-0.0.1";
+      name = "bugbug-0.0.2";
       src = pkgs.fetchurl {
-        url = "https://github.com/marco-c/bugbug/archive/909894c1cb0eb421c79200d94289b98c973a7dd4.tar.gz";
-        sha256 = "861d1089017353a7b918ac4ae4586ecb1ea283637a94aecfca9cf55d8c19b50b";
+        url = "https://files.pythonhosted.org/packages/ed/b2/7a6ccc2c2d7b812482534f10d719f305600a6e3d761852db8b2b3f63a9c1/bugbug-0.0.2.tar.gz";
+        sha256 = "3977dec18589905c9de668ae9a0a69dbdf908f4b933e0ebc6eefa7878dbdea47";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -561,10 +561,10 @@ let
     };
 
     "certifi" = python.mkDerivation {
-      name = "certifi-2018.11.29";
+      name = "certifi-2019.3.9";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/55/54/3ce77783acba5979ce16674fc98b1920d00b01d337cfaaf5db22543505ed/certifi-2018.11.29.tar.gz";
-        sha256 = "47f9c83ef4c0c621eaef743f133f09fa8a74a9b75f037e8624f83bd1b6626cb7";
+        url = "https://files.pythonhosted.org/packages/06/b8/d1ea38513c22e8c906275d135818fee16ad8495985956a9b7e2bb21942a1/certifi-2019.3.9.tar.gz";
+        sha256 = "b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -656,10 +656,10 @@ let
     };
 
     "coverage" = python.mkDerivation {
-      name = "coverage-4.5.2";
+      name = "coverage-4.5.3";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/fb/af/ce7b0fe063ee0142786ee53ad6197979491ce0785567b6d8be751d2069e8/coverage-4.5.2.tar.gz";
-        sha256 = "ab235d9fe64833f12d1334d29b558aacedfbca2356dfb9691f2d0d38a8a7bfb4";
+        url = "https://files.pythonhosted.org/packages/82/70/2280b5b29a0352519bb95ab0ef1ea942d40466ca71c53a2085bdeff7b0eb/coverage-4.5.3.tar.gz";
+        sha256 = "9de60893fb447d1e797f6bf08fdf0dbcda0c1e34c1b06c92bd3a363c0ea8c609";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -667,7 +667,7 @@ let
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "https://bitbucket.org/ned/coveragepy";
+        homepage = "https://github.com/nedbat/coveragepy";
         license = licenses.asl20;
         description = "Code coverage measurement for Python";
       };
@@ -779,10 +779,10 @@ let
     };
 
     "dask" = python.mkDerivation {
-      name = "dask-1.1.3";
+      name = "dask-1.1.4";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/fb/fa/0767fb1673c4ff262e9059ee49ff7d90ac6e494501c81c668f388d70e70e/dask-1.1.3.tar.gz";
-        sha256 = "25ef28ef9715d7567d5457bb09f2904a2e4ffd9b9d6d646c3d100a6c08aed30f";
+        url = "https://files.pythonhosted.org/packages/84/6a/079d9ef0414198736edfab1da5bdd85fe026a092a0c4e6dc621ce976c613/dask-1.1.4.tar.gz";
+        sha256 = "7e9a3c053d8f503483d7357d5b8486c70250c4975b08b3d29f91ab7fc97736c3";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1371,10 +1371,10 @@ let
     };
 
     "isort" = python.mkDerivation {
-      name = "isort-4.3.10";
+      name = "isort-4.3.15";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/29/22/63b1153b016dba62e8c6e3380178737011f310f7d4fcfe2fce7ee27dda14/isort-4.3.10.tar.gz";
-        sha256 = "144c4295314c0ed34fb034f838b2b7e242c52dd3eafdd6f5d49078692f582c0c";
+        url = "https://files.pythonhosted.org/packages/4c/d0/54d873aa05cea889fa65cb9241b6985460a12965f09a17f7c542007487af/isort-4.3.15.tar.gz";
+        sha256 = "96151fca2c6e736503981896495d344781b60d18bfda78dc11b290c6125ebdb6";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1521,10 +1521,10 @@ let
     };
 
     "mohawk" = python.mkDerivation {
-      name = "mohawk-0.3.4";
+      name = "mohawk-1.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/19/22/10f696548a8d41ad41b92ab6c848c60c669e18c8681c179265ce4d048b03/mohawk-0.3.4.tar.gz";
-        sha256 = "e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3";
+        url = "https://files.pythonhosted.org/packages/f2/05/e9a7e8e8194f77d40f32ef9fba96d3d3bcdd55d3057c3cd6e34b0b1959b2/mohawk-1.0.0.tar.gz";
+        sha256 = "fca4e34d8f5492f1c33141c98b96e168a089e5692ce65fb747e4bb613f5fe552";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1853,10 +1853,10 @@ let
     };
 
     "pdbpp" = python.mkDerivation {
-      name = "pdbpp-0.9.7";
+      name = "pdbpp-0.9.8";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/25/81/51e1af61dec6254ac65cf230d3ba6b952e239e0ae6e8746fa97cb9d3d94b/pdbpp-0.9.7.tar.gz";
-        sha256 = "0c40ffc5cfdd262f2a22ea6209a6f7aa3266f4e297a1c7af3c1b3e185fecd341";
+        url = "https://files.pythonhosted.org/packages/24/af/e5c4ccd95db79990ca1b24999796512bfbd75643c7aded29ad1242b05f8f/pdbpp-0.9.8.tar.gz";
+        sha256 = "c30827c59f60668d43cdc705502255bba32eb06ff68f896b3f469e6f7b41639d";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2599,10 +2599,10 @@ let
     };
 
     "slugid" = python.mkDerivation {
-      name = "slugid-1.0.7";
+      name = "slugid-2.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/dd/96/b05c6d357f8d6932bea2b360537360517d1154b82cc71b8eccb70b28bdde/slugid-1.0.7.tar.gz";
-        sha256 = "6dab3c7eef0bb423fb54cb7752e0f466ddd0ee495b78b763be60e8a27f69e779";
+        url = "https://files.pythonhosted.org/packages/ef/28/7e1a7c14277853b3082fe08af2bc601ca6772497f48f359dac806a7f90c9/slugid-2.0.0.tar.gz";
+        sha256 = "a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2689,10 +2689,10 @@ let
     };
 
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-6.0.0";
+      name = "taskcluster-7.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/06/6a/66bf42549bb69618159b0515c3001b9b8c21bbb5b28f16fcb14cfeef3318/taskcluster-6.0.0.tar.gz";
-        sha256 = "48ecd4898c7928deddfb34cb1cfe2b2505c68416e6c503f8a7f3dd0572425e96";
+        url = "https://files.pythonhosted.org/packages/47/75/ffba5fae55fde34812e5912ddb8c29a676c663053222da69083ad3e32af3/taskcluster-7.0.0.tar.gz";
+        sha256 = "e8f8e311e071cd0d2f36af136003cb87b09e87fde4a4bea98467334d6f2d5590";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2989,10 +2989,10 @@ let
     };
 
     "xgboost" = python.mkDerivation {
-      name = "xgboost-0.81";
+      name = "xgboost-0.82";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/4f/4c/4969b10939c4557ae46e5569d07c0c7ce772b3d6b9c1401a6ed07059fdee/xgboost-0.81.tar.gz";
-        sha256 = "f7c8057610350b0b2f91e1ac7c034f2f03d233919d111759346559e628061e0c";
+        url = "https://files.pythonhosted.org/packages/2e/bd/ad3a963b630fa3ee72d1a672fd207263fa0a18113688273afe8298293535/xgboost-0.82.tar.gz";
+        sha256 = "ff5aaa039fb43aae331a916b392994c32696279d9b6b5840cc7c74e06f183a95";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
