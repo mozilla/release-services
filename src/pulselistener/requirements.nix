@@ -989,10 +989,10 @@ let
     };
 
     "pytest-asyncio" = python.mkDerivation {
-      name = "pytest-asyncio-0.9.0";
+      name = "pytest-asyncio-0.10.0";
       src = pkgs.fetchurl {
-        url = "https://github.com/pytest-dev/pytest-asyncio/archive/v0.9.0.tar.gz";
-        sha256 = "20db04d27c197050f0ecdc30c115e677a77f0d27d95416f6ecef4b29e2de30f9";
+        url = "https://github.com/pytest-dev/pytest-asyncio/archive/v0.10.0.tar.gz";
+        sha256 = "1l0f6p8kxd562z479292gjgmsj6jsg86n0lf04wmf1xq83xm6bsa";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
