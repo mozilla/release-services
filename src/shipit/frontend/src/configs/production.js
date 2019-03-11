@@ -91,6 +91,13 @@ module.exports = {
           repo: 'https://hg.mozilla.org/releases/comm-beta',
           enableReleaseEta: false,
         },
+        {
+          prettyName: 'ESR60',
+          project: 'comm-esr60',
+          branch: 'releases/comm-esr60',
+          repo: 'https://hg.mozilla.org/releases/comm-esr60',
+          enableReleaseEta: false,
+        },
       ],
       enablePartials: false,
     },
