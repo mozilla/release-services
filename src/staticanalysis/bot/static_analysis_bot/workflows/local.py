@@ -25,8 +25,8 @@ from static_analysis_bot import stats
 from static_analysis_bot.clang import setup as setup_clang
 from static_analysis_bot.clang.format import ClangFormat
 from static_analysis_bot.clang.tidy import ClangTidy
-from static_analysis_bot.config import REPO_UNIFIED
 from static_analysis_bot.config import REPO_TRY
+from static_analysis_bot.config import REPO_UNIFIED
 from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import Publication
 from static_analysis_bot.config import settings
