@@ -241,7 +241,7 @@ class PhabricatorRevision(Revision):
             image = task['task']['payload'].get('image')
             if image is not None and isinstance(image, str):
                 return image.startswith('taskcluster/decision')
-        decision_task = next(filter(is_decision_task, tasks.values()))
+        decision_task = next(filter(is_decision_task, tasks.values()), None)
         assert decision_task is not None, 'Missing decision task'
 
         # Use mercurial infos for local revision
