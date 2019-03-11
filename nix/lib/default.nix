@@ -244,10 +244,11 @@ in rec {
     , taskRoutes ? []
     , scopes ? []
     , cache ? {}
+    , bindings ? []
     , maxRunTime ? 3600
     , workerType ? "releng-svc"
     }:
-    { inherit schedule;
+    { inherit schedule bindings;
       metadata = { inherit name description owner emailOnError; };
       task = mkTaskclusterTask ({
         created = created;
