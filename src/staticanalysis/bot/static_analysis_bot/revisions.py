@@ -246,7 +246,8 @@ class PhabricatorRevision(Revision):
 
         # Use mercurial infos for local revision
         decision_env = decision_task['task']['payload']['env']
-        assert decision_env.get('GECKO_HEAD_REPOSITORY') == REPO_TRY.decode('utf-8')
+        assert decision_env.get('GECKO_HEAD_REPOSITORY') == REPO_TRY.decode('utf-8'), \
+            'Not the try repo in GECKO_HEAD_REPOSITORY'
 
         # Save mercurial revision
         self.mercurial_revision = decision_env.get('GECKO_HEAD_REV')

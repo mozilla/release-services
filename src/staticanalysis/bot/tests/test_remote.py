@@ -102,13 +102,20 @@ def test_no_deps(mock_try_config, mock_revision):
     from static_analysis_bot.workflows.remote import RemoteWorkflow
 
     tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
         'remoteTryTask': {},
         'extra-task': {},
     }
     workflow = RemoteWorkflow(MockQueue(tasks))
     with pytest.raises(AssertionError) as e:
         workflow.run(mock_revision)
-        assert e.message == 'No task dependencies to analyze'
+    assert str(e.value) == 'No task dependencies to analyze'
 
 
 def test_baseline(mock_try_config, mock_revision):
@@ -203,6 +210,10 @@ def test_no_issues(mock_try_config, mock_revision):
     tasks = {
         'decision': {
             'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
         },
         'remoteTryTask': {
             'dependencies': ['analyzer-A', 'analyzer-B']
@@ -221,7 +232,7 @@ def test_no_issues(mock_try_config, mock_revision):
     workflow = RemoteWorkflow(MockQueue(tasks))
     with pytest.raises(AssertionError) as e:
         workflow.run(mock_revision)
-        assert e.message == 'No issues found in failure log'
+    assert str(e.value) == 'No issues found in failure log'
 
 
 def test_unsupported_analyzer(mock_try_config, mock_revision):
@@ -254,3 +265,94 @@ def test_unsupported_analyzer(mock_try_config, mock_revision):
     workflow = RemoteWorkflow(MockQueue(tasks))
     issues = workflow.run(mock_revision)
     assert len(issues) == 0
+
+
+def test_decision_task(mock_try_config, mock_revision):
+    '''
+    Test a remote workflow with different decision task setup
+    '''
+    from static_analysis_bot.workflows.remote import RemoteWorkflow
+
+    tasks = {
+        'decision': {
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Missing decision task'
+
+    tasks = {
+        'decision': {
+            'image': 'anotherImage',
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Missing decision task'
+
+    tasks = {
+        'decision': {
+            'image': {
+                'from': 'taskcluster/decision',
+                'tag': 'unsupported',
+            }
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Missing decision task'
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Not the try repo in GECKO_HEAD_REPOSITORY'
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+            }
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Missing try revision'
+    assert mock_revision.mercurial_revision is None
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'someRevision'
+            }
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'No task dependencies to analyze'
+    assert mock_revision.mercurial_revision is not None
+    assert mock_revision.mercurial_revision == 'someRevision'
