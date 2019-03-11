@@ -1021,37 +1021,6 @@ PROJECTS_CONFIG = {
                         'url': 'https://api.shipit.testing.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-testing',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'url': 'https://api.shipit.staging.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-staging',
-                    },
-                    'production': {
-                        'enable': True,
-                        # TODO: we will switch to new url soon
-                        # 'url': 'https://api.shipit.mozilla-releng.net',
-                        'url': 'https://shipit-api.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-production',
-                    },
-                },
-            },
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'url': 'https://api.shipit.testing.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'shipit_api_dockerflow_testing',
                     },
