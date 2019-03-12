@@ -19,8 +19,8 @@ class AnalysisTask(object):
     An analysis CI task running on Taskcluster
     '''
     def __init__(self, task_id, task_status):
-        assert 'task' in task_status
-        assert 'status' in task_status
+        assert 'task' in task_status, 'No task data for {}'.format(self.task_id)
+        assert 'status' in task_status, 'No status data for {}'.format(self.task_id)
         self.task_id = task_id
         self.task = task_status['task']
         self.status = task_status['status']

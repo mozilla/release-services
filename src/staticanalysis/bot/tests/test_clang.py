@@ -90,7 +90,6 @@ def test_clang_format(mock_config, mock_repository, mock_stats, mock_clang, mock
 
     # Get formatting issues
     cf = ClangFormat()
-    print(mock_revision)
     mock_revision.files = ['dom/bad.cpp', ]
     mock_revision.lines = {
         'dom/bad.cpp': [1, 2, 3],
