@@ -867,6 +867,32 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'docker',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'pulselistener-testing',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'nix_path_attribute': 'docker',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'pulselistener-staging',
+                    },
+                    'production': {
+                        'enable': True,
+                        'nix_path_attribute': 'docker',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'pulselistener-production',
+                    },
+                },
+            },
         ],
     },
     'staticanalysis/bot': {
