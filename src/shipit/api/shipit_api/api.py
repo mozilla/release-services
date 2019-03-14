@@ -242,7 +242,7 @@ def abandon_release(name):
     return release_json
 
 
-@auth.require_permissions([SCOPE_PREFIX + '/sync_releases'])
+@auth.require_permissions([[SCOPE_PREFIX + '/sync_releases']])
 def sync_releases(releases):
     session = current_app.db.session
     for release in releases:
@@ -270,7 +270,7 @@ def sync_releases(releases):
     return jsonify({'ok': 'ok'})
 
 
-@auth.require_permissions([SCOPE_PREFIX + '/rebuild_product_details'])
+@auth.require_permissions([[SCOPE_PREFIX + '/rebuild_product_details']])
 def rebuild_product_details(options):
     pulse_user = current_app.config['PULSE_USER']
     exchange = f'exchange/{pulse_user}/{PROJECT_NAME}'
@@ -288,7 +288,7 @@ def rebuild_product_details(options):
     return jsonify({'ok': 'ok'})
 
 
-@auth.require_permissions([SCOPE_PREFIX + '/sync_release_datetimes'])
+@auth.require_permissions([[SCOPE_PREFIX + '/sync_release_datetimes']])
 def sync_release_datetimes(releases):
     session = current_app.db.session
     for release in releases:
@@ -303,7 +303,7 @@ def sync_release_datetimes(releases):
     return jsonify({'ok': 'ok'})
 
 
-@auth.require_permissions([SCOPE_PREFIX + '/update_release_status'])
+@auth.require_permissions([[SCOPE_PREFIX + '/update_release_status']])
 def update_release_status(name, body):
     session = current_app.db.session
     try:
