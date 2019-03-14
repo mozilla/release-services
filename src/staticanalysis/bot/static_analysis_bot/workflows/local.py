@@ -5,8 +5,10 @@
 
 from __future__ import absolute_import
 
+import fcntl
 import os
 import shutil
+import time
 
 import hglib
 
@@ -23,7 +25,9 @@ from static_analysis_bot import stats
 from static_analysis_bot.clang import setup as setup_clang
 from static_analysis_bot.clang.format import ClangFormat
 from static_analysis_bot.clang.tidy import ClangTidy
+from static_analysis_bot.config import REPO_TRY
 from static_analysis_bot.config import REPO_UNIFIED
+from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import Publication
 from static_analysis_bot.config import settings
 from static_analysis_bot.coverage import Coverage
@@ -53,30 +57,77 @@ class LocalWorkflow(object):
         self.index_service = index_service
 
     @stats.api.timed('runtime.clone')
-    def clone(self):
+    def clone(self, revision):
         '''
         Clone mozilla-unified
         '''
-        logger.info('Clone mozilla unified', dir=settings.repo_dir)
-        cmd = hglib.util.cmdbuilder('robustcheckout',
-                                    REPO_UNIFIED,
-                                    settings.repo_dir,
-                                    purge=True,
-                                    sharebase=settings.repo_shared_dir,
-                                    branch=b'central')
+        logger.info('Clone mozilla unified', dir=settings.repo_dir, shared=settings.repo_shared_dir)
+        if settings.source == SOURCE_TRY:
+            # Clone Try using the target revision
+            assert revision.mercurial_revision is not None, 'Missing try mercurial revision'
+            cmd = hglib.util.cmdbuilder('robustcheckout',
+                                        REPO_TRY,
+                                        settings.repo_dir,
+                                        revision=revision.mercurial_revision,
+                                        upstream=REPO_UNIFIED,
+                                        purge=True,
+                                        sharebase=settings.repo_shared_dir)
 
+        else:
+            # Clone Mozilla unified up to central bookmark
+            cmd = hglib.util.cmdbuilder('robustcheckout',
+                                        REPO_UNIFIED,
+                                        settings.repo_dir,
+                                        purge=True,
+                                        sharebase=settings.repo_shared_dir,
+                                        branch=b'central')
         cmd.insert(0, hglib.HGPATH)
+
+        def _log_process(output, name):
+            # Read and display every line
+            out = output.read()
+            if out is None:
+                return
+            text = filter(None, out.decode('utf-8').splitlines())
+            for line in text:
+                logger.info('{}: {}'.format(name, line))
+
+        # Start process
+        start = time.time()
         proc = hglib.util.popen(cmd)
+
+        # Set process outputs as non blocking
+        for output in (proc.stdout, proc.stderr):
+            fcntl.fcntl(
+                output.fileno(),
+                fcntl.F_SETFL,
+                fcntl.fcntl(output, fcntl.F_GETFL) | os.O_NONBLOCK,
+            )
+
+        while proc.poll() is None:
+            _log_process(proc.stdout, 'clone')
+            _log_process(proc.stderr, 'clone (err)')
+            time.sleep(2)
+
         out, err = proc.communicate()
-        if proc.returncode:
-            raise hglib.error.CommandError(cmd, proc.returncode, out, err)
+        if proc.returncode != 0:
+            logger.error('Mercurial clone failure', out=out, err=err)
+            raise Exception('Mercurial clone failed with exit code {}'.format(proc.returncode))
+        logger.info('Clone finished', time=(time.time() - start), out=out, err=err)
 
         # Open new hg client
         client = hglib.open(settings.repo_dir)
 
+        # Attach logger
+        client.setcbout(lambda msg: logger.info('Mercurial out={}'.format(msg.decode('utf-8'))))
+        client.setcberr(lambda msg: logger.info('Mercurial err={}'.format(msg.decode('utf-8'))))
+
         # Store MC top revision after robustcheckout
         self.top_revision = client.log('reverse(public())', limit=1)[0].node
         logger.info('Mozilla unified top revision', revision=self.top_revision)
+
+        # Mark local clone is present
+        settings.has_local_clone = True
 
         return client
 
@@ -107,7 +158,7 @@ class LocalWorkflow(object):
         with stats.api.timer('runtime.mercurial'):
             try:
                 # Start by cloning the mercurial repository
-                self.hg = self.clone()
+                self.hg = self.clone(revision)
                 self.parent.index(revision, state='cloned')
 
                 # Force cleanup to reset top of MU

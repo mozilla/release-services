@@ -88,6 +88,8 @@ def build(docker,
     nix_cache_public_urls = nix_cache_public_urls or secrets['NIX_CACHE_PUBLIC_URLS']
 
     docker = please_cli.utils.which(docker)
+    assert docker is not None, \
+        'Docker is not available in your environment. Please use: nix-env -f /etc/nix/nixpkgs -iA docker'
     docker_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'docker', 'Dockerfile')
     nixpkgs_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nixpkgs.json')
     nix_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nix.json')

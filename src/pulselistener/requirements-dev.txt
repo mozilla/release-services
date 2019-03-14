@@ -1,3 +1,3 @@
 -r ./../../lib/cli_common/requirements-dev.txt
 
-https://github.com/pytest-dev/pytest-asyncio/archive/v0.9.0.tar.gz#egg=pytest-asyncio
+pytest-asyncio

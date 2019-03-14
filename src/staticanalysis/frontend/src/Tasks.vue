@@ -5,7 +5,28 @@ import Choice from './Choice.vue'
 
 export default {
   mounted () {
-    this.$store.dispatch('load_index')
+    // Load new tasks at startup
+    this.load_tasks()
+  },
+  watch: {
+    '$route' (to, from, next) {
+      // Load new tasks when route change
+      this.load_tasks()
+    }
+  },
+  methods: {
+    load_tasks () {
+      var payload = {}
+
+      // Reset state
+      this.$store.commit('reset')
+
+      // Load a specific revision only
+      if (this.$route.params.revision) {
+        payload['revision'] = this.$route.params.revision
+      }
+      this.$store.dispatch('load_index', payload)
+    }
   },
   components: {
     Choice: Choice
@@ -55,7 +76,7 @@ export default {
       // Filter by revision
       if (this.filters.revision !== null) {
         tasks = _.filter(tasks, t => {
-          let payload = t.data.title + t.data.bugzilla_id + t.data.phid + t.data.diff_phid
+          let payload = t.data.title + t.data.bugzilla_id + t.data.phid + t.data.diff_phid + t.data.id + t.data.diff_id
           return payload.toLowerCase().indexOf(this.filters.revision.toLowerCase()) !== -1
         })
       }
@@ -78,7 +99,7 @@ export default {
     <div class="states" >
       <div class="state columns" v-for="state in states">
         <div class="column is-one-third">
-          <progress class="progress" :class="{'is-danger': state.key.startsWith('error'), 'is-success': state.key == 'done', 'is-info': state.key != 'done' && !state.key.startsWith('error')}" :value="state.percent" max="100">{{ state.percent }}%</progress>
+          <progress class="progress" :class="{'is-danger': state.key.startsWith('error') || state.key === 'killed', 'is-success': state.key == 'done', 'is-info': state.key != 'done' && !state.key.startsWith('error')}" :value="state.percent" max="100">{{ state.percent }}%</progress>
         </div>
         <div class="column is-one-third">
           <strong>{{ state.name }}</strong> - <span class="has-text-grey-light">{{ state.nb }}/{{ tasks_total }} tasks or {{ state.percent }}%</span>
@@ -110,13 +131,15 @@ export default {
             <a class="mono" :href="'https://tools.taskcluster.net/task-inspector/#' + task.taskId" target="_blank">{{ task.taskId }}</a>
           </td>
 
-          <td v-if="task.data.source == 'phabricator'">
+          <td>
             <p v-if="task.data.title">{{ task.data.title }}</p>
             <p class="has-text-danger" v-else>No title</p>
-            <small class="mono has-text-grey-light">{{ task.data.diff_phid}}</small>
-          </td>
-          <td v-else>
-            <p class="notification is-danger">Unknown data source: {{ task.data.source }}</p>
+            <p>
+              <small class="mono has-text-grey-light">{{ task.data.diff_phid}}</small> - diff {{ task.data.diff_id || 'unknown'     }}
+            </p>
+            <p>
+              <small class="mono has-text-grey-light">{{ task.data.phid}}</small> - <router-link :to="{ name: 'revision', params: { revision: task.data.id }}">rev {{ task.data.id }}</router-link>
+            </p>
           </td>
 
           <td>
@@ -124,6 +147,9 @@ export default {
             <span class="tag is-info" v-else-if="task.data.state == 'cloned'">Cloned</span>
             <span class="tag is-info" v-else-if="task.data.state == 'analyzing'">Analyzing</span>
             <span class="tag is-primary" v-else-if="task.data.state == 'analyzed'">Analyzed</span>
+            <span class="tag is-danger" v-else-if="task.data.state == 'killed'">
+              Killed for timeout
+            </span>
             <span class="tag is-danger" v-else-if="task.data.state == 'error'" :title="task.data.error_message">
               Error: {{ task.data.error_code || 'unknown' }}
             </span>

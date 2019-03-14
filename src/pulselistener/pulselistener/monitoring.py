@@ -143,7 +143,7 @@ class Monitoring(object):
             return
 
         # Trigger a new task with the updated definition
-        new_task_id = slugId().decode('utf-8')
+        new_task_id = slugId()
         logger.info('Retry task', old_task=task_id, new_task=new_task_id)
         self.queue.createTask(new_task_id, definition)
 

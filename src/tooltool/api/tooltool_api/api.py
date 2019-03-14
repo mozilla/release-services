@@ -78,12 +78,9 @@ def upload_batch(body: dict, region: typing.Optional[str] = None) -> dict:
     # verify permissions based on visibilities
     visibilities = set(f['visibility'] for f in body['files'].values())
     for visibility in visibilities:
-        permission = '{}/upload/{}'.format(
-            tooltool_api.config.SCOPE_PREFIX,
-            visibility,
-        )
+        permission = f'{tooltool_api.config.SCOPE_PREFIX}/upload/{visibility}'
         if not flask_login.current_user.has_permissions(permission):
-            raise werkzeug.exceptions.Forbidden('no permission to upload {} files'.format(visibility))
+            raise werkzeug.exceptions.Forbidden(f'no permission to upload {visibility} files')
 
     session = flask.g.db.session
 
@@ -115,7 +112,7 @@ def upload_batch(body: dict, region: typing.Optional[str] = None) -> dict:
 
         if file and file.instances != []:
             if file.size != info['size']:
-                raise werkzeug.exceptions.BadRequest('Size mismatch for {}'.format(filename))
+                raise werkzeug.exceptions.BadRequest(f'Size mismatch for {filename}')
         else:
             if not file:
                 file = tooltool_api.models.File(sha512=digest,
@@ -123,9 +120,7 @@ def upload_batch(body: dict, region: typing.Optional[str] = None) -> dict:
                                                 size=info['size'])
                 session.add(file)
 
-            logger2.info('Generating signed S3 PUT URL to {} for {}; expiring in {}s'.format(info['digest'][:10],
-                                                                                             flask_login.current_user,
-                                                                                             UPLOAD_EXPIRES_IN))
+            logger2.info(f'Generating signed S3 PUT URL to {info["digest"][:10]} for {flask_login.current_user}; expiring in {UPLOAD_EXPIRES_IN}s')
 
             info['put_url'] = s3.generate_url(
                 method='PUT',
@@ -175,15 +170,8 @@ def upload_complete(digest: str) -> typing.Union[werkzeug.Response,
                 headers = {'X-Retry-After': str(1 + int(until.total_seconds()))}
                 return werkzeug.Response(status=409, headers=headers)
 
-    exchange = 'exchange/{}/{}'.format(
-        flask.current_app.config['PULSE_USER'],
-        tooltool_api.config.PROJECT_NAME,
-    )
-    logger.info('Sending digest `{}` to queue `{}` exfor route `{}`.'.format(
-        digest,
-        exchange,
-        tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS,
-    ))
+    exchange = f'exchange/{flask.current_app.config["PULSE_USER"]}/{tooltool_api.config.PROJECT_NAME}'
+    logger.info(f'Sending digest `{digest}` to queue `{exchange}` for route `{tooltool_api.config.PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS}`.')
     try:
         flask.current_app.pulse.publish(
             exchange,
@@ -194,7 +182,7 @@ def upload_complete(digest: str) -> typing.Union[werkzeug.Response,
         import traceback
         msg = 'Can\'t send notification to pulse.'
         trace = traceback.format_exc()
-        logger.error('{0}\nException:{1}\nTraceback: {2}'.format(msg, e, trace))  # noqa
+        logger.error(f'{msg}\nException:{e}\nTraceback: {trace}')
 
     return '{}', 202
 
@@ -219,7 +207,7 @@ def get_file(digest: str) -> dict:
     return row.to_dict(include_instances=True)
 
 
-@backend_common.auth.auth.require_scopes([tooltool_api.config.SCOPE_PREFIX + '/manage'])
+@backend_common.auth.auth.require_permissions([tooltool_api.config.SCOPE_MANAGE])
 def patch_file(digest: str, body: dict) -> dict:
     S3_REGIONS = flask.current_app.config['S3_REGIONS']  # type: typing.Dict[str, str]
     if type(S3_REGIONS) is not dict:
@@ -244,8 +232,7 @@ def patch_file(digest: str, body: dict) -> dict:
 
                 region_bucket = S3_REGIONS.get(instance.region)
                 if region_bucket is None:
-                    raise werkzeug.exceptions.InternalServerError(
-                        'No bucket for region `{}` defined.'.format(instance.region))
+                    raise werkzeug.exceptions.InternalServerError(f'No bucket for region `{instance.region}` defined.')
 
                 bucket = conn.get_bucket(region_bucket)
                 bucket.delete_key(key_name)
@@ -280,7 +267,8 @@ def download_file(digest: str, region: typing.Optional[str] = None) -> werkzeug.
     if type(ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD) is not bool:
         raise werkzeug.exceptions.InternalServerError('ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD should be of type bool.')
 
-    logger2.debug('Looking for file in following regions: {}'.format(', '.join(S3_REGIONS.keys())))
+    regions = ', '.join(S3_REGIONS.keys())
+    logger2.debug(f'Looking for file in following regions: {regions}')
 
     if not tooltool_api.utils.is_valid_sha512(digest):
         raise werkzeug.exceptions.BadRequest('Invalid sha512 digest')
@@ -293,10 +281,7 @@ def download_file(digest: str, region: typing.Optional[str] = None) -> werkzeug.
 
     # check visibility
     if file_row.visibility != 'public' or not ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD:
-        permission = '{}/download/{}'.format(
-            tooltool_api.config.SCOPE_PREFIX,
-            file_row.visibility,
-        )
+        permission = f'{tooltool_api.config.SCOPE_PREFIX}/download/{file_row.visibility}'
         if not flask_login.current_user.has_permissions(permission):
             raise werkzeug.exceptions.Forbidden
 
@@ -312,13 +297,12 @@ def download_file(digest: str, region: typing.Optional[str] = None) -> werkzeug.
 
     bucket = S3_REGIONS.get(selected_region)
     if bucket is None:
-        raise werkzeug.exceptions.InternalServerError(
-            'Region `{}` can not be found in S3_REGIONS.'.format(selected_region))
+        raise werkzeug.exceptions.InternalServerError(f'Region `{selected_region}` can not be found in S3_REGIONS.')
 
     key = tooltool_api.utils.keyname(digest)
 
     s3 = flask.current_app.aws.connect_to('s3', selected_region)
-    logger2.info('Generating signed S3 GET URL for {}, expiring in {}s'.format(digest[:10], DOWLOAD_EXPIRES_IN))
+    logger2.info(f'Generating signed S3 GET URL for {digest[:10]}, expiring in {DOWLOAD_EXPIRES_IN}s')
     signed_url = s3.generate_url(method='GET', expires_in=DOWLOAD_EXPIRES_IN, bucket=bucket, key=key)
 
     return flask.redirect(signed_url)

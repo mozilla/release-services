@@ -19,6 +19,34 @@ let
     '';
  } );
 
+
+  fullTaskEnv = mergeEnv:
+    let
+      # Taskcluster support for triggerHook
+      tcEnv = mkTaskclusterMergeEnv { env = mergeEnv; };
+
+      # Taskcluster support for pulseMessage
+      pulseEnv = {
+        "$if" = "firedBy == 'pulseMessage'";
+        "then" = {
+          "TRY_TASK_ID" = {
+            "$eval" = "payload.status.taskId";
+          };
+          "TRY_TASK_GROUP_ID" = {
+            "$eval" = "payload.status.taskGroupId";
+          };
+          "TRY_RUN_ID" = {
+            "$eval" = "payload.runId";
+          };
+        };
+        "else" = {};
+      };
+    in
+      {
+        "$merge" = tcEnv."$merge" ++ [ pulseEnv ];
+      };
+
+
   mkBot = branch:
     let
       cacheKey = "services-" + branch + "-static-analysis-bot";
@@ -28,8 +56,19 @@ let
         owner = "babadie@mozilla.com";
         taskImage = self.docker;
         workerType = if branch == "production" then "releng-svc-prod" else "releng-svc";
+
+        # These parameters must stay in sync with src/staticanalysis/frontend/src/store.js MAX_TTL constant
         deadline = "2 hours";
         maxRunTime = 2 * 60 * 60;
+
+        # Trigger through Try ending task pulse message
+        bindings = [
+          {
+            exchange = "exchange/taskcluster-queue/v1/task-completed";
+            routingKeyPattern = "route.project.relman.codereview.v1.try_ending";
+          }
+        ];
+
         scopes = [
           # Used by taskclusterProxy
           ("secrets:get:" + secretsKey)
@@ -49,12 +88,10 @@ let
         cache = {
           "${cacheKey}" = "/cache";
         };
-        taskEnv = mkTaskclusterMergeEnv {
-          env = {
-            "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
-            "APP_CHANNEL" = branch;
-            "MOZ_AUTOMATION" = "1";
-          };
+        taskEnv = fullTaskEnv {
+          "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
+          "MOZ_AUTOMATION" = "1";
         };
 
         taskRoutes = [
@@ -67,8 +104,6 @@ let
           "/bin/static-analysis-bot"
           "--taskcluster-secret"
           secretsKey
-          "--cache-root"
-          "/cache"
         ];
         taskArtifacts = {
           "public/results" = {

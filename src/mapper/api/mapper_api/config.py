@@ -5,4 +5,6 @@
 
 PROJECT_NAME = 'mapper/api'
 APP_NAME = 'mapper/api'
-SCOPE_PREFIX = 'project:releng:services/{}'.format(PROJECT_NAME)
+SCOPE_PREFIX = f'project:releng:services/{PROJECT_NAME}'
+SCOPE_PROJECT_INSERT = f'{SCOPE_PREFIX}/project/insert'
+SCOPE_MAPPING_INSERT = f'{SCOPE_PREFIX}/mapping/insert'

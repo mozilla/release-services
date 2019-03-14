@@ -20,8 +20,10 @@ PROJECT_NAME = 'static-analysis-bot'
 CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_UNIFIED = b'https://hg.mozilla.org/mozilla-unified'
+REPO_TRY = b'https://hg.mozilla.org/try'
 SOURCE_PHABRICATOR = 'phabricator'
 SOURCE_TRY = 'try'
+TASKCLUSTER_CACHE = '/cache'
 
 logger = get_logger(__name__)
 
@@ -46,11 +48,14 @@ class Settings(object):
         self.publication = None
 
         # Paths
-        self.has_local_clone = True
-        self.cache_root = None
+        self.has_local_clone = False
         self.repo_dir = None
         self.repo_shared_dir = None
         self.taskcluster = None
+
+        # For remote analysis
+        self.try_task_id = None
+        self.try_group_id = None
 
         # For Coverity Analysis package info
         self.cov_analysis_url = None
@@ -62,15 +67,20 @@ class Settings(object):
 
     def setup(self,
               app_channel,
-              cache_root,
-              source,
+              work_dir,
               publication,
               allowed_paths,
               cov_config=None,
-              task_id=None,
               ):
+        # Detect source from env
+        if 'TRY_TASK_ID' in os.environ and 'TRY_TASK_GROUP_ID' in os.environ:
+            self.source = SOURCE_TRY
+            self.try_task_id = os.environ['TRY_TASK_ID']
+            self.try_group_id = os.environ['TRY_TASK_GROUP_ID']
+        else:
+            self.source = SOURCE_PHABRICATOR
+
         self.app_channel = app_channel
-        self.source = source
         self.download({
             'cpp_extensions': frozenset(['.c', '.cpp', '.cc', '.cxx', '.m', '.mm']),
             'cpp_header_extensions': frozenset(['.h', '.hh', '.hpp', '.hxx']),
@@ -87,19 +97,26 @@ class Settings(object):
         except KeyError:
             raise Exception('Publication mode should be {}'.format('|'.join(map(lambda p: p .name, Publication))))
 
-        if not os.path.isdir(cache_root):
-            os.makedirs(cache_root)
-        self.cache_root = cache_root
-        self.repo_dir = os.path.join(self.cache_root, 'sa-unified')
-        self.repo_shared_dir = os.path.join(self.cache_root, 'sa-unified-shared')
+        # Repository is always on local instance
+        if not os.path.isdir(work_dir):
+            os.makedirs(work_dir)
+        self.repo_dir = os.path.join(work_dir, 'sa-unified')
 
         # Save Taskcluster ID for logging
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
             self.taskcluster = TaskCluster('/tmp/results', os.environ['TASK_ID'], os.environ['RUN_ID'], False)
         else:
-            self.taskcluster = TaskCluster(tempfile.mkdtemp(), task_id or 'local instance', 0, True)
+            self.taskcluster = TaskCluster(tempfile.mkdtemp(), 'local instance', 0, True)
         if not os.path.isdir(self.taskcluster.results_dir):
             os.makedirs(self.taskcluster.results_dir)
+
+        # Repository sharebase (for robustcheckout) is either
+        # * on the available Taskcluster cache, when running online
+        # * on the local instance, for developers
+        if not self.taskcluster.local and os.path.isdir(TASKCLUSTER_CACHE):
+            self.repo_shared_dir = os.path.join(TASKCLUSTER_CACHE, 'sa-unified-shared')
+        else:
+            self.repo_shared_dir = os.path.join(work_dir, 'sa-unified-shared')
 
         # Save allowed paths
         assert isinstance(allowed_paths, list)
