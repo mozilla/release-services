@@ -19,8 +19,37 @@ let
     '';
  } );
 
+
+  fullTaskEnv = mergeEnv:
+    let
+      # Taskcluster support for triggerHook
+      tcEnv = mkTaskclusterMergeEnv { env = mergeEnv; };
+
+      # Taskcluster support for pulseMessage
+      pulseEnv = {
+        "$if" = "firedBy == 'pulseMessage'";
+        "then" = {
+          "TRY_TASK_ID" = {
+            "$eval" = "payload.status.taskId";
+          };
+          "TRY_TASK_GROUP_ID" = {
+            "$eval" = "payload.status.taskGroupId";
+          };
+          "TRY_RUN_ID" = {
+            "$eval" = "payload.runId";
+          };
+        };
+        "else" = {};
+      };
+    in
+      {
+        "$merge" = tcEnv."$merge" ++ [ pulseEnv ];
+      };
+
+
   mkBot = branch:
     let
+      cacheKey = "services-" + branch + "-static-analysis-bot";
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
       hook = mkTaskclusterHook {
         name = "Static analysis automated tests";
@@ -32,6 +61,14 @@ let
         deadline = "2 hours";
         maxRunTime = 2 * 60 * 60;
 
+        # Trigger through Try ending task pulse message
+        bindings = [
+          {
+            exchange = "exchange/taskcluster-queue/v1/task-completed";
+            routingKeyPattern = "route.project.relman.codereview.v1.try_ending";
+          }
+        ];
+
         scopes = [
           # Used by taskclusterProxy
           ("secrets:get:" + secretsKey)
@@ -39,18 +76,22 @@ let
           # Send emails to relman
           "notify:email:*"
 
+          # Used by cache
+          ("docker-worker:cache:" + cacheKey)
+
           # Needed to index the task in the TaskCluster index
           ("index:insert-task:project.releng.services.project." + branch + ".static_analysis_bot.*")
 
           # Needed to download the Android sdks for Infer
           "queue:get-artifact:project/gecko/android-*"
         ];
-        taskEnv = mkTaskclusterMergeEnv {
-          env = {
-            "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
-            "APP_CHANNEL" = branch;
-            "MOZ_AUTOMATION" = "1";
-          };
+        cache = {
+          "${cacheKey}" = "/cache";
+        };
+        taskEnv = fullTaskEnv {
+          "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
+          "MOZ_AUTOMATION" = "1";
         };
 
         taskRoutes = [

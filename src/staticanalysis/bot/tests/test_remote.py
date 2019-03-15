@@ -24,6 +24,10 @@ class MockQueue(object):
                 'metadata': {
                     'name': desc.get('name', task_id),
                 },
+                'payload': {
+                    'image': desc.get('image', 'alpine'),
+                    'env': desc.get('env', {}),
+                }
             }
             for task_id, desc in relations.items()
         }
@@ -32,6 +36,7 @@ class MockQueue(object):
         self._status = {
             task_id: {
                 'status': {
+                    'taskId': task_id,
                     'state': desc.get('state', 'completed'),
                     'runs': [
                         {
@@ -65,6 +70,17 @@ class MockQueue(object):
     def status(self, task_id):
         return self._status[task_id]
 
+    def listTaskGroup(self, group_id):
+        return {
+            'tasks': [
+                {
+                    'task': self.task(task_id),
+                    'status': self.status(task_id)['status'],
+                }
+                for task_id in self._tasks.keys()
+            ]
+        }
+
     def listArtifacts(self, task_id, run_id):
         return self._artifacts.get(task_id, {})
 
@@ -79,23 +95,30 @@ class MockQueue(object):
         }
 
 
-def test_no_deps(mock_config, mock_revision):
+def test_no_deps(mock_try_config, mock_revision):
     '''
     Test an error occurs when no dependencies are found on root task
     '''
     from static_analysis_bot.workflows.remote import RemoteWorkflow
 
     tasks = {
-        '123abc': {},
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {},
         'extra-task': {},
     }
     workflow = RemoteWorkflow(MockQueue(tasks))
     with pytest.raises(AssertionError) as e:
         workflow.run(mock_revision)
-        assert e.message == 'No task dependencies to analyze'
+    assert str(e.value) == 'No task dependencies to analyze'
 
 
-def test_baseline(mock_config, mock_revision):
+def test_baseline(mock_try_config, mock_revision):
     '''
     Test a normal remote workflow (aka Try mode)
     - current task with analyzer deps
@@ -105,14 +128,23 @@ def test_baseline(mock_config, mock_revision):
     from static_analysis_bot.workflows.remote import RemoteWorkflow
     from static_analysis_bot.lint import MozLintIssue
 
-    # Fixed starting task
-    assert mock_config.taskcluster.task_id == '123abc'
+    # We run on a mock TC, with a try source
+    assert mock_try_config.taskcluster.task_id == 'local instance'
+    assert mock_try_config.source == 'try'
+    assert mock_try_config.try_task_id == 'remoteTryTask'
 
     # We do not want to check local files with this worfklow
-    mock_config.has_local_clone = False
+    mock_try_config.has_local_clone = False
 
     tasks = {
-        '123abc': {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {
             'dependencies': ['analyzer-A', 'analyzer-B']
         },
         'analyzer-A': {
@@ -143,14 +175,21 @@ def test_baseline(mock_config, mock_revision):
     assert issue.validates()
 
 
-def test_no_failed(mock_config, mock_revision):
+def test_no_failed(mock_try_config, mock_revision):
     '''
     Test a remote workflow without any failed tasks
     '''
     from static_analysis_bot.workflows.remote import RemoteWorkflow
 
     tasks = {
-        '123abc': {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {
             'dependencies': ['analyzer-A', 'analyzer-B']
         },
         'analyzer-A': {},
@@ -162,14 +201,21 @@ def test_no_failed(mock_config, mock_revision):
     assert len(issues) == 0
 
 
-def test_no_issues(mock_config, mock_revision):
+def test_no_issues(mock_try_config, mock_revision):
     '''
     Test a remote workflow without any issues in its artifacts
     '''
     from static_analysis_bot.workflows.remote import RemoteWorkflow
 
     tasks = {
-        '123abc': {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {
             'dependencies': ['analyzer-A', 'analyzer-B']
         },
         'analyzer-A': {},
@@ -186,17 +232,24 @@ def test_no_issues(mock_config, mock_revision):
     workflow = RemoteWorkflow(MockQueue(tasks))
     with pytest.raises(AssertionError) as e:
         workflow.run(mock_revision)
-        assert e.message == 'No issues found in failure log'
+    assert str(e.value) == 'No issues found in failure log'
 
 
-def test_unsupported_analyzer(mock_config, mock_revision):
+def test_unsupported_analyzer(mock_try_config, mock_revision):
     '''
     Test a remote workflow with an unsupported analyzer (not mozlint)
     '''
     from static_analysis_bot.workflows.remote import RemoteWorkflow
 
     tasks = {
-        '123abc': {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {
             'dependencies': ['analyzer-A', 'analyzer-B']
         },
         'analyzer-A': {},
@@ -212,3 +265,94 @@ def test_unsupported_analyzer(mock_config, mock_revision):
     workflow = RemoteWorkflow(MockQueue(tasks))
     issues = workflow.run(mock_revision)
     assert len(issues) == 0
+
+
+def test_decision_task(mock_try_config, mock_revision):
+    '''
+    Test a remote workflow with different decision task setup
+    '''
+    from static_analysis_bot.workflows.remote import RemoteWorkflow
+
+    tasks = {
+        'decision': {
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Missing decision task'
+
+    tasks = {
+        'decision': {
+            'image': 'anotherImage',
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Missing decision task'
+
+    tasks = {
+        'decision': {
+            'image': {
+                'from': 'taskcluster/decision',
+                'tag': 'unsupported',
+            }
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Missing decision task'
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Not the try repo in GECKO_HEAD_REPOSITORY'
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+            }
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Missing try revision'
+    assert mock_revision.mercurial_revision is None
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'someRevision'
+            }
+        },
+        'remoteTryTask': {
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    with pytest.raises(AssertionError) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'No task dependencies to analyze'
+    assert mock_revision.mercurial_revision is not None
+    assert mock_revision.mercurial_revision == 'someRevision'

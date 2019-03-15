@@ -71,7 +71,7 @@ def test_expanded_macros(mock_stats, test_cpp, mock_revision):
     assert issue.is_expanded_macro() is False
 
 
-def test_clang_format(mock_config, mock_repository, mock_stats, mock_clang, mock_revision, mock_workflow):
+def test_clang_format(mock_config, mock_repository, mock_stats, mock_clang, mock_revision):
     '''
     Test clang-format runner
     '''
@@ -293,7 +293,7 @@ Dummy body
 '''
 
 
-def test_repeats(mock_clang_repeats, mock_revision, mock_config):
+def test_repeats(mock_clang_repeats, mock_clang, mock_revision, mock_config, mock_repository):
     '''
     Test repeated issues are removed through set usage
     '''
@@ -317,7 +317,7 @@ def test_repeats(mock_clang_repeats, mock_revision, mock_config):
     assert count['modernize-loop-convert'] == 1
 
 
-def test_clang_format_3rd_party(mock_repository, mock_revision):
+def test_clang_format_3rd_party(mock_config, mock_repository, mock_revision):
     '''
     Test a clang format issue in 3rd party is not publishable
     '''

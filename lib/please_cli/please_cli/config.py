@@ -51,22 +51,20 @@ OPENSSL_ETC_DIR = os.environ.get('OPENSSL_ETC_DIR', '')  # must end with /
 POSTGRESQL_BIN_DIR = os.environ.get('POSTGRESQL_BIN_DIR', '')  # must end with /
 
 IN_DOCKER = False
-if os.path.isdir('/proc/1'):
-    with open('/proc/1/cgroup', 'rt') as ifh:
-        IN_DOCKER = 'docker' in ifh.read()
+with open('/proc/1/cgroup', 'rt') as ifh:
+    IN_DOCKER = 'docker' in ifh.read()
 
 TEMPLATES = {
     'backend-json-api': {}
 }
 
 DEV_PROJECTS = ['postgresql', 'redis']
-OUTSIDE_PROJECTS = ['scriptworker/shipitscript']
+PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
+                    filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
+                           glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
+PROJECTS += ['scriptworker/shipitscript']
+PROJECTS += DEV_PROJECTS
 
-PROJECTS = OUTSIDE_PROJECTS + DEV_PROJECTS
-PROJECTS += list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
-                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
-                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
-PROJECTS = sorted(PROJECTS)
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
@@ -867,6 +865,32 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'nix_path_attribute': 'docker',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'pulselistener-testing',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'nix_path_attribute': 'docker',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'pulselistener-staging',
+                    },
+                    'production': {
+                        'enable': True,
+                        'nix_path_attribute': 'docker',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'pulselistener-production',
+                    },
+                },
+            },
         ],
     },
     'staticanalysis/bot': {
@@ -1013,37 +1037,6 @@ PROJECTS_CONFIG = {
             'postgresql',
         ],
         'deploys': [
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'url': 'https://api.shipit.testing.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-testing',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'url': 'https://api.shipit.staging.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-staging',
-                    },
-                    'production': {
-                        'enable': True,
-                        # TODO: we will switch to new url soon
-                        # 'url': 'https://api.shipit.mozilla-releng.net',
-                        'url': 'https://shipit-api.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-production',
-                    },
-                },
-            },
             {
                 'target': 'DOCKERHUB',
                 'options': {

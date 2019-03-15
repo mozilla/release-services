@@ -35,7 +35,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-56"
+      image: "mozillareleng/services:base-57"
       features:
         taskclusterProxy: true
       capabilities:
@@ -74,7 +74,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-56"
+      image: "mozillareleng/services:base-57"
       features:
         taskclusterProxy: true
       capabilities:
@@ -99,7 +99,6 @@ tasks:
       - queue:create-task:highest:aws-provisioner-v1/releng-*
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
-      - queue:route:index.project.releng.services.deployment.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:testing
       - docker-worker:capability:privileged
       - notify:irc-channel:#release-services
@@ -116,7 +115,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-56"
+      image: "mozillareleng/services:base-57"
       features:
         taskclusterProxy: true
       capabilities:
@@ -141,7 +140,6 @@ tasks:
       - queue:create-task:highest:aws-provisioner-v1/releng-*
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
-      - queue:route:index.project.releng.services.deployment.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
       - docker-worker:capability:privileged
       - notify:irc-channel:#release-services
@@ -158,7 +156,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-56"
+      image: "mozillareleng/services:base-57"
       features:
         taskclusterProxy: true
       capabilities:
@@ -183,7 +181,6 @@ tasks:
       - queue:create-task:highest:aws-provisioner-v1/releng-*
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
-      - queue:route:index.project.releng.services.deployment.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:production
       - docker-worker:capability:privileged
       - notify:irc-channel:#release-services
@@ -200,7 +197,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-56"
+      image: "mozillareleng/services:base-57"
       features:
         taskclusterProxy: true
       capabilities:
