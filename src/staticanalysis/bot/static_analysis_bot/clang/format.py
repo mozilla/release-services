@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import itertools
 import os
 import subprocess
 
@@ -12,6 +13,7 @@ from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import settings
 from static_analysis_bot.revisions import Revision
+from static_analysis_bot.task import AnalysisTask
 
 logger = get_logger(__name__)
 
@@ -97,8 +99,35 @@ class ClangFormat(DefaultAnalyzer):
         # line numbers from the dev's patch instead of new line numbers)
         reverse_diff = client.diff(unified=8, reverse=True).decode('utf-8')
 
+        # Build issues from that patch
+        issues = ClangFormatIssue.from_patch(reverse_diff, revision)
+
+        stats.report_issues('clang-format', issues)
+        return issues
+
+
+class ClangFormatIssue(Issue):
+    '''
+    An issue created by the Clang Format tool
+    '''
+    ANALYZER = CLANG_FORMAT
+
+    def __init__(self, path, line, nb_lines, revision):
+        self.path = path
+        self.line = line
+        self.nb_lines = nb_lines
+        self.revision = revision
+        self.is_new = True
+
+    @staticmethod
+    def from_patch(patch_content, revision):
+        '''
+        Create a new issue for each patch hunk
+        '''
+        assert isinstance(patch_content, str)
+
         # List all the lines that were fixed by `./mach clang-format`
-        patch = Patch.parse_patch(reverse_diff, skip_comments=False)
+        patch = Patch.parse_patch(patch_content, skip_comments=False)
         assert patch != {}, \
             'Empty patch'
 
@@ -122,26 +151,11 @@ class ClangFormat(DefaultAnalyzer):
             groups.append(group)
 
             issues += [
-                ClangFormatIssue(filename, group[0], len(group), revision)
-                for group in groups
+                ClangFormatIssue(filename, g[0], len(group), revision)
+                for g in groups
             ]
 
-        stats.report_issues('clang-format', issues)
         return issues
-
-
-class ClangFormatIssue(Issue):
-    '''
-    An issue created by the Clang Format tool
-    '''
-    ANALYZER = CLANG_FORMAT
-
-    def __init__(self, path, line, nb_lines, revision):
-        self.path = path
-        self.line = line
-        self.nb_lines = nb_lines
-        self.revision = revision
-        self.is_new = True
 
     def build_extra_identifiers(self):
         '''
@@ -199,3 +213,28 @@ class ClangFormatIssue(Issue):
             'validates': self.validates(),
             'publishable': self.is_publishable(),
         }
+
+
+class ClangFormatTask(AnalysisTask):
+    '''
+    Support issues from source-test clang-format tasks by reading the
+    clang-format raw output
+    '''
+    artifacts = [
+        'public/code-review/clang-format.diff',
+    ]
+
+    def parse_issues(self, artifacts, revision):
+
+        def _clean(patch):
+            assert isinstance(patch, bytes)
+            patch = patch.decode('utf-8')
+            # TODO: use source name as dest name (no tmp)
+            # TODO: reverse it to get initial nb
+            # TODO: remove /builds/worker/checkouts/ prefix
+            return patch
+
+        return list(itertools.chain(*[
+            ClangFormatIssue.from_patch(_clean(artifact), revision)
+            for artifact in artifacts.values()
+        ]))
