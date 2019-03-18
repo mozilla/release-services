@@ -11,7 +11,9 @@ export default {
   watch: {
     '$route' (to, from, next) {
       // Load new tasks when route change
-      this.load_tasks()
+      if (to.path !== from.path) {
+        this.load_tasks()
+      }
     }
   },
   methods: {
