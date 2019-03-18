@@ -8,6 +8,7 @@ import datetime
 import enum
 import functools
 import hashlib
+import io
 import json
 import os
 import pathlib
@@ -141,6 +142,7 @@ ThunderbirdVersions = mypy_extensions.TypedDict('ThunderbirdVersions', {
     'LATEST_THUNDERBIRD_DEVEL_VERSION': str,
     'LATEST_THUNDERBIRD_NIGHTLY_VERSION': str,
 })
+IndexListing = str
 ProductDetails = typing.Dict[File, typing.Union[
     Releases,
     ReleasesHistory,
@@ -152,6 +154,7 @@ ProductDetails = typing.Dict[File, typing.Union[
     L10n,
     Languages,
     ThunderbirdVersions,
+    IndexListing
 ]]
 Products = typing.List[Product]
 
@@ -189,6 +192,56 @@ def get_product_mozilla_version(product: Product,
     if klass:
         return klass.parse(version)
     return None
+
+
+def create_index_listing_html(folder: pathlib.Path,
+                              items: typing.Set[pathlib.Path]
+                              ) -> str:
+
+    folder = '/' / folder  # noqa : T484 Unsupported left operand type for / ("str")
+    with io.StringIO() as html:
+
+        def write(x):
+            return html.write(f'{x}{os.linesep}')
+
+        write(f'<!doctype html>')
+        write(f'<html>')
+        write(f'  <head>')
+        write(f'    <title>Index of {folder}</title>')
+        write(f'  </head>')
+        write(f'  <body>')
+        write(f'    <h1>Index of {folder}</h1>')
+        write(f'    <ul>')
+        if folder != folder.parent:
+            write(f'      <li><a href="{folder.parent}"> Parent Directory</a></li>')
+        for item in sorted(items):
+            is_dir = not (item.name.endswith('.json') or item.name.endswith('.html'))
+            itemStr = is_dir and f'{item}/' or f'{item}'
+            write(f'      <li><a href="{itemStr}"> {itemStr}</a></li>')
+        write(f'    </ul>')
+        write(f'  </body>')
+        write(f'</html>')
+
+        return html.getvalue()
+
+
+def create_index_listing(product_details: ProductDetails) -> ProductDetails:
+    new_product_details: ProductDetails = dict()
+    folders: typing.Dict[pathlib.Path, typing.List[pathlib.Path]] = dict()
+
+    for file_, content in product_details.items():
+        new_product_details[file_] = content
+
+        path = pathlib.Path(file_)
+        for folder in list(path.parents):
+            folders.setdefault(folder, [])
+            folders[folder].append(path)
+            path = folder
+
+    for folder, items in folders.items():
+        new_product_details[str(folder / 'index.html')] = create_index_listing_html(folder, set(items))
+
+    return new_product_details
 
 
 async def fetch_l10n_data(
@@ -368,7 +421,7 @@ def get_releases(breakpoint_version: int,
         if product is Product.FENNEC:
             product_file = '1.0/mobile_android.json'
 
-        old_releases = typing.cast(typing.Dict[str, ReleaseDetails], old_product_details[product_file].get('releases', dict()))
+        old_releases = typing.cast(typing.Dict[str, ReleaseDetails], old_product_details[product_file].get('releases', dict()))  # noqa
         for product_with_version in old_releases:
             # mozilla_version.gecko.GeckoVersion does not parse rc (yet)
             # https://github.com/mozilla-releng/mozilla-version/pull/40
@@ -1179,6 +1232,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         for file_, content in product_details.items()
     }
 
+    # create index.html for every folder
+    product_details = create_index_listing(product_details)
+
     if shipit_api.config.PRODUCT_DETAILS_NEW_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_NEW_DIR)
 
@@ -1190,7 +1246,10 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
 
         # write content into json file
         with new_file.open('w+') as f:
-            f.write(json.dumps(content, sort_keys=True, indent=4))
+            if new_file.endswith('.json'):
+                f.write(json.dumps(content, sort_keys=True, indent=4))
+            else:
+                f.write(content)
 
     # remove all top level items in folder_in_repo
     for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo):
