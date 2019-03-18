@@ -232,7 +232,7 @@ class PhabricatorRevision(Revision):
         ]
 
     def __repr__(self):
-        return self.diff_phid or 'unknown'
+        return self.diff_phid
 
     def __str__(self):
         return 'Phabricator #{} - {}'.format(self.diff_id, self.diff_phid)
