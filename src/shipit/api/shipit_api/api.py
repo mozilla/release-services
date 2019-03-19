@@ -46,8 +46,9 @@ def good_version(release):
         return False
 
 
-def notify_via_irc(message):
-    owners = current_app.config.get('IRC_NOTIFICATIONS_OWNERS')
+def notify_via_irc(product, message):
+    owners_section = current_app.config.get('IRC_NOTIFICATIONS_OWNERS_PER_PRODUCT')
+    owners = owners_section.get(product, owners_section.get('default'))
     channel = current_app.config.get('IRC_NOTIFICATIONS_CHANNEL')
 
     if owners and channel:
@@ -66,8 +67,9 @@ def add_release(body):
         abort(401, f'required permission: {required_permission}, user permissions: {user_permissions}')
 
     session = current_app.db.session
+    product = body['product']
     r = Release(
-        product=body['product'],
+        product=product,
         version=body['version'],
         branch=body['branch'],
         revision=body['revision'],
@@ -87,7 +89,7 @@ def add_release(body):
     except UnsupportedFlavor as e:
         raise BadRequest(description=e.description)
 
-    notify_via_irc(f'New release ({r.product} {r.version} build{r.build_number}) was just created.')
+    notify_via_irc(product, f'New release ({product} {r.version} build{r.build_number}) was just created.')
 
     return release, 201
 
@@ -184,7 +186,8 @@ def schedule_phase(name, phase):
         phase.release.completed = completed
     session.commit()
 
-    notify_via_irc(f'Phase {phase.name} was just scheduled '
+    notify_via_irc(phase.release.product,
+                   f'Phase {phase.name} was just scheduled '
                    f'for release {phase.release.product} {phase.release.version} '
                    f'build{phase.release.build_number} - '
                    f'(https://tools.taskcluster.net/groups/{phase.task_id})')
@@ -237,7 +240,9 @@ def abandon_release(name):
     except NoResultFound:
         abort(404)
 
-    notify_via_irc(f'Release {release.product} {release.version} build{release.build_number} was just canceled.')
+    notify_via_irc(
+        release.product,
+        f'Release {release.product} {release.version} build{release.build_number} was just canceled.')
 
     return release_json
 
@@ -318,7 +323,9 @@ def update_release_status(name, body):
     session.commit()
     release = r.json
 
-    notify_via_irc(f'Release {r.product} {r.version} build{r.build_number} status changed to `{status}`.')
+    notify_via_irc(
+        r.product,
+        f'Release {r.product} {r.version} build{r.build_number} status changed to `{status}`.')
 
     return release
 
@@ -379,6 +386,7 @@ def phase_signoff(name, phase, uid):
 
     r = phase_obj.release
     notify_via_irc(
+        r.product,
         f'{phase} of {r.product} {r.version} build{r.build_number} signed off by {who}.')
 
     return dict(signoffs=signoffs)
