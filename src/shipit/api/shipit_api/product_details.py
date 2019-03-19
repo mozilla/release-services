@@ -215,7 +215,7 @@ def create_index_listing_html(folder: pathlib.Path,
         if folder != folder.parent:
             write(f'      <li><a href="{folder.parent}"> Parent Directory</a></li>')
         for item in sorted(items):
-            is_dir = not (item.name.endswith('.json') or item.name.endswith('.html'))
+            is_dir = item.suffix not in ['.json', '.html']
             itemStr = is_dir and f'{item}/' or f'{item}'
             write(f'      <li><a href="{itemStr}"> {itemStr}</a></li>')
         write(f'    </ul>')
@@ -1246,7 +1246,7 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
 
         # write content into json file
         with new_file.open('w+') as f:
-            if new_file.endswith('.json'):
+            if new_file.suffix == '.json':
                 f.write(json.dumps(content, sort_keys=True, indent=4))
             else:
                 f.write(content)
