@@ -2,7 +2,6 @@
 import itertools
 import json
 import os
-import re
 
 from cli_common.command import run
 from cli_common.log import get_logger
@@ -18,7 +17,6 @@ from static_analysis_bot.task import AnalysisTask
 logger = get_logger(__name__)
 
 TRY_PREFIX = 'source-test-mozlint'
-TRY_ISSUE_MARKER = 'TEST-UNEXPECTED-ERROR | '
 ISSUE_MARKDOWN = '''
 ## mozlint - {linter}
 
@@ -56,42 +54,9 @@ class MozLintIssue(Issue):
                 self.path = os.path.relpath(self.path, settings.repo_dir)
             assert os.path.exists(os.path.join(settings.repo_dir, self.path)), \
                 'Missing {} in repo {}'.format(self.path, settings.repo_dir)
-
-    @staticmethod
-    def from_try(task_name, line, revision):
-        '''
-        Convert a detected issue on try into a MozLintIssue
-        '''
-        assert task_name.startswith(TRY_PREFIX)
-
-        rule = None
-        column = 0
-
-        linter = task_name[len(TRY_PREFIX) + 1:]
-        if linter == 'codespell':
-            match = re.match(r'^(.+):(\d+) \| (.+)$', line)
-            assert match is not None, 'Unsupported line format: {}'.format(line)
-            path, line, message = match.groups()
-
-        else:
-            match = re.match(r'^(.+):(\d+):(\d+) \| (.+) \(([\w\s\-]+)\)$', line)
-            assert match is not None, 'Unsupported line format: {}'.format(line)
-            path, line, column, message, rule = match.groups()
-
-        # Remove Taskcluster clone prefix
-        if path.startswith('/builds/worker/checkouts/'):
-            path = path[25:]
-
-        return MozLintIssue(
-            path,
-            int(column),
-            'error',
-            int(line),
-            linter,
-            message,
-            rule,
-            revision,
-        )
+        elif self.path.startswith('/builds/worker/checkouts/'):
+            # Remove Try path prefix
+            self.path = self.path[25:]
 
     def __str__(self):
         return '{} issue {} {} line {}'.format(
@@ -276,7 +241,7 @@ class MozLintTask(AnalysisTask):
     Support issues from source-test mozlint tasks by parsing the raw log
     '''
     artifacts = [
-        'public/logs/live_backing.log',
+        'public/code-review/mozlint.json',
     ]
 
     # Only process failed states, as a completed task means than no issues were found
@@ -287,18 +252,9 @@ class MozLintTask(AnalysisTask):
         Parse issues from a log file content
         '''
         assert isinstance(artifacts, dict)
-
-        # Lookup issues using marker in raw log
-        issues = [
-            line[line.index(TRY_ISSUE_MARKER) + len(TRY_ISSUE_MARKER):]
+        return [
+            MozLintIssue(revision=revision, **issue)
             for artifact in artifacts.values()
-            for line in artifact.decode('utf-8').splitlines()
-            if TRY_ISSUE_MARKER in line
+            for path, path_issues in artifact.items()
+            for issue in path_issues
         ]
-        assert len(issues) > 0, 'No issues found in artifacts'
-
-        # Convert to Issue instances
-        return list(filter(None, [
-            MozLintIssue.from_try(self.name, issue, revision)
-            for issue in issues
-        ]))
