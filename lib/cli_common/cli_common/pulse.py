@@ -81,6 +81,12 @@ async def create_consumer(user, password, exchange, topic, callback):
     await channel.basic_consume(callback, queue_name=queue)
 
     logger.info('Worker starts consuming messages')
+    logger.info('Starting loop to ensure connection is open')
+    while True:
+        # make sure to raise AmqpClosedConnection in case the connection is
+        # closed. Assuming the create_consumer function is restarted on failure.
+        await asyncio.sleep(10)
+        await protocol.ensure_open()
 
 
 def run_consumer(consumer):
