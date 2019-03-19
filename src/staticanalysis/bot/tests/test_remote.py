@@ -55,7 +55,7 @@ class MockQueue(object):
                     {
                         'name': name,
                         'storageType': 'dummyStorage',
-                        'contentType': 'text/plain',
+                        'contentType': isinstance(artifact, dict) and 'application/json' or 'text/plain',
                         'content': artifact,
                     }
                     for name, artifact in desc.get('artifacts', {}).items()
@@ -90,6 +90,8 @@ class MockQueue(object):
             return
 
         artifact = next(filter(lambda a: a['name'] == artifact_name, artifacts['artifacts']))
+        if artifact['contentType'] == 'application/json':
+            return artifact['content']
         return {
             'response': MockArtifactResponse(artifact['content'].encode('utf-8')),
         }
@@ -151,10 +153,19 @@ def test_baseline(mock_try_config, mock_revision):
             'name': 'source-test-mozlint-flake8',
             'state': 'failed',
             'artifacts': {
-                'failures.log': '\n'.join([
-                    'something else',
-                    'xx123 TEST-UNEXPECTED-ERROR | test.cpp:12:1 | strange issue (checker XXX)',
-                ])
+                'public/code-review/mozlint.json': {
+                    'test.cpp': [
+                        {
+                            'path': 'test.cpp',
+                            'lineno': 12,
+                            'column': 1,
+                            'level': 'error',
+                            'linter': 'flake8',
+                            'rule': 'checker XXX',
+                            'message': 'strange issue',
+                        }
+                    ]
+                },
             }
         },
         'analyzer-B': {},
@@ -224,15 +235,15 @@ def test_no_issues(mock_try_config, mock_revision):
             'state': 'failed',
             'artifacts': {
                 'nope.log': 'No issues here !',
-                'still-nope.txt': 'xxxxx'
+                'still-nope.txt': 'xxxxx',
+                'public/code-review/mozlint.json': {},
             }
         },
         'extra-task': {},
     }
     workflow = RemoteWorkflow(MockQueue(tasks))
-    with pytest.raises(AssertionError) as e:
-        workflow.run(mock_revision)
-    assert str(e.value) == 'No issues found in failure log'
+    issues = workflow.run(mock_revision)
+    assert len(issues) == 0
 
 
 def test_unsupported_analyzer(mock_try_config, mock_revision):

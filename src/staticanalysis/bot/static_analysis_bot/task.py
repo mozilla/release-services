@@ -50,7 +50,7 @@ class AnalysisTask(object):
                 artifact = queue_service.getArtifact(self.id, self.run_id, artifact_name)
                 out[artifact_name] = 'response' in artifact and artifact['response'].content or artifact
             except Exception as e:
-                logger.warn('Failed to read artifact', task_id=self.id, run_id=self.run_id, artifact=artifact, error=e)
+                logger.warn('Failed to read artifact', task_id=self.id, run_id=self.run_id, artifact=artifact_name, error=e)
                 continue
 
         return out

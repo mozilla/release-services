@@ -171,14 +171,15 @@ class ClangTidy(DefaultAnalyzer):
 
         issues = []
         for i, header in enumerate(headers):
+            path, line, char, type, message, check = header.groups()
             issue = ClangTidyIssue(
                 revision,
-                path=headers[0],
-                line=headers[1],
-                char=headers[2],
-                type=headers[3],
-                message=headers[4],
-                check=headers[5],
+                path=path,
+                line=line,
+                char=char,
+                type=type,
+                message=message,
+                check=check,
             )
 
             # Get next header
