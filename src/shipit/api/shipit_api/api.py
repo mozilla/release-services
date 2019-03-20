@@ -48,15 +48,17 @@ def good_version(release):
 
 def notify_via_irc(product, message):
     owners_section = current_app.config.get('IRC_NOTIFICATIONS_OWNERS_PER_PRODUCT')
+    channels_section = current_app.config.get('IRC_NOTIFICATIONS_CHANNELS_PER_PRODUCT')
     owners = owners_section.get(product, owners_section.get('default'))
-    channel = current_app.config.get('IRC_NOTIFICATIONS_CHANNEL')
+    channels = channels_section.get(product, channels_section.get('default'))
 
-    if owners and channel:
+    if owners and channels:
         owners = ': '.join(owners)
-        current_app.notify.irc({
-            'channel': channel,
-            'message': f'{owners}: {message}',
-        })
+        for channel in channels:
+            current_app.notify.irc({
+                'channel': channel,
+                'message': f'{owners}: {message}',
+            })
 
 
 def add_release(body):
