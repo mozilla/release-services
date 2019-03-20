@@ -367,3 +367,153 @@ def test_decision_task(mock_try_config, mock_revision):
     assert str(e.value) == 'No task dependencies to analyze'
     assert mock_revision.mercurial_revision is not None
     assert mock_revision.mercurial_revision == 'someRevision'
+
+
+def test_mozlint_task(mock_try_config, mock_revision):
+    '''
+    Test a remote workflow with a mozlint analyzer
+    '''
+    from static_analysis_bot.workflows.remote import RemoteWorkflow
+    from static_analysis_bot.lint import MozLintIssue
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {
+            'dependencies': ['mozlint']
+        },
+        'mozlint': {
+            'name': 'source-test-mozlint-dummy',
+            'state': 'failed',
+            'artifacts': {
+                'public/code-review/mozlint.json': {
+                    'test.cpp': [
+                        {
+                            'path': 'test.cpp',
+                            'lineno': 42,
+                            'column': 51,
+                            'level': 'error',
+                            'linter': 'flake8',
+                            'rule': 'E001',
+                            'message': 'dummy issue',
+                        }
+                    ]
+                },
+            }
+        }
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    issues = workflow.run(mock_revision)
+    assert len(issues) == 1
+    issue = issues[0]
+    assert isinstance(issue, MozLintIssue)
+    assert issue.path == 'test.cpp'
+    assert issue.line == 42
+    assert issue.column == 51
+    assert issue.linter == 'flake8'
+    assert issue.message == 'dummy issue'
+
+
+def test_clang_tidy_task(mock_try_config, mock_revision):
+    '''
+    Test a remote workflow with a clang-tidy analyzer
+    '''
+    from static_analysis_bot.workflows.remote import RemoteWorkflow
+    from static_analysis_bot.clang.tidy import ClangTidyIssue
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {
+            'dependencies': ['clang-tidy']
+        },
+        'clang-tidy': {
+            'name': 'source-test-clang-tidy',
+            'state': 'completed',
+            'artifacts': {
+                'public/code-review/clang-tidy.json': {
+                    'files': {
+                        'test.cpp': {
+                            'hash': 'e409f05a10574adb8d47dcb631f8e3bb',
+                            'warnings': [
+                                {
+                                    'column': 12,
+                                    'line': 123,
+                                    'flag': 'checker.XXX',
+                                    'message': 'some hard issue with c++',
+                                    'filename': 'test.cpp',
+                                }
+                            ]
+                        }
+                    }
+                },
+            }
+        }
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    issues = workflow.run(mock_revision)
+    assert len(issues) == 1
+    issue = issues[0]
+    assert isinstance(issue, ClangTidyIssue)
+    assert issue.path == 'test.cpp'
+    assert issue.line == 123
+    assert issue.char == 12
+    assert issue.check == 'checker.XXX'
+    assert issue.message == 'some hard issue with c++'
+
+
+def test_clang_format_task(mock_try_config, mock_revision):
+    '''
+    Test a remote workflow with a clang-format analyzer
+    '''
+    from static_analysis_bot.workflows.remote import RemoteWorkflow
+    from static_analysis_bot.clang.format import ClangFormatIssue
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {
+            'dependencies': ['clang-format']
+        },
+        'clang-format': {
+            'name': 'source-test-clang-format',
+            'state': 'completed',
+            'artifacts': {
+                'public/code-review/clang-format.json': {
+                    'test.cpp': [
+                        {
+                            'dest_length': 10,
+                            'dest_offset': 1386,
+                            'src_offset': 1386,
+                            'src_length': 7,
+                            'patch': '''Multi\nlines'''
+                        }
+                    ]
+                }
+            }
+        }
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    issues = workflow.run(mock_revision)
+    assert len(issues) == 1
+    issue = issues[0]
+    assert isinstance(issue, ClangFormatIssue)
+    assert issue.path == 'test.cpp'
+    assert issue.line == 1386
+    assert issue.nb_lines == 7
+    assert issue.patch == 'Multi\nlines'
