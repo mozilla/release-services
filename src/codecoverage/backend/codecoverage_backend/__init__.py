@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 
 import os
+
 import codecoverage_backend.config
 import codecoverage_backend.datadog
 

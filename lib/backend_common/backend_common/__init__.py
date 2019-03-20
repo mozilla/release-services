@@ -3,13 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import cli_common.log
-import flask
 import importlib
 import os
 
-import backend_common.dockerflow
+import flask
 
+import backend_common.dockerflow
+import cli_common.log
 
 EXTENSIONS = [
     'log',

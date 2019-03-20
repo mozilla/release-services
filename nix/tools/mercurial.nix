@@ -55,6 +55,7 @@ in python2Packages.buildPythonApplication {
     hgmo = ${hg_tools}/hgext/hgmo
     pushlog = ${hg_tools}/hgext/pushlog
     mozext = ${hg_tools}/hgext/mozext
+    firefoxtree = ${hg_tools}/hgext/firefoxtree
     EOF
   '';
 }
