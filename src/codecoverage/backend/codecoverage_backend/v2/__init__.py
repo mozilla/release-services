@@ -2,9 +2,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from cli_common import log
+
 from flask import abort
-from codecoverage_backend.v2.base import active_data, NoResults
+
+from cli_common import log
+from codecoverage_backend.v2.base import NoResults
+from codecoverage_backend.v2.base import active_data
 from codecoverage_backend.v2.path import coverage_paths
 
 logger = log.get_logger(__name__)
