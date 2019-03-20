@@ -2,9 +2,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 from cli_common import log
 from codecoverage_backend import secrets
-from codecoverage_backend.services import coveralls, codecov, active_data
+from codecoverage_backend.services import active_data
+from codecoverage_backend.services import codecov
+from codecoverage_backend.services import coveralls
 
 logger = log.get_logger(__name__)
 
