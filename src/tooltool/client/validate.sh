@@ -65,7 +65,7 @@ show_results() {
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-[ -z "$VIRTUAL_ENV" ] && fail "Need an activated virtualenv with tooltool[test] installed"
+#[ -z "$VIRTUAL_ENV" ] && fail "Need an activated virtualenv with tooltool[test] installed"
 
 tmpbase=$(mktemp -d -t tmpbase.XXXXXX)
 trap 'rm -rf ${tmpbase}; exit 1' 1 2 3 15
@@ -77,11 +77,12 @@ status "running pyflakes"
 pyflakes tooltool.py || not_ok "pyflakes failed"
 
 status "running shell tests"
-bash test.sh >/dev/null 2>&1 || not_ok "shell tests failed"
+bash test.sh
+#>/dev/null 2>&1 || not_ok "shell tests failed"
 
 status "running tests (under coverage)"
 coverage erase || not_ok "coverage failed"
-coverage run --rcfile=coveragerc --source=tooltool $VIRTUAL_ENV/bin/nosetests test_tooltool.py || not_ok "tests failed"
+coverage run --rcfile=coveragerc --source=tooltool `dirname \`which nosetests\``/.nosetests-wrapped test_tooltool.py || not_ok "tests failed"
 
 status "checking coverage"
 coverage report --rcfile=coveragerc --fail-under=${COVERAGE_MIN} >${tmpbase}/covreport || not_ok "less than ${COVERAGE_MIN}% coverage"
