@@ -76,9 +76,10 @@ pep8 --config=pep8rc tooltool.py || not_ok "pep8 failed"
 status "running pyflakes"
 pyflakes tooltool.py || not_ok "pyflakes failed"
 
-status "running shell tests"
-bash test.sh
-#>/dev/null 2>&1 || not_ok "shell tests failed"
+if [ ! -z "$IN_NIX_SHELL" ]; then
+  status "running shell tests"
+  bash test.sh >/dev/null 2>&1 || not_ok "shell tests failed"
+fi
 
 status "running tests (under coverage)"
 coverage erase || not_ok "coverage failed"
