@@ -15,6 +15,7 @@ import hglib
 
 from cli_common.command import run_check
 from cli_common.log import get_logger
+from cli_common.phabricator import BuildState
 from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import CLANG_TIDY
 from static_analysis_bot import COVERAGE
@@ -146,6 +147,17 @@ class LocalWorkflow(object):
          * Run static analyzers
         '''
         analyzers = []
+
+        # Test workflow
+        revision.update_status(
+            state=BuildState.Work,
+        )
+        import time
+        time.sleep(3)
+        revision.update_status(
+            state=BuildState.Fail,
+        )
+        return
 
         # Add log to find Taskcluster task in papertrail
         logger.info(

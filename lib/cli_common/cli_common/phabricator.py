@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import enum
 import functools
 import json
 from collections import OrderedDict
@@ -18,6 +19,12 @@ HGMO_JSON_REV_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-rev/{}
 MOZILLA_PHABRICATOR_PROD = 'https://phabricator.services.mozilla.com/api/'
 
 logger = log.get_logger(__name__)
+
+
+class BuildState(enum.Enum):
+    Work = 'work'
+    Pass = 'pass'
+    Fail = 'fail'
 
 
 @functools.lru_cache(maxsize=2048)
@@ -271,9 +278,22 @@ class PhabricatorAPI(object):
         )
         return out['data']
 
+    def search_build_target(self, build_phid):
+        '''
+        Search HarborMaster build targets for a build
+        '''
+        constraints = {
+            'buildPHIDs': [build_phid, ],
+        }
+        out = self.request(
+            'harbormaster.target.search',
+            constraints=constraints,
+        )
+        return out['data']
+
     def find_diff_build(self, diff_phid, build_plan_phid):
         '''
-        Find a specific build for a Diff and an HarborMaster build plan
+        Find a specific build and its targets for a Diff and an HarborMaster build plan
         '''
         assert diff_phid.startswith('PHID-DIFF-')
         assert build_plan_phid.startswith('PHID-HMCP-')
@@ -290,7 +310,11 @@ class PhabricatorAPI(object):
         build = builds[0]
         logger.info('Found HarborMaster build', id=build['id'], phid=build['phid'])
 
-        return build
+        # Finally look for the build targets
+        targets = self.search_build_target(build['phid'])
+        logger.info('Found HarborMaster build targets', nb=len(targets))
+
+        return build, targets
 
     def update_build_target(self, build_target_phid, type, unit=[], lint=[]):
         '''

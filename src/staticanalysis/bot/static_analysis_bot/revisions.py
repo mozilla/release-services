@@ -11,6 +11,7 @@ import hglib
 from parsepatch.patch import Patch
 
 from cli_common import log
+from cli_common.phabricator import BuildState
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import create_blob_artifact
 from static_analysis_bot import AnalysisException
@@ -222,6 +223,16 @@ class PhabricatorRevision(Revision):
         self.revision = self.api.load_revision(self.phid)
         self.id = self.revision['id']
 
+        # Load build for status updates
+        if settings.build_plan:
+            build, targets = self.api.find_diff_build(self.diff_phid, settings.build_plan)
+            self.build_phid = build['phid']
+            assert len(targets) > 0, 'No build target found'
+            target = targets[0]
+            self.build_target_phid = target['phid']
+        else:
+            logger.info('No build plan specified, no HarborMaster update')
+
     @property
     def namespaces(self):
         return [
@@ -240,6 +251,21 @@ class PhabricatorRevision(Revision):
     @property
     def url(self):
         return 'https://{}/D{}'.format(self.api.hostname, self.id)
+
+    def update_status(self, state):
+        '''
+        Update build status on HarborMaster
+        '''
+        assert isinstance(state, BuildState)
+        if not settings.build_plan:
+            logger.info('No build plan, skipping HarborMaster update')
+            return
+
+        self.api.update_build_target(
+            self.build_target_phid,
+            type=state.value,
+        )
+        logger.info('Updated HarborMaster status', state=state)
 
     def setup_try(self, tasks):
         '''
