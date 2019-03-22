@@ -30,7 +30,18 @@ def taskcluster_options(func):
         default=None,
         envvar='TASKCLUSTER_ACCESS_TOKEN'
     )
+    @click.pass_context
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(context, *args, **kwargs):
+
+        # Load credentials from available user config
+        context.ensure_object(dict)
+        config = context.obj.get('config')
+        if config and 'taskcluster' in config:
+            if kwargs['taskcluster_client_id'] is None:
+                kwargs['taskcluster_client_id'] = config['taskcluster'].get('clientId')
+            if kwargs['taskcluster_access_token'] is None:
+                kwargs['taskcluster_access_token'] = config['taskcluster'].get('accessToken')
+
         return func(*args, **kwargs)
     return wrapper
