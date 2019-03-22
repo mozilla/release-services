@@ -1343,7 +1343,13 @@ class FetchFileTests(BaseFileRecordTest, TestDirMixin):
             def replacement(req):
                 auth = req.get_header('Authorization')
                 if auth:
-                    eq_(auth, 'Bearer %s' % exp_token)
+                    if exp_token.strip()[0] == '{':
+                        exp_token_ = json.loads(exp_token)
+                        assert 'id="{}"'.format(exp_token_['clientId']) in auth
+                        assert 'id="{}"'.format(exp_token_['clientId']) in \
+                            tooltool.make_taskcluster_header(exp_token_, req)
+                    else:
+                        eq_(auth, 'Bearer %s' % exp_token)
                 else:
                     assert not exp_token, "got token auth when not expecting it"
                 url = req.get_full_url()
@@ -1382,6 +1388,17 @@ class FetchFileTests(BaseFileRecordTest, TestDirMixin):
         with self.mocked_urllib2({'http://b/sha512/' + self.sample_hash: 'abcd'}, exp_token='TOKTOK'):
             with open("auth", "w") as f:
                 f.write('TOKTOK')
+            filename = tooltool.fetch_file(
+                ['http://a', 'http://b'], self.test_record, auth_file='auth')
+            assert filename
+            eq_(open(filename).read(), 'abcd')
+            os.unlink(filename)
+
+    def test_fetch_file_auth_file_taskcluster(self):
+        credentials = json.dumps({'clientId': '123', 'accessToken': '456'})
+        with self.mocked_urllib2({'http://b/sha512/' + self.sample_hash: 'abcd'}, exp_token=credentials):
+            with open("auth", "w") as f:
+                f.write(credentials)
             filename = tooltool.fetch_file(
                 ['http://a', 'http://b'], self.test_record, auth_file='auth')
             assert filename
