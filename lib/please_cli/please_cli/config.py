@@ -396,6 +396,9 @@ PROJECTS_CONFIG = {
             },
         ],
     },
+    'tooltool/client': {
+        'update': True,
+    },
     'tooltool/api': {
         'update': True,
         'run': 'FLASK',
