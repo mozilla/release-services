@@ -243,6 +243,55 @@ class PhabricatorAPI(object):
         )
         return res['targetMap']
 
+    def search_buildable(self, object_phid):
+        '''
+        Search HarborMaster buildables linked to an object (diff, revision, ...)
+        '''
+        constraints = {
+            'objectPHIDs': [object_phid, ],
+        }
+        out = self.request(
+            'harbormaster.buildable.search',
+            constraints=constraints,
+        )
+        return out['data']
+
+    def search_build(self, buildable_phid, plans=[]):
+        '''
+        Search HarborMaster build for a buildable
+        Supports HarborMaster Buidl Plan filtering
+        '''
+        constraints = {
+            'buildables': [buildable_phid, ],
+            'plans': plans,
+        }
+        out = self.request(
+            'harbormaster.build.search',
+            constraints=constraints,
+        )
+        return out['data']
+
+    def find_diff_build(self, diff_phid, build_plan_phid):
+        '''
+        Find a specific build for a Diff and an HarborMaster build plan
+        '''
+        assert diff_phid.startswith('PHID-DIFF-')
+        assert build_plan_phid.startswith('PHID-HMCP-')
+
+        # First find the buildable for this diff
+        buildables = self.search_buildable(diff_phid)
+        assert len(buildables) == 1
+        buildable = buildables[0]
+        logger.info('Found HarborMaster buildable', id=buildable['id'], phid=buildable['phid'])
+
+        # Then find the build in that buildable & plan
+        builds = self.search_build(buildable['phid'], plans=[build_plan_phid, ])
+        assert len(buildables) == 1
+        build = builds[0]
+        logger.info('Found HarborMaster build', id=build['id'], phid=build['phid'])
+
+        return build
+
     def update_build_target(self, build_target_phid, type, unit=[], lint=[]):
         '''
         Update unit test / linting data for a given build target.
