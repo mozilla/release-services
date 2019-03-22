@@ -22,12 +22,18 @@
 # in which the manifest file resides and it should be called
 # 'manifest.tt'
 
+import base64
+import calendar
 import hashlib
 import httplib
 import json
+import hmac
 import logging
+import math
 import optparse
 import os
+import pprint
+import re
 import shutil
 import sys
 import tarfile
@@ -45,6 +51,13 @@ __version__ = '1'
 
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
 TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
+HAWK_VER = 1
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    six_binary_type = bytes
+else:
+    six_binary_type = str
 
 
 log = logging.getLogger(__name__)
@@ -75,6 +88,259 @@ class DigestMismatchException(ExceptionWithFilename):
 
 class MissingFileException(ExceptionWithFilename):
     pass
+
+
+class InvalidCredentials(Exception):
+    pass
+
+
+class BadHeaderValue(Exception):
+    pass
+
+
+def parse_url(url):
+    url_parts = urlparse.urlparse(url)
+    url_dict = {
+        'scheme': url_parts.scheme,
+        'hostname': url_parts.hostname,
+        'port': url_parts.port,
+        'path': url_parts.path,
+        'resource': url_parts.path,
+        'query': url_parts.query,
+    }
+    if len(url_dict['query']) > 0:
+        url_dict['resource'] = '%s?%s' % (url_dict['resource'],
+                                          url_dict['query'])
+
+    if url_parts.port is None:
+        if url_parts.scheme == 'http':
+            url_dict['port'] = 80
+        elif url_parts.scheme == 'https':
+            url_dict['port'] = 443
+    return url_dict
+
+
+def utc_now(offset_in_seconds=0.0):
+    return int(math.floor(calendar.timegm(time.gmtime()) + float(offset_in_seconds)))
+
+
+def random_string(length):
+    return base64.urlsafe_b64encode(os.urandom(length))[:length]
+
+
+def prepare_header_val(val):
+    if isinstance(val, six_binary_type):
+        val = val.decode('utf-8')
+
+    # Allowed value characters:
+    # !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9, \, "
+    _header_attribute_chars = re.compile(r"^[ a-zA-Z0-9_\!#\$%&'\(\)\*\+,\-\./\:;<\=>\?@\[\]\^`\{\|\}~]*$")
+    if not _header_attribute_chars.match(val):
+        raise BadHeaderValue('header value name={name} value={val} '
+                             'contained an illegal character'.format(name=name or '?', val=repr(val)))
+
+    return val
+
+
+def parse_content_type(content_type):
+    if content_type:
+        return content_type.split(';')[0].strip().lower()
+    else:
+        return ''
+
+
+def calculate_payload_hash(algorithm, payload, content_type):
+    p_hash = hashlib.new(algorithm)
+
+    parts = []
+    parts.append('hawk.' + str(HAWK_VER) + '.payload\n')
+    parts.append(parse_content_type(content_type) + '\n')
+    parts.append(payload or '')
+    parts.append('\n')
+
+    for i, p in enumerate(parts):
+        # Make sure we are about to hash binary strings.
+        if not isinstance(p, six_binary_type):
+            p = p.encode('utf8')
+        p_hash.update(p)
+        parts[i] = p
+
+    log.debug('calculating payload hash from:\n{parts}'.format(parts=pprint.pformat(parts)))
+
+    return base64.b64encode(p_hash.digest())
+
+
+def validate_taskcluster_credentials(credentials):
+    if not hasattr(credentials, '__getitem__'):
+        raise InvalidCredentials('credentials must be a dict-like object')
+    try:
+        credentials['clientId']
+        credentials['accessToken']
+    except KeyError:
+        etype, val, tb = sys.exc_info()
+        raise InvalidCredentials('{etype}: {val}'.format(etype=etype, val=val))
+
+
+def normalize_header_attr(val):
+    if isinstance(val, six_binary_type):
+        return val.decode('utf-8')
+    return val
+
+
+def normalize_string(mac_type,
+                     timestamp,
+                     nonce,
+                     method,
+                     name,
+                     host,
+                     port,
+                     content_hash,
+                     ):
+    normalized = [
+        'hawk.' + str(HAWK_VER) + '.' + mac_type,
+        normalize_header_attr(timestamp),
+        normalize_header_attr(nonce),
+        normalize_header_attr(method or ''),
+        normalize_header_attr(name or ''),
+        normalize_header_attr(host),
+        normalize_header_attr(port),
+        normalize_header_attr(content_hash or '')
+    ]
+
+    # The blank lines are important. They follow what the Node Hawk lib does.
+
+    # for ext which is empty in this case
+    normalized.append('')
+
+    # Add trailing new line.
+    normalized.append('')
+
+    normalized = '\n'.join(normalized)
+
+    return normalized
+
+
+def calculate_mac(mac_type,
+                  access_token,
+                  algorithm,
+                  timestamp,
+                  nonce,
+                  method,
+                  name,
+                  host,
+                  port,
+                  content_hash,
+                  ):
+    normalized = normalize_string(mac_type,
+                                  timestamp,
+                                  nonce,
+                                  method,
+                                  name,
+                                  host,
+                                  port,
+                                  content_hash)
+    log.debug(u'normalized resource for mac calc: {norm}'.format(norm=normalized))
+    digestmod = getattr(hashlib, algorithm)
+
+    # Make sure we are about to hash binary strings.
+
+    if not isinstance(normalized, six_binary_type):
+        normalized = normalized.encode('utf8')
+
+    if not isinstance(access_token, six_binary_type):
+        access_token = access_token.encode('ascii')
+
+    result = hmac.new(access_token, normalized, digestmod)
+    return base64.b64encode(result.digest())
+
+
+def make_taskcluster_header(credentials, req):
+    validate_taskcluster_credentials(credentials)
+
+    url = req.get_full_url()
+    payload = req.get_data()
+    method = req.get_method()
+    algorithm = 'sha256'
+    timestamp = str(utc_now())
+    nonce = random_string(6)
+    url_parts = parse_url(url)
+    ext = {}
+
+    content_hash = None
+    if req.has_data():
+        content_hash = calculate_payload_hash(
+            algorithm,
+            req.get_data(),
+            req.get_method(),
+        )
+
+    mac = calculate_mac('header',
+                        credentials['accessToken'],
+                        algorithm,
+                        timestamp,
+                        nonce,
+                        method,
+                        url_parts['resource'],
+                        url_parts['hostname'],
+                        str(url_parts['port']),
+                        content_hash,
+                        )
+
+    header = u'Hawk mac="{}"'.format(prepare_header_val(mac))
+
+    if content_hash:
+        header = u'{}, hash="{}"'.format(header, prepare_header_val(content_hash))
+
+    header = u'{header}, id="{id}", ts="{ts}", nonce="{nonce}"'.format(
+        header=header,
+        id=prepare_header_val(credentials['clientId']),
+        ts=prepare_header_val(timestamp),
+        nonce=prepare_header_val(nonce),
+    )
+
+
+    log.debug('Hawk header for URL={} method={}: {}'.format(url, method, header))
+
+    def mohawk_sender():
+        import mohawk
+        sender = mohawk.Sender(
+            credentials={
+                'id': credentials['clientId'],
+                'key': credentials['accessToken'],
+                'algorithm': algorithm,
+            },
+            url=url,
+            method=method,
+            content=req.get_data() if req.has_data() else '',
+            content_type=req.get_method(),  # 'application/json' if payload else '',
+
+            nonce=nonce,
+            ext=ext,
+            _timestamp=timestamp,
+        )
+        return sender
+
+    sender = mohawk_sender()
+    return sender.request_header
+
+    import mohawk.base
+    resource = mohawk.base.Resource(
+        url=url,
+        credentials={
+            'id': credentials['clientId'],
+            'key': credentials['accessToken'],
+            'algorithm': algorithm,
+        },
+        ext=ext,
+        nonce=nonce,
+        method=method,
+        content=req.get_data() if req.has_data() else '',
+        content_type=req.get_method(),  # 'application/json' if payload else '',
+        timestamp=timestamp,
+    )
+
+    import pdb; pdb.set_trace()
+    return header
 
 
 class FileRecord(object):
@@ -757,10 +1023,25 @@ def _log_api_error(e):
 
 
 def _authorize(req, auth_file):
-    if auth_file:
-        log.debug("using bearer token in %s" % auth_file)
-        req.add_unredirected_header('Authorization',
-                                    'Bearer %s' % (open(auth_file, "rb").read().strip()))
+    if not auth_file:
+        return
+
+    is_taskcluster_auth = False
+    with open(auth_file) as f:
+        auth_file_content = f.read().strip()
+        try:
+            auth_file_content = json.loads(auth_file_content)
+            is_taskcluster_auth = True
+        except:
+            pass
+
+    if is_taskcluster_auth:
+        taskcluster_header = make_taskcluster_header(auth_file_content, req)
+        log.debug("Using taskcluster credentials in %s" % auth_file)
+        req.add_unredirected_header('Authorization', taskcluster_header)
+    else:
+        log.debug("Using Bearer token in %s" % auth_file)
+        req.add_unredirected_header('Authorization', 'Bearer %s' % auth_file_content)
 
 
 def _send_batch(base_url, auth_file, batch, region):
@@ -787,7 +1068,7 @@ def _s3_upload(filename, file):
     try:
         req_path = "%s?%s" % (url.path, url.query) if url.query else url.path
         conn.request('PUT', req_path, open(filename, "rb"),
-                     {'Content-type': 'application/octet-stream'})
+                     {'Content-Type': 'application/octet-stream'})
         resp = conn.getresponse()
         resp_body = resp.read()
         conn.close()
