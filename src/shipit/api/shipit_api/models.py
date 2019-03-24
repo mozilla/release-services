@@ -163,7 +163,7 @@ class Release(db.Model):
     def phase_signoffs(branch, product, phase):
         return [
             Signoff(
-                uid=slugid.nice()
+                uid=slugid.nice(),
                 name=req['name'],
                 description=req['description'],
                 permissions=req['permissions']
