@@ -11,6 +11,7 @@ import click
 from cli_common.cli import taskcluster_options
 from cli_common.log import get_logger
 from cli_common.log import init_logger
+from cli_common.phabricator import BuildState
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import get_secrets
 from cli_common.taskcluster import get_service
@@ -147,6 +148,9 @@ def main(id,
             extras['error_code'] = e.code
             extras['error_message'] = str(e)
         w.index(revision, state='error', **extras)
+
+        # Update Harbormaster status
+        revision.update_status(state=BuildState.Fail)
 
         # Then raise to mark task as erroneous
         raise

@@ -201,3 +201,17 @@ class InferIssue(Issue):
             'validates': self.validates(),
             'publishable': self.is_publishable(),
         }
+
+    def as_phabricator_lint(self):
+        '''
+        Outputs a Phabricator lint result
+        '''
+        return {
+            'name': self.message,
+            'code': 'infer.{}'.format(self.bug_type),
+            'severity': self.kind,
+            'path': self.path,
+            'line': self.line,
+            'char': self.column,
+            'description': self.body,
+        }

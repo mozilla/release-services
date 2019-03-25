@@ -385,6 +385,19 @@ class ClangTidyIssue(Issue):
             'publishable': self.is_publishable(),
         }
 
+    def as_phabricator_lint(self):
+        '''
+        Outputs a Phabricator lint result
+        '''
+        return {
+            'name': self.message,
+            'code': 'clang-tidy.{}'.format(self.check),
+            'severity': 'warning',
+            'path': self.path,
+            'line': self.line,
+            'char': self.char,
+        }
+
 
 class ClangTidyTask(AnalysisTask):
     '''

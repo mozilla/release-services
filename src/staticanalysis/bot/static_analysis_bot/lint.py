@@ -151,6 +151,19 @@ class MozLintIssue(Issue):
             'publishable': self.is_publishable(),
         }
 
+    def as_phabricator_lint(self):
+        '''
+        Outputs a Phabricator lint result
+        '''
+        return {
+            'name': self.message,
+            'code': '{}.{}'.format(self.linter, self.rule),
+            'severity': self.level,
+            'path': self.path,
+            'line': self.line,
+            'char': self.column,
+        }
+
 
 class MozLint(DefaultAnalyzer):
     '''

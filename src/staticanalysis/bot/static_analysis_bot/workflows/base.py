@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from cli_common.log import get_logger
+from cli_common.phabricator import BuildState
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import TASKCLUSTER_DATE_FORMAT
 from static_analysis_bot import stats
@@ -66,6 +67,9 @@ class Workflow(object):
 
         # Index ASAP Taskcluster task for this revision
         self.index(revision, state='started')
+
+        # Set the Phabricator build as running
+        revision.update_status(state=BuildState.Work)
 
         # Use remote when we are on try
         if settings.source == SOURCE_TRY:

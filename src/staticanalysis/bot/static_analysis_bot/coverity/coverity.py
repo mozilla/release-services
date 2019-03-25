@@ -324,3 +324,16 @@ class CoverityIssue(Issue):
             },
             'publishable': self.is_publishable(),
         }
+
+    def as_phabricator_lint(self):
+        '''
+        Outputs a Phabricator lint result
+        '''
+        return {
+            'name': self.message,
+            'code': 'coverity.{}'.format(self.kind),
+            'severity': 'error',
+            'path': self.path,
+            'line': self.line,
+            'description': self.body,
+        }

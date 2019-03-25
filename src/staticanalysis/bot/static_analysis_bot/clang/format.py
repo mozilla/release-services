@@ -205,6 +205,19 @@ class ClangFormatIssue(Issue):
             'column': self.column,
         }
 
+    def as_phabricator_lint(self):
+        '''
+        Outputs a Phabricator lint result
+        '''
+        return {
+            'name': 'C/C++ style issue',
+            'code': 'clang-format',
+            'severity': 'warning',
+            'path': self.path,
+            'line': self.line,
+            'char': self.column,
+        }
+
 
 class ClangFormatTask(AnalysisTask):
     '''

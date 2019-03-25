@@ -19,6 +19,7 @@ from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import REPO_TRY
 from static_analysis_bot.config import settings
+from static_analysis_bot.utils import is_lint_issue
 
 logger = log.get_logger(__name__)
 
@@ -189,6 +190,7 @@ class PhabricatorRevision(Revision):
     A phabricator revision to process
     '''
     diff_phid = None
+    build_target_phid = None
 
     def __init__(self, api, diff_phid=None, try_task=None):
         super().__init__()
@@ -252,18 +254,21 @@ class PhabricatorRevision(Revision):
     def url(self):
         return 'https://{}/D{}'.format(self.api.hostname, self.id)
 
-    def update_status(self, state):
+    def update_status(self, state, lint_issues=[]):
         '''
         Update build status on HarborMaster
         '''
         assert isinstance(state, BuildState)
-        if not settings.build_plan:
-            logger.info('No build plan, skipping HarborMaster update')
+        assert isinstance(lint_issues, list)
+        assert all(map(is_lint_issue, lint_issues))
+        if not self.build_target_phid:
+            logger.info('No build target found, skipping HarborMaster update', state=state.value)
             return
 
         self.api.update_build_target(
             self.build_target_phid,
             type=state.value,
+            lint=lint_issues,
         )
         logger.info('Updated HarborMaster status', state=state)
 
