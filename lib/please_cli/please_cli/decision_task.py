@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import asyncio
 import datetime
 import json
 
@@ -15,6 +16,19 @@ import please_cli.config
 import please_cli.utils
 
 PROJECTS = list(set(please_cli.config.PROJECTS) - set(please_cli.config.DEV_PROJECTS))
+
+
+def coroutine(f):
+    '''A generic function to create a main asyncio loop
+    '''
+    coroutine_f = asyncio.coroutine(f)
+
+    @functools.wraps(coroutine_f)
+    def wrapper(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(coroutine_f(*args, **kwargs))
+
+    return wrapper
 
 
 def get_build_task(index,
@@ -379,6 +393,7 @@ def get_task(task_group_id,
     is_flag=True,
     )
 @click.pass_context
+@coroutine
 def cmd(ctx,
         github_commit,
         channel,
