@@ -3,8 +3,8 @@ aiohttp==3.5.4
 async-timeout==3.0.1
 atomicwrites==1.3.0
 attrs==19.1.0
-boto3==1.9.117
-botocore==1.12.117
+boto3==1.9.120
+botocore==1.12.120
 certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
@@ -27,7 +27,7 @@ flake8-quotes==1.0.0
 flit==1.3
 idna==2.8
 intreehooks==1.0
-isort==4.3.15
+isort==4.3.16
 jmespath==0.9.4
 Logbook==1.4.3
 mccabe==0.6.1
@@ -38,7 +38,7 @@ mozilla-cli-common==1.0.0
 multidict==4.5.2
 mypy==0.670
 mypy-extensions==0.4.1
-pdbpp==0.9.13
+pdbpp==0.9.14
 pluggy==0.9.0
 py==1.8.0
 pycodestyle==2.5.0
@@ -61,9 +61,9 @@ setuptools-scm==3.2.0
 six==1.12.0
 slugid==2.0.0
 structlog==19.1.0
-taskcluster==7.0.0
+taskcluster==7.0.1
 taskcluster-urls==11.0.0
-testfixtures==6.6.1
+testfixtures==6.6.2
 typed-ast==1.3.1
 urllib3==1.24.1
 wmctrl==0.3
