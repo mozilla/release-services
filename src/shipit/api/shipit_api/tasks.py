@@ -76,7 +76,7 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates):
 def generate_action_task(decision_task_id, action_name, input_, actions):
     target_action = find_action(action_name, actions)
     context = copy.deepcopy(actions['variables'])  # parameters
-    action_task_id = slugid.nice().decode('utf-8')
+    action_task_id = slugid.nice()
     context.update({
         'input': input_,
         'taskGroupId': decision_task_id,
