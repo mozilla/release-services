@@ -137,13 +137,14 @@ class ClangFormatIssue(Issue):
     '''
     ANALYZER = CLANG_FORMAT
 
-    def __init__(self, path, line, nb_lines, revision, patch=None):
+    def __init__(self, path, line, nb_lines, revision, column=None, patch=None):
         self.path = path
         self.line = line
         self.nb_lines = nb_lines
         self.revision = revision
         self.is_new = True
         self.patch = patch
+        self.column = column
 
     def build_extra_identifiers(self):
         '''
@@ -200,6 +201,8 @@ class ClangFormatIssue(Issue):
             'is_new': self.is_new,
             'validates': self.validates(),
             'publishable': self.is_publishable(),
+            'patch': self.patch,
+            'column': self.column,
         }
 
 
@@ -216,9 +219,10 @@ class ClangFormatTask(AnalysisTask):
         return [
             ClangFormatIssue(
                 path=path,
-                line=issue['src_offset'],
-                nb_lines=issue['src_length'],
-                patch=issue['patch'],
+                line=issue['line'],
+                nb_lines=issue['lines_modified'],
+                column=issue['line_offset'],
+                patch=issue['replacement'],
                 revision=revision,
             )
             for artifact in artifacts.values()

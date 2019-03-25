@@ -497,11 +497,12 @@ def test_clang_format_task(mock_try_config, mock_revision):
                 'public/code-review/clang-format.json': {
                     'test.cpp': [
                         {
-                            'dest_length': 10,
-                            'dest_offset': 1386,
-                            'src_offset': 1386,
-                            'src_length': 7,
-                            'patch': '''Multi\nlines'''
+                            'line_offset': 11,
+                            'char_offset': 44616,
+                            'char_length': 7,
+                            'lines_modified': 2,
+                            'line': 1386,
+                            'replacement': 'Multi\nlines',
                         }
                     ]
                 }
@@ -515,5 +516,19 @@ def test_clang_format_task(mock_try_config, mock_revision):
     assert isinstance(issue, ClangFormatIssue)
     assert issue.path == 'test.cpp'
     assert issue.line == 1386
-    assert issue.nb_lines == 7
+    assert issue.nb_lines == 2
     assert issue.patch == 'Multi\nlines'
+    assert issue.column == 11
+    assert issue.as_dict() == {
+        'analyzer': 'clang-format',
+        'column': 11,
+        'in_patch': False,
+        'is_new': True,
+        'line': 1386,
+        'nb_lines': 2,
+        'patch': 'Multi\nlines',
+        'path': 'test.cpp',
+        'publishable': False,
+        'validates': False,
+        'validation': {}
+    }
