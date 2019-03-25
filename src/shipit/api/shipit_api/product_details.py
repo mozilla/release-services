@@ -216,7 +216,7 @@ def create_index_listing_html(folder: pathlib.Path,
             write(f'      <li><a href="{folder.parent}"> Parent Directory</a></li>')
         for item in sorted(items):
             is_dir = item.suffix not in ['.json', '.html']
-            itemStr = is_dir and f'{item}/' or f'{item}'
+            itemStr = is_dir and f'{item.name}/' or f'{item.name}'
             write(f'      <li><a href="{itemStr}"> {itemStr}</a></li>')
         write(f'    </ul>')
         write(f'  </body>')
