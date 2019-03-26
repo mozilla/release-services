@@ -75,5 +75,4 @@ def test_as_text(mock_config, mock_revision, mock_repository):
         'name': 'dummy test withUppercaseChars',
         'path': 'test.py',
         'severity': 'error',
-        'description': None,
     }

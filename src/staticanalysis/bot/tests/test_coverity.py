@@ -88,7 +88,6 @@ Dummy body
         'name': 'Some dummy event',
         'path': 'to/test.cpp',
         'severity': 'error',
-        'char': None,
     }
 
 

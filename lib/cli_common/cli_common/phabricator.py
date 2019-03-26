@@ -55,9 +55,12 @@ class LintResult(dict):
         self['code'] = code
         self['severity'] = severity
         self['path'] = path
-        self['line'] = line
-        self['char'] = char
-        self['description'] = description
+        if line is not None:
+            self['line'] = line
+        if char is not None:
+            self['char'] = char
+        if description is not None:
+            self['description'] = description
         self.validates()
 
     def validates(self):

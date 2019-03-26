@@ -438,7 +438,6 @@ def test_phabricator_harbormaster(mock_repository, mock_phabricator):
                     'name': 'dummy message',
                     'path': 'test.cpp',
                     'severity': 'warning',
-                    'description': None,
                 }
             ],
             'unit': [],

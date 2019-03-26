@@ -293,7 +293,6 @@ Dummy body
         'name': 'dummy message',
         'path': 'test.cpp',
         'severity': 'warning',
-        'description': None,
     }
 
 
@@ -336,11 +335,9 @@ def test_clang_format_3rd_party(mock_config, mock_repository, mock_revision):
     assert issue.as_phabricator_lint() == {
         'code': 'clang-format',
         'line': 10,
-        'char': None,
         'name': 'C/C++ style issue',
         'path': 'test/not_3rd.c',
         'severity': 'warning',
-        'description': None,
     }
 
     # test/dummy is a third party directory
