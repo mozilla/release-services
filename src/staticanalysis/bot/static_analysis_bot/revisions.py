@@ -228,7 +228,10 @@ class PhabricatorRevision(Revision):
         if settings.build_plan:
             build, targets = self.api.find_diff_build(self.diff_phid, settings.build_plan)
             self.build_phid = build['phid']
-            assert len(targets) > 0, 'No build target found'
+            nb = len(targets)
+            assert nb > 0, 'No build target found'
+            if nb > 1:
+                logger.warn('More than 1 build target found !', nb=nb, build_phid=self.build_phid)
             target = targets[0]
             self.build_target_phid = target['phid']
         else:
