@@ -265,7 +265,7 @@ class PhabricatorRevision(Revision):
 
         self.api.update_build_target(
             self.build_target_phid,
-            type=state.value,
+            state,
             lint=lint_issues,
         )
         logger.info('Updated HarborMaster status', state=state)

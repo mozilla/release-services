@@ -339,16 +339,17 @@ class PhabricatorAPI(object):
 
         return build, targets
 
-    def update_build_target(self, build_target_phid, type, unit=[], lint=[]):
+    def update_build_target(self, build_target_phid, state, unit=[], lint=[]):
         '''
         Update unit test / linting data for a given build target.
         '''
         assert all(map(lambda i: isinstance(i, LintResult), lint)), \
             'Only support LintResult instances'
+        assert isinstance(state, BuildState)
         self.request(
             'harbormaster.sendmessage',
             buildTargetPHID=build_target_phid,
-            type=type,
+            type=state.value,
             unit=unit,
             lint=lint,
         )
@@ -379,7 +380,7 @@ class PhabricatorAPI(object):
 
         self.update_build_target(
             build_target_phid,
-            'pass',
+            BuildState.Pass,
             unit=[
                 {
                     'name': 'Aggregate coverage information',
@@ -389,7 +390,7 @@ class PhabricatorAPI(object):
             ]
         )
 
-    def upload_lint_results(self, object_phid, type, lint_data):
+    def upload_lint_results(self, object_phid, state, lint_data):
         '''
         Upload linting/static analysis results to a Phabricator object.
 
@@ -397,6 +398,8 @@ class PhabricatorAPI(object):
 
         `lint_data` is an array of LintResult objects.
         '''
+        assert isinstance(state, BuildState)
+
         # TODO: We are temporarily using arcanist.lint, but we should switch to something
         # different after https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
         res = self.load_or_create_build_autotarget(object_phid, ['arcanist.lint'])
@@ -404,7 +407,7 @@ class PhabricatorAPI(object):
 
         self.update_build_target(
             build_target_phid,
-            type,
+            state,
             lint=lint_data,
         )
 
