@@ -89,6 +89,9 @@ FirefoxVersions = mypy_extensions.TypedDict('FirefoxVersions', {
     'LATEST_FIREFOX_OLDER_VERSION': str,
     'LATEST_FIREFOX_RELEASED_DEVEL_VERSION': str,
     'LATEST_FIREFOX_VERSION': str,
+    'NEXT_SOFTFREEZE_DATE': str,
+    'NEXT_MERGE_DATE': str,
+    'NEXT_RELEASE_DATE': str,
 })
 L10nChangeset = mypy_extensions.TypedDict('L10nChangeset', {
     'changeset': str,
@@ -718,6 +721,9 @@ def get_firefox_versions(releases: typing.List[shipit_api.models.Release]) -> Fi
                "LATEST_FIREFOX_OLDER_VERSION":           "3.6.28",
                "LATEST_FIREFOX_RELEASED_DEVEL_VERSION":  "59.0b14",
                "LATEST_FIREFOX_VERSION":                 "58.0.2",
+               "NEXT_SOFTFREEZE_DATE":                   "2019-05-06",
+               "NEXT_MERGE_DATE":                        "2019-05-13",
+               "NEXT_RELEASE_DATE":                      "2019-05-14"
            }
     '''
 
