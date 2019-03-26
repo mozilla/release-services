@@ -18,6 +18,7 @@ from static_analysis_bot import AnalysisException
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import REPO_TRY
+from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import settings
 
 logger = log.get_logger(__name__)
@@ -111,7 +112,7 @@ class Revision(object):
         # Get modified lines for this issue
         modified_lines = self.lines.get(issue.path)
         if modified_lines is None:
-            logger.warn('Issue path in not in revision', path=issue.path, revision=self)
+            logger.warn('Issue path is not in revision', path=issue.path, revision=self)
             return False
 
         # Detect if this issue is in the patch
@@ -236,6 +237,10 @@ class PhabricatorRevision(Revision):
             self.build_target_phid = target['phid']
         else:
             logger.info('No build plan specified, no HarborMaster update')
+
+        # Load target patch from Phabricator for Try mode
+        if settings.source == SOURCE_TRY:
+            self.patch = self.api.load_raw_diff(self.diff_id)
 
     @property
     def namespaces(self):
