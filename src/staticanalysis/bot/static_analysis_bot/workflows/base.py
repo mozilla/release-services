@@ -84,6 +84,7 @@ class Workflow(object):
         if not issues:
             logger.info('No issues, stopping there.')
             self.index(revision, state='done', issues=0)
+            revision.update_status(BuildState.Pass)
             return
 
         # Publish all issues from both workflows at once
@@ -113,6 +114,9 @@ class Workflow(object):
                 reporter.publish(issues, revision)
 
         self.index(revision, state='done', issues=nb_issues, issues_publishable=nb_publishable)
+
+        # Publish final HarborMaster state
+        revision.update_status(nb_publishable > 0 and BuildState.Fail or BuildState.Pass)
 
     def index(self, revision, **kwargs):
         '''

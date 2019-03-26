@@ -428,8 +428,6 @@ def test_phabricator_harbormaster(mock_repository, mock_phabricator):
         assert payload['output'] == ['json']
         assert len(payload['params']) == 1
         details = json.loads(payload['params'][0])
-        from pprint import pprint
-        pprint(details)
         assert details == {
             'buildTargetPHID': 'PHID-HMBD-deadbeef12456',
             'lint': [
@@ -443,7 +441,7 @@ def test_phabricator_harbormaster(mock_repository, mock_phabricator):
                 }
             ],
             'unit': [],
-            'type': 'pass',
+            'type': 'work',
             '__conduit__': {'token': 'deadbeef'},
         }
 
@@ -467,7 +465,7 @@ def test_phabricator_harbormaster(mock_repository, mock_phabricator):
             'test.cpp': [41, 42, 43],
         }
         revision.build_target_phid = 'PHID-HMBD-deadbeef12456'
-        reporter = PhabricatorReporter({'analyzers': ['clang-tidy'], 'modes': ('harbormaster')}, api=api)
+        reporter = PhabricatorReporter({'analyzers': ['clang-tidy'], 'mode': 'harbormaster'}, api=api)
 
     issue = ClangTidyIssue(revision, 'test.cpp', '42', '51', 'modernize-use-nullptr', 'dummy message', 'error')
     assert issue.is_publishable()

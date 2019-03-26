@@ -35,8 +35,8 @@ class PhabricatorReporter(Reporter):
         assert self.analyzers is not None, \
             'No analyzers setup on Phabricator reporter'
 
-        self.modes = configuration.get('modes', (MODE_COMMENT, ))
-        logger.info('Will publish using', modes=self.modes)
+        self.mode = configuration.get('mode', MODE_COMMENT)
+        logger.info('Will publish using', mode=self.mode)
 
     def setup_api(self, api):
         assert isinstance(api, PhabricatorAPI)
@@ -66,12 +66,12 @@ class PhabricatorReporter(Reporter):
         ]
 
         if issues:
-            if MODE_COMMENT in self.modes:
+            if MODE_COMMENT in self.mode:
                 self.publish_comment(revision, issues, patches)
             else:
                 logger.info('Skipping comment mode')
 
-            if MODE_HARBORMASTER in self.modes:
+            if MODE_HARBORMASTER in self.mode:
                 self.publish_harbormaster(revision, issues)
             else:
                 logger.info('Skipping harbormaster mode')
@@ -132,7 +132,7 @@ class PhabricatorReporter(Reporter):
         Publish issues through HarborMaster
         '''
         revision.update_status(
-            state=BuildState.Pass,
+            state=BuildState.Work,
             lint_issues=[
                 issue.as_phabricator_lint()
                 for issue in issues

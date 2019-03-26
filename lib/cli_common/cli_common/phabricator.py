@@ -266,7 +266,7 @@ class PhabricatorAPI(object):
     def search_build(self, buildable_phid, plans=[]):
         '''
         Search HarborMaster build for a buildable
-        Supports HarborMaster Buidl Plan filtering
+        Supports HarborMaster Build Plan filtering
         '''
         constraints = {
             'buildables': [buildable_phid, ],
@@ -291,15 +291,16 @@ class PhabricatorAPI(object):
         )
         return out['data']
 
-    def find_diff_build(self, diff_phid, build_plan_phid):
+    def find_diff_build(self, object_phid, build_plan_phid):
         '''
         Find a specific build and its targets for a Diff and an HarborMaster build plan
         '''
-        assert diff_phid.startswith('PHID-DIFF-')
+        assert isinstance(object_phid, str)
+        assert object_phid[0:10] in ('PHID-DIFF-', 'PHID-DREV-')
         assert build_plan_phid.startswith('PHID-HMCP-')
 
         # First find the buildable for this diff
-        buildables = self.search_buildable(diff_phid)
+        buildables = self.search_buildable(object_phid)
         assert len(buildables) == 1
         buildable = buildables[0]
         logger.info('Found HarborMaster buildable', id=buildable['id'], phid=buildable['phid'])
