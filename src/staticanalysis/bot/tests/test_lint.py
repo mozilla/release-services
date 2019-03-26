@@ -72,7 +72,8 @@ def test_as_text(mock_config, mock_revision, mock_repository):
         'char': 1,
         'code': 'flake8.dummy rule',
         'line': 1,
-        'name': 'dummy test withUppercaseChars',
+        'name': 'MozLint Flake8 - dummy rule',
+        'description': 'dummy test withUppercaseChars',
         'path': 'test.py',
         'severity': 'error',
     }

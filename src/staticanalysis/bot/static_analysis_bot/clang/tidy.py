@@ -391,8 +391,12 @@ class ClangTidyIssue(Issue):
         '''
         Outputs a Phabricator lint result
         '''
+        description = self.message
+        if self.body:
+            description += '\n\n > {}'.format(self.body)
         return LintResult(
-            name=self.message,
+            name='Clang-Tidy - {}'.format(self.check),
+            description=description,
             code='clang-tidy.{}'.format(self.check),
             severity='warning',
             path=self.path,

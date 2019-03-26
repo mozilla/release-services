@@ -434,10 +434,11 @@ def test_phabricator_harbormaster(mock_repository, mock_phabricator):
                 {
                     'char': 51,
                     'code': 'clang-tidy.modernize-use-nullptr',
+                    'name': 'Clang-Tidy - modernize-use-nullptr',
                     'line': 42,
-                    'name': 'dummy message',
                     'path': 'test.cpp',
                     'severity': 'warning',
+                    'description': 'dummy message'
                 }
             ],
             'unit': [],

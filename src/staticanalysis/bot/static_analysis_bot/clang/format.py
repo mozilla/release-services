@@ -210,8 +210,12 @@ class ClangFormatIssue(Issue):
         '''
         Outputs a Phabricator lint result
         '''
+        description = None
+        if self.patch:
+            description = 'Replace with :\n\n```{}```'.format(self.patch)
         return LintResult(
             name='C/C++ style issue',
+            description=description,
             code='clang-format',
             severity='warning',
             path=self.path,

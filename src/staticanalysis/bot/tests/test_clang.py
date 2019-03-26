@@ -290,7 +290,8 @@ Dummy body
         'char': 51,
         'code': 'clang-tidy.dummy-check',
         'line': 42,
-        'name': 'dummy message',
+        'name': 'Clang-Tidy - dummy-check',
+        'description': 'dummy message\n\n > Dummy body',
         'path': 'test.cpp',
         'severity': 'warning',
     }

@@ -156,9 +156,15 @@ class MozLintIssue(Issue):
         '''
         Outputs a Phabricator lint result
         '''
+        code = self.linter
+        name = 'MozLint {}'.format(self.linter.capitalize())
+        if self.rule:
+            code += '.{}'.format(self.rule)
+            name += ' - {}'.format(self.rule)
         return LintResult(
-            name=self.message,
-            code='{}.{}'.format(self.linter, self.rule),
+            name=name,
+            description=self.message,
+            code=code,
             severity=self.level,
             path=self.path,
             line=self.line,
