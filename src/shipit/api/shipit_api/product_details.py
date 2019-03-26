@@ -750,6 +750,9 @@ def get_firefox_versions(releases: typing.List[shipit_api.models.Release]) -> Fi
                                               Product.DEVEDITION,
                                               ),
         LATEST_FIREFOX_OLDER_VERSION=shipit_api.config.LATEST_FIREFOX_OLDER_VERSION,
+        NEXT_SOFTFREEZE_DATE=shipit_api.config.NEXT_SOFTFREEZE_DATE,
+        NEXT_MERGE_DATE=shipit_api.config.NEXT_MERGE_DATE,
+        NEXT_RELEASE_DATE=shipit_api.config.NEXT_RELEASE_DATE,
     )
 
 
