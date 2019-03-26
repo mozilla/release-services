@@ -22,7 +22,7 @@ class MockQueue(object):
             task_id: {
                 'dependencies': desc.get('dependencies', []),
                 'metadata': {
-                    'name': desc.get('name', task_id),
+                    'name': desc.get('name', 'source-test-mozlint-{}'.format(task_id)),
                 },
                 'payload': {
                     'image': desc.get('image', 'alpine'),
@@ -274,8 +274,9 @@ def test_unsupported_analyzer(mock_try_config, mock_revision):
         'extra-task': {},
     }
     workflow = RemoteWorkflow(MockQueue(tasks))
-    issues = workflow.run(mock_revision)
-    assert len(issues) == 0
+    with pytest.raises(Exception) as e:
+        workflow.run(mock_revision)
+    assert str(e.value) == 'Unsupported task custom-analyzer-from-vendor'
 
 
 def test_decision_task(mock_try_config, mock_revision):

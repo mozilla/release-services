@@ -123,7 +123,7 @@ class ClangFormat(DefaultAnalyzer):
             groups.append(group)
 
             issues += [
-                ClangFormatIssue(filename, g[0], len(group), revision)
+                ClangFormatIssue(filename, g[0], len(g), revision)
                 for g in groups
             ]
 

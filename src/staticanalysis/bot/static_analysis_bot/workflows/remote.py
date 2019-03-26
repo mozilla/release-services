@@ -65,7 +65,7 @@ class RemoteWorkflow(object):
                     issues += task_issues
             except Exception as e:
                 logger.warn('Failure during task analysis', task=settings.taskcluster.task_id, error=e)
-                continue
+                raise
 
         return issues
 

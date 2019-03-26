@@ -171,13 +171,13 @@ class ClangTidy(DefaultAnalyzer):
 
         issues = []
         for i, header in enumerate(headers):
-            path, line, char, type, message, check = header.groups()
+            path, line, char, level, message, check = header.groups()
             issue = ClangTidyIssue(
                 revision,
                 path=path,
                 line=line,
                 char=char,
-                type=type,
+                level=level,
                 message=message,
                 check=check,
             )
@@ -244,7 +244,7 @@ class ClangTidyIssue(Issue):
     '''
     ANALYZER = CLANG_TIDY
 
-    def __init__(self, revision, path, line, char, check, message, type='warning'):
+    def __init__(self, revision, path, line, char, check, message, level='warning'):
         assert not settings.repo_dir.endswith('/')
         self.revision = revision
         self.path = path
@@ -257,7 +257,9 @@ class ClangTidyIssue(Issue):
         self.message = message
         self.body = None
         self.notes = []
-        self.type = type
+
+        # TODO: rename all type occurences to level
+        self.type = level
 
         self.reason = None
         check = settings.get_clang_check(self.check)
