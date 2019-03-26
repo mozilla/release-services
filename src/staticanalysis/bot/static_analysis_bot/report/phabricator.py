@@ -36,6 +36,7 @@ class PhabricatorReporter(Reporter):
             'No analyzers setup on Phabricator reporter'
 
         self.mode = configuration.get('mode', MODE_COMMENT)
+        assert self.mode in (MODE_COMMENT, MODE_HARBORMASTER), 'Invalid mode'
         logger.info('Will publish using', mode=self.mode)
 
     def setup_api(self, api):
@@ -66,15 +67,12 @@ class PhabricatorReporter(Reporter):
         ]
 
         if issues:
-            if MODE_COMMENT in self.mode:
+            if self.mode == MODE_COMMENT:
                 self.publish_comment(revision, issues, patches)
-            else:
-                logger.info('Skipping comment mode')
-
-            if MODE_HARBORMASTER in self.mode:
+            elif self.mode == MODE_HARBORMASTER:
                 self.publish_harbormaster(revision, issues)
             else:
-                logger.info('Skipping harbormaster mode')
+                raise Exception('Unsupported mode {}'.format(self.mode))
         else:
             logger.info('No issues to publish on phabricator')
 
