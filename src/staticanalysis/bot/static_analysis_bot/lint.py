@@ -267,7 +267,16 @@ class MozLintTask(AnalysisTask):
         '''
         assert isinstance(artifacts, dict)
         return [
-            MozLintIssue(revision=revision, **issue)
+            MozLintIssue(
+                revision=revision,
+                path=self.clean_path(path),
+                column=issue['column'],
+                level=issue['level'],
+                lineno=issue['lineno'],
+                linter=issue['linter'],
+                message=issue['message'],
+                rule=issue['rule'],
+            )
             for artifact in artifacts.values()
             for path, path_issues in artifact.items()
             for issue in path_issues

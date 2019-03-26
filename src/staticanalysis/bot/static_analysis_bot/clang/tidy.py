@@ -413,7 +413,7 @@ class ClangTidyTask(AnalysisTask):
         return [
             ClangTidyIssue(
                 revision,
-                path=path,
+                path=self.clean_path(path),
                 line=warning['line'],
                 char=warning['column'],
                 check=warning['flag'],
