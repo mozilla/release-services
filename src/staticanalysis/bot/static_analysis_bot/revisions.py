@@ -19,7 +19,6 @@ from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import REPO_TRY
 from static_analysis_bot.config import settings
-from static_analysis_bot.utils import is_lint_issue
 
 logger = log.get_logger(__name__)
 
@@ -260,7 +259,6 @@ class PhabricatorRevision(Revision):
         '''
         assert isinstance(state, BuildState)
         assert isinstance(lint_issues, list)
-        assert all(map(is_lint_issue, lint_issues))
         if not self.build_target_phid:
             logger.info('No build target found, skipping HarborMaster update', state=state.value)
             return

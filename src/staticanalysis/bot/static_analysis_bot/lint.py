@@ -5,6 +5,7 @@ import os
 
 from cli_common.command import run
 from cli_common.log import get_logger
+from cli_common.phabricator import LintResult
 from static_analysis_bot import MOZLINT
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import DefaultAnalyzer
@@ -155,14 +156,14 @@ class MozLintIssue(Issue):
         '''
         Outputs a Phabricator lint result
         '''
-        return {
-            'name': self.message,
-            'code': '{}.{}'.format(self.linter, self.rule),
-            'severity': self.level,
-            'path': self.path,
-            'line': self.line,
-            'char': self.column,
-        }
+        return LintResult(
+            name=self.message,
+            code='{}.{}'.format(self.linter, self.rule),
+            severity=self.level,
+            path=self.path,
+            line=self.line,
+            char=self.column,
+        )
 
 
 class MozLint(DefaultAnalyzer):

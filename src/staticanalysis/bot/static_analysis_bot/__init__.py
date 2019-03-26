@@ -167,7 +167,7 @@ class Issue(abc.ABC):
     @abc.abstractmethod
     def as_phabricator_lint(self):
         '''
-        Build the Phabricator lint result structure
+        Build the Phabricator LintResult instance
         Used by the HarborMaster reporter
         '''
         raise NotImplementedError

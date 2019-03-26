@@ -24,29 +24,3 @@ def build_temp_file(content, suffix):
 
     # Cleanup
     os.unlink(path)
-
-
-def is_lint_issue(issue):
-    '''
-    Check the input is a lint issue compatible with
-    https://phabricator.services.mozilla.com/conduit/method/harbormaster.sendmessage/
-    '''
-    assert isinstance(issue, dict)
-
-    # Check required keys
-    for key in ('name', 'code', 'severity', 'path'):
-        value = issue.get(key)
-        assert value is not None, 'Missing key {}'.format(key)
-        assert isinstance(value, str), '{} should be a string'.format(key)
-
-    # Check the severity is a valid value
-    assert issue['severity'] in ('advice', 'autofix', 'warning', 'error', 'disabled'), \
-        'Invalid severity value: {}'.format(issue['severity'])
-
-    # Check optional integers
-    for key in ('line', 'char'):
-        value = issue.get(key)
-        if value:
-            assert isinstance(value, int), '{} should be an int'.format(key)
-
-    return True

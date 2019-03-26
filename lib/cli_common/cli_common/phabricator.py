@@ -50,7 +50,7 @@ def revision_available(repo, revision):
 # https://phabricator.services.mozilla.com/conduit/method/harbormaster.sendmessage/,
 # in the "Lint Results" paragraph.
 class LintResult(dict):
-    def __init__(self, name, code, severity, path, line, char, description):
+    def __init__(self, name, code, severity, path, line=None, char=None, description=None):
         self['name'] = name
         self['code'] = code
         self['severity'] = severity
@@ -58,6 +58,28 @@ class LintResult(dict):
         self['line'] = line
         self['char'] = char
         self['description'] = description
+        self.validates()
+
+    def validates(self):
+        '''
+        Check the input is a lint issue compatible with
+        '''
+
+        # Check required strings
+        for key in ('name', 'code', 'severity', 'path'):
+            assert isinstance(self[key], str), '{} should be a string'.format(key)
+
+        # Check the severity is a valid value
+        assert self['severity'] in ('advice', 'autofix', 'warning', 'error', 'disabled'), \
+            'Invalid severity value: {}'.format(self['severity'])
+
+        # Check optional integers
+        for key in ('line', 'char'):
+            value = self.get(key)
+            if value:
+                assert isinstance(value, int), '{} should be an int'.format(key)
+
+        return True
 
 
 class PhabricatorRevisionNotFoundException(Exception):
@@ -321,6 +343,8 @@ class PhabricatorAPI(object):
         '''
         Update unit test / linting data for a given build target.
         '''
+        assert all(map(lambda i: isinstance(i, LintResult), lint)), \
+            'Only support LintResult instances'
         self.request(
             'harbormaster.sendmessage',
             buildTargetPHID=build_target_phid,
