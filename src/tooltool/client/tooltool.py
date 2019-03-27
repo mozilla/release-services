@@ -377,12 +377,11 @@ class FileRecord(object):
 
 
 def create_file_record(filename, algorithm):
-    fo = open(filename, 'rb')
-    stored_filename = os.path.split(filename)[1]
-    fr = FileRecord(stored_filename, os.path.getsize(
-        filename), digest_file(fo, algorithm), algorithm)
-    fo.close()
-    return fr
+    with open(filename, 'rb') as fo:
+        stored_filename = os.path.split(filename)[1]
+        fr = FileRecord(stored_filename, os.path.getsize(
+            filename), digest_file(fo, algorithm), algorithm)
+        return fr
 
 
 class FileRecordJSONEncoder(json.JSONEncoder):
