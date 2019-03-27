@@ -2,10 +2,10 @@
 import itertools
 import json
 import os
-import re
 
 from cli_common.command import run
 from cli_common.log import get_logger
+from cli_common.phabricator import LintResult
 from static_analysis_bot import MOZLINT
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import DefaultAnalyzer
@@ -13,9 +13,11 @@ from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import settings
 from static_analysis_bot.revisions import Revision
+from static_analysis_bot.task import AnalysisTask
 
 logger = get_logger(__name__)
 
+TRY_PREFIX = 'source-test-mozlint'
 ISSUE_MARKDOWN = '''
 ## mozlint - {linter}
 
@@ -35,7 +37,6 @@ ISSUE_MARKDOWN = '''
 
 class MozLintIssue(Issue):
     ANALYZER = MOZLINT
-    TRY_PREFIX = 'source-test-mozlint'
 
     def __init__(self, path, column, level, lineno, linter, message, rule, revision, **kwargs):
         self.nb_lines = 1
@@ -54,33 +55,9 @@ class MozLintIssue(Issue):
                 self.path = os.path.relpath(self.path, settings.repo_dir)
             assert os.path.exists(os.path.join(settings.repo_dir, self.path)), \
                 'Missing {} in repo {}'.format(self.path, settings.repo_dir)
-
-    @staticmethod
-    def from_try(task_name, line, revision):
-        '''
-        Convert a detected issue on try into a MozLintIssue
-        '''
-        assert task_name.startswith(MozLintIssue.TRY_PREFIX)
-
-        linter = task_name[len(MozLintIssue.TRY_PREFIX) + 1:]
-        match = re.match(r'^(.+):(\d+):(\d+) \| (.+) \(([\w\s\-]+)\)$', line)
-        assert match is not None, 'Unsupported line format: {}'.format(line)
-        path, line, column, message, rule = match.groups()
-
-        # Remove Taskcluster clone prefix
-        if path.startswith('/builds/worker/checkouts/'):
-            path = path[25:]
-
-        return MozLintIssue(
-            path,
-            int(column),
-            'error',
-            int(line),
-            linter,
-            message,
-            rule,
-            revision,
-        )
+        elif self.path.startswith('/builds/worker/checkouts/'):
+            # Remove Try path prefix
+            self.path = self.path[25:]
 
     def __str__(self):
         return '{} issue {} {} line {}'.format(
@@ -175,6 +152,25 @@ class MozLintIssue(Issue):
             'publishable': self.is_publishable(),
         }
 
+    def as_phabricator_lint(self):
+        '''
+        Outputs a Phabricator lint result
+        '''
+        code = self.linter
+        name = 'MozLint {}'.format(self.linter.capitalize())
+        if self.rule:
+            code += '.{}'.format(self.rule)
+            name += ' - {}'.format(self.rule)
+        return LintResult(
+            name=name,
+            description=self.message,
+            code=code,
+            severity=self.level,
+            path=self.path,
+            line=self.line,
+            char=self.column,
+        )
+
 
 class MozLint(DefaultAnalyzer):
     '''
@@ -257,4 +253,37 @@ class MozLint(DefaultAnalyzer):
             MozLintIssue(revision=revision, **issue)
             for p in (path, full_path)
             for issue in payload.get(p, [])
+        ]
+
+
+class MozLintTask(AnalysisTask):
+    '''
+    Support issues from source-test mozlint tasks by parsing the raw log
+    '''
+    artifacts = [
+        'public/code-review/mozlint.json',
+    ]
+
+    # Only process failed states, as a completed task means than no issues were found
+    valid_states = ('failed', )
+
+    def parse_issues(self, artifacts, revision):
+        '''
+        Parse issues from a log file content
+        '''
+        assert isinstance(artifacts, dict)
+        return [
+            MozLintIssue(
+                revision=revision,
+                path=self.clean_path(path),
+                column=issue['column'],
+                level=issue['level'],
+                lineno=issue['lineno'],
+                linter=issue['linter'],
+                message=issue['message'],
+                rule=issue['rule'],
+            )
+            for artifact in artifacts.values()
+            for path, path_issues in artifact.items()
+            for issue in path_issues
         ]

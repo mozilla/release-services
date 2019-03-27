@@ -37,11 +37,10 @@ def taskcluster_options(func):
         # Load credentials from available user config
         context.ensure_object(dict)
         config = context.obj.get('config')
-        if config and 'taskcluster' in config:
-            if kwargs['taskcluster_client_id'] is None:
-                kwargs['taskcluster_client_id'] = config['taskcluster'].get('clientId')
-            if kwargs['taskcluster_access_token'] is None:
-                kwargs['taskcluster_access_token'] = config['taskcluster'].get('accessToken')
+        if config and 'common' in config:
+            for key in ('taskcluster_client_id', 'taskcluster_access_token'):
+                if kwargs[key] is None:
+                    kwargs[key] = config['common'].get(key)
 
         return func(*args, **kwargs)
     return wrapper
