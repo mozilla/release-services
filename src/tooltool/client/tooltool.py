@@ -49,6 +49,10 @@ from subprocess import Popen
 
 __version__ = '1'
 
+# Allowed request header characters:
+# !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9, \, "
+REQUEST_HEADER_ATTRIBUTE_CHARS = re.compile(
+    r"^[ a-zA-Z0-9_\!#\$%&'\(\)\*\+,\-\./\:;<\=>\?@\[\]\^`\{\|\}~]*$")
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
 TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
 HAWK_VER = 1
@@ -133,11 +137,7 @@ def prepare_header_val(val):
     if isinstance(val, six_binary_type):
         val = val.decode('utf-8')
 
-    # Allowed value characters:
-    # !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9, \, "
-    _header_attribute_chars = re.compile(
-        r"^[ a-zA-Z0-9_\!#\$%&'\(\)\*\+,\-\./\:;<\=>\?@\[\]\^`\{\|\}~]*$")
-    if not _header_attribute_chars.match(val):
+    if not REQUEST_HEADER_ATTRIBUTE_CHARS.match(val):
         raise BadHeaderValue(  # pragma: no cover
             'header value value={val} contained an illegal character'.format(val=repr(val)))
 
@@ -152,20 +152,17 @@ def parse_content_type(content_type):  # pragma: no cover
 
 
 def calculate_payload_hash(algorithm, payload, content_type):  # pragma: no cover
+    parts = [
+        part if isinstance(part, six_binary_type) else part.encode('utf8')
+        for part in  ['hawk.' + str(HAWK_VER) + '.payload\n',
+                      parse_content_type(content_type) + '\n',
+                      payload or '',
+                      '\n',
+                      ]
+    ]
+
     p_hash = hashlib.new(algorithm)
-
-    parts = []
-    parts.append('hawk.' + str(HAWK_VER) + '.payload\n')
-    parts.append(parse_content_type(content_type) + '\n')
-    parts.append(payload or '')
-    parts.append('\n')
-
-    for i, p in enumerate(parts):
-        # Make sure we are about to hash binary strings.
-        if not isinstance(p, six_binary_type):
-            p = p.encode('utf8')
-        p_hash.update(p)
-        parts[i] = p
+    p_hash.update(''.join(parts)
 
     log.debug('calculating payload hash from:\n{parts}'.format(parts=pprint.pformat(parts)))
 
@@ -199,28 +196,21 @@ def normalize_string(mac_type,
                      port,
                      content_hash,
                      ):
-    normalized = [
-        'hawk.' + str(HAWK_VER) + '.' + mac_type,
-        normalize_header_attr(timestamp),
-        normalize_header_attr(nonce),
-        normalize_header_attr(method or ''),
-        normalize_header_attr(name or ''),
-        normalize_header_attr(host),
-        normalize_header_attr(port),
-        normalize_header_attr(content_hash or '')
-    ]
-
-    # The blank lines are important. They follow what the Node Hawk lib does.
-
-    # for ext which is empty in this case
-    normalized.append('')
-
-    # Add trailing new line.
-    normalized.append('')
-
-    normalized = '\n'.join(normalized)
-
-    return normalized
+    return '\n'.join([
+        normalize_header_attr(header)
+        # The blank lines are important. They follow what the Node Hawk lib does.
+        for header in ['hawk.' + str(HAWK_VER) + '.' + mac_type,
+                       timestamp,
+                       nonce,
+                       method or '',
+                       name or '',
+                       host,
+                       port,
+                       content_hash or ''
+                       '',  # for ext which is empty in this case
+                       '',  # Add trailing new line.
+                       ]
+    ])
 
 
 def calculate_mac(mac_type,
