@@ -323,7 +323,14 @@ class FileRecord(object):
         self.setup = setup
 
     def __eq__(self, other):
-        if self is other:
+        return self is other or (
+            self.filename == other.filename and
+            self.size == other.size and
+            self.digest == other.digest and
+             self.algorithm == other.algorithm and
+             self.version == other.version and
+             self.visibility == other.visibility
+        )
             return True
         if self.filename == other.filename and \
            self.size == other.size and \
