@@ -173,7 +173,6 @@ def validate_taskcluster_credentials(credentials):
     if not hasattr(credentials, '__getitem__'):
         raise InvalidCredentials('credentials must be a dict-like object')  # pragma: no cover
     try:
-        print credentials
         credentials['clientId']
         credentials['accessToken']
     except KeyError:  # pragma: no cover
