@@ -204,9 +204,6 @@ class TestFileRecord(BaseFileRecordTest):
             test_record2 = copy.deepcopy(self.test_record)
             test_record2.__dict__[i] = 'wrong!'
             self.assertNotEqual(self.test_record, test_record2)
-            # on Python2.6, __ne__ isn't called automatically,
-            # so just verify manually
-            self.failUnless(self.test_record.__ne__(test_record2))
 
     def test_repr(self):
         a = eval(repr(self.test_record))
