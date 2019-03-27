@@ -154,11 +154,11 @@ def parse_content_type(content_type):  # pragma: no cover
 def calculate_payload_hash(algorithm, payload, content_type):  # pragma: no cover
     parts = [
         part if isinstance(part, six_binary_type) else part.encode('utf8')
-        for part in  ['hawk.' + str(HAWK_VER) + '.payload\n',
-                      parse_content_type(content_type) + '\n',
-                      payload or '',
-                      '\n',
-                      ]
+        for part in ['hawk.' + str(HAWK_VER) + '.payload\n',
+                     parse_content_type(content_type) + '\n',
+                     payload or '',
+                     '\n',
+                     ]
     ]
 
     p_hash = hashlib.new(algorithm)
@@ -317,9 +317,9 @@ class FileRecord(object):
             self.filename == other.filename and
             self.size == other.size and
             self.digest == other.digest and
-             self.algorithm == other.algorithm and
-             self.version == other.version and
-             self.visibility == other.visibility
+            self.algorithm == other.algorithm and
+            self.version == other.version and
+            self.visibility == other.visibility
         )
 
     def __ne__(self, other):
