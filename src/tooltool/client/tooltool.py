@@ -411,10 +411,10 @@ class FileRecordJSONEncoder(json.JSONEncoder):
 
     def default(self, f):
         if issubclass(type(f), list):
-            record_list = []
-            for i in f:
-                record_list.append(self.encode_file_record(i))
-            return record_list
+            return [
+                self.encode_file_record(i)
+                for i in f
+            ]
         else:
             return self.encode_file_record(f)
 
