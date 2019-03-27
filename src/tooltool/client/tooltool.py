@@ -366,9 +366,6 @@ class FileRecord(object):
 
     def validate(self):
         return self.validate_size() and self.validate_digest()
-            if self.validate_digest():
-                return True
-        return False
 
     def describe(self):
         if self.present() and self.validate():
