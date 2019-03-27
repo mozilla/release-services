@@ -162,7 +162,7 @@ def calculate_payload_hash(algorithm, payload, content_type):  # pragma: no cove
     ]
 
     p_hash = hashlib.new(algorithm)
-    p_hash.update(''.join(parts)
+    p_hash.update(''.join(parts))
 
     log.debug('calculating payload hash from:\n{parts}'.format(parts=pprint.pformat(parts)))
 
