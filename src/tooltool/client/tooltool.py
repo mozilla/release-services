@@ -331,16 +331,6 @@ class FileRecord(object):
              self.version == other.version and
              self.visibility == other.visibility
         )
-            return True
-        if self.filename == other.filename and \
-           self.size == other.size and \
-           self.digest == other.digest and \
-           self.algorithm == other.algorithm and \
-           self.version == other.version and \
-           self.visibility == other.visibility:
-            return True
-        else:
-            return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
