@@ -130,7 +130,8 @@ class Issue(abc.ABC):
 
         if settings.publication == Publication.BEFORE_AFTER:
             # Simply use marker set on workflow
-            return self.is_new
+            # and check the revision contains the file
+            return self.revision.has_file(self.path) and self.is_new
 
         raise Exception('Unsupported publication mode {}'.format(settings.publication))
 
