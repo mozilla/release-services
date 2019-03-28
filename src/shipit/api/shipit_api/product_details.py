@@ -1039,14 +1039,19 @@ def sanity_check_firefox_builds(firefox_versions: FirefoxVersions,
                                 version_key: str,
                                 min_builds: int = 20
                                 ) -> None:
-    version = firefox_versions[version_key]
-    if not version and version_key == 'FIREFOX_ESR_NEXT':
+    if version_key in ('FIREFOX_ESR_NEXT', 'FIREFOX_AURORA'):
         return
+
+    version = firefox_versions.get(version_key)
+    if not version:
+        return
+
     builds = len([
         locale
         for locale, build in firefox_primary_builds.items()
         if version in build
     ])
+
     if builds < min_builds:
         raise click.ClickException(f'Too few firefox primary builds for {version_key}')
 
@@ -1056,19 +1061,23 @@ def sanity_check_thunderbuild_builds(thunderbird_versions: ThunderbirdVersions,
                                      version_key: str,
                                      min_builds: int = 20,
                                      ) -> None:
-    version = thunderbird_versions[version_key]
+    version = thunderbird_versions.get(version_key)
+    if not version:
+        return
+
     builds = len([
         locale
         for locale, build in thunderbird_primary_builds.items()
         if version in build
     ])
+
     if builds < min_builds:
         raise click.ClickException(f'Too few thunderbird primary builds for {version_key}')
 
 
 def sanity_checks(product_details: ProductDetails) -> None:
     for version_key in ('FIREFOX_NIGHTLY',
-                        # 'FIREFOX_AURORA',
+                        'FIREFOX_AURORA',
                         'FIREFOX_DEVEDITION',
                         'FIREFOX_ESR',
                         'FIREFOX_ESR_NEXT',
@@ -1076,8 +1085,8 @@ def sanity_checks(product_details: ProductDetails) -> None:
                         'LATEST_FIREFOX_RELEASED_DEVEL_VERSION',
                         'LATEST_FIREFOX_VERSION',
                         ):
-        sanity_check_firefox_builds(product_details['1.0/firefox_versions.json'],
-                                    product_details['1.0/firefox_primary_builds.json'],
+        sanity_check_firefox_builds(typing.cast(FirefoxVersions, product_details['1.0/firefox_versions.json']),
+                                    typing.cast(PrimaryBuilds, product_details['1.0/firefox_primary_builds.json']),
                                     version_key,
                                     )
 
@@ -1085,8 +1094,8 @@ def sanity_checks(product_details: ProductDetails) -> None:
     # bedrock uses the locales for the release channel to
     # build download pages for the other channels
     for version_key in ('LATEST_THUNDERBIRD_VERSION',):
-        sanity_check_thunderbuild_builds(product_details['1.0/thunderbird_versions.json'],
-                                         product_details['1.0/thunderbird_primary_builds.json'],
+        sanity_check_thunderbuild_builds(typing.cast(ThunderbirdVersions, product_details['1.0/thunderbird_versions.json']),
+                                         typing.cast(PrimaryBuilds, product_details['1.0/thunderbird_primary_builds.json']),
                                          version_key,
                                          )
 
