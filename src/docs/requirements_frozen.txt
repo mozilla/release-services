@@ -2,7 +2,7 @@ actdiag==0.5.4
 alabaster==0.7.12
 Babel==2.6.0
 blockdiag==1.5.4
-certifi==2018.11.29
+certifi==2019.3.9
 chardet==3.0.4
 docutils==0.14
 funcparserlib==0.3.6
@@ -10,7 +10,7 @@ idna==2.8
 imagesize==1.1.0
 Jinja2==2.10
 livereload==2.6.0
-MarkupSafe==1.1.0
+MarkupSafe==1.1.1
 nwdiag==1.0.4
 packaging==19.0
 Pillow==5.4.1
@@ -21,12 +21,12 @@ requests==2.21.0
 seqdiag==0.9.6
 six==1.12.0
 snowballstemmer==1.2.1
-Sphinx==1.8.3
+Sphinx==1.8.5
 sphinxcontrib-actdiag==0.8.5
 sphinxcontrib-blockdiag==1.5.5
 sphinxcontrib-nwdiag==0.9.5
 sphinxcontrib-seqdiag==0.8.5
 sphinxcontrib-websupport==1.1.0
-tornado==5.1.1
+tornado==6.0.2
 urllib3==1.24.1
 webcolors==1.8.1
