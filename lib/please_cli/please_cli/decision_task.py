@@ -455,11 +455,17 @@ def get_nix_paths(projects: Projects) -> typing.List[NixPath]:
 
 
 class Derive:
+    '''Just out of coincidence a format of derivation is compatible with python
+       which means we can evaluate it.
+    '''
     def __init__(self, *drv):
         self._drv = drv
 
     @property
     def nix_hash(self):
+        '''We are only interested into nix_hash, which we need to parse from
+           derivation structure.
+        '''
         return self._drv[0][0][1][11:43]
 
 
