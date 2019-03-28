@@ -7,6 +7,7 @@ import asyncio
 import atexit
 import io
 import json
+import multiprocessing
 import os
 import tempfile
 
@@ -53,12 +54,24 @@ class MercurialWorker(object):
         logger.info('Removed ssh key')
 
     async def run(self):
-        # Start by updating the repo
-        logger.info('Checking out tip', repo=self.repo_url)
-        self.repo = batch_checkout(self.repo_url, self.repo_dir, batch_size=self.batch_size)
+        # Start by updating the repo in a separate process
+        clone = multiprocessing.Process(
+            target=batch_checkout,
+            args=(self.repo_url, self.repo_dir),
+            kwargs={'batch_size': self.batch_size},
+        )
+        clone.start()
+        logger.info('Checking out tip in a separate process', repo=self.repo_url, pid=clone.pid)
+        while clone.is_alive():
+            # Let the other consumers work while cloning
+            await asyncio.sleep(5)
+        clone.close()
+        logger.info('Initial clone finished')
+
+        # Open repo in main process
+        self.repo = hglib.open(self.repo_dir)
         self.repo.setcbout(lambda msg: logger.info('Mercurial', stdout=msg))
         self.repo.setcberr(lambda msg: logger.info('Mercurial', stderr=msg))
-        logger.info('Initial clone finished')
 
         # Wait for phabricator diffs to apply
         while True:
@@ -107,6 +120,7 @@ class MercurialWorker(object):
         - trigger push-to-try
         '''
         logger.info('Received diff {phid}'.format(**diff))
+        await asyncio.sleep(2)  # allow other tasks to run
 
         # Start by cleaning the repo
         self.clean()
@@ -140,6 +154,7 @@ class MercurialWorker(object):
                 message=message,
                 user='pulselistener',
             )
+            await asyncio.sleep(1)
 
         # Build and commit try_task_config.json
         config_path = os.path.join(self.repo_dir, 'try_task_config.json')
