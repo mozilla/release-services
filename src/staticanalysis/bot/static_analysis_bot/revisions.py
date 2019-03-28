@@ -5,19 +5,20 @@
 
 import io
 import os
-import re
 from datetime import timedelta
 
 import hglib
 from parsepatch.patch import Patch
 
 from cli_common import log
+from cli_common.phabricator import BuildState
 from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import create_blob_artifact
 from static_analysis_bot import AnalysisException
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import REPO_TRY
+from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import settings
 
 logger = log.get_logger(__name__)
@@ -111,7 +112,7 @@ class Revision(object):
         # Get modified lines for this issue
         modified_lines = self.lines.get(issue.path)
         if modified_lines is None:
-            logger.warn('Issue path in not in revision', path=issue.path, revision=self)
+            logger.warn('Issue path is not in revision', path=issue.path, revision=self)
             return False
 
         # Detect if this issue is in the patch
@@ -188,20 +189,31 @@ class PhabricatorRevision(Revision):
     '''
     A phabricator revision to process
     '''
-    regex = re.compile(r'^(PHID-DIFF-(?:\w+))$')
+    diff_phid = None
+    build_target_phid = None
 
-    def __init__(self, description, api):
+    def __init__(self, api, diff_phid=None, try_task=None):
         super().__init__()
         assert isinstance(api, PhabricatorAPI)
+        assert (diff_phid is not None) ^ (try_task is not None)
         self.api = api
         self.mercurial_revision = None
 
-        # Parse Diff description
-        match = self.regex.match(description)
-        if match is None:
-            raise Exception('Invalid Phabricator description')
-        groups = match.groups()
-        self.diff_phid = groups[0]
+        if diff_phid is not None:
+            # Load directly from the diff phid
+            self.load_phabricator(diff_phid)
+        elif try_task is not None:
+            # Load diff phid from the task env
+            self.load_phabricator(try_task['extra']['code-review']['phabricator-diff'])
+        else:
+            raise Exception('Invalid revision configuration')
+
+    def load_phabricator(self, diff_phid):
+        '''
+        Load identifiers from Phabricator
+        '''
+        assert diff_phid.startswith('PHID-DIFF-')
+        self.diff_phid = diff_phid
 
         # Load diff details to get the diff revision
         diffs = self.api.search_diffs(diff_phid=self.diff_phid)
@@ -212,6 +224,23 @@ class PhabricatorRevision(Revision):
 
         self.revision = self.api.load_revision(self.phid)
         self.id = self.revision['id']
+
+        # Load build for status updates
+        if settings.build_plan:
+            build, targets = self.api.find_diff_build(self.diff_phid, settings.build_plan)
+            self.build_phid = build['phid']
+            nb = len(targets)
+            assert nb > 0, 'No build target found'
+            if nb > 1:
+                logger.warn('More than 1 build target found !', nb=nb, build_phid=self.build_phid)
+            target = targets[0]
+            self.build_target_phid = target['phid']
+        else:
+            logger.info('No build plan specified, no HarborMaster update')
+
+        # Load target patch from Phabricator for Try mode
+        if settings.source == SOURCE_TRY:
+            self.patch = self.api.load_raw_diff(self.diff_id)
 
     @property
     def namespaces(self):
@@ -231,6 +260,23 @@ class PhabricatorRevision(Revision):
     @property
     def url(self):
         return 'https://{}/D{}'.format(self.api.hostname, self.id)
+
+    def update_status(self, state, lint_issues=[]):
+        '''
+        Update build status on HarborMaster
+        '''
+        assert isinstance(state, BuildState)
+        assert isinstance(lint_issues, list)
+        if not self.build_target_phid:
+            logger.info('No build target found, skipping HarborMaster update', state=state.value)
+            return
+
+        self.api.update_build_target(
+            self.build_target_phid,
+            state,
+            lint=lint_issues,
+        )
+        logger.info('Updated HarborMaster status', state=state)
 
     def setup_try(self, tasks):
         '''
@@ -314,7 +360,6 @@ class PhabricatorRevision(Revision):
         Outputs a serializable representation of this revision
         '''
         return {
-            'source': 'phabricator',
             'diff_phid': self.diff_phid,
             'phid': self.phid,
             'diff_id': self.diff_id,

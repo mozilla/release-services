@@ -82,15 +82,14 @@ def test_phabricator_clang_tidy(mock_repository, mock_phabricator):
     )
 
     with mock_phabricator as api:
-        revision = PhabricatorRevision('PHID-DIFF-abcdef', api)
+        revision = PhabricatorRevision(api, 'PHID-DIFF-abcdef')
         revision.lines = {
             # Add dummy lines diff
             'test.cpp': [41, 42, 43],
         }
-        reporter = PhabricatorReporter({'analyzers': ['clang-tidy']}, api=api)
+        reporter = PhabricatorReporter({'analyzers': ['clang-tidy'], 'modes': ('comment')}, api=api)
 
-    issue_parts = ('test.cpp', '42', '51', 'error', 'dummy message', 'modernize-use-nullptr')
-    issue = ClangTidyIssue(issue_parts, revision)
+    issue = ClangTidyIssue(revision, 'test.cpp', '42', '51', 'modernize-use-nullptr', 'dummy message', 'error')
     assert issue.is_publishable()
 
     issues, patches = reporter.publish([issue, ], revision)
@@ -135,7 +134,7 @@ def test_phabricator_clang_format(mock_config, mock_repository, mock_phabricator
     )
 
     with mock_phabricator as api:
-        revision = PhabricatorRevision('PHID-DIFF-abcdef', api)
+        revision = PhabricatorRevision(api, 'PHID-DIFF-abcdef')
         revision.lines = {
             # Add dummy lines diff
             'test.cpp': [41, 42, 43],
@@ -193,7 +192,7 @@ def test_phabricator_coverage(mock_config, mock_repository, mock_phabricator):
     )
 
     with mock_phabricator as api:
-        revision = PhabricatorRevision('PHID-DIFF-abcdef', api)
+        revision = PhabricatorRevision(api, 'PHID-DIFF-abcdef')
         revision.lines = {
             # Add dummy lines diff
             'test.txt': [0],
@@ -274,7 +273,7 @@ def test_phabricator_clang_tidy_and_coverage(mock_config, mock_repository, mock_
     )
 
     with mock_phabricator as api:
-        revision = PhabricatorRevision('PHID-DIFF-abcdef', api)
+        revision = PhabricatorRevision(api, 'PHID-DIFF-abcdef')
         revision.lines = {
             # Add dummy lines diff
             'test.txt': [0],
@@ -283,8 +282,7 @@ def test_phabricator_clang_tidy_and_coverage(mock_config, mock_repository, mock_
         }
         reporter = PhabricatorReporter({'analyzers': ['coverage', 'clang-tidy']}, api=api)
 
-    issue_parts = ('another_test.cpp', '42', '51', 'error', 'dummy message', 'modernize-use-nullptr')
-    issue_clang_tidy = ClangTidyIssue(issue_parts, revision)
+    issue_clang_tidy = ClangTidyIssue(revision, 'another_test.cpp', '42', '51', 'modernize-use-nullptr', 'dummy message', 'error')
     assert issue_clang_tidy.is_publishable()
 
     issue_coverage = CoverageIssue('test.cpp', 0, 'This file is uncovered', revision)
@@ -326,7 +324,7 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
 
     def _test_reporter(api, analyzers):
         # Always use the same setup, only varies the analyzers
-        revision = PhabricatorRevision('PHID-DIFF-abcdef', api)
+        revision = PhabricatorRevision(api, 'PHID-DIFF-abcdef')
         revision.lines = {
             'test.cpp': [0, 41, 42, 43],
             'dom/test.cpp': [42, ],
@@ -335,7 +333,7 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
 
         issues = [
             ClangFormatIssue('dom/test.cpp', 42, 1, revision),
-            ClangTidyIssue(('test.cpp', '42', '51', 'error', 'dummy message', 'modernize-use-nullptr'), revision),
+            ClangTidyIssue(revision, 'test.cpp', '42', '51', 'modernize-use-nullptr', 'dummy message', 'error'),
             InferIssue({
                 'file': 'test.cpp',
                 'line': 42,
@@ -412,3 +410,73 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
         assert len(issues) == 5
         assert len(patches) == 4
         assert [p.analyzer for p in patches] == ['clang-tidy', 'clang-format', 'infer', 'mozlint']
+
+
+@responses.activate
+def test_phabricator_harbormaster(mock_repository, mock_phabricator):
+    '''
+    Test Phabricator reporter publication on a mock clang-tidy issue
+    using harbormaster
+    '''
+    from static_analysis_bot.report.phabricator import PhabricatorReporter
+    from static_analysis_bot.revisions import PhabricatorRevision
+    from static_analysis_bot.clang.tidy import ClangTidyIssue
+
+    def _check_message(request):
+        # Check the Phabricator main comment is well formed
+        payload = urllib.parse.parse_qs(request.body)
+        assert payload['output'] == ['json']
+        assert len(payload['params']) == 1
+        details = json.loads(payload['params'][0])
+        assert details == {
+            'buildTargetPHID': 'PHID-HMBD-deadbeef12456',
+            'lint': [
+                {
+                    'char': 51,
+                    'code': 'clang-tidy.modernize-use-nullptr',
+                    'name': 'Clang-Tidy - modernize-use-nullptr',
+                    'line': 42,
+                    'path': 'test.cpp',
+                    'severity': 'warning',
+                    'description': 'dummy message'
+                }
+            ],
+            'unit': [],
+            'type': 'work',
+            '__conduit__': {'token': 'deadbeef'},
+        }
+
+        # Outputs dummy empty response
+        resp = {
+            'error_code': None,
+            'result': None,
+        }
+        return 201, {'Content-Type': 'application/json', 'unittest': 'clang-tidy'}, json.dumps(resp)
+
+    responses.add_callback(
+        responses.POST,
+        'http://phabricator.test/api/harbormaster.sendmessage',
+        callback=_check_message,
+    )
+
+    with mock_phabricator as api:
+        revision = PhabricatorRevision(api, 'PHID-DIFF-abcdef')
+        revision.lines = {
+            # Add dummy lines diff
+            'test.cpp': [41, 42, 43],
+        }
+        revision.build_target_phid = 'PHID-HMBD-deadbeef12456'
+        reporter = PhabricatorReporter({'analyzers': ['clang-tidy'], 'mode': 'harbormaster'}, api=api)
+
+    issue = ClangTidyIssue(revision, 'test.cpp', '42', '51', 'modernize-use-nullptr', 'dummy message', 'error')
+    assert issue.is_publishable()
+
+    issues, patches = reporter.publish([issue, ], revision)
+    assert len(issues) == 1
+    assert len(patches) == 0
+
+    # Check the callback has been used
+    assert len(responses.calls) > 0
+    call = responses.calls[-1]
+    assert call.request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
+    assert call.response.headers.get('unittest') == 'clang-tidy'

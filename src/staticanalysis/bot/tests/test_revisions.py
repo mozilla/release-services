@@ -17,7 +17,7 @@ def test_phabricator(mock_phabricator, mock_repository, mock_config):
     from static_analysis_bot.revisions import PhabricatorRevision
 
     with mock_phabricator as api:
-        r = PhabricatorRevision('PHID-DIFF-testABcd12', api)
+        r = PhabricatorRevision(api, 'PHID-DIFF-testABcd12')
     assert not hasattr(r, 'mercurial')
     assert r.diff_id == 42
     assert r.diff_phid == 'PHID-DIFF-testABcd12'
@@ -109,6 +109,9 @@ def test_analyze_patch():
 
         def validates():
             return True
+
+        def as_phabricator_lint():
+            return {}
 
     issue_in_new_file = MyIssue('new.txt', 1)
     issue_in_existing_file_touched_line = MyIssue('modified.txt', 3)

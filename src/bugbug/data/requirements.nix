@@ -258,10 +258,10 @@ let
     };
 
     "PyYAML" = python.mkDerivation {
-      name = "PyYAML-3.13";
+      name = "PyYAML-5.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/9e/a3/1d13970c3f36777c583f136c136f804d70f500168edc1edea6daa7200769/PyYAML-3.13.tar.gz";
-        sha256 = "3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf";
+        url = "https://files.pythonhosted.org/packages/9f/2c/9417b5c774792634834e730932745bc09a7d36754ca00acf1ccd1ac2594d/PyYAML-5.1.tar.gz";
+        sha256 = "436bc774ecf7c103814098159fbb84c2715d25980175292c648f2da143909f95";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -269,7 +269,7 @@ let
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "http://pyyaml.org/wiki/PyYAML";
+        homepage = "https://github.com/yaml/pyyaml";
         license = licenses.mit;
         description = "YAML parser and emitter for Python";
       };
@@ -444,10 +444,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.111";
+      name = "boto3-1.9.116";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/83/70/b83cfe44f922c15ebcd185217ebc05d27e879d5a2ccca59f1c4f49d09938/boto3-1.9.111.tar.gz";
-        sha256 = "06414c75d1f62af7d04fd652b38d1e4fd3cfd6b35bad978466af88e2aaecd00d";
+        url = "https://files.pythonhosted.org/packages/25/20/45aa58b4b13e420b76f72326ae148004dc32297a930584ad57a126269019/boto3-1.9.116.tar.gz";
+        sha256 = "dcf46a30d33ee213acfd3f7d61f60a1797dc21b8e3f8121ebe9eeb00237fea61";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -466,10 +466,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.111";
+      name = "botocore-1.12.116";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/2b/85/53393530cdf42b3b8daa42ce498cb0feee79892d02983fac8d090622c111/botocore-1.12.111.tar.gz";
-        sha256 = "6af473c52d5e3e7ff82de5334e9fee96b2d5ec2df5d78bc00cd9937e2573a7a8";
+        url = "https://files.pythonhosted.org/packages/8f/4c/2b92b7fa32ace5b0b862b1befdd67fc9169c2ef85540642b389c8541087c/botocore-1.12.116.tar.gz";
+        sha256 = "b0e79b61dda7fb5f05949a4fe319d44108e0ba6db41775d909b891e6992d5a06";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -489,10 +489,10 @@ let
     };
 
     "bugbug" = python.mkDerivation {
-      name = "bugbug-0.0.2";
+      name = "bugbug-0.0.4";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/ed/b2/7a6ccc2c2d7b812482534f10d719f305600a6e3d761852db8b2b3f63a9c1/bugbug-0.0.2.tar.gz";
-        sha256 = "3977dec18589905c9de668ae9a0a69dbdf908f4b933e0ebc6eefa7878dbdea47";
+        url = "https://files.pythonhosted.org/packages/9a/85/a44b33e214e118d860b506e5a737cc830cd91afbd59b714e5ff4414b7015/bugbug-0.0.4.tar.gz";
+        sha256 = "f1971d0670d8698b4b43aa20a4d91aed0012f4a847cd9f29a98194590bae8c8b";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -516,6 +516,7 @@ let
         self."spacy"
         self."tqdm"
         self."xgboost"
+        self."zstandard"
       ];
       meta = with pkgs.stdenv.lib; {
         homepage = "UNKNOWN";
@@ -802,10 +803,10 @@ let
     };
 
     "decorator" = python.mkDerivation {
-      name = "decorator-4.3.2";
+      name = "decorator-4.4.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/c4/26/b48aaa231644bc875bb348e162d156edb18b994da900a10f4493ea995a2f/decorator-4.3.2.tar.gz";
-        sha256 = "33cd704aea07b4c28b3eb2c97d288a06918275dac0ecebdaf1bc8a48d98adb9e";
+        url = "https://files.pythonhosted.org/packages/ba/19/1119fe7b1e49b9c8a9f154c930060f37074ea2e8f9f6558efc2eeaa417a2/decorator-4.4.0.tar.gz";
+        sha256 = "86156361c50488b84a3f148056ea716ca587df2f0de1d34750d35c21312725de";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1788,10 +1789,10 @@ let
     };
 
     "pandas" = python.mkDerivation {
-      name = "pandas-0.24.1";
+      name = "pandas-0.24.2";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/81/fd/b1f17f7dc914047cd1df9d6813b944ee446973baafe8106e4458bfb68884/pandas-0.24.1.tar.gz";
-        sha256 = "435821cb2501eabbcee7e83614bd710940dc0cf28b5afbc4bdb816c31cec71af";
+        url = "https://files.pythonhosted.org/packages/b2/4c/b6f966ac91c5670ba4ef0b0b5613b5379e3c7abdfad4e7b89a87d73bae13/pandas-0.24.2.tar.gz";
+        sha256 = "4f919f409c433577a501e023943e582c57355d50a724c589e78bc1d551a535a2";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1853,10 +1854,10 @@ let
     };
 
     "pdbpp" = python.mkDerivation {
-      name = "pdbpp-0.9.8";
+      name = "pdbpp-0.9.12";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/24/af/e5c4ccd95db79990ca1b24999796512bfbd75643c7aded29ad1242b05f8f/pdbpp-0.9.8.tar.gz";
-        sha256 = "c30827c59f60668d43cdc705502255bba32eb06ff68f896b3f469e6f7b41639d";
+        url = "https://files.pythonhosted.org/packages/b5/bf/5eecc4fb9a6aad3c06b3b1c20db08977ac1164ddb2072c072f5958815778/pdbpp-0.9.12.tar.gz";
+        sha256 = "62dea08830eea5df685c957de4fac6e7f699ed635dd58975a689432450b3258b";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2179,10 +2180,10 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-4.3.0";
+      name = "pytest-4.3.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/7c/02/b35c0a322e332544716a0c598f8208ba3474fa94706183c26465d833b283/pytest-4.3.0.tar.gz";
-        sha256 = "067a1d4bf827ffdd56ad21bd46674703fce77c5957f6c1eef731f6146bfcef1c";
+        url = "https://files.pythonhosted.org/packages/c9/ff/e353dff7987c3a6ccb0cecb1c148c7b276c235f80f7017d181d19e2b4710/pytest-4.3.1.tar.gz";
+        sha256 = "592eaa2c33fae68c7d75aacf042efc9f77b27c08a6224a4f59beab8d9a420523";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2403,10 +2404,10 @@ let
     };
 
     "responses" = python.mkDerivation {
-      name = "responses-0.10.5";
+      name = "responses-0.10.6";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/c9/3b/bea0bfc243072a3d910befae4d1fb585276260abcac2a62109e01064c551/responses-0.10.5.tar.gz";
-        sha256 = "c85882d2dc608ce6b5713a4e1534120f4a0dc6ec79d1366570d2b0c909a50c87";
+        url = "https://files.pythonhosted.org/packages/cb/83/9a79053228532392949542bb21ee3e685e089ac8dc2fe7f0a9dfbbced0e5/responses-0.10.6.tar.gz";
+        sha256 = "502d9c0c8008439cfcdef7e251f507fcfdd503b56e8c0c87c3c3e3393953f790";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2733,10 +2734,10 @@ let
     };
 
     "testfixtures" = python.mkDerivation {
-      name = "testfixtures-6.6.0";
+      name = "testfixtures-6.6.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/67/da/de8de63516c66bceba0df7936efb7108afc625bb6f1015247756a37a2bdc/testfixtures-6.6.0.tar.gz";
-        sha256 = "361e0a557f95e351ee4487a14eb26ccb1337038a33f16f588bcb0be90977d80b";
+        url = "https://files.pythonhosted.org/packages/d5/35/82801442ffa1abe1deed5bb66c986b781baa5d311ab2db5496504218fcb4/testfixtures-6.6.1.tar.gz";
+        sha256 = "1ff15abd7c93a25c25e707e15bc245fb3d5723e43ce114e8fd6f72cff17926c8";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -3027,6 +3028,24 @@ let
         homepage = "https://github.com/aio-libs/yarl/";
         license = licenses.asl20;
         description = "Yet another URL library";
+      };
+    };
+
+    "zstandard" = python.mkDerivation {
+      name = "zstandard-0.11.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/a2/26/0764c755f0d929ad55b35eeb98a350556f838bfd33ac8945ec7f5848b28b/zstandard-0.11.0.tar.gz";
+        sha256 = "58f2e102f4d8b82415aa8db4a18ee3f440c28b7741f1c95951236a08ec1a7d7f";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/indygreg/python-zstandard";
+        license = licenses.bsdOriginal;
+        description = "Zstandard bindings for Python";
       };
     };
   };

@@ -6,22 +6,22 @@
 from unittest import mock
 
 
-def test_taskcluster_index(mock_workflow, mock_config):
+def test_taskcluster_index(mock_try_config, mock_try_workflow):
     '''
     Test the Taskcluster indexing API
     by mocking an online taskcluster state
     '''
     from static_analysis_bot.config import TaskCluster
     from static_analysis_bot.revisions import Revision
-    mock_config.taskcluster = TaskCluster('/tmp/dummy', '12345deadbeef', 0, False)
-    mock_workflow.index_service = mock.Mock()
+    mock_try_config.taskcluster = TaskCluster('/tmp/dummy', '12345deadbeef', 0, False)
+    mock_try_workflow.index_service = mock.Mock()
     rev = Revision()
     rev.namespaces = ['mock.1234']
-    rev.as_dict = lambda: {'id': '1234', 'source': 'mock'}
-    mock_workflow.index(rev, test='dummy')
+    rev.as_dict = lambda: {'id': '1234', 'someData': 'mock'}
+    mock_try_workflow.index(rev, test='dummy')
 
-    assert mock_workflow.index_service.insertTask.call_count == 2
-    calls = mock_workflow.index_service.insertTask.call_args_list
+    assert mock_try_workflow.index_service.insertTask.call_count == 2
+    calls = mock_try_workflow.index_service.insertTask.call_args_list
 
     # First call with namespace
     namespace, args = calls[0][0]
@@ -29,7 +29,10 @@ def test_taskcluster_index(mock_workflow, mock_config):
     assert args['taskId'] == '12345deadbeef'
     assert args['data']['test'] == 'dummy'
     assert args['data']['id'] == '1234'
-    assert args['data']['source'] == 'mock'
+    assert args['data']['source'] == 'try'
+    assert args['data']['try_task_id'] == 'remoteTryTask'
+    assert args['data']['try_group_id'] == 'remoteTryGroup'
+    assert args['data']['someData'] == 'mock'
     assert 'indexed' in args['data']
 
     # Second call with sub namespace
@@ -38,5 +41,8 @@ def test_taskcluster_index(mock_workflow, mock_config):
     assert args['taskId'] == '12345deadbeef'
     assert args['data']['test'] == 'dummy'
     assert args['data']['id'] == '1234'
-    assert args['data']['source'] == 'mock'
+    assert args['data']['source'] == 'try'
+    assert args['data']['try_task_id'] == 'remoteTryTask'
+    assert args['data']['try_group_id'] == 'remoteTryGroup'
+    assert args['data']['someData'] == 'mock'
     assert 'indexed' in args['data']

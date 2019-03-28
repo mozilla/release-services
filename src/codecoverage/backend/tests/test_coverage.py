@@ -46,7 +46,7 @@ def test_coverage_by_changeset(coverage_builds):
     from tests.conftest import mock_coverage_by_changeset_job_success
 
     # patch the queue to be sync to allow it run without workers. http://python-rq.org/docs/testing/
-    with mock.patch('codecoverage_backend.api.q', Queue(connection=FakeStrictRedis(singleton=False))) as q:
+    with mock.patch('codecoverage_backend.api.q', Queue(connection=FakeStrictRedis())) as q:
         # patch the mock_coverage_by_changeset
         with mock.patch('codecoverage_backend.api.coverage_by_changeset_job', mock_coverage_by_changeset_job_success):
             assert q.is_empty()
@@ -81,7 +81,7 @@ def test_coverage_summary_by_changeset(coverage_builds):
     from tests.conftest import mock_coverage_by_changeset_job_success
 
     # patch the queue to be sync to allow it run without workers. http://python-rq.org/docs/testing/
-    with mock.patch('codecoverage_backend.api.q', Queue(connection=FakeStrictRedis(singleton=False))) as q:
+    with mock.patch('codecoverage_backend.api.q', Queue(connection=FakeStrictRedis())) as q:
         # patch the mock_coverage_by_changeset
         with mock.patch('codecoverage_backend.api.coverage_by_changeset_job', mock_coverage_by_changeset_job_success):
             # Get changeset coverage information

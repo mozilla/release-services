@@ -46,12 +46,14 @@ class Settings(object):
         self.app_channel = None
         self.source = None
         self.publication = None
+        self.max_clone_runtime = 0
 
         # Paths
         self.has_local_clone = False
         self.repo_dir = None
         self.repo_shared_dir = None
         self.taskcluster = None
+        self.build_plan = None
 
         # For remote analysis
         self.try_task_id = None
@@ -71,6 +73,8 @@ class Settings(object):
               publication,
               allowed_paths,
               cov_config=None,
+              max_clone_runtime=15*60,
+              build_plan=None
               ):
         # Detect source from env
         if 'TRY_TASK_ID' in os.environ and 'TRY_TASK_GROUP_ID' in os.environ:
@@ -131,6 +135,15 @@ class Settings(object):
             self.cov_auth = cov_config.get('auth_key')
             self.cov_package_ver = cov_config.get('package_ver')
             self.cov_full_stack = cov_config.get('full_stack', False)
+
+        # Save max clone runtime for watchdog
+        assert max_clone_runtime > 0
+        self.max_clone_runtime = max_clone_runtime
+
+        # Save Phabricator build plan in use
+        if build_plan:
+            assert build_plan.startswith('PHID-HMCP-'), 'Invalid buid plan phid'
+            self.build_plan = build_plan
 
     def __getattr__(self, key):
         if key not in self.config:
