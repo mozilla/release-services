@@ -33,7 +33,7 @@ let
                 };
                 taskCapabilities = {};
                 taskCommand = [
-                  "/bin/flask"
+                  "flask"
                   command
                 ];
                 deadline = "4 hours";

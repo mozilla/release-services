@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import enum
 import functools
 import json
 from collections import OrderedDict
@@ -18,6 +19,12 @@ HGMO_JSON_REV_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-rev/{}
 MOZILLA_PHABRICATOR_PROD = 'https://phabricator.services.mozilla.com/api/'
 
 logger = log.get_logger(__name__)
+
+
+class BuildState(enum.Enum):
+    Work = 'work'
+    Pass = 'pass'
+    Fail = 'fail'
 
 
 @functools.lru_cache(maxsize=2048)
@@ -43,14 +50,39 @@ def revision_available(repo, revision):
 # https://phabricator.services.mozilla.com/conduit/method/harbormaster.sendmessage/,
 # in the "Lint Results" paragraph.
 class LintResult(dict):
-    def __init__(self, name, code, severity, path, line, char, description):
+    def __init__(self, name, code, severity, path, line=None, char=None, description=None):
         self['name'] = name
         self['code'] = code
         self['severity'] = severity
         self['path'] = path
-        self['line'] = line
-        self['char'] = char
-        self['description'] = description
+        if line is not None:
+            self['line'] = line
+        if char is not None:
+            self['char'] = char
+        if description is not None:
+            self['description'] = description
+        self.validates()
+
+    def validates(self):
+        '''
+        Check the input is a lint issue compatible with
+        '''
+
+        # Check required strings
+        for key in ('name', 'code', 'severity', 'path'):
+            assert isinstance(self[key], str), '{} should be a string'.format(key)
+
+        # Check the severity is a valid value
+        assert self['severity'] in ('advice', 'autofix', 'warning', 'error', 'disabled'), \
+            'Invalid severity value: {}'.format(self['severity'])
+
+        # Check optional integers
+        for key in ('line', 'char'):
+            value = self.get(key)
+            if value:
+                assert isinstance(value, int), '{} should be an int'.format(key)
+
+        return True
 
 
 class PhabricatorRevisionNotFoundException(Exception):
@@ -243,14 +275,84 @@ class PhabricatorAPI(object):
         )
         return res['targetMap']
 
-    def update_build_target(self, build_target_phid, type, unit=[], lint=[]):
+    def search_buildable(self, object_phid):
+        '''
+        Search HarborMaster buildables linked to an object (diff, revision, ...)
+        '''
+        constraints = {
+            'objectPHIDs': [object_phid, ],
+        }
+        out = self.request(
+            'harbormaster.buildable.search',
+            constraints=constraints,
+        )
+        return out['data']
+
+    def search_build(self, buildable_phid, plans=[]):
+        '''
+        Search HarborMaster build for a buildable
+        Supports HarborMaster Build Plan filtering
+        '''
+        constraints = {
+            'buildables': [buildable_phid, ],
+            'plans': plans,
+        }
+        out = self.request(
+            'harbormaster.build.search',
+            constraints=constraints,
+        )
+        return out['data']
+
+    def search_build_target(self, build_phid):
+        '''
+        Search HarborMaster build targets for a build
+        '''
+        constraints = {
+            'buildPHIDs': [build_phid, ],
+        }
+        out = self.request(
+            'harbormaster.target.search',
+            constraints=constraints,
+        )
+        return out['data']
+
+    def find_diff_build(self, object_phid, build_plan_phid):
+        '''
+        Find a specific build and its targets for a Diff and an HarborMaster build plan
+        '''
+        assert isinstance(object_phid, str)
+        assert object_phid[0:10] in ('PHID-DIFF-', 'PHID-DREV-')
+        assert build_plan_phid.startswith('PHID-HMCP-')
+
+        # First find the buildable for this diff
+        buildables = self.search_buildable(object_phid)
+        assert len(buildables) == 1
+        buildable = buildables[0]
+        logger.info('Found HarborMaster buildable', id=buildable['id'], phid=buildable['phid'])
+
+        # Then find the build in that buildable & plan
+        builds = self.search_build(buildable['phid'], plans=[build_plan_phid, ])
+        assert len(buildables) == 1
+        build = builds[0]
+        logger.info('Found HarborMaster build', id=build['id'], phid=build['phid'])
+
+        # Finally look for the build targets
+        targets = self.search_build_target(build['phid'])
+        logger.info('Found HarborMaster build targets', nb=len(targets))
+
+        return build, targets
+
+    def update_build_target(self, build_target_phid, state, unit=[], lint=[]):
         '''
         Update unit test / linting data for a given build target.
         '''
+        assert all(map(lambda i: isinstance(i, LintResult), lint)), \
+            'Only support LintResult instances'
+        assert isinstance(state, BuildState)
         self.request(
             'harbormaster.sendmessage',
             buildTargetPHID=build_target_phid,
-            type=type,
+            type=state.value,
             unit=unit,
             lint=lint,
         )
@@ -281,7 +383,7 @@ class PhabricatorAPI(object):
 
         self.update_build_target(
             build_target_phid,
-            'pass',
+            BuildState.Pass,
             unit=[
                 {
                     'name': 'Aggregate coverage information',
@@ -291,7 +393,7 @@ class PhabricatorAPI(object):
             ]
         )
 
-    def upload_lint_results(self, object_phid, type, lint_data):
+    def upload_lint_results(self, object_phid, state, lint_data):
         '''
         Upload linting/static analysis results to a Phabricator object.
 
@@ -299,6 +401,8 @@ class PhabricatorAPI(object):
 
         `lint_data` is an array of LintResult objects.
         '''
+        assert isinstance(state, BuildState)
+
         # TODO: We are temporarily using arcanist.lint, but we should switch to something
         # different after https://bugzilla.mozilla.org/show_bug.cgi?id=1487843 is resolved.
         res = self.load_or_create_build_autotarget(object_phid, ['arcanist.lint'])
@@ -306,7 +410,7 @@ class PhabricatorAPI(object):
 
         self.update_build_target(
             build_target_phid,
-            type,
+            state,
             lint=lint_data,
         )
 

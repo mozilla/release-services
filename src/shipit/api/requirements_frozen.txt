@@ -9,8 +9,8 @@ attrs==19.1.0
 backoff==1.6.0
 blinker==1.4
 boto==2.49.0
-boto3==1.9.117
-botocore==1.12.117
+boto3==1.9.123
+botocore==1.12.123
 certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
@@ -18,7 +18,7 @@ clickclick==1.2.2
 codecov==2.0.15
 connexion==2.2.0
 coverage==4.5.3
-coveralls==1.6.0
+coveralls==1.7.0
 docopt==0.6.2
 docutils==0.14
 ecdsa==0.13
@@ -47,7 +47,7 @@ idna==2.8
 inflection==0.3.1
 inotify==0.2.10
 intreehooks==1.0
-isort==4.3.15
+isort==4.3.16
 itsdangerous==0.24
 Jinja2==2.10
 jmespath==0.9.4
@@ -55,7 +55,7 @@ json-e==3.0.0
 jsonschema==2.6.0
 kombu==4.4.0
 Logbook==1.4.3
-Mako==1.0.7
+Mako==1.0.8
 MarkupSafe==1.1.1
 mccabe==0.6.1
 mohawk==0.3.4
@@ -70,7 +70,7 @@ mypy-extensions==0.4.1
 nose==1.3.7
 oauth2client==4.1.3
 openapi-spec-validator==0.2.6
-pdbpp==0.9.13
+pdbpp==0.9.14
 pluggy==0.9.0
 psycopg2==2.7.7
 py==1.8.0
@@ -101,13 +101,13 @@ slugid==2.0.0
 SQLAlchemy==1.3.1
 structlog==19.1.0
 swagger-ui-bundle==0.0.3
-taskcluster==7.0.0
+taskcluster==7.0.1
 taskcluster-urls==11.0.0
-testfixtures==6.6.1
+testfixtures==6.6.2
 typed-ast==1.3.1
 urllib3==1.24.1
 vcversioner==2.16.0.0
 vine==1.3.0
-Werkzeug==0.15.0
+Werkzeug==0.15.1
 wmctrl==0.3
 yarl==1.3.0
