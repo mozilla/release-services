@@ -2,6 +2,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import fcntl
+import os
+import time
 
 import hglib
 
@@ -14,11 +17,39 @@ def hg_run(cmd):
     '''
     Run a mercurial command without an hglib instance
     Useful for initial custom clones
+    Redirects stdout & stderr to python's logger
     '''
+    def _log_process(output, name):
+        # Read and display every line
+        out = output.read()
+        if out is None:
+            return
+        text = filter(None, out.decode('utf-8').splitlines())
+        for line in text:
+            log.info('{}: {}'.format(name, line))
+
+    # Start process
+    main_cmd = cmd[0]
     proc = hglib.util.popen([hglib.HGPATH] + cmd)
+
+    # Set process outputs as non blocking
+    for output in (proc.stdout, proc.stderr):
+        fcntl.fcntl(
+            output.fileno(),
+            fcntl.F_SETFL,
+            fcntl.fcntl(output, fcntl.F_GETFL) | os.O_NONBLOCK,
+        )
+
+    while proc.poll() is None:
+        _log_process(proc.stdout, main_cmd)
+        _log_process(proc.stderr, '{} (err)'.format(main_cmd))
+        time.sleep(2)
+
     out, err = proc.communicate()
-    if proc.returncode:
+    if proc.returncode != 0:
+        log.error('Mercurial {} failure'.format(main_cmd), out=out, err=err)
         raise hglib.error.CommandError(cmd, proc.returncode, out, err)
+
     return out
 
 
@@ -58,6 +89,7 @@ def batch_checkout(repo_url, repo_dir, revision=b'tip', batch_size=100000):
                                 repo_url,
                                 repo_dir,
                                 noupdate=True,
+                                verbose=True,
                                 stream=True)
     hg_run(cmd)
     log.info('Inital clone finished')
