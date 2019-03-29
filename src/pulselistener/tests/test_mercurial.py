@@ -63,6 +63,14 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
     tip = RepoMock.tip()
     assert tip.node != initial.node
 
+    # Check all commits messages
+    assert [c.desc for c in RepoMock.log()] == [
+        b'try_task_config for code-review\nDifferential Diff: PHID-DIFF-test123',
+        b'Bug XXX - A second commit message\nDifferential Diff: PHID-DIFF-test123',
+        b'Bug XXX - A first commit message\nDifferential Diff: PHID-DIFF-xxxx',
+        b'Readme'
+    ]
+
     # Check the push to try has been called
     # with tip commit
     ssh_conf = 'ssh -o StrictHostKeyChecking="no" -o User="john@doe.com" -o IdentityFile="{}"'.format(worker.ssh_key_path)
@@ -140,7 +148,7 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
     # It should be different from the initial one (patches and config have applied)
     tip = RepoMock.tip()
     assert tip.node != base
-    assert tip.desc == b'try_task_config for PHID-DIFF-solo'
+    assert tip.desc == b'try_task_config for code-review\nDifferential Diff: PHID-DIFF-solo'
 
     # Check the push to try has been called
     # with tip commit
@@ -156,7 +164,7 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
     parents = RepoMock.parents(tip.node)
     assert len(parents) == 1
     parent = parents[0]
-    assert parent.desc == b'Patch PHID-DIFF-solo'
+    assert parent.desc == b'A nice human readable commit message\nDifferential Diff: PHID-DIFF-solo'
 
     # Check the grand parent is the base, not extra
     great_parents = RepoMock.parents(parent.node)
