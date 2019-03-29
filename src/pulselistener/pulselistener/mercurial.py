@@ -131,9 +131,8 @@ class MercurialWorker(object):
         for diff_phid, patch in patches:
             commit = commits.get(diff_phid)
             if commit:
-                message = '{}\nDiff: {}'.format(commit[0]['message'], diff_phid)
-            else:
-                message = 'Diff: {}'.format(diff_phid)
+                message = '{}\n'.format(commit[0]['message'])
+            message += 'Differential Diff: {}'.format(diff_phid)
 
             logger.info('Applying patch', phid=diff_phid, message=message)
             self.repo.import_(
@@ -156,7 +155,7 @@ class MercurialWorker(object):
             json.dump(config, f, sort_keys=True, indent=4)
         self.repo.add(config_path.encode('utf-8'))
         self.repo.commit(
-            message='try_task_config for code-review\nDiff: {}'.format(diff['phid']),
+            message='try_task_config for code-review\nDifferential Diff: {}'.format(diff['phid']),
             user='pulselistener',
         )
 
