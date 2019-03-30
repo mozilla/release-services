@@ -126,8 +126,16 @@ def PhabricatorMock():
     def _diff_search(request):
         params = _phab_params(request)
         assert 'constraints' in params
-        rev = params['constraints']['revisionPHIDs'][0]
-        return (200, json_headers, _response('search-{}'.format(rev)))
+        if 'revisionPHIDs' in params['constraints']:
+            # Search from revision
+            mock_name = 'search-{}'.format(params['constraints']['revisionPHIDs'][0])
+        elif 'phids' in params['constraints']:
+            # Search from diffs
+            diffs = '-'.join(params['constraints']['phids'])
+            mock_name = 'search-{}'.format(diffs)
+        else:
+            raise Exception('Unsupported diff mock {}'.format(params))
+        return (200, json_headers, _response(mock_name))
 
     def _diff_raw(request):
         params = _phab_params(request)

@@ -1034,6 +1034,72 @@ def get_thunderbird_beta_builds() -> typing.Dict:
     return dict()
 
 
+def sanity_check_firefox_builds(firefox_versions: FirefoxVersions,
+                                firefox_primary_builds: PrimaryBuilds,
+                                version_key: str,
+                                min_builds: int = 20
+                                ) -> None:
+    if version_key in ('FIREFOX_ESR_NEXT', 'FIREFOX_AURORA'):
+        return
+
+    version = firefox_versions.get(version_key)
+    if not version:
+        return
+
+    builds = len([
+        locale
+        for locale, build in firefox_primary_builds.items()
+        if version in build
+    ])
+
+    if builds < min_builds:
+        raise click.ClickException(f'Too few firefox primary builds for {version_key}')
+
+
+def sanity_check_thunderbuild_builds(thunderbird_versions: ThunderbirdVersions,
+                                     thunderbird_primary_builds: PrimaryBuilds,
+                                     version_key: str,
+                                     min_builds: int = 20,
+                                     ) -> None:
+    version = thunderbird_versions.get(version_key)
+    if not version:
+        return
+
+    builds = len([
+        locale
+        for locale, build in thunderbird_primary_builds.items()
+        if version in build
+    ])
+
+    if builds < min_builds:
+        raise click.ClickException(f'Too few thunderbird primary builds for {version_key}')
+
+
+def sanity_checks(product_details: ProductDetails) -> None:
+    for version_key in ('FIREFOX_NIGHTLY',
+                        'FIREFOX_AURORA',
+                        'FIREFOX_DEVEDITION',
+                        'FIREFOX_ESR',
+                        'FIREFOX_ESR_NEXT',
+                        'LATEST_FIREFOX_DEVEL_VERSION',
+                        'LATEST_FIREFOX_RELEASED_DEVEL_VERSION',
+                        'LATEST_FIREFOX_VERSION',
+                        ):
+        sanity_check_firefox_builds(typing.cast(FirefoxVersions, product_details['1.0/firefox_versions.json']),
+                                    typing.cast(PrimaryBuilds, product_details['1.0/firefox_primary_builds.json']),
+                                    version_key,
+                                    )
+
+    # so far p-d only lists builds for the latest version
+    # bedrock uses the locales for the release channel to
+    # build download pages for the other channels
+    for version_key in ('LATEST_THUNDERBIRD_VERSION',):
+        sanity_check_thunderbuild_builds(typing.cast(ThunderbirdVersions, product_details['1.0/thunderbird_versions.json']),
+                                         typing.cast(PrimaryBuilds, product_details['1.0/thunderbird_primary_builds.json']),
+                                         version_key,
+                                         )
+
+
 def run_check(*arg, **kw):
     return cli_common.utils.retry(lambda: cli_common.command.run_check(*arg, **kw))
 
@@ -1243,6 +1309,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
 
     # create index.html for every folder
     product_details = create_index_listing(product_details)
+
+    # run sanity checks
+    sanity_checks(product_details)
 
     if shipit_api.config.PRODUCT_DETAILS_NEW_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_NEW_DIR)
