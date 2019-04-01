@@ -134,21 +134,28 @@ class PhabricatorAPI(object):
         parts = urlparse(self.url)
         return parts.netloc
 
-    def search_diffs(self, diff_phid=None, revision_phid=None, output_cursor=False, **params):
+    def search_diffs(self, diff_phid=None, diff_id=None, revision_phid=None, output_cursor=False, **params):
         '''
         Find details of differential diffs from a Differential diff or revision
         Multiple diffs can be returned (when using revision_phid)
         '''
+        def as_list(name, value, value_type):
+            if isinstance(value, value_type):
+                return [value, ]
+            elif isinstance(value, list):
+                assert all(map(lambda v: isinstance(v, value_type), value)), \
+                    'All values in {} should be of type {}'.format(name, value_type)
+                return value
+            else:
+                raise Exception('{0} must be a {1} or a list of {1}'.format(name, value_type))
+
         constraints = {}
         if diff_phid is not None:
-            if isinstance(diff_phid, str):
-                constraints['phids'] = [diff_phid, ]
-            elif isinstance(diff_phid, list):
-                constraints['phids'] = diff_phid
-            else:
-                raise Exception('diff_phid must be a string or a list')
+            constraints['phids'] = as_list('diff_phid', diff_phid, str)
+        if diff_id is not None:
+            constraints['ids'] = as_list('diff_id', diff_id, int)
         if revision_phid is not None:
-            constraints['revisionPHIDs'] = [revision_phid, ]
+            constraints['revisionPHIDs'] = as_list('revision_phid', revision_phid, str)
         out = self.request('differential.diff.search', constraints=constraints, **params)
 
         def _clean(diff):
@@ -184,7 +191,7 @@ class PhabricatorAPI(object):
             diffID=diff_id,
         )
 
-    def load_revision(self, rev_phid=None, rev_id=None):
+    def load_revision(self, rev_phid=None, rev_id=None, **params):
         '''
         Find details of a differential revision
         '''
@@ -199,6 +206,7 @@ class PhabricatorAPI(object):
         out = self.request(
             'differential.revision.search',
             constraints=constraints,
+            **params,
         )
 
         data = out['data']
@@ -418,6 +426,20 @@ class PhabricatorAPI(object):
             state,
             lint=lint_data,
         )
+
+    def search_projects(self, slugs=None, **params):
+        '''
+        Search Phabricator projects descriptions
+        '''
+        constraints = {}
+        if slugs:
+            constraints['slugs'] = slugs
+        out = self.request(
+            'project.search',
+            constraints=constraints,
+            **params,
+        )
+        return out['data']
 
     def request(self, path, **payload):
         '''
