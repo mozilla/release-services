@@ -141,7 +141,12 @@ class PhabricatorAPI(object):
         '''
         constraints = {}
         if diff_phid is not None:
-            constraints['phids'] = [diff_phid, ]
+            if isinstance(diff_phid, str):
+                constraints['phids'] = [diff_phid, ]
+            elif isinstance(diff_phid, list):
+                constraints['phids'] = diff_phid
+            else:
+                raise Exception('diff_phid must be a string or a list')
         if revision_phid is not None:
             constraints['revisionPHIDs'] = [revision_phid, ]
         out = self.request('differential.diff.search', constraints=constraints, **params)
