@@ -12,6 +12,7 @@ import re
 import click
 import requests
 import taskcluster
+import taskcluster.aio
 
 from cli_common.log import get_logger
 
@@ -82,7 +83,7 @@ def get_options(client_id=None, access_token=None):
     return tc_options
 
 
-def get_service(service_name, client_id=None, access_token=None):
+def get_service(service_name, client_id=None, access_token=None, _async=False):
     '''
     Build a Taskcluster service instance from the environment
     Supports:
@@ -110,7 +111,10 @@ def get_service(service_name, client_id=None, access_token=None):
 
     # Instanciate service
     options = get_options(client_id, access_token)
-    return getattr(taskcluster, service_name.capitalize())(options)
+    if _async:
+        return getattr(taskcluster.aio, service_name.capitalize())(options)
+    else:
+        return getattr(taskcluster, service_name.capitalize())(options)
 
 
 def get_secrets(name,

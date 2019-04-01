@@ -3,18 +3,38 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import asyncio
 import datetime
+import functools
 import json
+import os
+import typing
 
+import aiohttp
 import click
 import click_spinner
 import slugid
+import tqdm
 
 import cli_common.taskcluster
 import please_cli.config
 import please_cli.utils
 
 PROJECTS = list(set(please_cli.config.PROJECTS) - set(please_cli.config.DEV_PROJECTS))
+log = cli_common.log.get_logger(__name__)
+
+
+def coroutine(f):
+    '''A generic function to create a main asyncio loop
+    '''
+    coroutine_f = asyncio.coroutine(f)
+
+    @functools.wraps(coroutine_f)
+    def wrapper(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(coroutine_f(*args, **kwargs))
+
+    return wrapper
 
 
 def get_build_task(index,
@@ -323,6 +343,189 @@ def get_task(task_group_id,
     }
 
 
+NixPath = str
+NixHash = str
+NixHashes = typing.List[typing.Tuple[NixPath, NixHash]]
+# TODO: we need to have more detailed type for Projects but we would need to
+#       have a type for please_cli.config.PROJECTS_CONFIG before that
+Projects = typing.Dict
+
+
+async def read_stream(stream,
+                      log_output: typing.Optional[typing.Callable[[str], None]] = None,
+                      callback: typing.Optional[typing.Callable[[str], None]] = None,
+                      ) -> str:
+    output = []
+    while True:
+        line = await stream.readline()
+        if line:
+            line = line.decode().rstrip('\n')
+            if log_output:
+                log_output(line)
+            output.append(line)
+            if callback:
+                callback(line)
+        else:
+            break
+    return '\n'.join(output)
+
+
+async def run(_command: typing.Union[str, typing.List[str]],
+              stream: bool = False,
+              handle_stream_line: typing.Optional[typing.Callable[[str], None]] = None,
+              log_command: bool = True,
+              log_output: bool = True,
+              secrets: typing.List[str] = [],
+              **kwargs,
+              ) -> typing.Tuple[int, str, str]:
+
+    hide_secrets = cli_common.command.hide_secrets
+
+    command: str
+    if isinstance(_command, str):
+        command = _command
+    else:
+        command = ' ' .join(_command)
+
+    if len(command) == 0:
+        raise click.ClickException('Can\'t run an empty command.')
+
+    _kwargs = dict(
+        stdin=asyncio.subprocess.DEVNULL,  # no interactions
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    _kwargs.update(kwargs)
+
+    if log_command:
+        log.debug('Running command', command=hide_secrets(command, secrets), kwargs=_kwargs)
+
+    process = await asyncio.create_subprocess_shell(command, **_kwargs)  # noqa
+    if stream:
+        _log_output: typing.Optional[typing.Callable[[str], None]] = None
+        if log_output:
+            def _log_output(line):
+                log.debug(hide_secrets(line, secrets))
+
+        streams = []
+        if process.stdout:
+            streams.append(read_stream(process.stdout, _log_output, handle_stream_line))
+        if process.stderr:
+            streams.append(read_stream(process.stderr, _log_output, handle_stream_line))
+
+        output, error = await asyncio.gather(*streams)
+    else:
+        output, error = await process.communicate()
+
+    return process.returncode, output, error
+
+
+async def check_in_nix_cache(session: aiohttp.ClientSession,
+                             nix_path: NixPath,
+                             nix_hash: NixHash,
+                             ) -> typing.Tuple[NixPath, bool]:
+    exists = False
+    for cache_url in please_cli.config.CACHE_URLS:
+        try:
+            url = f'{cache_url}/{nix_hash}.narinfo'
+            async with session.get(url) as resp:
+                exists = resp.status == 200
+                break
+        except Exception:
+            exists = False
+
+    return (nix_path, exists)
+
+
+def get_nix_paths(projects: Projects) -> typing.List[NixPath]:
+    nix_paths = []
+    for project, project_config in projects.items():
+        nix_paths.append(project)
+        deploys = project_config.get('deploys', [])
+        for deploy in deploys:
+            for _channel, options in deploy.get('options', dict()).items():
+                if _channel not in please_cli.config.DEPLOY_CHANNELS:
+                    continue
+                nix_path = options.get('nix_path_attribute')
+                if nix_path:
+                    nix_paths.append(project + '.' + nix_path)
+                else:
+                    nix_paths.append(project)
+    return list(set(nix_paths))
+
+
+class Derive:
+    '''Just out of coincidence a format of derivation is compatible with python
+       which means we can evaluate it.
+    '''
+    def __init__(self, *drv):
+        self._drv = drv
+
+    @property
+    def nix_hash(self):
+        '''We are only interested into nix_hash, which we need to parse from
+           derivation structure.
+        '''
+        return self._drv[0][0][1][11:43]
+
+
+async def get_projects_hash(nix_instantiate: str,
+                            nix_path: NixPath):
+    default_nix = os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix')
+    code, output, error = await run([nix_instantiate, default_nix, '-A', nix_path], stream=True)
+    try:
+        drv_path = output.split('\n')[-1].strip()
+        with open(drv_path) as f:
+            drv = eval(f.read())
+    except Exception as e:
+        log.exception(e)
+        raise click.ClickException(
+            'Something went wrong when reading derivation file for '
+            '`{}` project.'.format(nix_path))
+    return (nix_path, drv.nix_hash)
+
+
+async def get_projects_hashes(nix_instantiate: str,
+                              projects: Projects,
+                              ) -> NixHashes:
+    nix_hashes = []
+    tasks = [
+        get_projects_hash(nix_instantiate, nix_path)
+        for nix_path in get_nix_paths(projects)
+    ]
+    for task in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks)):
+        nix_hashes.append(await task)
+    return nix_hashes
+
+
+def nix_path_to_project(nix_path: NixPath) -> str:
+    return nix_path.split('.')[0]
+
+
+async def get_projects_to_build(session: aiohttp.ClientSession,
+                                projects: Projects,
+                                nix_hashes: NixHashes
+                                ) -> typing.List[str]:
+
+    project_to_build: typing.Dict[str, bool] = dict()
+    tasks = [
+        check_in_nix_cache(session, nix_path, nix_hash)
+        for nix_path, nix_hash in nix_hashes
+    ]
+    for task in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks)):
+        nix_path, exists = await task
+        project = nix_path_to_project(nix_path)
+        current_exists = project_to_build.get(project, True)
+        if current_exists is False:
+            continue
+        project_to_build[project] = exists
+    return [
+        project
+        for project, exists in project_to_build.items()
+        if exists
+    ]
+
+
 @click.command()
 @click.option(
     '--github-commit',
@@ -379,18 +582,19 @@ def get_task(task_group_id,
     is_flag=True,
     )
 @click.pass_context
-def cmd(ctx,
-        github_commit,
-        channel,
-        owner,
-        pull_request,
-        task_id,
-        cache_urls,
-        nix_instantiate,
-        taskcluster_client_id,
-        taskcluster_access_token,
-        dry_run,
-        ):
+@coroutine
+async def cmd(ctx,
+              github_commit,
+              channel,
+              owner,
+              pull_request,
+              task_id,
+              cache_urls,
+              nix_instantiate,
+              taskcluster_client_id,
+              taskcluster_access_token,
+              dry_run,
+              ):
     '''A tool to be ran on each commit.
     '''
 
@@ -398,61 +602,50 @@ def cmd(ctx,
     if pull_request is not None:
         taskcluster_secret = 'repo:github.com/mozilla-releng/services:pull-request'
 
-    taskcluster_queue = cli_common.taskcluster.get_service('queue')
-    taskcluster_notify = cli_common.taskcluster.get_service('notify')
+    taskcluster_queue = cli_common.taskcluster.get_service('queue', _async=True)
+    taskcluster_notify = cli_common.taskcluster.get_service('notify', _async=True)
 
     click.echo(' => Retriving taskGroupId ... ', nl=False)
     with click_spinner.spinner():
-        task = taskcluster_queue.task(task_id)
+        task = await taskcluster_queue.task(task_id)
         if 'taskGroupId' not in task:
             please_cli.utils.check_result(1, 'taskGroupId does not exists in task: {}'.format(json.dumps(task)))
         task_group_id = task['taskGroupId']
         please_cli.utils.check_result(0, '')
         click.echo('    taskGroupId: ' + task_group_id)
 
-    if channel in please_cli.config.DEPLOY_CHANNELS:
-        taskcluster_notify.irc(dict(channel='#release-services',
-                                    message=f'New deployment on {channel} is about to start: https://tools.taskcluster.net/groups/{task_group_id}'))
+    if channel in please_cli.config.DEPLOY_CHANNELS and not dry_run:
+        await taskcluster_notify.irc(dict(channel='#release-services',
+                                          message=f'New deployment on {channel} is about to start: https://tools.taskcluster.net/groups/{task_group_id}'))
 
     message = ('release-services team is about to release a new version of mozilla/release-services '
                '(*.mozilla-releng.net, *.moz.tools). Any alerts coming up soon will be best directed '
                'to #release-services IRC channel. Automated message (such as this) will be send '
                'once deployment is done. Thank you.')
 
-    '''This message will only be sent when channel is production.
-    '''
-    if channel is 'production':
+    # This message will only be sent when channel is production.
+    if channel == 'production' and not dry_run:
         for msgChannel in ['#ci', '#moc']:
-            taskcluster_notify.irc(dict(channel=msgChannel, message=message))
+            await taskcluster_notify.irc(dict(channel=msgChannel, message=message))
 
-    click.echo(' => Checking cache which project needs to be rebuilt')
-    build_projects = []
-    project_hashes = dict()
-    for project in sorted(PROJECTS):
-        click.echo('     => ' + project)
-        project_exists_in_cache, project_hash = ctx.invoke(
-            please_cli.check_cache.cmd,
-            project=project,
-            cache_urls=cache_urls,
-            nix_instantiate=nix_instantiate,
-            channel=channel,
-            indent=8,
-            interactive=False,
-        )
-        project_hashes[project] = project_hash
-        if not project_exists_in_cache:
-            build_projects.append(project)
+    projects = {
+        project: please_cli.config.PROJECTS_CONFIG.get(project, {})
+        for project in PROJECTS
+    }
+
+    click.echo(' => Checking for project\'s Nix hashes')
+    nix_hashes = await get_projects_hashes(nix_instantiate, projects)
+
+    click.echo(' => Checking if project\'s Nix hashes exists in cache')
+    async with aiohttp.ClientSession() as session:
+        build_projects = await get_projects_to_build(session, projects, nix_hashes)
 
     projects_to_deploy = []
 
     if channel in please_cli.config.DEPLOY_CHANNELS:
         click.echo(' => Checking which project needs to be redeployed')
 
-        # TODO: get status for our index branch
-        deployed_projects = {}
-
         for project_name in sorted(PROJECTS):
-            deployed_projects.get(project_name)
 
             # update hook for each project
             if please_cli.config.PROJECTS_CONFIG[project_name]['update'] is True:
@@ -475,9 +668,6 @@ def cmd(ctx,
                     },
                 ))
 
-            if deployed_projects == project_hashes[project_name]:
-                continue
-
             if 'deploys' not in please_cli.config.PROJECTS_CONFIG[project_name]:
                 continue
 
@@ -497,7 +687,7 @@ def cmd(ctx,
     # 1. build tasks
     build_tasks = {}
     for index, project in enumerate(sorted(build_projects)):
-        project_uuid = slugid.nice().decode('utf-8')
+        project_uuid = slugid.nice()
         required = []
         if pull_request is not None:
             required += [
@@ -528,7 +718,7 @@ def cmd(ctx,
     if projects_to_deploy:
 
         # 2. maintanance on task
-        maintanance_on_uuid = slugid.nice().decode('utf-8')
+        maintanance_on_uuid = slugid.nice()
         if len(build_tasks.keys()) == 0:
             maintanance_on_dependencies = [task_id]
         else:
@@ -562,7 +752,7 @@ def cmd(ctx,
             if not enable:
                 continue
 
-            project_uuid = slugid.nice().decode('utf-8')
+            project_uuid = slugid.nice()
             project_task = get_deploy_task(
                 index,
                 project,
@@ -581,7 +771,7 @@ def cmd(ctx,
                 tasks.append((project_uuid, deploy_tasks[project_uuid]))
 
         # 4. maintanance off task
-        maintanance_off_uuid = slugid.nice().decode('utf-8')
+        maintanance_off_uuid = slugid.nice()
         maintanance_off_task = get_task(
             task_group_id,
             [i for i in deploy_tasks.keys()],
@@ -616,7 +806,7 @@ def cmd(ctx,
                 click.echo(dep)
     else:
         for task_id, task in tasks:
-            taskcluster_queue.createTask(task_id, task)
+            await taskcluster_queue.createTask(task_id, task)
 
 
 if __name__ == '__main__':

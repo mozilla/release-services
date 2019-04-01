@@ -1,6 +1,8 @@
 -e ./../../lib/cli_common[pulse,taskcluster,mercurial] #egg=mozilla-cli-common
 
+aiohttp
 awscli
+backoff==1.6.0  # all later versions require poetry which is not supported (yet) by pypi2nix
 click-spinner
 colorama<=0.3.7,>=0.2.5 #(from awscli==1.11.85)
 cookiecutter
@@ -9,3 +11,4 @@ requests
 slugid
 taskcluster
 toml
+tqdm
