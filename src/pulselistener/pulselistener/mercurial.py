@@ -115,12 +115,29 @@ class MercurialWorker(object):
         base, patches = self.phabricator_api.load_patches_stack(self.repo, diff, default_revision='central')
         assert len(patches) > 0, 'No patches to apply'
 
+        # Load all the diffs details with commits messages
+        diffs = self.phabricator_api.search_diffs(
+            diff_phid=[p[0] for p in patches],
+            attachments={
+                'commits': True,
+            }
+        )
+        commits = {
+            diff['phid']: diff['attachments']['commits'].get('commits', [])
+            for diff in diffs
+        }
+
         # Apply the patches and commit them one by one
         for diff_phid, patch in patches:
-            logger.info('Applying patch', phid=diff_phid)
+            commit = commits.get(diff_phid)
+            if commit:
+                message = '{}\n'.format(commit[0]['message'])
+            message += 'Differential Diff: {}'.format(diff_phid)
+
+            logger.info('Applying patch', phid=diff_phid, message=message)
             self.repo.import_(
                 patches=io.BytesIO(patch.encode('utf-8')),
-                message='Patch {}'.format(diff_phid),
+                message=message,
                 user='pulselistener',
             )
 
@@ -135,10 +152,10 @@ class MercurialWorker(object):
             }
         }
         with open(config_path, 'w') as f:
-            json.dump(config, f)
+            json.dump(config, f, sort_keys=True, indent=4)
         self.repo.add(config_path.encode('utf-8'))
         self.repo.commit(
-            message='try_task_config for {}'.format(diff['phid']),
+            message='try_task_config for code-review\nDifferential Diff: {}'.format(diff['phid']),
             user='pulselistener',
         )
 

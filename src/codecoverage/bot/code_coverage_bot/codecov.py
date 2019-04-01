@@ -80,10 +80,11 @@ class CodeCov(object):
             task = taskcluster.get_task(branch, self.revision, platform)
 
             # On try, developers might have requested to run only one platform, and we trust them.
-            # On mozilla-central, we want to assert that every platform was run.
+            # On mozilla-central, we want to assert that every platform was run (except for android platforms
+            # as they are unstable).
             if task is not None:
                 task_ids[platform] = task
-            elif self.repository == MOZILLA_CENTRAL_REPOSITORY:
+            elif self.repository == MOZILLA_CENTRAL_REPOSITORY and not platform.startswith('android'):
                 raise Exception('Code coverage build failed and was not indexed.')
 
         self.artifactsHandler = ArtifactsHandler(task_ids, self.artifacts_dir)

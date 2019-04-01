@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+
 import backend_common
 import treestatus_api.config
 import treestatus_api.models  # noqa

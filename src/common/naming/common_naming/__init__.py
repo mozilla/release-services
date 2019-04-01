@@ -5,7 +5,6 @@
 
 import re
 
-
 LETTERS = re.compile('[^a-zA-Z]')
 
 
