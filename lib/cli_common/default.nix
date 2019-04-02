@@ -79,7 +79,7 @@ let
   allDeps = builtins.attrNames self;
 in {
   doCheck = true;
-  buildInputs =
+  nativeBuildInputs =
     builtins.map (name: self."${name}") (
       builtins.filter (name: builtins.elem name allDeps) (
         unique (
