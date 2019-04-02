@@ -78,29 +78,36 @@ def batch_checkout(repo_url, repo_dir, revision=b'tip', batch_size=100000):
     '''
     Helper to clone a mercurial repository using several steps
     to minimize memory footprint and stay below 1Gb of RAM
-    It's used on Heroku small dynos
+    It's used on Heroku small dynos, and support restarts
     '''
     assert isinstance(revision, bytes)
     assert isinstance(batch_size, int)
     assert batch_size > 1
 
     log.info('Batch checkout', url=repo_url, dir=repo_dir, size=batch_size)
-    cmd = hglib.util.cmdbuilder('clone',
-                                repo_url,
-                                repo_dir,
-                                noupdate=True,
-                                verbose=True,
-                                stream=True)
-    hg_run(cmd)
-    log.info('Inital clone finished')
+    try:
+        cmd = hglib.util.cmdbuilder('clone',
+                                    repo_url,
+                                    repo_dir,
+                                    noupdate=True,
+                                    verbose=True,
+                                    stream=True)
+        hg_run(cmd)
+        log.info('Initial clone finished')
+    except hglib.error.CommandError as e:
+        if e.err.startswith('abort: destination \'{}\' is not empty'.format(repo_dir).encode('utf-8')):
+            log.info('Repository already present, skipping clone')
+        else:
+            raise
 
     repo = hglib.open(repo_dir)
+    start = max(int(repo.identify(num=True).strip().decode('utf-8')), 1)
     target = int(repo.identify(rev=revision, num=True).strip().decode('utf-8'))
-    log.info('Target revision for incremental checkout', revision=target)
+    if start >= target:
+        return
+    log.info('Will process checkout in range', start=start, target=target)
 
-    steps = list(range(1, target, batch_size)) + [target]
+    steps = list(range(start, target, batch_size)) + [target]
     for rev in steps:
         log.info('Moving repo to revision', dir=repo_dir, rev=rev)
         repo.update(rev=rev)
-
-    return repo
