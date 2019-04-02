@@ -77,6 +77,13 @@ class HookPhabricator(Hook):
         }
         logger.info('Loaded secure projects', projects=self.secure_projects.values())
 
+        # Phabricator secure revision retries configuration
+        self.phabricator_retries = configuration.get('phabricator_retries', 5)
+        self.phabricator_sleep = configuration.get('phabricator_sleep', 10)
+        assert isinstance(self.phabricator_retries, int)
+        assert isinstance(self.phabricator_sleep, int)
+        logger.info('Will retry Phabricator secure revision queries', retries=self.phabricator_retries, sleep=self.phabricator_sleep)  # noqa
+
     def list_differential(self):
         '''
         List new differential items using pagination
@@ -141,24 +148,28 @@ class HookPhabricator(Hook):
             logger.error('Invalid webhook parameters', path=request.path_qs)
             raise web.HTTPBadRequest(text='Invalid webhook parameters')
 
+        # Check if the revision if public, and retry a few times
+        # to give some time to the BMO daemon to update the revision
+        public = False
+        for step in range(self.phabricator_retries):
+            if self.is_public_revision(int(revision_id)):
+                public = True
+                break
+            else:
+                sleep_time = self.phabricator_sleep * (1 + (step / self.phabricator_retries))
+                logger.info('Sleeping until next retry', seconds=sleep_time)
+                await asyncio.sleep(sleep_time)
+
+        if not public:
+            raise web.HTTPForbidden(text='Secure revision')
+
+        # Lookup revision to check if it's public or secured
         # Load full diff from API
         diffs = self.api.search_diffs(diff_id=int(diff_id))
         if not diffs:
             logger.warn('Diff not found', diff_id=diff_id)
             raise web.HTTPNotFound(text='Diff not found')
         diff = diffs[0]
-
-        # Load revision to get projects
-        rev = self.api.load_revision(rev_id=int(revision_id), attachments={'projects': True})
-        if not rev:
-            logger.warn('Revision not found', revision_id=revision_id)
-            raise web.HTTPNotFound(text='Revision not found')
-
-        # Load projects and check againt secure projects
-        projects = set(rev['attachments']['projects']['projectPHIDs'])
-        if projects.intersection(self.secure_projects):
-            logger.warn('Secure revision', revision_id=revision_id)
-            raise web.HTTPForbidden(text='Secure revision')
 
         try:
             logger.info('Triggering task from webhook', diff=diff_id, repo=repo_phid)
@@ -168,6 +179,31 @@ class HookPhabricator(Hook):
             raise web.HTTPInternalServerError(text='Internal error: {}'.format(e))
 
         return web.Response(text=created and 'Task queued' or 'Skipped')
+
+    def is_public_revision(self, revision_id):
+        '''
+        Check if a given revision is public (not in any secure projects)
+        '''
+        assert isinstance(revision_id, int)
+        try:
+            logger.info('Checking visibility status', revision_id=revision_id)
+            rev = self.api.load_revision(rev_id=revision_id, attachments={'projects': True})
+        except Exception as e:
+            logger.info('Revision not accessible', revision_id=revision_id, error=e)
+            return False
+
+        if not rev:
+            logger.warn('Revision not found', revision_id=revision_id)
+            return False
+
+        # Load projects and check againt secure projects
+        projects = set(rev['attachments']['projects']['projectPHIDs'])
+        if projects.intersection(self.secure_projects):
+            logger.warn('Secure revision', revision_id=revision_id)
+            return False
+
+        logger.info('Revision is public', revision_id=revision_id)
+        return True
 
     async def trigger_task(self, diff, repo_phid):
         '''
