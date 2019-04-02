@@ -1091,7 +1091,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        's3_bucket': 'shipit-testing-frontend',
+                        's3_bucket': 'relengstatic-testing-shipitfrontend-static-website',
                         'url': 'https://shipit.testing.mozilla-releng.net',
                         'dns': 'd2jpisuzgldax2.cloudfront.net.',
                         'envs': {
@@ -1106,7 +1106,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        's3_bucket': 'shipit-staging-frontend',
+                        's3_bucket': 'relengstatic-staging-shipitfrontend-static-website',
                         'url': 'https://shipit.staging.mozilla-releng.net',
                         'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                         'envs': {
