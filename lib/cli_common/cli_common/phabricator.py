@@ -46,6 +46,21 @@ def revision_available(repo, revision):
         return False
 
 
+def as_list(name, value, value_type):
+    '''
+    Helper to convert Phabricator inputs to list
+    Supports unique and multiple values, checking their type
+    '''
+    if isinstance(value, value_type):
+        return [value, ]
+    elif isinstance(value, list):
+        assert all(map(lambda v: isinstance(v, value_type), value)), \
+            'All values in {} should be of type {}'.format(name, value_type)
+        return value
+    else:
+        raise Exception('{0} must be a {1} or a list of {1}'.format(name, value_type))
+
+
 # Descriptions of the fields are available at
 # https://phabricator.services.mozilla.com/conduit/method/harbormaster.sendmessage/,
 # in the "Lint Results" paragraph.
@@ -139,16 +154,6 @@ class PhabricatorAPI(object):
         Find details of differential diffs from a Differential diff or revision
         Multiple diffs can be returned (when using revision_phid)
         '''
-        def as_list(name, value, value_type):
-            if isinstance(value, value_type):
-                return [value, ]
-            elif isinstance(value, list):
-                assert all(map(lambda v: isinstance(v, value_type), value)), \
-                    'All values in {} should be of type {}'.format(name, value_type)
-                return value
-            else:
-                raise Exception('{0} must be a {1} or a list of {1}'.format(name, value_type))
-
         constraints = {}
         if diff_phid is not None:
             constraints['phids'] = as_list('diff_phid', diff_phid, str)
