@@ -489,10 +489,10 @@ let
     };
 
     "bugbug" = python.mkDerivation {
-      name = "bugbug-0.0.8";
+      name = "bugbug-0.0.9";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/1f/ef/1e3491b7b81fdf031805598c231e65483c7ab52fe24e6020d988272a12d0/bugbug-0.0.8.tar.gz";
-        sha256 = "cdd4de2365ea4c3e4a0e721736d67f9e0dd9d582d8b028d80b942c50e70044a2";
+        url = "https://files.pythonhosted.org/packages/56/4a/bdba88dc8b86f0e510486a9fa9be3fa3f1f99a8be93789b7d94967e10cbb/bugbug-0.0.9.tar.gz";
+        sha256 = "9c7559b0d6cf04b1695695ab7a602df9e8071a0cd374baf67bba509fb83aadc4";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
