@@ -18,6 +18,7 @@ class Hook(object):
         self.hook_id = hook_id
         self.hooks = None  # TC hooks
         self.mercurial_queue = None
+        self.routes = []
 
     def connect_taskcluster(self, client_id=None, access_token=None):
         '''
