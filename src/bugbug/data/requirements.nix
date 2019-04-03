@@ -489,10 +489,10 @@ let
     };
 
     "bugbug" = python.mkDerivation {
-      name = "bugbug-0.0.4";
+      name = "bugbug-0.0.8";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/9a/85/a44b33e214e118d860b506e5a737cc830cd91afbd59b714e5ff4414b7015/bugbug-0.0.4.tar.gz";
-        sha256 = "f1971d0670d8698b4b43aa20a4d91aed0012f4a847cd9f29a98194590bae8c8b";
+        url = "https://files.pythonhosted.org/packages/1f/ef/1e3491b7b81fdf031805598c231e65483c7ab52fe24e6020d988272a12d0/bugbug-0.0.8.tar.gz";
+        sha256 = "cdd4de2365ea4c3e4a0e721736d67f9e0dd9d582d8b028d80b942c50e70044a2";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1448,10 +1448,10 @@ let
     };
 
     "libmozdata" = python.mkDerivation {
-      name = "libmozdata-0.1.50";
+      name = "libmozdata-0.1.52";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/eb/d2/c98b9140e523df31e2d17e0d708782217123861d2b5099001098b9b6daaa/libmozdata-0.1.50.tar.gz";
-        sha256 = "3977e48c75ebc161e5febaf5855555f4fa2466fcd54f13ed2f544e86b5fc60d9";
+        url = "https://files.pythonhosted.org/packages/21/ba/66b76c5dc78c6093d634942232227047d6c01f42b9777c6188a9d7d17a13/libmozdata-0.1.52.tar.gz";
+        sha256 = "de2ef285980129f5f8720cf7793c5162e89cc908fed82c80276fd7ff0344374b";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
