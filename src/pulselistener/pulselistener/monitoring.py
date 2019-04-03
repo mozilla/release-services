@@ -19,6 +19,7 @@ GROUP_MD = '''
 
 '''
 TASK_MD = '* [{0}](https://tools.taskcluster.net/task-inspector/#{0})'
+TASKCLUSTER_NAMESPACE = 'project.releng.services.tasks.{task_id}'
 
 
 class Monitoring(object):
@@ -36,6 +37,7 @@ class Monitoring(object):
         # TC services
         self.notify = None
         self.queue = None
+        self.index = None
 
         # Setup monitoring queue
         self.tasks = asyncio.Queue()
@@ -46,6 +48,7 @@ class Monitoring(object):
         '''
         self.notify = get_service('notify', client_id, access_token)
         self.queue = get_service('queue', client_id, access_token)
+        self.index = get_service('index', client_id, access_token)
 
     async def add_task(self, group_id, hook_id, task_id):
         '''
@@ -103,6 +106,11 @@ class Monitoring(object):
             if task_status == 'exception':
                 await self.retry_task(group_id, hook_id, task_id)
 
+            # Lookup the failed details
+            if task_status == 'failed' and self.is_restartable(task_id):
+                logger.info('Failed task is restartable', task_id=task_id)
+                await self.retry_task(group_id, hook_id, task_id)
+
             # Add to report
             if hook_id not in self.stats:
                 self.stats[hook_id] = {'failed': [], 'completed': [], 'exception': []}
@@ -111,6 +119,22 @@ class Monitoring(object):
         else:
             # Push back into queue so it get checked later on
             await self.tasks.put((group_id, hook_id, task_id))
+
+    def is_restartable(self, task_id):
+        '''
+        A task is restartable if its indexed state using task id
+        has a monitoring_restart field set to True
+        '''
+        # Load the indexed data
+        task_path = TASKCLUSTER_NAMESPACE.format(task_id=task_id)
+        try:
+            index = self.index.findTask(task_path)
+        except Exception as e:
+            logger.info('Task not found in index', task=task_id, error=str(e))
+            return False
+
+        # Restart when monitoring_restart is set
+        return index['data'].get('monitoring_restart') is True
 
     async def retry_task(self, group_id, hook_id, task_id):
         '''
