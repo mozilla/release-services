@@ -62,7 +62,6 @@ DEV_PROJECTS = ['postgresql', 'redis']
 PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
-PROJECTS += ['scriptworker/shipitscript']
 PROJECTS += DEV_PROJECTS
 
 
@@ -395,6 +394,9 @@ PROJECTS_CONFIG = {
                 },
             },
         ],
+    },
+    'tooltool/client': {
+        'update': True,
     },
     'tooltool/api': {
         'update': True,
@@ -849,19 +851,25 @@ PROJECTS_CONFIG = {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-testing-pulse-listener',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://pulselistener.testing.moz.tools',
+                        'dns': 'pulselistener.testing.moz.tools.herokudns.com',
                     },
                     'staging': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-staging-pulse-listener',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://pulselistener.staging.moz.tools',
+                        'dns': 'pulselistener.staging.moz.tools.herokudns.com',
                     },
                     'production': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-production-pulse-listen',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://pulselistener.moz.tools',
+                        'dns': 'pulselistener.moz.tools.herokudns.com',
                     },
                 },
             },

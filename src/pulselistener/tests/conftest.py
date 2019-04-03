@@ -61,6 +61,9 @@ def QueueMock():
                 'requires': 'all-completed',
                 'retries': retry,
                 'scopes': [],
+                'routes': [
+                    'index.{}.latest'.format(task_id),
+                ],
                 'taskGroupId': 'group-{}'.format(task_id),
                 'workerType': 'niceWorker'
             }
@@ -99,6 +102,27 @@ def HooksMock():
                 'status': {
                     'taskId': 'fake_task_id',
                 },
+            }
+
+    return Mock()
+
+
+@pytest.fixture
+def IndexMock():
+    class Mock():
+        def __init__(self):
+            pass
+
+        def findTask(self, path):
+            assert path.startswith('project.releng.services.tasks.')
+            failed = 'failed' in path
+            return {
+                'taskId': path[30:],
+                'data': {
+                    'state': failed and 'error' or 'done',
+                    'error_code': failed and 'somethingBad' or None,
+                    'monitoring_restart': (failed and 'restart' in path)
+                }
             }
 
     return Mock()

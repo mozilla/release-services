@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -C /tmp/release-services-lemrn33s/src/pulselistener/../../../tmp/pypi2nix -V 3.7 -O ../../nix/requirements_override.nix -E libffi -E openssl -E pkgconfig -E freetype.dev -s intreehooks -s flit -s pytest-runner -s setuptools-scm -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -C /app/src/pulselistener/../../../tmp/pypi2nix -V 3.7 -O ../../nix/requirements_override.nix -E libffi -E openssl -E pkgconfig -E freetype.dev -s intreehooks -s flit -s pytest-runner -s setuptools-scm -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -242,10 +242,10 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.9.111";
+      name = "boto3-1.9.123";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/83/70/b83cfe44f922c15ebcd185217ebc05d27e879d5a2ccca59f1c4f49d09938/boto3-1.9.111.tar.gz";
-        sha256 = "06414c75d1f62af7d04fd652b38d1e4fd3cfd6b35bad978466af88e2aaecd00d";
+        url = "https://files.pythonhosted.org/packages/6f/5a/0cfdef6f69a32287f11d92fa6054c49b2c98e0e4412a0a9181544d0fd7ef/boto3-1.9.123.tar.gz";
+        sha256 = "2e527686a72ff5fed8275e897df63fadbdca6d4d47f651d898dee89ba9b9eb4d";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -264,10 +264,10 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.12.111";
+      name = "botocore-1.12.123";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/2b/85/53393530cdf42b3b8daa42ce498cb0feee79892d02983fac8d090622c111/botocore-1.12.111.tar.gz";
-        sha256 = "6af473c52d5e3e7ff82de5334e9fee96b2d5ec2df5d78bc00cd9937e2573a7a8";
+        url = "https://files.pythonhosted.org/packages/c1/88/8811cf71a9a45c1ba4c54e8bccb5c863b905e6765af40354b441b62fb2f6/botocore-1.12.123.tar.gz";
+        sha256 = "7982ab3b3da1f7f2f23f0a12fbd34fe8efc514b53bbe61b536a61884a51db25c";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -362,10 +362,10 @@ let
     };
 
     "coveralls" = python.mkDerivation {
-      name = "coveralls-1.6.0";
+      name = "coveralls-1.7.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/e3/18/6d985cc06e428945af2e1179dcea85986530d2b1c8091841a1f36e8076dd/coveralls-1.6.0.tar.gz";
-        sha256 = "6f213e461390973f4a97fb9e9d4ebd4956af296ff0a4d868e622108145835cb7";
+        url = "https://files.pythonhosted.org/packages/af/76/5592d2757487de97d64865d9eb586046820ac90681a63137a40bfe20d650/coveralls-1.7.0.tar.gz";
+        sha256 = "ff9b7823b15070f26f654837bb02a201d006baaf2083e0514ffd3b34a3ffed81";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -542,10 +542,10 @@ let
     };
 
     "flake8-isort" = python.mkDerivation {
-      name = "flake8-isort-2.6.0";
+      name = "flake8-isort-2.7.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/85/fb/f2a33e47cf7520fd391e5f180cae5b8d2977ad7a5ddf897213137fe8a171/flake8-isort-2.6.0.tar.gz";
-        sha256 = "3c107c405dd6e3dbdcccb2f84549d76d58a07120cd997a0560fab8b84c305f2a";
+        url = "https://files.pythonhosted.org/packages/20/94/7f17d507ab8973922b98ef0c9ac32de88ac592c7a8367e528fe205e72f50/flake8-isort-2.7.0.tar.gz";
+        sha256 = "81a8495eefed3f2f63f26cd2d766c7b1191e923a15b9106e6233724056572c68";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -666,10 +666,10 @@ let
     };
 
     "isort" = python.mkDerivation {
-      name = "isort-4.3.14";
+      name = "isort-4.3.16";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/5b/b2/8dc40ea4d3b2280e68021855ffe5525a6e86883e251e1bbf926825847085/isort-4.3.14.tar.gz";
-        sha256 = "473c458f279f1545fe80a4c901fe83681c27fb6969ae0bd2f1472143fc46eb1f";
+        url = "https://files.pythonhosted.org/packages/08/d2/bbbb582ea75a3237e16e7d1f37fa3bda72e9690097d7a24dfd7d80f899d0/isort-4.3.16.tar.gz";
+        sha256 = "08f8e3f0f0b7249e9fad7e5c41e2113aba44969798a26452ee790c06f155d4ec";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -865,10 +865,10 @@ let
     };
 
     "pdbpp" = python.mkDerivation {
-      name = "pdbpp-0.9.8";
+      name = "pdbpp-0.9.14";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/24/af/e5c4ccd95db79990ca1b24999796512bfbd75643c7aded29ad1242b05f8f/pdbpp-0.9.8.tar.gz";
-        sha256 = "c30827c59f60668d43cdc705502255bba32eb06ff68f896b3f469e6f7b41639d";
+        url = "https://files.pythonhosted.org/packages/49/b4/2c95ef28dac4a5fc2258938d0518a6e79e48a95101fb56c5403880802b9b/pdbpp-0.9.14.tar.gz";
+        sha256 = "565a4ee4b54bd73310058ce439e245230c587774813e394c902a214c3e693d24";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -963,10 +963,10 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-4.3.0";
+      name = "pytest-4.3.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/7c/02/b35c0a322e332544716a0c598f8208ba3474fa94706183c26465d833b283/pytest-4.3.0.tar.gz";
-        sha256 = "067a1d4bf827ffdd56ad21bd46674703fce77c5957f6c1eef731f6146bfcef1c";
+        url = "https://files.pythonhosted.org/packages/c9/ff/e353dff7987c3a6ccb0cecb1c148c7b276c235f80f7017d181d19e2b4710/pytest-4.3.1.tar.gz";
+        sha256 = "592eaa2c33fae68c7d75aacf042efc9f77b27c08a6224a4f59beab8d9a420523";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -991,8 +991,8 @@ let
     "pytest-asyncio" = python.mkDerivation {
       name = "pytest-asyncio-0.10.0";
       src = pkgs.fetchurl {
-        url = "https://github.com/pytest-dev/pytest-asyncio/archive/v0.10.0.tar.gz";
-        sha256 = "1l0f6p8kxd562z479292gjgmsj6jsg86n0lf04wmf1xq83xm6bsa";
+        url = "https://files.pythonhosted.org/packages/dc/20/a35b6fbb9b97859ed2203ad474e4dd8591ef369b7387f6ef08270a0a3e84/pytest-asyncio-0.10.0.tar.gz";
+        sha256 = "9fac5100fd716cbecf6ef89233e8590a4ad61d729d1732e0a96b84182df1daaf";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1188,10 +1188,10 @@ let
     };
 
     "responses" = python.mkDerivation {
-      name = "responses-0.10.5";
+      name = "responses-0.10.6";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/c9/3b/bea0bfc243072a3d910befae4d1fb585276260abcac2a62109e01064c551/responses-0.10.5.tar.gz";
-        sha256 = "c85882d2dc608ce6b5713a4e1534120f4a0dc6ec79d1366570d2b0c909a50c87";
+        url = "https://files.pythonhosted.org/packages/cb/83/9a79053228532392949542bb21ee3e685e089ac8dc2fe7f0a9dfbbced0e5/responses-0.10.6.tar.gz";
+        sha256 = "502d9c0c8008439cfcdef7e251f507fcfdd503b56e8c0c87c3c3e3393953f790";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1303,10 +1303,10 @@ let
     };
 
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-7.0.0";
+      name = "taskcluster-7.0.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/47/75/ffba5fae55fde34812e5912ddb8c29a676c663053222da69083ad3e32af3/taskcluster-7.0.0.tar.gz";
-        sha256 = "e8f8e311e071cd0d2f36af136003cb87b09e87fde4a4bea98467334d6f2d5590";
+        url = "https://files.pythonhosted.org/packages/c6/a9/2a20af412902aed28c5add3b8592c17665d4649886c0edcf7abca4dcc44c/taskcluster-7.0.1.tar.gz";
+        sha256 = "93027ec6949289d8267595c5770c3d3f0902d9461d98081544dce60764f94f46";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1347,10 +1347,10 @@ let
     };
 
     "testfixtures" = python.mkDerivation {
-      name = "testfixtures-6.6.0";
+      name = "testfixtures-6.6.2";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/67/da/de8de63516c66bceba0df7936efb7108afc625bb6f1015247756a37a2bdc/testfixtures-6.6.0.tar.gz";
-        sha256 = "361e0a557f95e351ee4487a14eb26ccb1337038a33f16f588bcb0be90977d80b";
+        url = "https://files.pythonhosted.org/packages/04/36/9e6810ddf93daddf132331e395fac0ed31ac7796a7e5cf062c783d000911/testfixtures-6.6.2.tar.gz";
+        sha256 = "79b1c1ae5407750406eaf4407ea0d4c0d50b60bec3f85494c6401e072e7d2239";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
