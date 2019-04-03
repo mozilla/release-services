@@ -259,10 +259,7 @@ class ClangTidyIssue(Issue):
         self.message = message
         self.body = None
         self.notes = []
-
-        # TODO: rename all type occurences to level
         self.level = level
-
         self.reason = None
         check = settings.get_clang_check(self.check)
         if check is not None:
@@ -276,7 +273,7 @@ class ClangTidyIssue(Issue):
         Used to compare with same-class issues
         '''
         return {
-            'type': self.level,
+            'level': self.level,
             'check': self.check,
             'char': self.char,
         }
@@ -371,7 +368,7 @@ class ClangTidyIssue(Issue):
             'nb_lines': self.nb_lines,
             'char': self.char,
             'check': self.check,
-            'type': self.level,
+            'level': self.level,
             'message': self.message,
             'body': self.body,
             'reason': self.reason,
