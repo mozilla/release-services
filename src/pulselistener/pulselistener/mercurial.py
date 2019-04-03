@@ -141,8 +141,9 @@ class MercurialWorker(object):
         # Apply the patches and commit them one by one
         for diff_phid, patch in patches:
             commit = commits.get(diff_phid)
+            message = ''
             if commit:
-                message = '{}\n'.format(commit[0]['message'])
+                message += '{}\n'.format(commit[0]['message'])
             message += 'Differential Diff: {}'.format(diff_phid)
 
             logger.info('Applying patch', phid=diff_phid, message=message)
