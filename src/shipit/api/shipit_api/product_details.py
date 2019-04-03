@@ -295,6 +295,7 @@ async def fetch_l10n_data(
                 with cache.open('w+') as f:
                     f.write(json.dumps(changesets))
         except Exception as e:
+            logger.fatal('Failed to fetch', url=url, release=release.json)
             logger.exception(e)
             if git_branch == 'production':
                 raise
@@ -562,7 +563,9 @@ def get_release_history(breakpoint_version: int,
 def get_primary_builds(breakpoint_version: int,
                        product: Product,
                        releases: typing.List[shipit_api.models.Release],
+                       nightly_builds: typing.List[shipit_api.models.Release],
                        releases_l10n: typing.Dict[shipit_api.models.Release, ReleaseL10ns],
+                       nightly_l10n: typing.Dict[shipit_api.models.Release, ReleaseL10ns],
                        old_product_details: ProductDetails) -> PrimaryBuilds:
     '''This file contains all the Thunderbird builds we provide per locale. The
        filesize fields have the same value for all lcoales, this is not a bug,
@@ -604,7 +607,6 @@ def get_primary_builds(breakpoint_version: int,
         thunderbird_versions = get_thunderbird_versions(releases)
         versions = [
             thunderbird_versions['LATEST_THUNDERBIRD_VERSION'],
-            thunderbird_versions['LATEST_THUNDERBIRD_ALPHA_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_DEVEL_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_NIGHTLY_VERSION'],
         ]
@@ -613,39 +615,43 @@ def get_primary_builds(breakpoint_version: int,
 
     builds: PrimaryBuilds = dict()
 
-    for release in releases:
+    combined_l10n = releases_l10n.copy()
+    combined_l10n.update(nightly_l10n)
+    for release in releases + nightly_builds:
+        # Skip other products and older versions
         if product is not Product(release.product) or \
-           release.version in versions:
+           release.version not in versions:
             continue
-        for l10n in releases_l10n.get(release, {}).keys():
+        # Make sure to add en-US, it's not listed in the l10n changesets file
+        for l10n in list(combined_l10n.get(release, {}).keys()) + ['en-US']:
+            # for compatibility with shipit v1, skip ja-JP-mac
+            if l10n == 'ja-JP-mac':
+                continue
             builds.setdefault(l10n, dict())
-            for version in versions:
-                if version == '':
-                    continue
-                if product is Product.THUNDERBIRD:
-                    builds[l10n][version] = {
-                        'Windows': {
-                            'filesize': 25.1
-                        },
-                        'OS X': {
-                            'filesize': 50.8
-                        },
-                        'Linux': {
-                            'filesize': 31.8
-                        }
+            if product is Product.THUNDERBIRD:
+                builds[l10n][release.version] = {
+                    'Windows': {
+                        'filesize': 25.1
+                    },
+                    'OS X': {
+                        'filesize': 50.8
+                    },
+                    'Linux': {
+                        'filesize': 31.8
                     }
-                else:
-                    builds[l10n][version] = {
-                        'Windows': {
-                            'filesize': 0,
-                        },
-                        'OS X': {
-                            'filesize': 0,
-                        },
-                        'Linux': {
-                            'filesize': 0,
-                        },
-                    }
+                }
+            else:
+                builds[l10n][release.version] = {
+                    'Windows': {
+                        'filesize': 0,
+                    },
+                    'OS X': {
+                        'filesize': 0,
+                    },
+                    'Linux': {
+                        'filesize': 0,
+                    },
+                }
 
     return builds
 
@@ -1191,9 +1197,36 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
             fetch_l10n_data(session, release, git_branch)
             for release in releases
         ])
+
     releases_l10n = {
         release: changeset
         for (release, changeset) in releases_l10n
+        if changeset is not None
+    }
+
+    # Also fetch latest nightly builds with their L10N info
+    nightly_builds = [
+        shipit_api.models.Release(
+            product=Product.FIREFOX.value,
+            version=shipit_api.config.FIREFOX_NIGHTLY,
+            branch='mozilla-central', revision='default', build_number=None,
+            release_eta=None, partial_updates=None, status=None),
+        shipit_api.models.Release(
+            product=Product.THUNDERBIRD.value,
+            version=shipit_api.config.LATEST_THUNDERBIRD_NIGHTLY_VERSION,
+            branch='comm-central', revision='default', build_number=None,
+            release_eta=None, partial_updates=None, status=None),
+    ]
+
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit_per_host=50)) as session:
+        nightly_l10n = await asyncio.gather(*[
+            fetch_l10n_data(session, release, git_branch)
+            for release in nightly_builds
+        ])
+
+    nightly_l10n = {
+        release: changeset
+        for (release, changeset) in nightly_l10n
         if changeset is not None
     }
 
@@ -1235,7 +1268,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         'firefox_primary_builds.json': get_primary_builds(breakpoint_version,
                                                           Product.FIREFOX,
                                                           releases,
+                                                          nightly_builds,
                                                           releases_l10n,
+                                                          nightly_l10n,
                                                           old_product_details,
                                                           ),
         'firefox_versions.json': get_firefox_versions(releases),
@@ -1292,7 +1327,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         'thunderbird_primary_builds.json': get_primary_builds(breakpoint_version,
                                                               Product.THUNDERBIRD,
                                                               releases,
+                                                              nightly_builds,
                                                               releases_l10n,
+                                                              nightly_l10n,
                                                               old_product_details,
                                                               ),
         'thunderbird_versions.json': get_thunderbird_versions(releases),
