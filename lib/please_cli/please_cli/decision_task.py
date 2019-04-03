@@ -7,7 +7,6 @@ import asyncio
 import datetime
 import functools
 import json
-import multiprocessing
 import os
 import typing
 
@@ -372,7 +371,6 @@ async def read_stream(stream,
 
 
 async def run(_command: typing.Union[str, typing.List[str]],
-              semaphore: typing.Optional[asyncio.Semaphore] = None,
               stream: bool = False,
               handle_stream_line: typing.Optional[typing.Callable[[str], None]] = None,
               log_command: bool = True,
@@ -402,12 +400,7 @@ async def run(_command: typing.Union[str, typing.List[str]],
     if log_command:
         log.debug('Running command', command=hide_secrets(command, secrets), kwargs=_kwargs)
 
-    if semaphore is None:
-        process = await asyncio.create_subprocess_shell(command, **_kwargs)  # noqa
-    else:
-        async with semaphore:
-            process = await asyncio.create_subprocess_shell(command, **_kwargs)  # noqa
-
+    process = await asyncio.create_subprocess_shell(command, **_kwargs)  # noqa
     if stream:
         _log_output: typing.Optional[typing.Callable[[str], None]] = None
         if log_output:
@@ -427,8 +420,7 @@ async def run(_command: typing.Union[str, typing.List[str]],
     return process.returncode, output, error
 
 
-async def check_in_nix_cache(semaphore: asyncio.Semaphore,
-                             session: aiohttp.ClientSession,
+async def check_in_nix_cache(session: aiohttp.ClientSession,
                              nix_path: NixPath,
                              nix_hash: NixHash,
                              ) -> typing.Tuple[NixPath, bool]:
@@ -436,10 +428,9 @@ async def check_in_nix_cache(semaphore: asyncio.Semaphore,
     for cache_url in please_cli.config.CACHE_URLS:
         try:
             url = f'{cache_url}/{nix_hash}.narinfo'
-            async with semaphore:
-                async with session.get(url) as resp:
-                    exists = resp.status == 200
-                    break
+            async with session.get(url) as resp:
+                exists = resp.status == 200
+                break
         except Exception:
             exists = False
 
@@ -478,14 +469,10 @@ class Derive:
         return self._drv[0][0][1][11:43]
 
 
-async def get_projects_hash(semaphore: asyncio.Semaphore,
-                            nix_instantiate: str,
+async def get_projects_hash(nix_instantiate: str,
                             nix_path: NixPath):
     default_nix = os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix')
-    code, output, error = await run([nix_instantiate, default_nix, '-A', nix_path],
-                                    stream=True,
-                                    semaphore=semaphore,
-                                    )
+    code, output, error = await run([nix_instantiate, default_nix, '-A', nix_path], stream=True)
     try:
         drv_path = output.split('\n')[-1].strip()
         with open(drv_path) as f:
@@ -501,12 +488,9 @@ async def get_projects_hash(semaphore: asyncio.Semaphore,
 async def get_projects_hashes(nix_instantiate: str,
                               projects: Projects,
                               ) -> NixHashes:
-    # this limits nix calls allowed to make at the same time
-    semaphore = asyncio.Semaphore(value=multiprocessing.cpu_count())
-
     nix_hashes = []
     tasks = [
-        get_projects_hash(semaphore, nix_instantiate, nix_path)
+        get_projects_hash(nix_instantiate, nix_path)
         for nix_path in get_nix_paths(projects)
     ]
     for task in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks)):
@@ -523,12 +507,9 @@ async def get_projects_to_build(session: aiohttp.ClientSession,
                                 nix_hashes: NixHashes
                                 ) -> typing.List[str]:
 
-    # how many concurrent requests to sent
-    semaphore = asyncio.Semaphore(value=100)
-
     project_to_build: typing.Dict[str, bool] = dict()
     tasks = [
-        check_in_nix_cache(semaphore, session, nix_path, nix_hash)
+        check_in_nix_cache(session, nix_path, nix_hash)
         for nix_path, nix_hash in nix_hashes
     ]
     for task in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks)):
