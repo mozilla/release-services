@@ -51,9 +51,8 @@ OPENSSL_ETC_DIR = os.environ.get('OPENSSL_ETC_DIR', '')  # must end with /
 POSTGRESQL_BIN_DIR = os.environ.get('POSTGRESQL_BIN_DIR', '')  # must end with /
 
 IN_DOCKER = False
-if os.path.exists('/proc/1/cgroup'):
-    with open('/proc/1/cgroup', 'rt') as ifh:
-        IN_DOCKER = 'docker' in ifh.read()
+with open('/proc/1/cgroup', 'rt') as ifh:
+    IN_DOCKER = 'docker' in ifh.read()
 
 TEMPLATES = {
     'backend-json-api': {}
@@ -852,19 +851,25 @@ PROJECTS_CONFIG = {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-testing-pulse-listener',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://pulselistener.testing.moz.tools',
+                        'dns': 'pulselistener.testing.moz.tools.herokudns.com',
                     },
                     'staging': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-staging-pulse-listener',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://pulselistener.staging.moz.tools',
+                        'dns': 'pulselistener.staging.moz.tools.herokudns.com',
                     },
                     'production': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-production-pulse-listen',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://pulselistener.moz.tools',
+                        'dns': 'pulselistener.moz.tools.herokudns.com',
                     },
                 },
             },

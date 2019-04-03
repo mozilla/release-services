@@ -3,6 +3,7 @@ import asyncio
 import os.path
 
 import requests
+from aiohttp import web
 
 from cli_common.log import get_logger
 from cli_common.pulse import run_consumer
@@ -18,6 +19,9 @@ logger = get_logger(__name__)
 ACTION_TASKCLUSTER = 'taskcluster'
 ACTION_TRY = 'try'
 
+MODE_PHABRICATOR_POLLING = 'polling'
+MODE_PHABRICATOR_WEBHOOK = 'webhook'
+
 
 class HookPhabricator(Hook):
     '''
@@ -32,6 +36,11 @@ class HookPhabricator(Hook):
             'project-releng',
             configuration['hookId'],
         )
+
+        # Choose a mode between polling and webhook
+        self.mode = configuration.get('mode', MODE_PHABRICATOR_POLLING)
+        assert self.mode in (MODE_PHABRICATOR_POLLING, MODE_PHABRICATOR_WEBHOOK)
+        logger.info('Running in mode', mode=self.mode)
 
         # Connect to Phabricator API
         assert 'phabricator_api' in configuration
@@ -55,6 +64,25 @@ class HookPhabricator(Hook):
         diffs = self.api.search_diffs(limit=1)
         assert len(diffs) == 1
         self.latest_id = diffs[0]['id']
+
+        # Add web route for new code review
+        if self.mode == MODE_PHABRICATOR_WEBHOOK:
+            self.routes.append(web.post('/codereview/new', self.new_code_review))
+
+        # Load secure projects
+        projects = self.api.search_projects(slugs=['secure-revision'])
+        self.secure_projects = {
+            p['phid']: p['fields']['name']
+            for p in projects
+        }
+        logger.info('Loaded secure projects', projects=self.secure_projects.values())
+
+        # Phabricator secure revision retries configuration
+        self.phabricator_retries = configuration.get('phabricator_retries', 5)
+        self.phabricator_sleep = configuration.get('phabricator_sleep', 10)
+        assert isinstance(self.phabricator_retries, int)
+        assert isinstance(self.phabricator_sleep, int)
+        logger.info('Will retry Phabricator secure revision queries', retries=self.phabricator_retries, sleep=self.phabricator_sleep)  # noqa
 
     def list_differential(self):
         '''
@@ -85,40 +113,130 @@ class HookPhabricator(Hook):
         '''
         Query phabricator differentials regularly
         '''
+        if self.mode != MODE_PHABRICATOR_POLLING:
+            return
+
         while True:
 
             # Get new differential ids
             for diff in self.list_differential():
-                if diff['type'] != 'DIFF':
-                    logger.info('Skipping differential, not a diff', id=diff['id'], type=diff['type'])
-                    continue
+                try:
+                    # Load revision to get repository
+                    rev = self.api.load_revision(diff['revisionPHID'])
 
-                # Load revision to check the repository is authorized
-                rev = self.api.load_revision(diff['revisionPHID'])
-                repo_phid = rev['fields']['repositoryPHID']
-                if repo_phid not in self.repos:
-                    logger.info('Skipping differential, repo not enabled', id=diff['id'], repo=repo_phid)
-                    continue
-
-                # Create new task
-                if ACTION_TASKCLUSTER in self.actions:
-                    await self.create_task({
-                        'ANALYSIS_SOURCE': 'phabricator',
-                        'ANALYSIS_ID': diff['phid']
-                    })
-                else:
-                    logger.info('Skipping Taskcluster task', diff=diff['phid'])
-
-                # Put message in mercurial queue for try jobs
-                if ACTION_TRY in self.actions:
-                    assert self.mercurial_queue is not None, \
-                        'No mercurial queue to push on try!'
-                    await self.mercurial_queue.put(diff)
-                else:
-                    logger.info('Skipping Try job', diff=diff['phid'])
+                    logger.info('Triggering task from polling', diff=diff['id'])
+                    await self.trigger_task(diff, rev['fields']['repositoryPHID'])
+                except Exception as e:
+                    logger.error('Failed to trigger task from polling', error=str(e))
 
             # Sleep a bit before trying new diffs
             await asyncio.sleep(60)
+
+    async def new_code_review(self, request):
+        '''
+        HTTP webhook used by HarborMaster on new diffs
+        Mandatory query parameters:
+        * diff as ID
+        * repo as PHID
+        * revision as ID
+        '''
+        diff_id = request.rel_url.query.get('diff')
+        repo_phid = request.rel_url.query.get('repo')
+        revision_id = request.rel_url.query.get('revision')
+
+        if not diff_id or not repo_phid or not revision_id:
+            logger.error('Invalid webhook parameters', path=request.path_qs)
+            raise web.HTTPBadRequest(text='Invalid webhook parameters')
+
+        # Check if the revision if public, and retry a few times
+        # to give some time to the BMO daemon to update the revision
+        public = False
+        for step in range(self.phabricator_retries):
+            if self.is_public_revision(int(revision_id)):
+                public = True
+                break
+            else:
+                sleep_time = self.phabricator_sleep * (1 + (step / self.phabricator_retries))
+                logger.info('Sleeping until next retry', seconds=sleep_time)
+                await asyncio.sleep(sleep_time)
+
+        if not public:
+            raise web.HTTPForbidden(text='Secure revision')
+
+        # Lookup revision to check if it's public or secured
+        # Load full diff from API
+        diffs = self.api.search_diffs(diff_id=int(diff_id))
+        if not diffs:
+            logger.warn('Diff not found', diff_id=diff_id)
+            raise web.HTTPNotFound(text='Diff not found')
+        diff = diffs[0]
+
+        try:
+            logger.info('Triggering task from webhook', diff=diff_id, repo=repo_phid)
+            created = await self.trigger_task(diff, repo_phid)
+        except Exception as e:
+            logger.error('Failed to trigger task from webhook', error=str(e))
+            raise web.HTTPInternalServerError(text='Internal error: {}'.format(e))
+
+        return web.Response(text=created and 'Task queued' or 'Skipped')
+
+    def is_public_revision(self, revision_id):
+        '''
+        Check if a given revision is public (not in any secure projects)
+        '''
+        assert isinstance(revision_id, int)
+        try:
+            logger.info('Checking visibility status', revision_id=revision_id)
+            rev = self.api.load_revision(rev_id=revision_id, attachments={'projects': True})
+        except Exception as e:
+            logger.info('Revision not accessible', revision_id=revision_id, error=e)
+            return False
+
+        if not rev:
+            logger.warn('Revision not found', revision_id=revision_id)
+            return False
+
+        # Load projects and check againt secure projects
+        projects = set(rev['attachments']['projects']['projectPHIDs'])
+        if projects.intersection(self.secure_projects):
+            logger.warn('Secure revision', revision_id=revision_id)
+            return False
+
+        logger.info('Revision is public', revision_id=revision_id)
+        return True
+
+    async def trigger_task(self, diff, repo_phid):
+        '''
+        Trigger a code review task using configured modes: Try or Taskcluster
+        '''
+        assert isinstance(diff, dict)
+        assert 'phid' in diff and 'type' in diff
+        assert diff['type'] == 'DIFF'
+
+        # Skip unsupported repos
+        if repo_phid not in self.repos:
+            logger.info('Repository not enabled', repo=repo_phid)
+            return False
+
+        # Create new task
+        if ACTION_TASKCLUSTER in self.actions:
+            await self.create_task({
+                'ANALYSIS_SOURCE': 'phabricator',
+                'ANALYSIS_ID': diff['phid']
+            })
+        else:
+            logger.info('Skipping Taskcluster task', diff=diff['phid'])
+
+        # Put message in mercurial queue for try jobs
+        # Do not wait so the webhook is not locked
+        if ACTION_TRY in self.actions:
+            assert self.mercurial_queue is not None, \
+                'No mercurial queue to push on try!'
+            self.mercurial_queue.put_nowait(diff)
+        else:
+            logger.info('Skipping Try job', diff=diff['phid'])
+
+        return True
 
 
 class HookCodeCoverage(PulseHook):
@@ -222,6 +340,8 @@ class PulseListener(object):
         self.taskcluster_client_id = taskcluster_client_id
         self.taskcluster_access_token = taskcluster_access_token
         self.phabricator_api = phabricator_api
+        self.http_port = int(os.environ.get('PORT', 9000))
+        logger.info('HTTP webhook server will listen', port=self.http_port)
 
         task_monitoring.connect_taskcluster(
             self.taskcluster_client_id,
@@ -275,6 +395,9 @@ class PulseListener(object):
         if self.mercurial is not None:
             consumers.append(self.mercurial.run())
 
+        # Hooks through web server
+        consumers.append(self.build_webserver(hooks))
+
         # Run all consumers together
         run_consumer(asyncio.gather(*consumers))
 
@@ -294,6 +417,25 @@ class PulseListener(object):
             raise Exception('Unsupported hook {}'.format(conf['type']))
 
         return hook_class(conf)
+
+    def build_webserver(self, hooks):
+        '''
+        Build an async web server used by hooks
+        '''
+        app = web.Application()
+
+        # Always add a simple test endpoint
+        async def ping(request):
+            return web.Response(text='pong')
+
+        app.add_routes([web.get('/ping', ping)])
+
+        # Add routes from hooks
+        for hook in hooks:
+            app.add_routes(hook.routes)
+
+        # Finally build the webserver coroutine
+        return web._run_app(app, port=self.http_port, print=logger.info)
 
     def add_revision(self, revision):
         '''
