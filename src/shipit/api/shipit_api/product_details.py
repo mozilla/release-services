@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import asyncio
+import collections
 import datetime
 import enum
 import functools
@@ -557,7 +558,9 @@ def get_release_history(breakpoint_version: int,
                                                 default='',
                                                 )
 
-    return history
+    # Sort the releases in their chronological order
+    ordered_history = collections.OrderedDict(sorted(history.items(), key=lambda x: x[1]))
+    return ordered_history
 
 
 def get_primary_builds(breakpoint_version: int,
@@ -1362,7 +1365,9 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         # write content into json file
         with new_file.open('w+') as f:
             if new_file.suffix == '.json':
-                f.write(json.dumps(content, sort_keys=True, indent=4))
+                f.write(json.dumps(
+                    content, sort_keys=(not isinstance(content, collections.OrderedDict)),
+                    indent=4))
             else:
                 f.write(content)
 
