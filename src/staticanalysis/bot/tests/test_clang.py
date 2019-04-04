@@ -4,7 +4,6 @@ from collections import Counter
 
 import pytest
 
-
 BAD_CPP_SRC = '''#include <demo>
 int \tmain(void){
  printf("plop");return 42;
@@ -269,26 +268,26 @@ def test_as_dict(mock_revision):
     issue.body = 'Dummy body withUppercaseChars'
 
     assert issue.as_dict() == {
-            "analyzer": "clang-tidy",
-            "path": "test.cpp",
-            "line": 42,
-            "nb_lines": 1,
-            "char": 51,
-            "check": "dummy-check",
-            "level": "error",
-            "message": "dummy message withUppercaseChars",
-            "body": "Dummy body withUppercaseChars",
-            "reason": None,
-            "notes": [],
-            "validation": {
-                "publishable_check": False,
-                "third_party": False,
-                "is_expanded_macro": False
+            'analyzer': 'clang-tidy',
+            'path': 'test.cpp',
+            'line': 42,
+            'nb_lines': 1,
+            'char': 51,
+            'check': 'dummy-check',
+            'level': 'error',
+            'message': 'dummy message withUppercaseChars',
+            'body': 'Dummy body withUppercaseChars',
+            'reason': None,
+            'notes': [],
+            'validation': {
+                'publishable_check': False,
+                'third_party': False,
+                'is_expanded_macro': False
                 },
-            "in_patch": False,
-            "is_new": False,
-            "validates": False,
-            "publishable": False
+            'in_patch': False,
+            'is_new': False,
+            'validates': False,
+            'publishable': False
             }
 
 
