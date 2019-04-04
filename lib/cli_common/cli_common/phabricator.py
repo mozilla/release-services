@@ -27,6 +27,13 @@ class BuildState(enum.Enum):
     Fail = 'fail'
 
 
+class ArtifactType(enum.Enum):
+    Host = 'host'
+    WorkingCopy = 'working-copy'
+    File = 'file'
+    Uri = 'uri'
+
+
 @functools.lru_cache(maxsize=2048)
 def revision_exists_on_central(revision):
     url = HGMO_JSON_REV_URL_TEMPLATE.format(revision)
@@ -367,12 +374,26 @@ class PhabricatorAPI(object):
         assert all(map(lambda i: isinstance(i, LintResult), lint)), \
             'Only support LintResult instances'
         assert isinstance(state, BuildState)
-        self.request(
+        return self.request(
             'harbormaster.sendmessage',
             buildTargetPHID=build_target_phid,
             type=state.value,
             unit=unit,
             lint=lint,
+        )
+
+    def create_harbormaster_artifact(self, build_target_phid, artifact_type, key, payload):
+        '''
+        Create an artifact on HarborMaster
+        '''
+        assert isinstance(artifact_type, ArtifactType)
+        assert isinstance(payload, dict)
+        return self.request(
+            'harbormaster.createartifact',
+            buildTargetPHID=build_target_phid,
+            artifactType=artifact_type.value,
+            artifactKey=key,
+            artifactData=payload,
         )
 
     def upload_coverage_results(self, object_phid, coverage_data):
