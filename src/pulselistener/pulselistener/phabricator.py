@@ -79,6 +79,9 @@ class PhabricatorBuild(object):
             if not diffs:
                 raise Exception('Diff not found')
             self.diff = diffs[0]
+
+            # Add target to diff for treeherder link publication
+            self.diff['build_target_phid'] = self.target_phid
         except Exception as e:
             logger.info('Revision not accessible', build=str(self), error=str(e))
 

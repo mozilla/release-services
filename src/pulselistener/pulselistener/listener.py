@@ -223,11 +223,10 @@ class HookPhabricator(Hook):
             logger.info('Skipping Taskcluster task', diff=diff['phid'])
 
         # Put message in mercurial queue for try jobs
-        # Do not wait so the webhook is not locked
         if ACTION_TRY in self.actions:
             assert self.mercurial_queue is not None, \
                 'No mercurial queue to push on try!'
-            self.mercurial_queue.put_nowait(diff)
+            await self.mercurial_queue.put(diff)
         else:
             logger.info('Skipping Try job', diff=diff['phid'])
 
