@@ -5,10 +5,10 @@ let
   inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib nasm;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
-  clang = releng_pkgs.pkgs.clang_7;
+  clang = releng_pkgs.pkgs.clang_8;
   clang-tools = releng_pkgs.pkgs.clang-tools.override { inherit llvmPackages; };
-  llvm = releng_pkgs.pkgs.llvm_7;
-  llvmPackages = releng_pkgs.pkgs.llvmPackages_7;
+  llvm = releng_pkgs.pkgs.llvm_8;
+  llvmPackages = releng_pkgs.pkgs.llvmPackages_8;
 
   # Rust 1.32.0
   rustChannel' = rustChannelOf { date = "2019-01-17"; channel = "stable"; };
