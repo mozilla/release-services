@@ -50,9 +50,9 @@ let
         maxRunTime = 7 * 60 * 60;
         workerType = "releng-svc-compute";
         taskArtifacts = {
-          "public/defectfeaturetaskmodel.xz" = {
+          "public/defectenhancementtaskmodel.xz" = {
             type = "file";
-            path = "/defectfeaturetaskmodel.xz";
+            path = "/defectenhancementtaskmodel.xz";
           };
           "public/componentmodel.xz" = {
             type = "file";

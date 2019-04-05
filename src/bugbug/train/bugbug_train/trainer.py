@@ -8,7 +8,7 @@ from datetime import timedelta
 from urllib.request import urlretrieve
 
 from bugbug.models.component import ComponentModel
-from bugbug.models.defect_feature_task import DefectFeatureTaskModel
+from bugbug.models.defect_enhancement_task import DefectEnhancementTaskModel
 from bugbug.models.regression import RegressionModel
 from bugbug.models.tracking import TrackingModel
 
@@ -43,9 +43,9 @@ class Trainer(object):
 
     def train_defect_enhancement_task(self):
         logger.info('Training *defect vs enhancement vs task* model')
-        model = DefectFeatureTaskModel()
+        model = DefectEnhancementTaskModel()
         model.train()
-        self.compress_file('defectfeaturetaskmodel')
+        self.compress_file('defectenhancementtaskmodel')
 
     def train_component(self):
         logger.info('Training *component* model')
