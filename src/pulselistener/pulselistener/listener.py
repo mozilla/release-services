@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import collections
 import os.path
 
 import requests
 from aiohttp import web
 
 from cli_common.log import get_logger
+from cli_common.phabricator import BuildState
 from cli_common.pulse import run_consumer
 from cli_common.utils import retry
 from pulselistener import task_monitoring
@@ -13,6 +15,8 @@ from pulselistener.config import REPO_UNIFIED
 from pulselistener.hook import Hook
 from pulselistener.hook import PulseHook
 from pulselistener.mercurial import MercurialWorker
+from pulselistener.phabricator import PhabricatorBuild
+from pulselistener.phabricator import PhabricatorBuildState
 
 logger = get_logger(__name__)
 
@@ -36,6 +40,7 @@ class HookPhabricator(Hook):
             'project-releng',
             configuration['hookId'],
         )
+        self.builds = collections.OrderedDict()
 
         # Choose a mode between polling and webhook
         self.mode = configuration.get('mode', MODE_PHABRICATOR_POLLING)
@@ -67,7 +72,7 @@ class HookPhabricator(Hook):
 
         # Add web route for new code review
         if self.mode == MODE_PHABRICATOR_WEBHOOK:
-            self.routes.append(web.post('/codereview/new', self.new_code_review))
+            self.routes.append(web.post('/codereview/new', self.create_code_review))
 
         # Load secure projects
         projects = self.api.search_projects(slugs=['secure-revision'])
@@ -111,99 +116,89 @@ class HookPhabricator(Hook):
 
     async def build_consumer(self, *args, **kwargs):
         '''
-        Query phabricator differentials regularly
+        Main consumer:
+        * Query phabricator differentials regularly
+        * Check queued builds
         '''
-        if self.mode != MODE_PHABRICATOR_POLLING:
-            return
-
         while True:
 
             # Get new differential ids
-            for diff in self.list_differential():
-                try:
-                    # Load revision to get repository
-                    rev = self.api.load_revision(diff['revisionPHID'])
+            if self.mode == MODE_PHABRICATOR_POLLING:
+                await self.poll_phabricator()
 
-                    logger.info('Triggering task from polling', diff=diff['id'])
-                    await self.trigger_task(diff, rev['fields']['repositoryPHID'])
-                except Exception as e:
-                    logger.error('Failed to trigger task from polling', error=str(e))
+                # Sleep a bit before trying new diffs
+                await asyncio.sleep(60)
 
-            # Sleep a bit before trying new diffs
-            await asyncio.sleep(60)
+            elif self.mode == MODE_PHABRICATOR_WEBHOOK:
+                await self.run_builds()
 
-    async def new_code_review(self, request):
+                # Sleep just a bit between two runs
+                await asyncio.sleep(2)
+
+    async def poll_phabricator(self):
         '''
-        HTTP webhook used by HarborMaster on new diffs
+        Poll Phabricator Diff search endpoint to trigger new tasks
+        '''
+        for diff in self.list_differential():
+            try:
+                # Load revision to get repository
+                rev = self.api.load_revision(diff['revisionPHID'])
+
+                logger.info('Triggering task from polling', diff=diff['id'])
+                await self.trigger_task(diff, rev['fields']['repositoryPHID'])
+            except Exception as e:
+                logger.error('Failed to trigger task from polling', error=str(e))
+
+    async def run_builds(self):
+        '''
+        Start asynchronously new builds when their revision become public
+        '''
+        for target_phid, build in self.builds.items():
+
+            # Run builds that just became public
+            if build.state == PhabricatorBuildState.Queued and build.check_visibility(self.api, self.secure_projects):
+                try:
+                    logger.info('Triggering task from webhook', build=build)
+                    await self.trigger_task(build.diff, build.repo_phid)
+                    # TODO: better integration with mercurial queue
+                    # to get the revisions produced
+                except Exception as e:
+                    logger.error('Failed to trigger task from webhook', error=str(e))
+
+                # Report public bug as working
+                self.api.update_build_target(target_phid, BuildState.Work)
+                logger.info('Published public build as working', build=str(build))
+
+            # Report secured bug as failing
+            # and remove it from queue
+            if build.state == PhabricatorBuildState.Secured:
+                self.api.update_build_target(target_phid, BuildState.Fail)
+                logger.info('Published secure build as failing', build=str(build))
+
+                del self.builds[target_phid]
+                logger.info('Removed secure build from queue', build=str(build))
+
+    async def create_code_review(self, request):
+        '''
+        HTTP POST webhook used by HarborMaster on new builds
+        It only stores build ids and reply ASAP
         Mandatory query parameters:
         * diff as ID
         * repo as PHID
         * revision as ID
+        * target as PHID
         '''
-        diff_id = request.rel_url.query.get('diff')
-        repo_phid = request.rel_url.query.get('repo')
-        revision_id = request.rel_url.query.get('revision')
-
-        if not diff_id or not repo_phid or not revision_id:
-            logger.error('Invalid webhook parameters', path=request.path_qs)
-            raise web.HTTPBadRequest(text='Invalid webhook parameters')
-
-        # Check if the revision if public, and retry a few times
-        # to give some time to the BMO daemon to update the revision
-        public = False
-        for step in range(self.phabricator_retries):
-            if self.is_public_revision(int(revision_id)):
-                public = True
-                break
-            else:
-                sleep_time = self.phabricator_sleep * (1 + (step / self.phabricator_retries))
-                logger.info('Sleeping until next retry', seconds=sleep_time)
-                await asyncio.sleep(sleep_time)
-
-        if not public:
-            raise web.HTTPForbidden(text='Secure revision')
-
-        # Lookup revision to check if it's public or secured
-        # Load full diff from API
-        diffs = self.api.search_diffs(diff_id=int(diff_id))
-        if not diffs:
-            logger.warn('Diff not found', diff_id=diff_id)
-            raise web.HTTPNotFound(text='Diff not found')
-        diff = diffs[0]
-
         try:
-            logger.info('Triggering task from webhook', diff=diff_id, repo=repo_phid)
-            created = await self.trigger_task(diff, repo_phid)
+            build = PhabricatorBuild(request, self.phabricator_retries, self.phabricator_sleep)
+            if build.target_phid in self.builds:
+                raise Exception('Build target already queued')
+            self.builds[build.target_phid] = build
         except Exception as e:
-            logger.error('Failed to trigger task from webhook', error=str(e))
-            raise web.HTTPInternalServerError(text='Internal error: {}'.format(e))
+            logger.error(str(e), path=request.path_qs)
+            raise web.HTTPBadRequest(text=str(e))
 
-        return web.Response(text=created and 'Task queued' or 'Skipped')
-
-    def is_public_revision(self, revision_id):
-        '''
-        Check if a given revision is public (not in any secure projects)
-        '''
-        assert isinstance(revision_id, int)
-        try:
-            logger.info('Checking visibility status', revision_id=revision_id)
-            rev = self.api.load_revision(rev_id=revision_id, attachments={'projects': True})
-        except Exception as e:
-            logger.info('Revision not accessible', revision_id=revision_id, error=e)
-            return False
-
-        if not rev:
-            logger.warn('Revision not found', revision_id=revision_id)
-            return False
-
-        # Load projects and check againt secure projects
-        projects = set(rev['attachments']['projects']['projectPHIDs'])
-        if projects.intersection(self.secure_projects):
-            logger.warn('Secure revision', revision_id=revision_id)
-            return False
-
-        logger.info('Revision is public', revision_id=revision_id)
-        return True
+        logger.info('Queued new build', build=build)
+        return web.Response(text='Build queued')
 
     async def trigger_task(self, diff, repo_phid):
         '''
@@ -228,11 +223,10 @@ class HookPhabricator(Hook):
             logger.info('Skipping Taskcluster task', diff=diff['phid'])
 
         # Put message in mercurial queue for try jobs
-        # Do not wait so the webhook is not locked
         if ACTION_TRY in self.actions:
             assert self.mercurial_queue is not None, \
                 'No mercurial queue to push on try!'
-            self.mercurial_queue.put_nowait(diff)
+            await self.mercurial_queue.put(diff)
         else:
             logger.info('Skipping Try job', diff=diff['phid'])
 
