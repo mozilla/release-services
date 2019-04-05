@@ -26,8 +26,6 @@ ACTION_TRY = 'try'
 MODE_PHABRICATOR_POLLING = 'polling'
 MODE_PHABRICATOR_WEBHOOK = 'webhook'
 
-TASK_URL = 'https://tools.taskcluster.net/task-inspector/#{}'
-
 
 class HookPhabricator(Hook):
     '''
