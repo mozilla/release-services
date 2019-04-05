@@ -396,6 +396,23 @@ class PhabricatorAPI(object):
             artifactData=payload,
         )
 
+    def create_harbormaster_uri(self, build_target_phid, artifact_key, name, uri, external=True):
+        '''
+        Helper to create a URI Harbormaster Artifact
+        '''
+        out = self.create_harbormaster_artifact(
+                build_target_phid=build_target_phid,
+                artifact_type=ArtifactType.Uri,
+                key=artifact_key,
+                payload={
+                    'uri': uri,
+                    'name': name,
+                    'ui.external': external,
+                },
+            )
+        logger.info('Created HarborMaster link', target=build_target_phid, uri=uri)
+        return out
+
     def upload_coverage_results(self, object_phid, coverage_data):
         '''
         Upload code coverage results to a Phabricator object.
