@@ -217,7 +217,8 @@ class HookPhabricator(Hook):
         if ACTION_TASKCLUSTER in self.actions:
             await self.create_task({
                 'ANALYSIS_SOURCE': 'phabricator',
-                'ANALYSIS_ID': diff['phid']
+                'ANALYSIS_ID': diff['phid'],
+                'HARBORMASTER_TARGET': diff.get('build_target_phid'),
             })
         else:
             logger.info('Skipping Taskcluster task', diff=diff['phid'])
