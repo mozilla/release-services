@@ -26,6 +26,8 @@ ACTION_TRY = 'try'
 MODE_PHABRICATOR_POLLING = 'polling'
 MODE_PHABRICATOR_WEBHOOK = 'webhook'
 
+TASK_URL = 'https://tools.taskcluster.net/task-inspector/#{}'
+
 
 class HookPhabricator(Hook):
     '''
@@ -215,10 +217,21 @@ class HookPhabricator(Hook):
 
         # Create new task
         if ACTION_TASKCLUSTER in self.actions:
-            await self.create_task({
+            build_target_phid = diff.get('build_target_phid')
+            task_id = await self.create_task({
                 'ANALYSIS_SOURCE': 'phabricator',
-                'ANALYSIS_ID': diff['phid']
+                'ANALYSIS_ID': diff['phid'],
+                'HARBORMASTER_TARGET': build_target_phid,
             })
+
+            # Add link to Taskcluster on Phabricator build
+            if build_target_phid is not None:
+                self.api.create_harbormaster_uri(
+                    build_target_phid,
+                    artifact_key='taskcluster',
+                    name='Code Review Task',
+                    uri=TASK_URL.format(task_id),
+                )
         else:
             logger.info('Skipping Taskcluster task', diff=diff['phid'])
 
