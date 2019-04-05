@@ -15,9 +15,12 @@ import hglib
 
 from cli_common.log import get_logger
 from cli_common.mercurial import batch_checkout
+from cli_common.phabricator import ArtifactType
 from pulselistener.config import REPO_TRY
 
 logger = get_logger(__name__)
+
+TREEHERDER_URL = 'https://treeherder.mozilla.org/#/jobs?repo=try&revision={}'
 
 
 class MercurialWorker(object):
@@ -184,3 +187,19 @@ class MercurialWorker(object):
         )
 
         logger.info('Diff has been pushed !')
+
+        # Publish Treeherder link
+        build_target_phid = diff.get('build_target_phid')
+        if build_target_phid:
+            uri = TREEHERDER_URL.format(commit.node.decode('utf-8'))
+            self.phabricator_api.create_harbormaster_artifact(
+                build_target_phid=build_target_phid,
+                artifact_type=ArtifactType.Uri,
+                key='treeherder',
+                payload={
+                    'uri': uri,
+                    'name': 'Treeherder',
+                    'ui.external': True
+                },
+            )
+            logger.info('Published treeherder uri', target=build_target_phid, uri=uri)
