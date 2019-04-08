@@ -75,7 +75,7 @@ let
       __old = pythonPackages;
       inherit interpreter;
       inherit interpreterWithPackages;
-      mkDerivation = pythonPackages.buildPythonPackage;
+      mkDerivation = args: pythonPackages.buildPythonPackage (args // { nativeBuildInputs = args.buildInputs; });
       packages = pkgs;
       overrideDerivation = drv: f:
         pythonPackages.buildPythonPackage (
@@ -489,10 +489,10 @@ let
     };
 
     "bugbug" = python.mkDerivation {
-      name = "bugbug-0.0.8";
+      name = "bugbug-0.0.13";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/1f/ef/1e3491b7b81fdf031805598c231e65483c7ab52fe24e6020d988272a12d0/bugbug-0.0.8.tar.gz";
-        sha256 = "cdd4de2365ea4c3e4a0e721736d67f9e0dd9d582d8b028d80b942c50e70044a2";
+        url = "https://files.pythonhosted.org/packages/e8/d8/f60e0a5381fb207b017fadba68b2b1dba18690016cfa53d62cc2a27f2a12/bugbug-0.0.13.tar.gz";
+        sha256 = "a932b9cf8dc51acb342f44adb0ab31f588b5afc73424031ae41177c9f70d3f2d";
       };
       doCheck = commonDoCheck;
       checkPhase = "";

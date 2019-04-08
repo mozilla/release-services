@@ -93,8 +93,8 @@ def MERCURIAL_COMMIT():
 
     responses.add(
         responses.GET,
-        'https://mapper.mozilla-releng.net/gecko-dev/rev/hg/{}'.format(hg_commit),
-        body='40e8eb46609dcb8780764774ec550afff1eed3a5 {}'.format(hg_commit),
+        f'https://mapper.mozilla-releng.net/gecko-dev/rev/hg/{hg_commit}',
+        body=f'40e8eb46609dcb8780764774ec550afff1eed3a5 {hg_commit}',
         status=200)
 
     return hg_commit
@@ -106,8 +106,8 @@ def GITHUB_COMMIT():
 
     responses.add(
         responses.GET,
-        'https://mapper.mozilla-releng.net/gecko-dev/rev/git/{}'.format(git_commit),
-        body='{} 0d1e55d87931fe70ec1d007e886bcd58015ff770'.format(git_commit),
+        f'https://mapper.mozilla-releng.net/gecko-dev/rev/git/{git_commit}',
+        body=f'{git_commit} 0d1e55d87931fe70ec1d007e886bcd58015ff770',
         status=200)
 
     return git_commit
@@ -186,7 +186,7 @@ def codecov_commits():
 
             responses.add(
                 responses.GET,
-                'https://codecov.io/api/gh/marco-c/gecko-dev/commit/{}'.format(fname[:-5]),
+                f'https://codecov.io/api/gh/marco-c/gecko-dev/commit/{fname[:-5]}',
                 json=data,
                 status=status
             )
@@ -240,7 +240,7 @@ def fake_hg_repo_with_contents(fake_hg_repo):
             with open(fname, 'w') as Out:
                 Out.write(c * f['size'])
             hg.add(files=[bytes(fname, 'ascii')])
-            hg.commit(message='Commit file {} with {} inside'.format(fname, c),
+            hg.commit(message=f'Commit file {fname} with {c} inside',
                       user='Moz Illa <milla@mozilla.org>')
             hg.push(dest=bytes(remote, 'ascii'))
 
@@ -256,7 +256,7 @@ def mock_phabricator():
     Mock phabricator authentication process
     '''
     def _response(name):
-        path = os.path.join(FIXTURES_DIR, 'phabricator_{}.json'.format(name))
+        path = os.path.join(FIXTURES_DIR, f'phabricator_{name}.json')
         assert os.path.exists(path)
         return open(path).read()
 

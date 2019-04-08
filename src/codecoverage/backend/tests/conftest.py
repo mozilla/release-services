@@ -72,28 +72,28 @@ async def coverage_responses(aresponses):
         {
             'path': 'hgmo_json_revs',
             'host': 'hg.mozilla.org',
-            'url': lambda fname: '/mozilla-central/json-rev/{}'.format(fname),
+            'url': lambda fname: f'/mozilla-central/json-rev/{fname}',
         },
         {
             'path': 'hgmo_json_pushes',
             'host': 'hg.mozilla.org',
-            'url': lambda fname: '/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(int(fname), int(fname) + 8),
+            'url': lambda fname: f'/mozilla-central/json-pushes?version=2&full=1&startID={int(fname)}&endID={int(fname) + 8}',
             'match_querystring': True,
         },
         {
             'path': 'hg_git_map',
             'host': 'mapper.mozilla-releng.net',
-            'url': lambda fname: '/gecko-dev/rev/hg/{}'.format(fname),
+            'url': lambda fname: f'/gecko-dev/rev/hg/{fname}',
         },
         {
             'path': 'git_hg_map',
             'host': 'mapper.mozilla-releng.net',
-            'url': lambda fname: '/gecko-dev/rev/git/{}'.format(fname),
+            'url': lambda fname: f'/gecko-dev/rev/git/{fname}',
         },
         {
             'path': 'codecov_commits',
             'host': 'codecov.io',
-            'url': lambda fname: '/api/gh/marco-c/gecko-dev/commit/{}'.format(fname),
+            'url': lambda fname: f'/api/gh/marco-c/gecko-dev/commit/{fname}',
             'status': lambda data: json.loads(data)['meta']['status'],
         },
         {
@@ -128,9 +128,9 @@ async def coverage_responses(aresponses):
 @pytest.fixture
 def hgmo_phab_rev_responses():
     rev = '2ed1506d1dc7db3d70a3feed95f1456bce05bbee'
-    with open(os.path.join(FIXTURES_DIR, 'hgmo_json_revs', '{}.json'.format(rev))) as f:
+    with open(os.path.join(FIXTURES_DIR, 'hgmo_json_revs', f'{rev}.json')) as f:
         responses.add(responses.GET,
-                      'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(rev),
+                      f'https://hg.mozilla.org/mozilla-central/json-rev/{rev}',
                       status=200,
                       body=f.read(),
                       content_type='application/json')
@@ -147,7 +147,7 @@ def hgmo_phab_rev_responses():
 def phabricator_responses():
     resp = {}
     for ftype in ['hit', 'miss', 'wrong-api-key']:
-        with open(os.path.join(FIXTURES_DIR, 'phabricator-{}.json'.format(ftype))) as f:
+        with open(os.path.join(FIXTURES_DIR, f'phabricator-{ftype}.json')) as f:
             resp[ftype] = f.read()
 
     def callback(request):

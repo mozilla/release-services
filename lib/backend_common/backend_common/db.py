@@ -84,7 +84,7 @@ def init_database(app):
         # Needed to init potential migrations later on
         # Use a separate alembic_version table per app
         options = {
-            'version_table': '{}_alembic_version'.format(app.import_name),
+            f'version_table': '{app.import_name}_alembic_version',
         }
         migrate.init_app(app, directory=migrations_dir, **options)
 

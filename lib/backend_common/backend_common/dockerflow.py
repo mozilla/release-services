@@ -68,7 +68,7 @@ def heartbeat_response():
         extension_heartbeat = None
         try:
             app_heartbeat = getattr(importlib.import_module('backend_common.' + extension_name), 'app_heartbeat')
-            logger.info('Testing heartbeat of {} extension'.format(extension_name))
+            logger.info(f'Testing heartbeat of {extension_name} extension')
             app_heartbeat()
         except HeartbeatException as e:
             extension_heartbeat = e.message

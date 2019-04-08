@@ -82,7 +82,7 @@ let
   allDeps = builtins.attrNames self;
 in {
   doCheck = true;
-  buildInputs =
+  nativeBuildInputs =
     builtins.map (name: self."${name}") (
       unique(
         (fromRequirementsFile ./../cli_common/requirements-dev.txt) ++

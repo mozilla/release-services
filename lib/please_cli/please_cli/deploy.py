@@ -137,7 +137,7 @@ def cmd_S3(ctx,
             shutil.copytree(project_path, tmp_dir, copy_function=shutil.copy)
         please_cli.utils.check_result(
             0,
-            'Copied build artifacs to temporary location: {}'.format(tmp_dir),
+            f'Copied build artifacs to temporary location: {tmp_dir}',
             ask_for_details=interactive,
         )
 
@@ -197,7 +197,7 @@ def cmd_S3(ctx,
             ])
         please_cli.utils.check_result(
             result,
-            'Synced {} to S3 bucket {}'.format(project, s3_bucket),
+            f'Synced {project} to S3 bucket {s3_bucket}',
             ask_for_details=interactive,
         )
 
@@ -334,11 +334,11 @@ def cmd_HEROKU(ctx,
             if heroku_command:
                 update['command'] = heroku_command
             r = requests.patch(
-                'https://api.heroku.com/apps/{}/formation'.format(heroku_app),
+                f'https://api.heroku.com/apps/{heroku_app}/formation',
                 json=dict(updates=[update]),
                 headers={
                     'Accept': 'application/vnd.heroku+json; version=3.docker-releases',
-                    'Authorization': 'Bearer {}'.format(secrets['HEROKU_PASSWORD']),
+                    'Authorization': f"Bearer {secrets['HEROKU_PASSWORD']}",
                 },
             )
             output = r.text
@@ -437,17 +437,17 @@ def cmd_TASKCLUSTER_HOOK(ctx,
 
     hooks_tool = cli_common.taskcluster.get_service('hooks')
 
-    click.echo(' => Hook `{}/{}` exists? ... '.format(hook_group_id, hook_id), nl=False)
+    click.echo(f' => Hook `{hook_group_id}/{hook_id}` exists? ... ', nl=False)
     with click_spinner.spinner():
         hooks = [i['hookId'] for i in hooks_tool.listHooks(hook_group_id).get('hooks', [])]
 
     hook_exists = False
     result = 1
-    output = 'Hook {} not exists in {}'.format(hook_id, str(hooks))
+    output = f'Hook {hook_id} not exists in {str(hooks)}'
     if hook_id in hooks:
         hook_exists = True
         result = 0
-        output = 'Hook {} exists in {}'.format(hook_id, str(hooks))
+        output = f'Hook {hook_id} exists in {str(hooks)}'
 
     please_cli.utils.check_result(
         result,
@@ -484,7 +484,7 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                 image_tags.append(docker_stable_tag)
 
             for image_tag in image_tags:
-                click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, image_tag), nl=False)
+                click.echo(f' => Uploading docker image `{docker_repo}:{image_tag}` ... ', nl=False)
                 with click_spinner.spinner():
                     please_cli.utils.push_docker_image(
                         registry=docker_registry,
@@ -496,10 +496,10 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                         interactive=interactive,
                     )
 
-            hook['task']['payload']['image'] = '{}:{}'.format(docker_repo, versioned_image_tag)
+            hook['task']['payload']['image'] = f'{docker_repo}:{versioned_image_tag}'
 
         if hook_exists:
-            click.echo(' => Updating hook `{}/{}` ... '.format(hook_group_id, hook_id), nl=False)
+            click.echo(f' => Updating hook `{hook_group_id}/{hook_id}` ... ', nl=False)
             with click_spinner.spinner():
                 try:
                     hooks_tool.updateHook(hook_group_id, hook_id, hook)
@@ -510,7 +510,7 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                     output = str(e)
                     result = 1
         else:
-            click.echo(' => Creating hook `{}/{}` ... '.format(hook_group_id, hook_id), nl=False)
+            click.echo(f' => Creating hook `{hook_group_id}/{hook_id}` ... ', nl=False)
             with click_spinner.spinner():
                 try:
                     hooks_tool.createHook(hook_group_id, hook_id, hook)
@@ -639,7 +639,7 @@ def cmd_DOCKERHUB(ctx,
         # Put the hash to the end of the tag
         image_tag_versioned = '-'.join(reversed(tag_base.split('-', 1)))
         for tag in (image_tag_versioned, docker_stable_tag):
-            click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, tag), nl=False)
+            click.echo(f' => Uploading docker image `{docker_repo}:{tag}` ... ', nl=False)
             with click_spinner.spinner():
                 please_cli.utils.push_docker_image(
                     registry=docker_registry,

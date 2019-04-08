@@ -70,7 +70,7 @@ def cmd(ctx,
     run_options = project_config.get('run_options', {})
 
     if not run_type:
-        raise click.ClickException('Application `{}` is not configured to be runnable.'.format(project))
+        raise click.ClickException(f'Application `{project}` is not configured to be runnable.')
 
     host = run_options.get('host', os.environ.get('HOST', '127.0.0.1'))
     port = str(run_options.get('port', 8000))
@@ -93,7 +93,7 @@ def cmd(ctx,
 
         dbname = 'services'
 
-        click.echo(' => Checking if database `{}` exists ... '.format(dbname), nl=False)
+        click.echo(f' => Checking if database `{dbname}` exists ... ', nl=False)
         with click_spinner.spinner():
             result, output, error = ctx.invoke(
                 please_cli.shell.cmd,
@@ -127,7 +127,7 @@ def cmd(ctx,
                 break
 
         if not database_exists:
-            click.echo(' => Creating `{}` database ` ... '.format(dbname), nl=False)
+            click.echo(f' => Creating `{dbname}` database ` ... ', nl=False)
             with click_spinner.spinner():
                 result, output, error = ctx.invoke(
                     please_cli.shell.cmd,
@@ -142,9 +142,7 @@ def cmd(ctx,
                     )
             please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
-        os.environ['DATABASE_URL'] = 'postgresql://{}:{}/{}'.format(
-            pg_host, pg_port, dbname
-        )
+        os.environ['DATABASE_URL'] = f'postgresql://{pg_host}:{pg_port}/{dbname}'
 
     if 'redis' in project_config.get('requires', []):
 
@@ -155,24 +153,24 @@ def cmd(ctx,
                 please_cli.shell.cmd,
                 project=project,
                 quiet=True,
-                command='redis-cli -h {} -p {} ping'.format(redis_host, redis_port),
+                command=f'redis-cli -h {redis_host} -p {redis_port} ping',
                 nix_shell=nix_shell,
                 )
 
         please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
         # Setup config for client application
-        os.environ['REDIS_URL'] = 'redis://{}:{}'.format(redis_host, redis_port)
+        os.environ['REDIS_URL'] = f'redis://{redis_host}:{redis_port}'
 
     if run_type == 'POSTGRESQL':
         data_dir = run_options.get('data_dir', os.path.join(please_cli.config.TMP_DIR, 'postgresql'))
 
         if not os.path.isdir(data_dir):
-            click.echo(' => Initialize database folder `{}` ... '.format(data_dir), nl=False)
+            click.echo(f' => Initialize database folder `{data_dir}` ... ', nl=False)
             with click_spinner.spinner():
                 result, output, error = ctx.invoke(please_cli.shell.cmd,
                                                    project=project,
-                                                   command='initdb -D {} --auth=trust'.format(data_dir),
+                                                   command=f'initdb -D {data_dir} --auth=trust',
                                                    nix_shell=nix_shell,
                                                    )
             please_cli.utils.check_result(result, output, ask_for_details=interactive)
@@ -218,16 +216,16 @@ def cmd(ctx,
         os.environ['CACHE_DIR'] = project_cache_dir
         os.environ['APP_SETTINGS'] = os.path.join(
             please_cli.config.ROOT_DIR, 'src', project_name, 'settings.py')
-        os.environ['APP_URL'] = '{}{}:{}'.format(schema, host, port)
+        os.environ['APP_URL'] = f'{schema}{host}:{port}'
         os.environ['CORS_ORIGINS'] = '*'
 
         command = [
             'gunicorn',
             please_cli.utils.normalize_name(project_name) + '.flask:app',
-            '--bind', '{}:{}'.format(host, port),
-            '--ca-certs={}'.format(ca_cert_file),
-            '--certfile={}'.format(server_cert_file),
-            '--keyfile={}'.format(server_key_file),
+            '--bind', f'{host}:{port}',
+            f'--ca-certs={ca_cert_file}',
+            f'--certfile={server_cert_file}',
+            f'--keyfile={server_key_file}',
             '--workers', '2',
             '--timeout', '3600',
             '--reload',
@@ -319,7 +317,7 @@ def cmd(ctx,
 
         command = ['yarn', 'start']
 
-    click.echo(' => Running {} on {}{}:{} ...'.format(project, schema, host, port))
+    click.echo(f' => Running {project} on {schema}{host}:{port} ...')
     returncode, output, error = ctx.invoke(please_cli.shell.cmd,
                                            project=project,
                                            quiet=quiet,

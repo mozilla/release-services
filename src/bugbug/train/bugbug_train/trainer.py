@@ -7,8 +7,8 @@ from datetime import datetime
 from datetime import timedelta
 from urllib.request import urlretrieve
 
-from bugbug.models.bug import BugModel
 from bugbug.models.component import ComponentModel
+from bugbug.models.defect_enhancement_task import DefectEnhancementTaskModel
 from bugbug.models.regression import RegressionModel
 from bugbug.models.tracking import TrackingModel
 
@@ -24,7 +24,7 @@ class Trainer(object):
     def __init__(self, cache_root, client_id, access_token):
         self.cache_root = cache_root
 
-        assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
+        assert os.path.isdir(cache_root), f'Cache root {cache_root} is not a dir.'
 
         self.client_id = client_id
         self.access_token = access_token
@@ -32,20 +32,20 @@ class Trainer(object):
         self.index_service = get_service('index', client_id, access_token)
 
     def decompress_file(self, path):
-        with lzma.open('{}.xz'.format(path), 'rb') as input_f:
+        with lzma.open(f'{path}.xz', 'rb') as input_f:
             with open(path, 'wb') as output_f:
                 shutil.copyfileobj(input_f, output_f)
 
     def compress_file(self, path):
         with open(path, 'rb') as input_f:
-            with lzma.open('{}.xz'.format(path), 'wb') as output_f:
+            with lzma.open(f'{path}.xz', 'wb') as output_f:
                 shutil.copyfileobj(input_f, output_f)
 
-    def train_bug(self):
-        logger.info('Training *bug vs feature* model')
-        model = BugModel()
+    def train_defect_enhancement_task(self):
+        logger.info('Training *defect vs enhancement vs task* model')
+        model = DefectEnhancementTaskModel()
         model.train()
-        self.compress_file('bugmodel')
+        self.compress_file('defectenhancementtaskmodel')
 
     def train_component(self):
         logger.info('Training *component* model')
@@ -75,8 +75,8 @@ class Trainer(object):
             f2 = executor.submit(lambda: urlretrieve('https://index.taskcluster.net/v1/task/project.releng.services.project.testing.bugbug_data.latest/artifacts/public/commits.json.xz', 'data/commits.json.xz'))  # noqa
             f2.add_done_callback(lambda f: self.decompress_file('data/commits.json'))
 
-        # Train classifier for bug-vs-nonbug.
-        self.train_bug()
+        # Train classifier for defect-vs-enhancement-vs-task.
+        self.train_defect_enhancement_task()
 
         # Train classifier for the component of a bug.
         self.train_component()
@@ -89,7 +89,7 @@ class Trainer(object):
 
         # Index the task in the TaskCluster index.
         self.index_service.insertTask(
-            'project.releng.services.project.{}.bugbug_train.latest'.format(secrets[secrets.APP_CHANNEL]),
+            f'project.releng.services.project.{secrets[secrets.APP_CHANNEL]}.bugbug_train.latest',
             {
                 'taskId': os.environ['TASK_ID'],
                 'rank': 0,

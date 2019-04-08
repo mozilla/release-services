@@ -48,6 +48,7 @@ let
         ];
         deadline = "24 hours";
         maxRunTime = 24 * 60 * 60;
+        workerType = "releng-svc-compute";
         taskArtifacts = {
           "public/bugs.json.xz" = {
             type = "file";

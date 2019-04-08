@@ -85,7 +85,7 @@ def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT):
 
     # Setup papertrail
     papertrail = logbook.SyslogHandler(
-        application_name='mozilla/release-services/{}/{}'.format(channel, project_name),
+        application_name=f'mozilla/release-services/{channel}/{project_name}',
         address=(PAPERTRAIL_HOST, int(PAPERTRAIL_PORT)),
         format_string='{record.time} {record.channel}: {record.message}',
         bubble=True,
@@ -140,7 +140,7 @@ def init_logger(project_name,
         channel = os.environ.get('APP_CHANNEL')
 
     if channel and channel not in CHANNELS:
-        raise Exception('Initilizing logging with channel `{}`. It should be one of: {}'.format(channel, ', '.join(CHANNELS)))
+        raise Exception('Initializing logging with channel `{}`. It should be one of: {}'.format(channel, ', '.join(CHANNELS)))
 
     # By default output logs on stderr
     if handler is None:

@@ -431,6 +431,8 @@ in rec {
     }:
     let
 
+      module_name = mkProjectModuleName project_name;
+
       self = mkProject {
         # yarn2nix knows how to extract the name/version from package.json
         inherit src project_name version;
@@ -440,6 +442,11 @@ in rec {
         doCheck = true;
 
         extraBuildInputs = extraBuildInputs;
+
+        preConfigure = ''
+          export HOME=$TMPDIR/${module_name}-$RANDOM
+          mkdir $HOME
+        '';
 
         checkPhase = ''
           yarn lint
@@ -889,12 +896,26 @@ in rec {
 
         inherit src;
 
+        checkInputs =
+          [ makeWrapper
+            glibcLocales
+          ] ++ buildInputs ++ propagatedBuildInputs;
+
         buildInputs =
           [ makeWrapper
             glibcLocales
-          ] ++ buildInputs;
+          ] ++ buildInputs ++ propagatedBuildInputs;
+
+        nativeBuildInputs =
+          [ makeWrapper
+            glibcLocales
+          ] ++ buildInputs ++ propagatedBuildInputs;
 
         propagatedBuildInputs =
+          [ releng_pkgs.pkgs.cacert
+          ] ++ propagatedBuildInputs;
+
+        nativePropagatedBuildInputs =
           [ releng_pkgs.pkgs.cacert
           ] ++ propagatedBuildInputs;
 

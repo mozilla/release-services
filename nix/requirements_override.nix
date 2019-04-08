@@ -49,11 +49,24 @@ in skipOverrides {
       ];
   };
 
+  "bugbug" = self: old: {
+    patchPhase = ''
+      sed -i 's/python-dateutil==2.8.0/python-dateutil/' requirements.txt
+      sed -i 's/spacy==2.1.3/spacy==2.0.18/' requirements.txt
+    '';
+  };
+
   "cryptography" = self: old: {
     propagatedBuildInputs =
       builtins.filter
         (x: ! (pkgs.lib.hasSuffix "-flake8" (builtins.parseDrvName x.name).name))
         old.propagatedBuildInputs;
+  };
+
+  "cymem" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['wheel>=0.32.0,<0.33.0'\],|setup_requires=\['wheel'\],|" setup.py
+    '';
   };
 
   "en-core-web-sm" = self: old: {
@@ -63,6 +76,12 @@ in skipOverrides {
         old.propagatedBuildInputs;
     patchPhase = ''
       sed -i -e "s|return requirements|return []|" setup.py
+    '';
+  };
+
+  "murmurhash" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['wheel>=0.32.0,<0.33.0'\],|setup_requires=\['wheel'\],|" setup.py
     '';
   };
 
@@ -87,8 +106,18 @@ in skipOverrides {
     buildInputs = old.buildInputs ++ [ self."setuptools-scm" ];
   };
 
+  "preshed" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['wheel>=0.32.0,<0.33.0'\],|setup_requires=\['wheel'\],|" setup.py
+    '';
+  };
+
   "pytest" = self: old: {
     buildInputs = old.buildInputs ++ [ self."setuptools-scm" ];
+  };
+
+  "scikit-image" = self: old: {
+    buildInputs = old.buildInputs ++ [ self."Cython" ];
   };
 
   "scipy" = self: old: {
@@ -112,21 +141,22 @@ in skipOverrides {
     };
   };
 
-  "scikit-image" = self: old: {
-    buildInputs = old.buildInputs ++ [ self."Cython" ];
-  };
-
-  "bugbug" = self: old: {
+  "spacy" = self: old: {
     patchPhase = ''
-      sed -i 's/python-dateutil==2.8.0/python-dateutil/' requirements.txt
-      sed -i 's/spacy==2.1.3/spacy==2.0.18/' requirements.txt
+      sed -i -e "s|setup_requires=\['wheel>=0.32.0,<0.33.0'\],|setup_requires=\['wheel'\],|" setup.py
     '';
   };
-
   "taskcluster-urls" = self: old: {
     patchPhase = ''
       # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37
       sed -i -e "s|/api/|/|" taskcluster_urls/__init__.py
     '';
   };
+
+  "thinc" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\[\"wheel>=0.32.0,<0.33.0\"\],|setup_requires=\['wheel'\],|" setup.py
+    '';
+  };
+
 }

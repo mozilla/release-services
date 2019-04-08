@@ -24,7 +24,7 @@ class Retriever(object):
     def __init__(self, cache_root, client_id, access_token):
         self.cache_root = cache_root
 
-        assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
+        assert os.path.isdir(cache_root), f'Cache root {cache_root} is not a dir.'
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
         self.client_id = client_id
@@ -84,7 +84,7 @@ class Retriever(object):
 
     def compress_file(self, path):
         with open(path, 'rb') as input_f:
-            with lzma.open('{}.xz'.format(path), 'wb') as output_f:
+            with lzma.open(f'{path}.xz', 'wb') as output_f:
                 shutil.copyfileobj(input_f, output_f)
 
     def go(self):
@@ -97,7 +97,7 @@ class Retriever(object):
 
         # Index the task in the TaskCluster index.
         self.index_service.insertTask(
-            'project.releng.services.project.{}.bugbug_data.latest'.format(secrets[secrets.APP_CHANNEL]),
+            f'project.releng.services.project.{secrets[secrets.APP_CHANNEL]}.bugbug_data.latest',
             {
                 'taskId': os.environ['TASK_ID'],
                 'rank': 0,

@@ -44,10 +44,13 @@ let
 in pkgs.recurseIntoAttrs (pkgs.lib.fix (self:
   let
     callPackage = pkgs.newScope self;
+    fetchcargo = callPackage "${pkgs.path}/pkgs/build-support/rust/fetchcargo.nix" {
+      cargo = rust.cargo;
+    };
   in {
       inherit rust rustRegistry;
       buildRustPackage = callPackage "${pkgs.path}/pkgs/build-support/rust" {
-        inherit rust;
+        inherit fetchcargo;
       };
     }
 ))
