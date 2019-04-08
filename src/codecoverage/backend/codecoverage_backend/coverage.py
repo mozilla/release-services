@@ -22,7 +22,7 @@ changeset_cache = LRUCache(maxsize=MAX_CHANGESETS)
 
 
 async def get_pushes(push_id):
-    async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(push_id - 1, push_id + 7)) as r:  # noqa
+    async with aiohttp.request('GET', f'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID={push_id - 1}&endID={push_id + 7}') as r:  # noqa
         data = await r.json()
 
     for pushid, pushdata in data['pushes'].items():
@@ -58,7 +58,7 @@ async def get_pushes_changesets(push_id, push_id_end):
 
 async def get_changeset_data(changeset):
     if changeset[:12] not in changeset_cache:
-        async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset)) as r:
+        async with aiohttp.request('GET', f'https://hg.mozilla.org/mozilla-central/json-rev/{changeset}') as r:
             rev = await r.json()
 
         push_id = int(rev['pushid'])

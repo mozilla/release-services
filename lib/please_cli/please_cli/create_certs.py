@@ -134,7 +134,7 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
     with open(openssl_config, 'r') as f:
         openssl_config_content = f.read()
     with open(server_cnf_file, 'w+') as f:
-        f.write('{}\n[SAN]\nsubjectAltName=DNS:localhost,DNS:127.0.0.1'.format(openssl_config_content))
+        f.write(f'{openssl_config_content}\n[SAN]\nsubjectAltName=DNS:localhost,DNS:127.0.0.1')
     please_cli.utils.check_result(0, '', ask_for_details=interactive)
 
     click.echo(' => Building backend csr certificate with mandatory subjectAltName ... ', nl=False)

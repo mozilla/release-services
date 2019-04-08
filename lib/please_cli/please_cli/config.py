@@ -51,9 +51,8 @@ OPENSSL_ETC_DIR = os.environ.get('OPENSSL_ETC_DIR', '')  # must end with /
 POSTGRESQL_BIN_DIR = os.environ.get('POSTGRESQL_BIN_DIR', '')  # must end with /
 
 IN_DOCKER = False
-if os.path.exists('/proc/1/cgroup'):
-    with open('/proc/1/cgroup', 'rt') as ifh:
-        IN_DOCKER = 'docker' in ifh.read()
+with open('/proc/1/cgroup', 'rt') as ifh:
+    IN_DOCKER = 'docker' in ifh.read()
 
 TEMPLATES = {
     'backend-json-api': {}
@@ -852,19 +851,25 @@ PROJECTS_CONFIG = {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-testing-pulse-listener',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://eventlistener.testing.moz.tools',
+                        'dns': 'adjacent-shelf-2mxct7inb0tl5tg1rwt73ev4.herokudns.com',
                     },
                     'staging': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-staging-pulse-listener',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://eventlistener.staging.moz.tools',
+                        'dns': 'immense-refuge-f4ii4ur88iq0x707ybzq5mfn.herokudns.com',
                     },
                     'production': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-production-pulse-listen',
-                        'heroku_dyno_type': 'worker',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://eventlistener.moz.tools',
+                        'dns': 'convex-woodland-ilwk96s11s92e5otfkmb5ybe.herokudns.com',
                     },
                 },
             },
@@ -876,21 +881,21 @@ PROJECTS_CONFIG = {
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'pulselistener-testing',
+                        'docker_stable_tag': 'eventlistener-testing',
                     },
                     'staging': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'pulselistener-staging',
+                        'docker_stable_tag': 'eventlistener-staging',
                     },
                     'production': {
                         'enable': True,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'pulselistener-production',
+                        'docker_stable_tag': 'eventlistener-production',
                     },
                 },
             },

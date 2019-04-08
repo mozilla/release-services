@@ -25,7 +25,7 @@ class Evaluator(object):
     def __init__(self, cache_root, client_id, access_token):
         self.cache_root = cache_root
 
-        assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
+        assert os.path.isdir(cache_root), f'Cache root {cache_root} is not a dir.'
 
         self.client_id = client_id
         self.access_token = access_token
@@ -33,7 +33,7 @@ class Evaluator(object):
         self.index_service = get_service('index', client_id, access_token)
 
     def decompress_file(self, path):
-        with lzma.open('{}.xz'.format(path), 'rb') as input_f:
+        with lzma.open(f'{path}.xz', 'rb') as input_f:
             with open(path, 'wb') as output_f:
                 shutil.copyfileobj(input_f, output_f)
 
@@ -126,7 +126,7 @@ class Evaluator(object):
 
         # Index the task in the TaskCluster index.
         self.index_service.insertTask(
-            'project.releng.services.project.{}.bugbug_eval.latest'.format(secrets[secrets.APP_CHANNEL]),
+            f'project.releng.services.project.{secrets[secrets.APP_CHANNEL]}.bugbug_eval.latest',
             {
                 'taskId': os.environ['TASK_ID'],
                 'rank': 0,

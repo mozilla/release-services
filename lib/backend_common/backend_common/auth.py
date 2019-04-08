@@ -111,7 +111,7 @@ class TaskclusterUser(BaseUser):
 
         self.credentials = credentials
 
-        logger.info('Init user {}'.format(self.get_id()))
+        logger.info(f'Init user {self.get_id()}')
 
     def get_id(self):
         return self.credentials['clientId']
@@ -186,9 +186,9 @@ class RelengapiTokenUser(BaseUser):
     def get_id(self):
         parts = ['token', self.claims['typ']]
         if 'jti' in self.claims:
-            parts.append('id={}'.format(self.claims['jti']))
+            parts.append(f'id={self.claims["jti"]}')
         try:
-            parts.append('user={}'.format(self.authenticated_email))
+            parts.append(f'user={self.authenticated_email}')
         except AttributeError:
             pass
         return ':'.join(parts)
@@ -213,7 +213,7 @@ class Auth(object):
             try:
                 return flask_login.current_user.is_authenticated
             except Exception as e:
-                logger.error('Invalid authentication: {}'.format(e))
+                logger.error(f'Invalid authentication: {e}')
                 return False
 
     def require_login(self, method):
@@ -414,8 +414,8 @@ def parse_header_taskcluster(request):
         if not resp.get('status') == 'auth-success':
             raise Exception('Taskcluster rejected the authentication')
     except Exception as e:
-        logger.error('TC auth error: {}'.format(e))
-        logger.error('TC auth details: {}'.format(payload))
+        logger.error(f'TC auth error: {e}')
+        logger.error(f'TC auth details: {payload}')
         return NO_AUTH
 
     return TaskclusterUser(resp)

@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -C /app/src/bugbug/data/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E blas -E gfortran -E libffi -E openssl -E pkgconfig -E freetype.dev -E libjpeg.dev -E hdf5 -s numpy -s flit -s intreehooks -s cython -s pkgconfig -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -C /app/src/bugbug/train/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -E blas -E gfortran -E libffi -E openssl -E pkgconfig -E freetype.dev -E libjpeg.dev -E hdf5 -s numpy -s flit -s intreehooks -s cython -s pkgconfig -e pytest-runner -e setuptools-scm -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -75,7 +75,7 @@ let
       __old = pythonPackages;
       inherit interpreter;
       inherit interpreterWithPackages;
-      mkDerivation = pythonPackages.buildPythonPackage;
+      mkDerivation = args: pythonPackages.buildPythonPackage (args // { nativeBuildInputs = args.buildInputs; });
       packages = pkgs;
       overrideDerivation = drv: f:
         pythonPackages.buildPythonPackage (
@@ -489,10 +489,10 @@ let
     };
 
     "bugbug" = python.mkDerivation {
-      name = "bugbug-0.0.4";
+      name = "bugbug-0.0.13";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/9a/85/a44b33e214e118d860b506e5a737cc830cd91afbd59b714e5ff4414b7015/bugbug-0.0.4.tar.gz";
-        sha256 = "f1971d0670d8698b4b43aa20a4d91aed0012f4a847cd9f29a98194590bae8c8b";
+        url = "https://files.pythonhosted.org/packages/e8/d8/f60e0a5381fb207b017fadba68b2b1dba18690016cfa53d62cc2a27f2a12/bugbug-0.0.13.tar.gz";
+        sha256 = "a932b9cf8dc51acb342f44adb0ab31f588b5afc73424031ae41177c9f70d3f2d";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1448,10 +1448,10 @@ let
     };
 
     "libmozdata" = python.mkDerivation {
-      name = "libmozdata-0.1.50";
+      name = "libmozdata-0.1.52";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/eb/d2/c98b9140e523df31e2d17e0d708782217123861d2b5099001098b9b6daaa/libmozdata-0.1.50.tar.gz";
-        sha256 = "3977e48c75ebc161e5febaf5855555f4fa2466fcd54f13ed2f544e86b5fc60d9";
+        url = "https://files.pythonhosted.org/packages/21/ba/66b76c5dc78c6093d634942232227047d6c01f42b9777c6188a9d7d17a13/libmozdata-0.1.52.tar.gz";
+        sha256 = "de2ef285980129f5f8720cf7793c5162e89cc908fed82c80276fd7ff0344374b";
       };
       doCheck = commonDoCheck;
       checkPhase = "";

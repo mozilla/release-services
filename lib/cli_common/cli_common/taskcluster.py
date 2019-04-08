@@ -12,7 +12,6 @@ import re
 import click
 import requests
 import taskcluster
-import taskcluster.aio
 
 from cli_common.log import get_logger
 
@@ -72,7 +71,8 @@ def get_options(client_id=None, access_token=None):
 
         # Load secrets from TC task context
         # with taskclusterProxy
-        root_url = 'http://{}'.format(hosts['taskcluster'])
+        root_url = f"http://{hosts['taskcluster']}"
+
         logger.info('Taskcluster Proxy enabled', url=root_url)
         tc_options = {
             'rootUrl': root_url
@@ -83,7 +83,7 @@ def get_options(client_id=None, access_token=None):
     return tc_options
 
 
-def get_service(service_name, client_id=None, access_token=None, _async=False):
+def get_service(service_name, client_id=None, access_token=None):
     '''
     Build a Taskcluster service instance from the environment
     Supports:
@@ -93,7 +93,7 @@ def get_service(service_name, client_id=None, access_token=None, _async=False):
      * taskclusterProxy
     '''
     if service_name not in TASKCLUSTER_SERVICES:
-        raise Exception('Service `{}` does not exists.'.format(service_name))
+        raise Exception(f'Service `{service_name}` does not exists.')
 
     # Credentials preference: Use click variables
     if client_id is None and access_token is None:
@@ -111,10 +111,7 @@ def get_service(service_name, client_id=None, access_token=None, _async=False):
 
     # Instanciate service
     options = get_options(client_id, access_token)
-    if _async:
-        return getattr(taskcluster.aio, service_name.capitalize())(options)
-    else:
-        return getattr(taskcluster, service_name.capitalize())(options)
+    return getattr(taskcluster, service_name.capitalize())(options)
 
 
 def get_secrets(name,
@@ -156,7 +153,7 @@ def get_secrets(name,
 
     for required_secret in required:
         if required_secret not in secrets:
-            raise Exception('Missing value {} in secrets.'.format(required_secret))
+            raise Exception(f'Missing value {required_secret} in secrets.')
 
     return secrets
 
@@ -179,7 +176,7 @@ def get_hook_artifact(hook_group_id, hook_id, artifact_name, client_id=None,
     queue = get_service('queue', client_id, access_token)
     task_status = queue.status(task_id)
     if task_status['status']['state'] != 'completed':
-        raise Exception('Task {} is not completed'.format(task_id))
+        raise Exception(f'Task {task_id} is not completed')
     run_id = None
     for run in task_status['status']['runs']:
         if run['state'] == 'completed':

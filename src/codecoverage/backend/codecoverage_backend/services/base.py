@@ -34,13 +34,13 @@ class CoverageException(Exception):
 
 @alru_cache(maxsize=2048)
 async def get_github_commit(mercurial_commit):
-    async with aiohttp.request('GET', '{}/gecko-dev/rev/hg/{}'.format(secrets.HG_GIT_MAPPER, mercurial_commit)) as r:
+    async with aiohttp.request('GET', f'{secrets.HG_GIT_MAPPER}/gecko-dev/rev/hg/{mercurial_commit}') as r:
         text = await r.text()
         return text.split(' ')[0]
 
 
 @alru_cache(maxsize=2048)
 async def get_mercurial_commit(github_commit):
-    async with aiohttp.request('GET', '{}/gecko-dev/rev/git/{}'.format(secrets.HG_GIT_MAPPER, github_commit)) as r:
+    async with aiohttp.request('GET', f'{secrets.HG_GIT_MAPPER}/gecko-dev/rev/git/{github_commit}') as r:
         text = await r.text()
         return text.split(' ')[1]

@@ -173,7 +173,7 @@ def cmd():
                             alias = 'shipit.' + channel
                     else:
                         alias = project_name.lstrip('releng-').lstrip('shipit-')
-                        alias = '{}.{}'.format(alias, channel)
+                        alias = f'{alias}.{channel}'
                         if channel == 'production':
                             alias = alias.rstrip('.production')
 

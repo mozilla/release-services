@@ -107,7 +107,7 @@ def update_bug(bugzilla_id):
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
     except NoResultFound:
-        raise Exception('Missing bug {}'.format(bugzilla_id))
+        raise Exception(f'Missing bug {bugzilla_id}')
 
     # Browse changes
     payload = bug.payload_data
@@ -155,7 +155,7 @@ def update_bug(bugzilla_id):
                 # From 'approval-mozilla-beta+' to
                 # ('beta +', 'approval-mozilla-beta', '+')
                 assert fullkey.startswith('approval-mozilla-'), \
-                    '{} is not approval-mozilla-XXX'.format(fullkey)
+                    f'{fullkey} is not approval-mozilla-XXX'
                 out = fullkey[17:]
                 return out[:-1] + ' ' + out[-1], fullkey[:-1], fullkey[-1]
 
@@ -173,7 +173,7 @@ def update_bug(bugzilla_id):
                     del versions[before]
 
         else:
-            raise Exception('Invalid update target {}'.format(update['target']))  # noqa
+            raise Exception(f'Invalid update target {update["target"]}')  # noqa
 
     # Save changes
     bug.payload = pickle.dumps(payload, 2)
@@ -275,7 +275,7 @@ def delete_bug(bugzilla_id):
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
     except NoResultFound:
-        logger.warn('Missing bug {}'.format(bugzilla_id))
+        logger.warn(f'Missing bug {bugzilla_id}')
         abort(404)
 
     bug.delete()
@@ -290,7 +290,7 @@ def update_contributor(contributor_id):
     try:
         contributor = Contributor.query.filter_by(id=contributor_id).one()
     except NoResultFound:
-        logger.warn('Missing contributor {}'.format(contributor_id))
+        logger.warn(f'Missing contributor {contributor_id}')
         abort(404)
 
     # Update karma & comment
@@ -331,7 +331,7 @@ def create_patch_status(bugzilla_id):
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
     except NoResultFound:
-        logger.warn('Missing bug {}'.format(bugzilla_id))
+        logger.warn(f'Missing bug {bugzilla_id}')
         abort(404)
 
     try:

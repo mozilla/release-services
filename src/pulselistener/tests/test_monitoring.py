@@ -245,3 +245,29 @@ async def test_monitoring_retry_exceptions(QueueMock, NotifyMock):
     assert monitoring.stats['Hook2']['exception'] == ['Task-exception-retry:0']
     assert len(monitoring.queue.created_tasks) == 1
     assert monitoring.tasks.qsize() == 1
+
+
+@pytest.mark.asyncio
+async def test_monitoring_restartable(QueueMock, IndexMock):
+    monitoring = Monitoring(1)
+
+    monitoring.index = IndexMock
+    monitoring.queue = QueueMock
+
+    # Check a failed task is restartable
+    # when the monitoring flag is set
+    assert monitoring.is_restartable('Task-failed-restart')
+
+    # Check a failed task is not restartable
+    # when the monitoring flag is not set
+    assert not monitoring.is_restartable('Task-failed-nope')
+
+    # Check a completed task is not restartable
+    assert not monitoring.is_restartable('Task-completed-restart')
+    assert not monitoring.is_restartable('Task-completed-nope')
+
+    # Check a failed task is restarted by the monitoring flow
+    assert len(monitoring.queue.created_tasks) == 0
+    await monitoring.add_task('Group', 'Hook-staticanalysis/bot', 'Task-failed-restart')
+    await monitoring.check_task()
+    assert len(monitoring.queue.created_tasks) == 1

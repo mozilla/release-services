@@ -1,7 +1,7 @@
 {
   "owner": "NixOS",
   "repo": "nixpkgs-channels",
-  "rev": "80738ed9dc0ce48d7796baed5364eef8072c794d",
-  "sha256": "0anmvr6b47gbbyl9v2fn86mfkcwgpbd5lf0yf3drgm8pbv57c1dc",
-  "sha256_tarball": "36755e283e6fb38990e24afa3b2826160e29ff604efb5305eb419f410e6cd1df"
+  "rev": "07b42ccf2de451342982b550657636d891c4ba35",
+  "sha256": "1a7ga18pwq0y4p9r787622ry8gssw1p6wsr5l7dl8pqnj1hbbzwh",
+  "sha256_tarball": "43bf66bb2cc0fea3bda9b61804489063935a3fff283e6ce6f13a35619e7d84df"
 }
