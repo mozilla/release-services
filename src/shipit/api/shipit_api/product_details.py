@@ -559,6 +559,7 @@ def get_release_history(breakpoint_version: int,
                                                 )
 
     # Sort the releases in their chronological order
+    # TODO: the consumers should not rely on this order, see bug 1541636
     ordered_history = collections.OrderedDict(sorted(history.items(), key=lambda x: x[1]))
     return ordered_history
 
@@ -566,9 +567,7 @@ def get_release_history(breakpoint_version: int,
 def get_primary_builds(breakpoint_version: int,
                        product: Product,
                        releases: typing.List[shipit_api.models.Release],
-                       nightly_builds: typing.List[shipit_api.models.Release],
                        releases_l10n: typing.Dict[shipit_api.models.Release, ReleaseL10ns],
-                       nightly_l10n: typing.Dict[shipit_api.models.Release, ReleaseL10ns],
                        old_product_details: ProductDetails) -> PrimaryBuilds:
     '''This file contains all the Thunderbird builds we provide per locale. The
        filesize fields have the same value for all lcoales, this is not a bug,
@@ -618,15 +617,13 @@ def get_primary_builds(breakpoint_version: int,
 
     builds: PrimaryBuilds = dict()
 
-    combined_l10n = releases_l10n.copy()
-    combined_l10n.update(nightly_l10n)
-    for release in releases + nightly_builds:
+    for release in releases:
         # Skip other products and older versions
         if product is not Product(release.product) or \
            release.version not in versions:
             continue
         # Make sure to add en-US, it's not listed in the l10n changesets file
-        for l10n in list(combined_l10n.get(release, {}).keys()) + ['en-US']:
+        for l10n in list(releases_l10n.get(release, {}).keys()) + ['en-US']:
             # for compatibility with shipit v1, skip ja-JP-mac
             if l10n == 'ja-JP-mac':
                 continue
@@ -1233,6 +1230,10 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         if changeset is not None
     }
 
+    combined_releases = releases + nightly_builds
+    combined_l10n = releases_l10n.copy()
+    combined_l10n.update(nightly_l10n)
+
     # combine old and new data
     product_details: ProductDetails = {
         'all.json': get_releases(breakpoint_version,
@@ -1270,10 +1271,8 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                                                                        ),
         'firefox_primary_builds.json': get_primary_builds(breakpoint_version,
                                                           Product.FIREFOX,
-                                                          releases,
-                                                          nightly_builds,
-                                                          releases_l10n,
-                                                          nightly_l10n,
+                                                          combined_releases,
+                                                          combined_l10n,
                                                           old_product_details,
                                                           ),
         'firefox_versions.json': get_firefox_versions(releases),
@@ -1329,10 +1328,8 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                                                                            ),
         'thunderbird_primary_builds.json': get_primary_builds(breakpoint_version,
                                                               Product.THUNDERBIRD,
-                                                              releases,
-                                                              nightly_builds,
-                                                              releases_l10n,
-                                                              nightly_l10n,
+                                                              combined_releases,
+                                                              combined_l10n,
                                                               old_product_details,
                                                               ),
         'thunderbird_versions.json': get_thunderbird_versions(releases),
