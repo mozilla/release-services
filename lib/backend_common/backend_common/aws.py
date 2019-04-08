@@ -75,7 +75,7 @@ class AWS(object):
         sqs = self.connect_to('sqs', region_name)
         queue = sqs.get_queue(queue_name)
         if not queue:
-            raise RuntimeError('no such queue {} in {}'.format(repr(queue_name), str(region_name)))
+            raise RuntimeError(f'no such queue {repr(queue_name)} in {str(region_name)}')
         self._queues[key] = queue
         return queue
 

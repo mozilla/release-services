@@ -149,7 +149,7 @@ class PhabricatorAPI(object):
 
         # Test authentication
         self.user = self.request('user.whoami')
-        logger.info('Authenticated on {} as {}'.format(self.url, self.user['realName']))
+        logger.info(f"Authenticated on {self.url} as {self.user['realName']}")
 
     @property
     def hostname(self):
@@ -569,7 +569,7 @@ class PhabricatorAPI(object):
                 clean=True,
             )
         except hglib.error.CommandError:
-            raise Exception('Failed to update to revision {}'.format(hg_base))
+            raise Exception(f'Failed to update to revision {hg_base}')
 
         # Get current revision using full informations tuple from hglib
         revision = repo.identify(id=True).strip()

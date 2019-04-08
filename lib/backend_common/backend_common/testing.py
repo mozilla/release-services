@@ -102,7 +102,7 @@ def parse_header(header):
     parts = dict(parts)
     for k in ('id', 'mac', 'ts', 'nonce'):
         if k not in parts:
-            raise Exception('Missing header part {}'.format(k))
+            raise Exception(f'Missing header part {k}')
 
     # TODO: check mac
 

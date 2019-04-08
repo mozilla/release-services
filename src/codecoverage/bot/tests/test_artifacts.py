@@ -154,7 +154,7 @@ def _group_tasks():
 
 @responses.activate
 def test_download_all(LINUX_TASK_ID, LINUX_TASK, GROUP_TASKS_1, GROUP_TASKS_2, FAKE_ARTIFACTS_DIR):
-    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}'.format(LINUX_TASK_ID), json=LINUX_TASK, status=200)
+    responses.add(responses.GET, f'https://queue.taskcluster.net/v1/task/{LINUX_TASK_ID}', json=LINUX_TASK, status=200)
     for group_tasks in _group_tasks():
         responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/aPt9FbIdQwmhwDIPDYLuaw/list', json=group_tasks, status=200)
 

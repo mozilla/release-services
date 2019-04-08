@@ -32,7 +32,7 @@ async def generate(changeset):
         coverage_future = coverage_service.get_file_coverage(build_changeset, path)
 
         # Retrieve annotate data.
-        async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-annotate/{}/{}'.format(build_changeset, path)) as r:
+        async with aiohttp.request('GET', f'https://hg.mozilla.org/mozilla-central/json-annotate/{build_changeset}/{path}') as r:
             annotate_future = r.json()
 
             # Use hg annotate to report lines in their correct positions and to avoid

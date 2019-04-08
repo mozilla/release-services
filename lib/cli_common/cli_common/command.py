@@ -93,16 +93,14 @@ def run_check(command, **kwargs):
     if returncode != 0:
         secrets = kwargs.get('secrets', [])
         log.info(
-            'Command failed with code: {}'.format(returncode),
+            f'Command failed with code: {returncode}',
             command=hide_secrets(command_as_string, secrets),
             output=hide_secrets(output, secrets),
             error=hide_secrets(error, secrets),
         )
         raise click.ClickException(hide_secrets(
-            '`{}` failed with code: {}.'.format(
-                command[0],
-                returncode,
-            ), secrets)
+            f'`{command[0]}` failed with code: {returncode}.',
+            secrets)
         )
 
     return output

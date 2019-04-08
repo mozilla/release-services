@@ -25,7 +25,7 @@ def join_requirements(list1, list2):
     for package, package_extra in packages.items():
         package_extra = ','.join(list(set(package_extra)))
         if package_extra:
-            package_extra = '[{}]'.format(package_extra)
+            package_extra = f'[{package_extra}]'
         joined.append(package + package_extra)
 
     return list(set(joined))

@@ -71,7 +71,7 @@ def create_app(
             pass
 
         if extension_init_app is None:
-            raise Exception('Could not import backend_common extension: {}'.format(extension_name))
+            raise Exception(f'Could not import backend_common extension: {extension_name}')
 
         extension = extension_init_app(app)
         if extension and extension_name is not None:

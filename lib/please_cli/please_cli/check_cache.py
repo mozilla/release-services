@@ -85,7 +85,7 @@ def cmd(project,
     for nix_path_attribute in nix_path_attributes:
         project_exists = False
 
-        click.echo('{} => Calculating `{}` hash ... '.format(indent, nix_path_attribute), nl=False)
+        click.echo(f'{indent} => Calculating `{nix_path_attribute}` hash ... ', nl=False)
         command = [
             nix_instantiate,
             os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
@@ -112,9 +112,9 @@ def cmd(project,
         except Exception as e:
             log.exception(e)
             raise click.ClickException('Something went wrong when reading derivation file for `{}` project.'.format(nix_path_attribute))
-        click.echo('{} found.'.format(channel_derivations[nix_path_attribute].nix_hash))
+        click.echo(f'{channel_derivations[nix_path_attribute].nix_hash} found.')
 
-        click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, nix_path_attribute), nl=False)
+        click.echo(f'{indent} => Checking cache if build artifacts exists for `{nix_path_attribute}` ... ', nl=False)
         with click_spinner.spinner():
             project_exists = False
             for cache_url in cache_urls:

@@ -13,13 +13,13 @@ from code_coverage_bot import taskcluster
 
 @responses.activate
 def test_get_task_status(LINUX_TASK_ID, LINUX_TASK_STATUS):
-    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}/status'.format(LINUX_TASK_ID), json=LINUX_TASK_STATUS, status=200)
+    responses.add(responses.GET, f'https://queue.taskcluster.net/v1/task/{LINUX_TASK_ID}/status', json=LINUX_TASK_STATUS, status=200)
     assert taskcluster.get_task_status(LINUX_TASK_ID) == LINUX_TASK_STATUS
 
 
 @responses.activate
 def test_get_task_details(LINUX_TASK_ID, LINUX_TASK):
-    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}'.format(LINUX_TASK_ID), json=LINUX_TASK, status=200)
+    responses.add(responses.GET, f'https://queue.taskcluster.net/v1/task/{LINUX_TASK_ID}', json=LINUX_TASK, status=200)
     assert taskcluster.get_task_details(LINUX_TASK_ID) == LINUX_TASK
 
 
@@ -51,7 +51,7 @@ def test_get_task_failure(TASK_NOT_FOUND):
 
 @responses.activate
 def test_get_task_artifacts(LINUX_TASK_ID, LINUX_TASK_ARTIFACTS):
-    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}/artifacts'.format(LINUX_TASK_ID), json=LINUX_TASK_ARTIFACTS, status=200)
+    responses.add(responses.GET, f'https://queue.taskcluster.net/v1/task/{LINUX_TASK_ID}/artifacts', json=LINUX_TASK_ARTIFACTS, status=200)
     assert taskcluster.get_task_artifacts(LINUX_TASK_ID) == LINUX_TASK_ARTIFACTS['artifacts']
 
 
