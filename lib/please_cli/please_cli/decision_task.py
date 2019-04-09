@@ -496,7 +496,7 @@ async def get_projects_hashes(nix_instantiate: str,
                               projects: Projects,
                               ) -> NixHashes:
     # this limits nix calls allowed to make at the same time
-    semaphore = asyncio.Semaphore(value=multiprocessing.cpu_count())
+    semaphore = asyncio.Semaphore(value=multiprocessing.cpu_count() + 1)
 
     nix_hashes = []
     tasks = [
