@@ -10,7 +10,6 @@ import cli_common.log
 import please_cli.base_image
 import please_cli.build
 import please_cli.check
-import please_cli.check_cache
 import please_cli.create
 import please_cli.create_certs
 import please_cli.decision_task
@@ -24,7 +23,6 @@ import please_cli.signin
 import please_cli.terraform_route53_config
 import please_cli.update_dependencies
 import please_cli.utils
-
 
 CMD_HELP = '''
 
@@ -117,7 +115,6 @@ cmd_tools.add_command(please_cli.base_image.push, 'push-base-image')
 cmd_tools.add_command(please_cli.build.cmd, 'build')
 cmd_tools.add_command(please_cli.build.cmd_docker, 'docker')
 cmd_tools.add_command(please_cli.shell.cmd_docker_shell, 'docker-shell')
-cmd_tools.add_command(please_cli.check_cache.cmd, 'check-cache')
 cmd_tools.add_command(please_cli.create_certs.cmd, 'create-certs')
 cmd_tools.add_command(please_cli.decision_task.cmd, 'decision-task')
 cmd_tools.add_command(please_cli.deploy.cmd_HEROKU, 'deploy:HEROKU')

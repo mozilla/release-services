@@ -42,7 +42,7 @@ def check_result(returncode, output='', success_message='DONE',
             if show_details:
                 click.echo_via_pager(output)
         elif show_details and output:
-                click.echo(output)
+            click.echo(output)
 
         if raise_exception:
             raise click.ClickException(
