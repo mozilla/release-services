@@ -479,7 +479,6 @@ async def get_projects_hash(semaphore: asyncio.Semaphore,
         code, output, error = await run([nix_instantiate, default_nix, '-A', nix_path],
                                         stream=True,
                                         )
-        click.echo(f'got results for {nix_path}')
     try:
         drv_path = output.split('\n')[-1].strip()
         with open(drv_path) as f:
@@ -496,7 +495,7 @@ async def get_projects_hashes(nix_instantiate: str,
                               projects: Projects,
                               ) -> NixHashes:
     # this limits nix calls allowed to make at the same time
-    semaphore = asyncio.Semaphore(value=multiprocessing.cpu_count() + 1)
+    semaphore = asyncio.Semaphore(value=multiprocessing.cpu_count())
 
     nix_hashes = []
     tasks = [
