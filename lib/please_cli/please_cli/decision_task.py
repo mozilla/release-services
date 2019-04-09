@@ -427,8 +427,7 @@ async def run(_command: typing.Union[str, typing.List[str]],
     return process.returncode, output, error
 
 
-async def check_in_nix_cache(semaphore: asyncio.Semaphore,
-                             session: aiohttp.ClientSession,
+async def check_in_nix_cache(session: aiohttp.ClientSession,
                              nix_path: NixPath,
                              nix_hash: NixHash,
                              ) -> typing.Tuple[NixPath, bool]:
@@ -436,10 +435,9 @@ async def check_in_nix_cache(semaphore: asyncio.Semaphore,
     for cache_url in please_cli.config.CACHE_URLS:
         try:
             url = f'{cache_url}/{nix_hash}.narinfo'
-            async with semaphore:
-                async with session.get(url) as resp:
-                    exists = resp.status == 200
-                    break
+            async with session.get(url) as resp:
+                exists = resp.status == 200
+                break
         except Exception:
             exists = False
 
@@ -523,12 +521,9 @@ async def get_projects_to_build(session: aiohttp.ClientSession,
                                 nix_hashes: NixHashes
                                 ) -> typing.List[str]:
 
-    # how many concurrent requests to sent
-    semaphore = asyncio.Semaphore(value=100)
-
     project_to_build: typing.Dict[str, bool] = dict()
     tasks = [
-        check_in_nix_cache(semaphore, session, nix_path, nix_hash)
+        check_in_nix_cache(session, nix_path, nix_hash)
         for nix_path, nix_hash in nix_hashes
     ]
     for task in tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks)):
@@ -656,7 +651,8 @@ async def cmd(ctx,
     nix_hashes = await get_projects_hashes(nix_instantiate, projects)
 
     click.echo(' => Checking if project\'s Nix hashes exists in cache')
-    async with aiohttp.ClientSession() as session:
+
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit_per_host=50)) as session:
         build_projects = await get_projects_to_build(session, projects, nix_hashes)
 
     projects_to_deploy = []
