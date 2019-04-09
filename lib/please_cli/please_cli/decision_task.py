@@ -372,7 +372,6 @@ async def read_stream(stream,
 
 
 async def run(_command: typing.Union[str, typing.List[str]],
-              semaphore: typing.Optional[asyncio.Semaphore] = None,
               stream: bool = False,
               handle_stream_line: typing.Optional[typing.Callable[[str], None]] = None,
               log_command: bool = True,
@@ -402,11 +401,7 @@ async def run(_command: typing.Union[str, typing.List[str]],
     if log_command:
         log.debug('Running command', command=hide_secrets(command, secrets), kwargs=_kwargs)
 
-    if semaphore is None:
-        process = await asyncio.create_subprocess_shell(command, **_kwargs)  # noqa
-    else:
-        async with semaphore:
-            process = await asyncio.create_subprocess_shell(command, **_kwargs)  # noqa
+    process = await asyncio.create_subprocess_shell(command, **_kwargs)  # noqa
 
     if stream:
         _log_output: typing.Optional[typing.Callable[[str], None]] = None
@@ -480,10 +475,11 @@ async def get_projects_hash(semaphore: asyncio.Semaphore,
                             nix_instantiate: str,
                             nix_path: NixPath):
     default_nix = os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix')
-    code, output, error = await run([nix_instantiate, default_nix, '-A', nix_path],
-                                    stream=True,
-                                    semaphore=semaphore,
-                                    )
+    async with semaphore:
+        code, output, error = await run([nix_instantiate, default_nix, '-A', nix_path],
+                                        stream=True,
+                                        )
+        click.echo(f'got results for {nix_path}')
     try:
         drv_path = output.split('\n')[-1].strip()
         with open(drv_path) as f:
