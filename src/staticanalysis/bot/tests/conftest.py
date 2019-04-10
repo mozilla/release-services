@@ -6,7 +6,6 @@
 import itertools
 import os.path
 import subprocess
-import tempfile
 import time
 from contextlib import contextmanager
 from distutils.spawn import find_executable
@@ -30,7 +29,7 @@ int main(void){
 
 
 @responses.activate
-def build_config():
+def build_config(tmpdir):
     path = os.path.join(MOCK_DIR, 'config.yaml')
     responses.add(
         responses.GET,
@@ -41,7 +40,7 @@ def build_config():
 
     from static_analysis_bot.config import settings
     settings.config = None
-    settings.setup('test', tempfile.mkdtemp(), 'IN_PATCH', ['dom/*', 'tests/*.py', 'test/*.c'])
+    settings.setup('test', tmpdir.strpath, 'IN_PATCH', ['dom/*', 'tests/*.py', 'test/*.c'])
     return settings
 
 
