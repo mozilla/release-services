@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -C /tmp/release-services-2vwsgxcj/src/common/naming/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -s intreehooks -s flit -s pytest-runner -s setuptools-scm -r requirements-dev.txt
+#   pypi2nix -v -C /tmp/release-services-9_r4b1e6/src/common/naming/../../../tmp/pypi2nix -V 3.7 -O ../../../nix/requirements_override.nix -s intreehooks -s flit -s pytest-runner -s setuptools-scm -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -75,7 +75,7 @@ let
       __old = pythonPackages;
       inherit interpreter;
       inherit interpreterWithPackages;
-      mkDerivation = args: pythonPackages.buildPythonPackage (args // { nativeBuildInputs = args.buildInputs; });
+      mkDerivation = pythonPackages.buildPythonPackage;
       packages = pkgs;
       overrideDerivation = drv: f:
         pythonPackages.buildPythonPackage (
@@ -522,10 +522,10 @@ let
     };
 
     "isort" = python.mkDerivation {
-      name = "isort-4.3.16";
+      name = "isort-4.3.17";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/08/d2/bbbb582ea75a3237e16e7d1f37fa3bda72e9690097d7a24dfd7d80f899d0/isort-4.3.16.tar.gz";
-        sha256 = "08f8e3f0f0b7249e9fad7e5c41e2113aba44969798a26452ee790c06f155d4ec";
+        url = "https://files.pythonhosted.org/packages/10/48/ca938f1b3ffeb3534da5d0dfdb8ebbdc6e95b743781b7503fb3532dd1fea/isort-4.3.17.tar.gz";
+        sha256 = "268067462aed7eb2a1e237fcb287852f22077de3fb07964e87e00f829eea2d1a";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -560,10 +560,10 @@ let
     };
 
     "more-itertools" = python.mkDerivation {
-      name = "more-itertools-6.0.0";
+      name = "more-itertools-7.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/dd/f4/cdfbb6f07f767e0cd8a11b16adfecc735b6eb87dbebda026ce8898e1cc22/more-itertools-6.0.0.tar.gz";
-        sha256 = "590044e3942351a1bdb1de960b739ff4ce277960f2425ad4509446dbace8d9d1";
+        url = "https://files.pythonhosted.org/packages/29/ed/3a85eb4afdce6dc33e78dad885e17c678db8055bf65353e0de4944c72a40/more-itertools-7.0.0.tar.gz";
+        sha256 = "c3e4748ba1aad8dba30a4886b0b1a2004f9a863837b8654e7059eebf727afa5a";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -578,10 +578,10 @@ let
     };
 
     "mypy" = python.mkDerivation {
-      name = "mypy-0.670";
+      name = "mypy-0.700";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/b3/69/68cca7d49c4a6856c2937ea794b9eb21102137503f924c6eca7c72664901/mypy-0.670.tar.gz";
-        sha256 = "e80fd6af34614a0e898a57f14296d0dacb584648f0339c2e000ddbf0f4cc2f8d";
+        url = "https://files.pythonhosted.org/packages/6e/e7/ac28c6c8093d7e62e67601f5dde1c567d7c3492d1243e11ecac373c9c311/mypy-0.700.tar.gz";
+        sha256 = "b10b16d9aa7a01266f14260344fb25849ef0d508c512a916043f77987489aeff";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -617,10 +617,10 @@ let
     };
 
     "pdbpp" = python.mkDerivation {
-      name = "pdbpp-0.9.14";
+      name = "pdbpp-0.9.15";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/49/b4/2c95ef28dac4a5fc2258938d0518a6e79e48a95101fb56c5403880802b9b/pdbpp-0.9.14.tar.gz";
-        sha256 = "565a4ee4b54bd73310058ce439e245230c587774813e394c902a214c3e693d24";
+        url = "https://files.pythonhosted.org/packages/b4/c3/0fbf1004f1ecafaf36cdb551a0b04daec0467585fee11afad8031a0c2fb5/pdbpp-0.9.15.tar.gz";
+        sha256 = "3936ed6c145d9bebad9f532a20796d7022fc251ad6b041adc56b67839efd5173";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -631,6 +631,7 @@ let
       propagatedBuildInputs = [
         self."Pygments"
         self."fancycompleter"
+        self."pytest"
         self."wmctrl"
       ];
       meta = with pkgs.stdenv.lib; {
@@ -715,10 +716,10 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-4.3.1";
+      name = "pytest-4.4.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/c9/ff/e353dff7987c3a6ccb0cecb1c148c7b276c235f80f7017d181d19e2b4710/pytest-4.3.1.tar.gz";
-        sha256 = "592eaa2c33fae68c7d75aacf042efc9f77b27c08a6224a4f59beab8d9a420523";
+        url = "https://files.pythonhosted.org/packages/f2/a9/fc3a4fb6959eb88d1151149c7ba27f96b389a123ada2d961a016bbdff641/pytest-4.4.0.tar.gz";
+        sha256 = "f21d2f1fb8200830dcbb5d8ec466a9c9120e20d8b53c7585d180125cce1d297a";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
