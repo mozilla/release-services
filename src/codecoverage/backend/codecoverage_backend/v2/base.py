@@ -36,7 +36,7 @@ class ActiveData(object):
                 )
             )
         except Exception as e:
-            logger.warn('ES client failure: {}'.format(e))
+            logger.warn(f'ES client failure: {e}')
 
     def search(self, name, body, timeout=10):
         with stats.timer('codecoverage.active_data.{}'.format(name)):
@@ -48,7 +48,7 @@ class ActiveData(object):
         if out is None:
             raise Exception('No response from ES server')
         if out['timed_out']:
-            logger.warn('ES query {} timed out'.format(name))
+            logger.warn(f'ES query {name} timed out')
         else:
             took = out['took'] / 1000.0
             logger.info('ES query {name} took {time}s to hit {nb} items'.format(

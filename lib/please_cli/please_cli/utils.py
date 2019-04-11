@@ -134,12 +134,12 @@ def generate_docker_auth(registry, username, password):
     '''Generate docker-specific auth JSON
     '''
     # b64encode accepts bytes
-    auth_pair = '{}:{}'.format(username, password).encode('utf-8')
+    auth_pair = f'{username}:{password}'.encode('utf-8')
     # JSON accepts unicode
     auth_pair_base64 = base64.b64encode(auth_pair).decode('utf-8')
     return {
         'auths': {
-            'https://{}/v1'.format(registry): {
+            f'https://{registry}/v1': {
                 'auth': auth_pair_base64
             }
         }
@@ -192,7 +192,7 @@ def docker_image_id(image):
     manifest = json.load(tar.extractfile('manifest.json'))
     config = tar.extractfile(manifest[0]['Config'])
     image_sha256 = hashlib.sha256(config.read()).hexdigest()
-    return 'sha256:{}'.format(image_sha256)
+    return f'sha256:{image_sha256}'
 
 
 def normalize_name(x, normalizer='_'):

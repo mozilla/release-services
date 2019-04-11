@@ -103,9 +103,16 @@ class Revision(object):
         stats.api.increment('analysis.files', len(self.files))
         stats.api.increment('analysis.lines', sum(len(line) for line in self.lines.values()))
 
+    def has_file(self, path):
+        '''
+        Check if the path is in this patch
+        '''
+        assert isinstance(path, str)
+        return path in self.files
+
     def contains(self, issue):
         '''
-        Check if the issue is in this patch
+        Check if the issue (path+lines) is in this patch
         '''
         assert isinstance(issue, Issue)
 
@@ -226,13 +233,15 @@ class PhabricatorRevision(Revision):
         self.id = self.revision['id']
 
         # Load build for status updates
-        if settings.build_plan:
+        if 'HARBORMASTER_TARGET' in os.environ:
+            self.build_target_phid = os.environ['HARBORMASTER_TARGET']
+        elif settings.build_plan:
             build, targets = self.api.find_diff_build(self.diff_phid, settings.build_plan)
-            self.build_phid = build['phid']
+            build_phid = build['phid']
             nb = len(targets)
             assert nb > 0, 'No build target found'
             if nb > 1:
-                logger.warn('More than 1 build target found !', nb=nb, build_phid=self.build_phid)
+                logger.warn('More than 1 build target found !', nb=nb, build_phid=build_phid)
             target = targets[0]
             self.build_target_phid = target['phid']
         else:

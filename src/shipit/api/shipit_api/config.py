@@ -8,7 +8,7 @@ import tempfile
 
 PROJECT_NAME = 'shipit/api'
 APP_NAME = 'shipit_api'
-SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)
+SCOPE_PREFIX = f'project:releng:services/{APP_NAME}'
 
 # A route key that triggers rebuild of product details.
 # Worker will listen to this route key to trigger the rebuild.

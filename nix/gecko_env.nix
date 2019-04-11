@@ -2,8 +2,13 @@
 
 let
   inherit (releng_pkgs.lib) mkRustPlatform ;
-  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_7 llvm_7 llvmPackages_7 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib nasm;
+  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 gcc-unwrapped glibc fetchFromGitHub unzip zip openjdk python2Packages sqlite zlib nasm;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
+
+  clang = releng_pkgs.pkgs.clang_8;
+  clang-tools = releng_pkgs.pkgs.clang-tools.override { inherit llvmPackages; };
+  llvm = releng_pkgs.pkgs.llvm_8;
+  llvmPackages = releng_pkgs.pkgs.llvmPackages_8;
 
   # Rust 1.32.0
   rustChannel' = rustChannelOf { date = "2019-01-17"; channel = "stable"; };
@@ -17,7 +22,7 @@ let
     "${glibc.dev}/include"
   ];
 
-  # Mach needs 0.8.2 at least
+  # Mach needs 0.8.3 at least
   # From https://github.com/NixOS/nixpkgs/blob/cdf90258e6bf911db2b56280301014a88c91be65/pkgs/development/tools/rust/cbindgen/default.nix
   rustPlatform = mkRustPlatform {
     rust = {
@@ -27,13 +32,13 @@ let
   };
   rust-cbindgen =  rustPlatform.buildRustPackage rec {
     name = "rust-cbindgen-${version}";
-    version = "0.8.2";
+    version = "0.8.3";
 
     src = fetchFromGitHub {
       owner = "eqrion";
       repo = "cbindgen";
-      rev = "v${version}";
-      sha256 = "1ck0zyhrrj61rxcmz4045m4nl04g6r971min5hz5p8cmx4h5gl9w";
+      rev = "release/v${version}";
+      sha256 = "08zlnk1k1nddjciccfdcplxqngsnz6ml3zxm57mijabzybry8zz1";
     };
 
     cargoSha256 = "00j5nm491zil6kpjns31qyd6z7iqd77b5qp4h7149s70qjwfq2cb";
@@ -73,20 +78,20 @@ in gecko.overrideDerivation (old: {
     echo "export JAVA_HOME=${openjdk}" >> $geckoenv
 
     # Setup Clang & Autoconf
-    echo "export CC=${clang_7}/bin/clang" >> $geckoenv
-    echo "export CXX=${clang_7}/bin/clang++" >> $geckoenv
-    echo "export LD=${clang_7}/bin/ld" >> $geckoenv
-    echo "export LLVM_CONFIG=${llvm_7}/bin/llvm-config" >> $geckoenv
-    echo "export LLVMCONFIG=${llvm_7}/bin/llvm-config" >> $geckoenv # we need both
-    echo "export LLVM_OBJDUMP=${llvm_7}/bin/llvm-objdump" >> $geckoenv
+    echo "export CC=${clang}/bin/clang" >> $geckoenv
+    echo "export CXX=${clang}/bin/clang++" >> $geckoenv
+    echo "export LD=${clang}/bin/ld" >> $geckoenv
+    echo "export LLVM_CONFIG=${llvm}/bin/llvm-config" >> $geckoenv
+    echo "export LLVMCONFIG=${llvm}/bin/llvm-config" >> $geckoenv # we need both
+    echo "export LLVM_OBJDUMP=${llvm}/bin/llvm-objdump" >> $geckoenv
     echo "export AUTOCONF=${autoconf213}/bin/autoconf" >> $geckoenv
 
     # Build custom mozconfig
     mozconfig=$out/conf/mozconfig
     echo > $mozconfig "
     ac_add_options --enable-debug
-    ac_add_options --with-clang-path=${clang_7}/bin/clang
-    ac_add_options --with-libclang-path=${llvmPackages_7.libclang}/lib
+    ac_add_options --with-clang-path=${clang}/bin/clang
+    ac_add_options --with-libclang-path=${llvmPackages.libclang}/lib
     mk_add_options AUTOCLOBBER=1
     "
 
@@ -115,5 +120,6 @@ in gecko.overrideDerivation (old: {
       sqlite
       zlib
       nasm
+      clang-tools
     ];
 })

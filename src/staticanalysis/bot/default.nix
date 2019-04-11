@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkTaskclusterMergeRoutes mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs-8_x git python27 python36 coreutils clang_5 zlib shellcheck tzdata;
+  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs-8_x git python27 python36 coreutils zlib shellcheck tzdata;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
@@ -81,6 +81,7 @@ let
 
           # Needed to index the task in the TaskCluster index
           ("index:insert-task:project.releng.services.project." + branch + ".static_analysis_bot.*")
+          ("index:insert-task:project.releng.services.tasks.*")
 
           # Needed to download the Android sdks for Infer
           "queue:get-artifact:project/gecko/android-*"
@@ -121,9 +122,8 @@ let
     "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}/x86_64-unknown-linux-gnu"
     "${glibc.dev}/include/"
     "${xorg.libX11.dev}/include"
-    "${xorg.xproto}/include"
+    "${xorg.xorgproto}/include"
     "${xorg.libXrender.dev}/include"
-    "${xorg.renderproto}/include"
   ];
 
   self = mkPython {
@@ -131,7 +131,7 @@ let
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit(self) name; };
     buildInputs =
-      [ mercurial clang_5 ] ++
+      [ mercurial ] ++
       (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =

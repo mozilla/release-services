@@ -27,10 +27,6 @@ view : App.Model -> Html App.Msg
 view model =
     div [ class "row" ]
         [ viewCard
-            "TryChooser"
-            "Generate parts of try syntax and restrict tests to certain directories."
-            (href "/trychooser")
-        , viewCard
             "TreeStatus"
             "Current status of Mozilla's version-control repositories."
             (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.ShowTreesRoute))

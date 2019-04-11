@@ -27,6 +27,13 @@ class BuildState(enum.Enum):
     Fail = 'fail'
 
 
+class ArtifactType(enum.Enum):
+    Host = 'host'
+    WorkingCopy = 'working-copy'
+    File = 'file'
+    Uri = 'uri'
+
+
 @functools.lru_cache(maxsize=2048)
 def revision_exists_on_central(revision):
     url = HGMO_JSON_REV_URL_TEMPLATE.format(revision)
@@ -44,6 +51,21 @@ def revision_available(repo, revision):
         return True
     except hglib.error.CommandError:
         return False
+
+
+def as_list(name, value, value_type):
+    '''
+    Helper to convert Phabricator inputs to list
+    Supports unique and multiple values, checking their type
+    '''
+    if isinstance(value, value_type):
+        return [value, ]
+    elif isinstance(value, list):
+        assert all(map(lambda v: isinstance(v, value_type), value)), \
+            'All values in {} should be of type {}'.format(name, value_type)
+        return value
+    else:
+        raise Exception('{0} must be a {1} or a list of {1}'.format(name, value_type))
 
 
 # Descriptions of the fields are available at
@@ -127,23 +149,25 @@ class PhabricatorAPI(object):
 
         # Test authentication
         self.user = self.request('user.whoami')
-        logger.info('Authenticated on {} as {}'.format(self.url, self.user['realName']))
+        logger.info(f"Authenticated on {self.url} as {self.user['realName']}")
 
     @property
     def hostname(self):
         parts = urlparse(self.url)
         return parts.netloc
 
-    def search_diffs(self, diff_phid=None, revision_phid=None, output_cursor=False, **params):
+    def search_diffs(self, diff_phid=None, diff_id=None, revision_phid=None, output_cursor=False, **params):
         '''
         Find details of differential diffs from a Differential diff or revision
         Multiple diffs can be returned (when using revision_phid)
         '''
         constraints = {}
         if diff_phid is not None:
-            constraints['phids'] = [diff_phid, ]
+            constraints['phids'] = as_list('diff_phid', diff_phid, str)
+        if diff_id is not None:
+            constraints['ids'] = as_list('diff_id', diff_id, int)
         if revision_phid is not None:
-            constraints['revisionPHIDs'] = [revision_phid, ]
+            constraints['revisionPHIDs'] = as_list('revision_phid', revision_phid, str)
         out = self.request('differential.diff.search', constraints=constraints, **params)
 
         def _clean(diff):
@@ -179,7 +203,7 @@ class PhabricatorAPI(object):
             diffID=diff_id,
         )
 
-    def load_revision(self, rev_phid=None, rev_id=None):
+    def load_revision(self, rev_phid=None, rev_id=None, **params):
         '''
         Find details of a differential revision
         '''
@@ -194,6 +218,7 @@ class PhabricatorAPI(object):
         out = self.request(
             'differential.revision.search',
             constraints=constraints,
+            **params,
         )
 
         data = out['data']
@@ -349,13 +374,44 @@ class PhabricatorAPI(object):
         assert all(map(lambda i: isinstance(i, LintResult), lint)), \
             'Only support LintResult instances'
         assert isinstance(state, BuildState)
-        self.request(
+        return self.request(
             'harbormaster.sendmessage',
             buildTargetPHID=build_target_phid,
             type=state.value,
             unit=unit,
             lint=lint,
         )
+
+    def create_harbormaster_artifact(self, build_target_phid, artifact_type, key, payload):
+        '''
+        Create an artifact on HarborMaster
+        '''
+        assert isinstance(artifact_type, ArtifactType)
+        assert isinstance(payload, dict)
+        return self.request(
+            'harbormaster.createartifact',
+            buildTargetPHID=build_target_phid,
+            artifactType=artifact_type.value,
+            artifactKey=key,
+            artifactData=payload,
+        )
+
+    def create_harbormaster_uri(self, build_target_phid, artifact_key, name, uri, external=True):
+        '''
+        Helper to create a URI Harbormaster Artifact
+        '''
+        out = self.create_harbormaster_artifact(
+                build_target_phid=build_target_phid,
+                artifact_type=ArtifactType.Uri,
+                key=artifact_key,
+                payload={
+                    'uri': uri,
+                    'name': name,
+                    'ui.external': external,
+                },
+            )
+        logger.info('Created HarborMaster link', target=build_target_phid, uri=uri)
+        return out
 
     def upload_coverage_results(self, object_phid, coverage_data):
         '''
@@ -413,6 +469,20 @@ class PhabricatorAPI(object):
             state,
             lint=lint_data,
         )
+
+    def search_projects(self, slugs=None, **params):
+        '''
+        Search Phabricator projects descriptions
+        '''
+        constraints = {}
+        if slugs:
+            constraints['slugs'] = slugs
+        out = self.request(
+            'project.search',
+            constraints=constraints,
+            **params,
+        )
+        return out['data']
 
     def request(self, path, **payload):
         '''
@@ -499,7 +569,7 @@ class PhabricatorAPI(object):
                 clean=True,
             )
         except hglib.error.CommandError:
-            raise Exception('Failed to update to revision {}'.format(hg_base))
+            raise Exception(f'Failed to update to revision {hg_base}')
 
         # Get current revision using full informations tuple from hglib
         revision = repo.identify(id=True).strip()

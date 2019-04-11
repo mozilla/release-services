@@ -34,13 +34,6 @@ let
                                                         (filter_dirs (builtins.readDir "${src_dir}/${x}")))
                                      level_one_dirs);
 
-  src-scriptworker-shipitscript = pkgs.fetchFromGitHub {
-    owner = "mozilla-releng";
-    repo = "shipitscript";
-    rev = "5db546d7916630a62f8f9f9719b2a3d3a7fa1870";
-    sha256 = "05caga08jd5l2np6h1zi8lx4q89b6pcsj7vs9iv3m3db32d1dkqh";
-  };
-
   releng_pkgs = {
     inherit pkgs;
     lib = import ./lib/default.nix { inherit releng_pkgs; };
@@ -76,7 +69,6 @@ let
     "please-cli" = import ./../lib/please_cli { inherit releng_pkgs; };
     # TODO: backend_common_example = import ./../lib/backend_common/example { inherit releng_pkgs; };
     "frontend-common-example" = import ./../lib/frontend_common/example { inherit releng_pkgs; };
-    "scriptworker/shipitscript" = import "${src-scriptworker-shipitscript}/nix" { inherit (releng_pkgs) pkgs; };
 
   } // (
     # list projects (folders in src/ folder with default.nix) and imports them

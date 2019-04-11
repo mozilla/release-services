@@ -5,7 +5,6 @@
 
 from __future__ import absolute_import
 
-import fcntl
 import multiprocessing
 import os
 import shutil
@@ -15,6 +14,7 @@ import hglib
 
 from cli_common.command import run_check
 from cli_common.log import get_logger
+from cli_common.mercurial import hg_run
 from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import CLANG_TIDY
 from static_analysis_bot import COVERAGE
@@ -82,39 +82,13 @@ class LocalWorkflow(object):
                                         purge=True,
                                         sharebase=settings.repo_shared_dir,
                                         branch=b'central')
-        cmd.insert(0, hglib.HGPATH)
-
-        def _log_process(output, name):
-            # Read and display every line
-            out = output.read()
-            if out is None:
-                return
-            text = filter(None, out.decode('utf-8').splitlines())
-            for line in text:
-                logger.info('{}: {}'.format(name, line))
-
-        # Start process
         start = time.time()
-        proc = hglib.util.popen(cmd)
-
-        # Set process outputs as non blocking
-        for output in (proc.stdout, proc.stderr):
-            fcntl.fcntl(
-                output.fileno(),
-                fcntl.F_SETFL,
-                fcntl.fcntl(output, fcntl.F_GETFL) | os.O_NONBLOCK,
-            )
-
-        while proc.poll() is None:
-            _log_process(proc.stdout, 'clone')
-            _log_process(proc.stderr, 'clone (err)')
-            time.sleep(2)
-
-        out, err = proc.communicate()
-        if proc.returncode != 0:
-            logger.error('Mercurial clone failure', out=out, err=err)
-            raise Exception('Mercurial clone failed with exit code {}'.format(proc.returncode))
-        logger.info('Clone finished', time=(time.time() - start), out=out, err=err)
+        try:
+            out = hg_run(cmd)
+        except hglib.error.CommandError as e:
+            logger.error('Mercurial clone failure', error=str(e))
+            raise Exception('Mercurial clone failed with exit code {}'.format(e.ret))
+        logger.info('Clone finished', time=(time.time() - start), out=out)
 
     def open_repository(self):
         '''
@@ -201,9 +175,9 @@ class LocalWorkflow(object):
                 self.do_build_setup()
 
                 # Download clang build from Taskcluster
-                # Use new clang-tidy paths, https://bugzilla.mozilla.org/show_bug.cgi?id=1495641
+                # Use updated clang-tidy matching clang/llvm 8
                 logger.info('Setup Taskcluster clang build...')
-                setup_clang(repository='mozilla-inbound', revision='revision.874a07fdb045b725edc2aaa656a8620ff439ec10')
+                setup_clang(repository='autoland', revision='revision.7d60a7fd2fac0ac7427666f2d857aeba128cc6d0')
 
                 # Use clang-tidy & clang-format
                 if CLANG_TIDY in self.analyzers:

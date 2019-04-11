@@ -9,6 +9,7 @@ import io
 import json
 import os
 import tempfile
+from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 
@@ -17,6 +18,8 @@ from cli_common.mercurial import batch_checkout
 from pulselistener.config import REPO_TRY
 
 logger = get_logger(__name__)
+
+TREEHERDER_URL = 'https://treeherder.mozilla.org/#/jobs?repo=try&revision={}'
 
 
 class MercurialWorker(object):
@@ -53,12 +56,21 @@ class MercurialWorker(object):
         logger.info('Removed ssh key')
 
     async def run(self):
-        # Start by updating the repo
-        logger.info('Checking out tip', repo=self.repo_url)
-        self.repo = batch_checkout(self.repo_url, self.repo_dir, batch_size=self.batch_size)
+        # Start by updating the repo in a separate process
+        loop = asyncio.get_running_loop()
+        with ProcessPoolExecutor() as pool:
+            logger.info('Checking out tip in a separate process', repo=self.repo_url)
+            await loop.run_in_executor(
+                pool,
+                batch_checkout,
+                self.repo_url, self.repo_dir, b'tip', self.batch_size,
+            )
+            logger.info('Batch checkout finished')
+
+        # Setup repo in main process
+        self.repo = hglib.open(self.repo_dir)
         self.repo.setcbout(lambda msg: logger.info('Mercurial', stdout=msg))
         self.repo.setcberr(lambda msg: logger.info('Mercurial', stderr=msg))
-        logger.info('Initial clone finished')
 
         # Wait for phabricator diffs to apply
         while True:
@@ -107,6 +119,7 @@ class MercurialWorker(object):
         - trigger push-to-try
         '''
         logger.info('Received diff {phid}'.format(**diff))
+        await asyncio.sleep(2)  # allow other tasks to run
 
         # Start by cleaning the repo
         self.clean()
@@ -115,14 +128,33 @@ class MercurialWorker(object):
         base, patches = self.phabricator_api.load_patches_stack(self.repo, diff, default_revision='central')
         assert len(patches) > 0, 'No patches to apply'
 
+        # Load all the diffs details with commits messages
+        diffs = self.phabricator_api.search_diffs(
+            diff_phid=[p[0] for p in patches],
+            attachments={
+                'commits': True,
+            }
+        )
+        commits = {
+            diff['phid']: diff['attachments']['commits'].get('commits', [])
+            for diff in diffs
+        }
+
         # Apply the patches and commit them one by one
         for diff_phid, patch in patches:
-            logger.info('Applying patch', phid=diff_phid)
+            commit = commits.get(diff_phid)
+            message = ''
+            if commit:
+                message += '{}\n'.format(commit[0]['message'])
+            message += 'Differential Diff: {}'.format(diff_phid)
+
+            logger.info('Applying patch', phid=diff_phid, message=message)
             self.repo.import_(
                 patches=io.BytesIO(patch.encode('utf-8')),
-                message='Patch {}'.format(diff_phid),
+                message=message,
                 user='pulselistener',
             )
+            await asyncio.sleep(1)
 
         # Build and commit try_task_config.json
         config_path = os.path.join(self.repo_dir, 'try_task_config.json')
@@ -135,10 +167,10 @@ class MercurialWorker(object):
             }
         }
         with open(config_path, 'w') as f:
-            json.dump(config, f)
+            json.dump(config, f, sort_keys=True, indent=4)
         self.repo.add(config_path.encode('utf-8'))
         self.repo.commit(
-            message='try_task_config for {}'.format(diff['phid']),
+            message='try_task_config for code-review\nDifferential Diff: {}'.format(diff['phid']),
             user='pulselistener',
         )
 
@@ -154,3 +186,9 @@ class MercurialWorker(object):
         )
 
         logger.info('Diff has been pushed !')
+
+        # Publish Treeherder link
+        build_target_phid = diff.get('build_target_phid')
+        if build_target_phid:
+            uri = TREEHERDER_URL.format(commit.node.decode('utf-8'))
+            self.phabricator_api.create_harbormaster_uri(build_target_phid, 'treeherder', 'Treeherder Jobs', uri)

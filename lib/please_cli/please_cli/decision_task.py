@@ -49,12 +49,12 @@ def get_build_task(index,
     nix_path_attributes = list(set(nix_path_attributes))
 
     for nix_path_attribute in nix_path_attributes:
-        command.append('--nix-path-attribute={}'.format(nix_path_attribute))
+        command.append(f'--nix-path-attribute={nix_path_attribute}')
 
     if cache_bucket and cache_region:
         command += [
-            '--cache-bucket={}'.format(cache_bucket),
-            '--cache-region={}'.format(cache_region),
+            f'--cache-bucket={cache_bucket}',
+            f'--cache-region={cache_region}',
         ]
     return get_task(
         task_group_id,
@@ -104,7 +104,7 @@ def get_deploy_task(index,
             subfolder = [deploy_options['subfolder']]
         project_csp = []
         for url in deploy_options.get('csp', []):
-            project_csp.append('--csp="{}"'.format(url))
+            project_csp.append(f'--csp="{url}"')
         for require in project_requires:
             require_config = please_cli.config.PROJECTS_CONFIG.get(require, {})
 
@@ -134,7 +134,7 @@ def get_deploy_task(index,
             ]
             require_urls = filter(lambda x: x[0] is not None, require_urls)
             normalized_require = please_cli.utils.normalize_name(require, normalizer='-')
-            require_urls = map(lambda x: '--env="{}{}-url: {}"'.format(normalized_require, x[1], x[0]), require_urls)
+            require_urls = map(lambda x: f'--env="{normalized_require}{x[1]}-url: {x[0]}"', require_urls)
 
             project_envs += require_urls
 
@@ -170,7 +170,7 @@ def get_deploy_task(index,
 
         heroku_command = deploy_options.get('heroku_command')
         if heroku_command:
-            command.append('--heroku-command="{}"'.format(heroku_command))
+            command.append(f'--heroku-command="{heroku_command}"')
 
         command += [
             '--taskcluster-secret=' + taskcluster_secret,

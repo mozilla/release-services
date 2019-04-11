@@ -38,7 +38,7 @@ in python2Packages.buildPythonApplication {
     sha256 = "00rzjbf2blxkc0qwd9mdzx5fnzgpp4jxzijq6wgsjgmqscx40sy5";
   };
 
-  buildInputs = [ makeWrapper docutils unzip ];
+  buildInputs = [ makeWrapper python2Packages.docutils unzip ];
 
   makeFlags = [ "PREFIX=$(out)" ];
 

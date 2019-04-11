@@ -11,7 +11,6 @@ import App.ToolTool
 import App.TreeStatus
 import App.TreeStatus.Api
 import App.TreeStatus.Types
-import App.TryChooser
 import App.UserScopes
 import App.Utils exposing (error)
 import Hawk
@@ -48,7 +47,6 @@ init flags location =
             , version = flags.version
             , user = user
             , userScopes = App.UserScopes.init
-            , trychooser = App.TryChooser.init
             , tokens = App.Tokens.init
             , tooltool = App.ToolTool.init
             , treestatus = App.TreeStatus.init flags.treestatusUrl
@@ -80,8 +78,7 @@ initRoute model route =
 
         App.HomeRoute ->
             { model
-                | trychooser = App.TryChooser.init
-                , tokens = App.Tokens.init
+                | tokens = App.Tokens.init
                 , tooltool = App.ToolTool.init
                 , treestatus =
                     App.TreeStatus.init model.treestatus.baseUrl
@@ -112,9 +109,6 @@ initRoute model route =
                   -- TODO: we should be redirecting to the url that we were loging in from
                   , Utils.performMsg (App.NavigateTo App.HomeRoute)
                   ]
-
-        App.TryChooserRoute ->
-            model ! []
 
         App.TokensRoute ->
             model ! []
@@ -226,15 +220,6 @@ update msg model =
                 |> Maybe.withDefault []
                 |> List.append [ Cmd.map App.UserScopesMsg newCmd ]
                 |> Cmd.batch
-            )
-
-        App.TryChooserMsg msg_ ->
-            let
-                ( newModel, newCmd ) =
-                    App.TryChooser.update msg_ model.trychooser
-            in
-            ( { model | trychooser = newModel }
-            , Cmd.map App.TryChooserMsg newCmd
             )
 
         App.TokensMsg msg_ ->
@@ -360,9 +345,6 @@ viewRoute model =
         App.LogoutRoute ->
             -- TODO: this should be already a view on TaskclusterLogin
             text "Logging you out ..."
-
-        App.TryChooserRoute ->
-            Html.map App.TryChooserMsg (App.TryChooser.view model.trychooser)
 
         App.TokensRoute ->
             Html.map App.TokensMsg (App.Tokens.view model.tokens)

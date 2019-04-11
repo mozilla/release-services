@@ -22,7 +22,7 @@ def build_coverage_service():
         'activedata': active_data.ActiveDataCoverage,
     }
     if secrets.COVERAGE_SERVICE not in services:
-        raise Exception('Unknown coverage service : {}'.format(secrets.COVERAGE_SERVICE))
+        raise Exception(f'Unknown coverage service : {secrets.COVERAGE_SERVICE}')
 
     service = services[secrets.COVERAGE_SERVICE]()
     logger.info('Using coverage service', service=service)
