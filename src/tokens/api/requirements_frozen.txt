@@ -7,8 +7,8 @@ atomicwrites==1.3.0
 attrs==19.1.0
 blinker==1.4
 boto==2.49.0
-boto3==1.9.125
-botocore==1.12.125
+boto3==1.9.130
+botocore==1.12.130
 certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
@@ -45,9 +45,9 @@ idna==2.8
 inflection==0.3.1
 inotify==0.2.10
 intreehooks==1.0
-isort==4.3.16
+isort==4.3.17
 itsdangerous==0.24
-Jinja2==2.10
+Jinja2==2.10.1
 jmespath==0.9.4
 jsonschema==2.6.0
 kombu==4.5.0
@@ -61,14 +61,14 @@ mozdef-client==1.0.11
 mozilla-backend-common==1.0.0
 mozilla-cli-common==1.0.0
 multidict==4.5.2
-mypy==0.670
+mypy==0.700
 mypy-extensions==0.4.1
 nose==1.3.7
 oauth2client==4.1.3
 openapi-spec-validator==0.2.6
-pdbpp==0.9.14
+pdbpp==0.9.15
 pluggy==0.9.0
-psycopg2==2.7.7
+psycopg2==2.8.1
 py==1.8.0
 pyasn1==0.4.5
 pyasn1-modules==0.2.4
@@ -83,7 +83,7 @@ python-editor==1.0.4
 python-hglib==2.6.1
 python-jose==3.0.1
 pytoml==0.1.20
-pytz==2018.9
+pytz==2019.1
 PyYAML==5.1
 raven==6.10.0
 requests==2.21.0
@@ -94,7 +94,7 @@ s3transfer==0.2.0
 setuptools-scm==3.2.0
 six==1.12.0
 slugid==2.0.0
-SQLAlchemy==1.3.1
+SQLAlchemy==1.3.2
 structlog==19.1.0
 swagger-ui-bundle==0.0.3
 taskcluster==7.0.1
@@ -104,6 +104,6 @@ typed-ast==1.3.1
 urllib3==1.24.1
 vcversioner==2.16.0.0
 vine==1.3.0
-Werkzeug==0.15.1
+Werkzeug==0.15.2
 wmctrl==0.3
 yarl==1.3.0
