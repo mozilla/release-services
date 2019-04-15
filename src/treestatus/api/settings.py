@@ -101,6 +101,7 @@ if not DEBUG:
 # -- STATUSPAGE  --------------------------------------------------------------
 
 STATUSPAGE_ENABLE = True
+# below setting should be set per channel (in secrets)
 # STATUSPAGE_TOKEN <- authentication token
 # STATUSPAGE_PAGE_ID <- id of the page which we are interacting with
 # STATUSPAGE_COMPONENTS = <- a tree_name=>component_id mapping
