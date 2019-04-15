@@ -9,6 +9,7 @@ import json
 import flask
 import flask_login
 import pytz
+import requests
 import sqlalchemy as sa
 import werkzeug.exceptions
 
@@ -20,6 +21,20 @@ import treestatus_api.models
 
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5
+STATUSPAGE_URL = 'https://api.statuspage.io/v1'
+STATUSPAGE_ERROR_ON_CREATE = '''Hi,
+
+For some reason we weren't able to create an incident for tree `{tree}`.
+
+Please make sure that an incident is open for every closed tree.
+'''
+STATUSPAGE_ERROR_ON_CLOSE = '''Hi,
+
+For some reason we weren't able to close an incident for tree `{tree}`.
+
+Please make sure that an incident is closed for every open (or under approval) tree.
+'''
+
 
 log = cli_common.log.get_logger(__name__)
 
@@ -36,7 +51,184 @@ def _now():
     return datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
 
 
+def _statuspage_data(
+    close,
+    component_id,
+    tree,
+    status_from,
+    status_to,
+):
+    data = {
+        'status': close and 'resolved' or 'investigating',
+        'components': {
+            component_id: close and 'operational' or 'major_outage',
+        }
+    }
+    if not close:
+        data['name'] = f'Tree {tree.tree} closed'
+        data['component_ids'] = [component_id]
+        data['metadata'] = {
+            'treestatus': {
+                'tree': tree.tree,
+                'status_from': status_from,
+                'status_to': status_to,
+            },
+        }
+        data['body'] = (
+            f'Message of the day: {tree.message_of_the_day}\n'
+            f'Reason: {tree.reason}\n'
+        )
+    return data
+
+
+def _statuspage_send_email_on_error(subject, content, incident_id=None):
+    page_id = flask.current_app.config.get('STATUSPAGE_PAGE_ID')
+    address = flask.current_app.config.get('STATUSPAGE_NOTIFY_ON_ERROR')
+
+    if not address:
+        return
+
+    link = {
+        'href': f'https://manage.statuspage.io/pages/{page_id}',
+        'text': 'Visit statuspage',
+    }
+    if incident_id:
+        link = {
+            'href': f'https://manage.statuspage.io/pages/{page_id}/incidents/{incident_id}',
+            'text': 'Visit statuspage incident',
+        }
+    flask.current_app.notify.email({
+        'address': address,
+        'subject': subject,
+        'content': content,
+        'link': link,
+    })
+
+
+def _create_statuspage_incident(
+    headers,
+    component_id,
+    tree,
+    status_from,
+    status_to,
+):
+    page_id = flask.current_app.config.get('STATUSPAGE_PAGE_ID')
+    response = requests.post(
+        f'{STATUSPAGE_URL}/pages/{page_id}/incidents',
+        headers=headers,
+        json=_statuspage_data(False,
+                              component_id,
+                              tree,
+                              status_from,
+                              status_to,
+                              ),
+    )
+    try:
+        response.raise_for_status()
+    except Exception:
+        _statuspage_send_email_on_error(
+            subject=f'[treestatus] Error when creating statuspage incident',
+            content=STATUSPAGE_ERROR_ON_CREATE.format(tree=tree.tree),
+            link=dict(
+                href=f'https://manage.statuspage.io/pages/{page_id}',
+                text='Visit statuspage',
+            ),
+        )
+        pass
+
+    return response.json()
+
+
+def _close_statuspage_incident(
+    headers,
+    component_id,
+    tree,
+    status_from,
+    status_to,
+):
+    page_id = flask.current_app.config.get('STATUSPAGE_PAGE_ID')
+    response = requests.get(
+        f'{STATUSPAGE_URL}/pages/{page_id}/incidents/unresolved',
+        headers=headers,
+    )
+    try:
+        response.raise_for_status()
+    except Exception:
+        _statuspage_send_email_on_error(
+            subject=f'[treestatus] Error when closing statuspage incident',
+            content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
+        )
+
+    # last incident with meta.treestatus.tree == tree.tree
+    incident_id = None
+    for incident in sorted(response.json(), key=lambda x: x['created_at']):
+        if 'metadata' in incident and \
+                'treestatus' in incident['metadata'] and \
+                'tree' in incident['metadata']['treestatus'] and \
+                incident['metadata']['treestatus'] == tree.tree:
+            incident_id = incident['id']
+            break
+
+    if incident_id is None:
+        _statuspage_send_email_on_error(
+            subject=f'[treestatus] Error when closing statuspage incident',
+            content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
+        )
+
+    response = requests.patch(
+        f'{STATUSPAGE_URL}/pages/{page_id}/incidents/{incident_id}',
+        headers=headers,
+        json=_statuspage_data(True,
+                              component_id,
+                              tree,
+                              status_from,
+                              status_to,
+                              ),
+    )
+    try:
+        response.raise_for_status()
+    except Exception:
+        _statuspage_send_email_on_error(
+            subject=f'[treestatus] Error when closing statuspage incident',
+            content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
+            incident_id=incident_id,
+        )
+
+    return response.json()
+
+
 def _notify_status_change(trees_changes, tags=[]):
+    if flask.current_app.config.get('STATUSPAGE_ENABLE'):
+        components = flask.current_app.config.get('STATUSPAGE_COMPONENTS')
+        token = flask.current_app.config.get('STATUSPAGE_TOKEN')
+        headers = {'Authorization': f'OAuth {token}'}
+
+        for tree_change in trees_changes:
+            tree, status_from, status_to = tree_change
+
+            if tree not in components:
+                continue
+
+            component_id = components[tree.tree]
+
+            # create an accident
+            if status_from in ['open', 'approval required'] and status_to == 'closed':
+                _create_statuspage_incident(headers,
+                                            component_id,
+                                            tree,
+                                            status_from,
+                                            status_to,
+                                            )
+
+            # close an accident
+            elif status_from == 'closed' and status_to in ['open', 'approval required']:
+                _close_statuspage_incident(headers,
+                                           component_id,
+                                           tree,
+                                           status_from,
+                                           status_to,
+                                           )
+
     if flask.current_app.config.get('PULSE_TREESTATUS_ENABLE'):
         routing_key_pattern = 'tree/{0}/status_change'
         exchange = flask.current_app.config.get('PULSE_TREESTATUS_EXCHANGE')
