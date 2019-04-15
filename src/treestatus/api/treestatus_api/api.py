@@ -78,7 +78,7 @@ def _statuspage_data(
             f'Message of the day: {tree.message_of_the_day}\n'
             f'Reason: {tree.reason}\n'
         )
-    return data
+    return dict(incident=data)
 
 
 def _statuspage_send_email_on_error(subject, content, incident_id=None):
@@ -113,28 +113,26 @@ def _create_statuspage_incident(
     status_to,
 ):
     page_id = flask.current_app.config.get('STATUSPAGE_PAGE_ID')
+    data = _statuspage_data(False,
+                            component_id,
+                            tree,
+                            status_from,
+                            status_to,
+                            )
+    log.debug(f'Create statuspage incident for tree `{tree.tree}` under page `{page_id}`', data=data)
     response = requests.post(
         f'{STATUSPAGE_URL}/pages/{page_id}/incidents',
         headers=headers,
-        json=_statuspage_data(False,
-                              component_id,
-                              tree,
-                              status_from,
-                              status_to,
-                              ),
+        json=data,
     )
     try:
         response.raise_for_status()
-    except Exception:
+    except Exception as e:
+        log.exception(e)
         _statuspage_send_email_on_error(
             subject=f'[treestatus] Error when creating statuspage incident',
             content=STATUSPAGE_ERROR_ON_CREATE.format(tree=tree.tree),
-            link=dict(
-                href=f'https://manage.statuspage.io/pages/{page_id}',
-                text='Visit statuspage',
-            ),
         )
-        pass
 
     return response.json()
 
@@ -153,27 +151,33 @@ def _close_statuspage_incident(
     )
     try:
         response.raise_for_status()
-    except Exception:
+    except Exception as e:
+        log.exception(e)
         _statuspage_send_email_on_error(
             subject=f'[treestatus] Error when closing statuspage incident',
             content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
         )
+        return
 
     # last incident with meta.treestatus.tree == tree.tree
     incident_id = None
-    for incident in sorted(response.json(), key=lambda x: x['created_at']):
-        if 'metadata' in incident and \
+    incidents = sorted(response.json(), key=lambda x: x['created_at'])
+    for incident in incidents:
+        if 'id' in incident and \
+                'metadata' in incident and \
                 'treestatus' in incident['metadata'] and \
                 'tree' in incident['metadata']['treestatus'] and \
-                incident['metadata']['treestatus'] == tree.tree:
+                incident['metadata']['treestatus']['tree'] == tree.tree:
             incident_id = incident['id']
             break
 
     if incident_id is None:
+        log.error(f'No incident found when closing tree `{tree.tree}`')
         _statuspage_send_email_on_error(
             subject=f'[treestatus] Error when closing statuspage incident',
             content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
         )
+        return
 
     response = requests.patch(
         f'{STATUSPAGE_URL}/pages/{page_id}/incidents/{incident_id}',
@@ -187,7 +191,8 @@ def _close_statuspage_incident(
     )
     try:
         response.raise_for_status()
-    except Exception:
+    except Exception as e:
+        log.exception(e)
         _statuspage_send_email_on_error(
             subject=f'[treestatus] Error when closing statuspage incident',
             content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
@@ -199,6 +204,8 @@ def _close_statuspage_incident(
 
 def _notify_status_change(trees_changes, tags=[]):
     if flask.current_app.config.get('STATUSPAGE_ENABLE'):
+        log.debug('Notify statuspage about trees changes.')
+
         components = flask.current_app.config.get('STATUSPAGE_COMPONENTS')
         token = flask.current_app.config.get('STATUSPAGE_TOKEN')
         headers = {'Authorization': f'OAuth {token}'}
@@ -206,9 +213,10 @@ def _notify_status_change(trees_changes, tags=[]):
         for tree_change in trees_changes:
             tree, status_from, status_to = tree_change
 
-            if tree not in components:
+            if tree.tree not in components.keys():
                 continue
 
+            log.debug(f'Notify statuspage about: {tree.tree}')
             component_id = components[tree.tree]
 
             # create an accident
