@@ -96,3 +96,13 @@ if not DEBUG:
     PULSE_USER = secrets['PULSE_USER']
     PULSE_PASSWORD = secrets['PULSE_PASSWORD']
     PULSE_VIRTUAL_HOST = secrets['PULSE_VIRTUAL_HOST']
+
+
+# -- STATUSPAGE  --------------------------------------------------------------
+
+STATUSPAGE_ENABLE = True
+# below setting should be set per channel (in secrets)
+# STATUSPAGE_TOKEN <- authentication token
+# STATUSPAGE_PAGE_ID <- id of the page which we are interacting with
+# STATUSPAGE_COMPONENTS = <- a tree_name=>component_id mapping
+# STATUSPAGE_NOTIFY_ON_ERROR <- email to where to send when error happens
