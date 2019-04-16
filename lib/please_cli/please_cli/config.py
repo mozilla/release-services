@@ -181,19 +181,19 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        's3_bucket': 'releng-testing-docs',
+                        's3_bucket': 'relengstatic-testing-relengdocs-static-website',
                         'url': 'https://docs.testing.mozilla-releng.net',
                         'dns': 'd1sw5c8kdn03y.cloudfront.net.',
                     },
                     'staging': {
                         'enable': True,
-                        's3_bucket': 'releng-staging-docs',
+                        's3_bucket': 'relengstatic-staging-relengdocs-static-website',
                         'url': 'https://docs.staging.mozilla-releng.net',
                         'dns': 'd32jt14rospqzr.cloudfront.net.',
                     },
                     'production': {
                         'enable': True,
-                        's3_bucket': 'releng-production-docs',
+                        's3_bucket': 'relengstatic-prod-relengdocs-static-website',
                         'url': 'https://docs.mozilla-releng.net',
                         'dns': 'd1945er7u4liht.cloudfront.net.',
                     },
@@ -222,7 +222,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        's3_bucket': 'releng-testing-frontend',
+                        's3_bucket': 'relengstatic-testing-relengfrontend-static-website',
                         'url': 'https://testing.mozilla-releng.net',
                         'dns': 'd1l70lpksx3ik7.cloudfront.net.',
                         'csp': [
@@ -232,7 +232,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        's3_bucket': 'releng-staging-frontend',
+                        's3_bucket': 'relengstatic-staging-relengfrontend-static-website',
                         'url': 'https://staging.mozilla-releng.net',
                         'dns': 'dpwmwa9tge2p3.cloudfront.net.',
                         'csp': [
@@ -242,7 +242,7 @@ PROJECTS_CONFIG = {
                     },
                     'production': {
                         'enable': True,
-                        's3_bucket': 'releng-production-frontend',
+                        's3_bucket': 'relengstatic-prod-relengfrontend-static-website',
                         'url': 'https://mozilla-releng.net',
                         'dns': 'd1qqwps52z1e12.cloudfront.net.',
                         'dns_domain': 'www.mozilla-releng.net',
@@ -1067,8 +1067,7 @@ PROJECTS_CONFIG = {
                     'production': {
                         'enable': True,
                         # TODO: we will switch to new url soon
-                        # 'url': 'https://api.shipit.mozilla-releng.net',
-                        'url': 'https://shipit-api.mozilla-releng.net',
+                        'url': 'https://api.shipit.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -1125,8 +1124,7 @@ PROJECTS_CONFIG = {
                     },
                     'production': {
                         'enable': True,
-                        's3_bucket': 'shipit-production-frontend',
-                        'url': 'https://shipit.mozilla-releng.net',
+                        's3_bucket': 'relengstatic-prod-shipitfrontend-static-website',
                         'dns': 'dve8yd1431ifz.cloudfront.net.',
                         'envs': {
                             'CONFIG': 'production',
