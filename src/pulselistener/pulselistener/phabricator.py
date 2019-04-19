@@ -39,6 +39,18 @@ class PhabricatorBuild(object):
     def __str__(self):
         return 'Revison {} - {}'.format(self.revision_id, self.target_phid)
 
+    def serialize(self):
+        '''
+        Json serializable data
+        '''
+        return {
+            'diff_id': self.diff_id,
+            'repo': self.repo_phid,
+            'revision': self.revision_id,
+            'target': self.target_phid,
+            'state': self.state.name.lower(),
+        }
+
     def check_visibility(self, api, secure_projects):
         '''
         Check the visibility of the revision, by retrying N times with a specified time

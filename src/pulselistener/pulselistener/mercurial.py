@@ -192,3 +192,13 @@ class MercurialWorker(object):
         if build_target_phid:
             uri = TREEHERDER_URL.format(commit.node.decode('utf-8'))
             self.phabricator_api.create_harbormaster_uri(build_target_phid, 'treeherder', 'Treeherder Jobs', uri)
+
+    def export_status(self):
+        '''
+        Export in a JSON serializable format the mercurial
+        worker's status
+        '''
+        return {
+            'repo': self.repo_url,
+            'queued': self.queue.qsize(),
+        }

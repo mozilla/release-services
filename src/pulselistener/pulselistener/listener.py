@@ -200,6 +200,17 @@ class HookPhabricator(Hook):
         logger.info('Queued new build', build=build)
         return web.Response(text='Build queued')
 
+    def export_status(self):
+        '''
+        Export current hook status to be used in API endpoint
+        '''
+        return {
+            'builds': [
+                build.serialize()
+                for build in self.builds.values()
+            ]
+        }
+
     async def trigger_task(self, diff, repo_phid):
         '''
         Trigger a code review task using configured modes: Try or Taskcluster
@@ -328,7 +339,7 @@ class PulseListener(object):
                  taskcluster_client_id=None,
                  taskcluster_access_token=None,
                  ):
-
+        self.hooks = []
         self.pulse_user = pulse_user
         self.pulse_password = pulse_password
         self.hooks_configuration = hooks_configuration
@@ -360,11 +371,11 @@ class PulseListener(object):
     def run(self):
 
         # Build hooks for each conf
-        hooks = [
+        self.hooks = [
             self.build_hook(conf)
             for conf in self.hooks_configuration
         ]
-        if not hooks:
+        if not self.hooks:
             raise Exception('No hooks created')
 
         # Run hooks pulse listeners together
@@ -379,7 +390,7 @@ class PulseListener(object):
             return out
         consumers = [
             hook.build_consumer(self.pulse_user, self.pulse_password)
-            for hook in hooks
+            for hook in self.hooks
             if _connect(hook)
         ]
 
@@ -391,7 +402,7 @@ class PulseListener(object):
             consumers.append(self.mercurial.run())
 
         # Hooks through web server
-        consumers.append(self.build_webserver(hooks))
+        consumers.append(self.build_webserver())
 
         # Run all consumers together
         run_consumer(asyncio.gather(*consumers))
@@ -413,7 +424,20 @@ class PulseListener(object):
 
         return hook_class(conf)
 
-    def build_webserver(self, hooks):
+    async def get_hooks_status(self, request):
+        '''
+        HTTP GET Endpoint used by dashboard & monitoring
+        to retrieve the current state of hooks
+        '''
+        return web.json_response({
+            'hooks': {
+                str(hook.__class__.__name__): hook.export_status()
+                for hook in self.hooks
+            },
+            'mercurial': self.mercurial.export_status() if self.mercurial else None,
+        })
+
+    def build_webserver(self):
         '''
         Build an async web server used by hooks
         '''
@@ -423,10 +447,13 @@ class PulseListener(object):
         async def ping(request):
             return web.Response(text='pong')
 
-        app.add_routes([web.get('/ping', ping)])
+        app.add_routes([
+            web.get('/ping', ping),
+            web.get('/status', self.get_hooks_status),
+        ])
 
         # Add routes from hooks
-        for hook in hooks:
+        for hook in self.hooks:
             app.add_routes(hook.routes)
 
         # Finally build the webserver coroutine

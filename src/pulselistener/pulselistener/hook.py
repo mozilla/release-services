@@ -43,6 +43,12 @@ class Hook(object):
         '''
         raise NotImplementedError
 
+    def export_status(self):
+        '''
+        Build a json serializable status of the hook
+        '''
+        return {}
+
     async def create_task(self, extra_env={}):
         '''
         Create a new task on Taskcluster
