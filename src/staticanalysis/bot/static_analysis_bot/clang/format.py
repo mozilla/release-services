@@ -108,6 +108,8 @@ class ClangFormat(DefaultAnalyzer):
         issues = []
         for filename, diff in patch.items():
             lines = sorted(diff.get('touched', []) + diff.get('added', []))
+            if not lines:
+                continue
 
             # Group consecutive lines together (algorithm by calixte)
             groups = []
