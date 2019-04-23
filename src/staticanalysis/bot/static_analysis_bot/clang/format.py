@@ -107,8 +107,9 @@ class ClangFormat(DefaultAnalyzer):
         # Build `ClangFormatIssue`s
         issues = []
         for filename, diff in patch.items():
-            lines = sorted(diff.get('touched', []) + diff.get('added', []))
+            lines = sorted(diff.get('touched', []) + diff.get('added', []) + diff.get('deleted', []))
             if not lines:
+                logger.warn('No modified lines on this file', file=filename)
                 continue
 
             # Group consecutive lines together (algorithm by calixte)
