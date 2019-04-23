@@ -157,13 +157,18 @@ class MercurialWorker(object):
             await asyncio.sleep(1)
 
         # Build and commit try_task_config.json
+        # The build_target_phid variable is stored in the diff
+        # but comes from the Harbormaster query parameters
+        # TODO: use a dedicated variable once we can remove Taskcluster trigger
+        # and simplify this workflow
+        build_target_phid = diff.get('build_target_phid')
         config_path = os.path.join(self.repo_dir, 'try_task_config.json')
         config = {
             'version': 2,
             'parameters': {
                 'target_tasks_method': 'codereview',
                 'optimize_target_tasks': True,
-                'phabricator_diff': diff['phid'],
+                'phabricator_diff': build_target_phid or diff['phid'],
             }
         }
         with open(config_path, 'w') as f:
@@ -188,7 +193,6 @@ class MercurialWorker(object):
         logger.info('Diff has been pushed !')
 
         # Publish Treeherder link
-        build_target_phid = diff.get('build_target_phid')
         if build_target_phid:
             uri = TREEHERDER_URL.format(commit.node.decode('utf-8'))
             self.phabricator_api.create_harbormaster_uri(build_target_phid, 'treeherder', 'Treeherder Jobs', uri)
