@@ -294,6 +294,35 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'enable': True,
+                        'url': 'https://api.mapper.testing.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'mapper_api_dockerflow_testing',
+                    },
+                    'staging': {
+                        'enable': True,
+                        'url': 'https://api.mapper.staging.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'mapper_api_dockerflow_staging',
+                    },
+                    'production': {
+                        'enable': True,
+                        'url': 'https://api.mapper.mozilla-releng.net',
+                        'nix_path_attribute': 'dockerflow',
+                        'docker_registry': 'index.docker.io',
+                        'docker_repo': 'mozilla/release-services',
+                        'docker_stable_tag': 'mapper_api_dockerflow_production',
+                    },
+                },
+            },
         ],
     },
     'tokens/api': {
