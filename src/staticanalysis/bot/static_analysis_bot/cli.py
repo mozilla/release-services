@@ -118,15 +118,22 @@ def main(id,
     )
 
     # Load Phabricator API
+    phabricator_reporting = 'phabricator' in reporters
     phabricator_api = PhabricatorAPI(phabricator['api_key'], phabricator['url'])
-    if 'phabricator' in reporters:
+    if phabricator_reporting:
         reporters['phabricator'].setup_api(phabricator_api)
 
     # Load unique revision
     if settings.source == SOURCE_PHABRICATOR:
         revision = PhabricatorRevision(phabricator_api, diff_phid=id)
     elif settings.source == SOURCE_TRY:
-        revision = PhabricatorRevision(phabricator_api, try_task=queue_service.task(settings.try_task_id))
+        revision = PhabricatorRevision(
+            phabricator_api,
+            try_task=queue_service.task(settings.try_task_id),
+
+            # Update build status only when phabricator reporting is enabled
+            update_build=phabricator_reporting,
+        )
     else:
         raise Exception('Unsupported source {}'.format(settings.source))
 
