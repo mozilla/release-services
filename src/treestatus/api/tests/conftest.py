@@ -17,6 +17,8 @@ def app():
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'TASKCLUSTER_CLIENT_ID': 'something',
+        'TASKCLUSTER_ACCESS_TOKEN': 'something',
     })
     app = treestatus_api.create_app(config)
 

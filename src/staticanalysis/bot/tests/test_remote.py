@@ -424,6 +424,7 @@ def test_clang_tidy_task(mock_try_config, mock_revision):
     '''
     Test a remote workflow with a clang-tidy analyzer
     '''
+    from static_analysis_bot import Reliability
     from static_analysis_bot.workflows.remote import RemoteWorkflow
     from static_analysis_bot.clang.tidy import ClangTidyIssue
 
@@ -451,7 +452,16 @@ def test_clang_tidy_task(mock_try_config, mock_revision):
                                     'column': 12,
                                     'line': 123,
                                     'flag': 'checker.XXX',
+                                    'reliability': 'high',
                                     'message': 'some hard issue with c++',
+                                    'filename': 'test.cpp',
+                                },
+                                {
+                                    'column': 51,
+                                    'line': 987,
+                                    'flag': 'checker.YYY',
+                                    # No reliability !
+                                    'message': 'some harder issue with c++',
                                     'filename': 'test.cpp',
                                 }
                             ]
@@ -463,14 +473,24 @@ def test_clang_tidy_task(mock_try_config, mock_revision):
     }
     workflow = RemoteWorkflow(MockQueue(tasks))
     issues = workflow.run(mock_revision)
-    assert len(issues) == 1
+    assert len(issues) == 2
     issue = issues[0]
     assert isinstance(issue, ClangTidyIssue)
     assert issue.path == 'test.cpp'
     assert issue.line == 123
     assert issue.char == 12
     assert issue.check == 'checker.XXX'
+    assert issue.reliability == Reliability.High
     assert issue.message == 'some hard issue with c++'
+
+    issue = issues[1]
+    assert isinstance(issue, ClangTidyIssue)
+    assert issue.path == 'test.cpp'
+    assert issue.line == 987
+    assert issue.char == 51
+    assert issue.check == 'checker.YYY'
+    assert issue.reliability == Reliability.Unknown
+    assert issue.message == 'some harder issue with c++'
 
 
 def test_clang_format_task(mock_try_config, mock_revision):
@@ -539,6 +559,7 @@ def test_coverity_task(mock_try_config, mock_revision):
     '''
     Test a remote workflow with a clang-tidy analyzer
     '''
+    from static_analysis_bot import Reliability
     from static_analysis_bot.workflows.remote import RemoteWorkflow
     from static_analysis_bot.coverity.coverity import CoverityIssue
 
@@ -564,6 +585,7 @@ def test_coverity_task(mock_try_config, mock_revision):
                                 {
                                     'line': 66,
                                     'flag': 'UNINIT',
+                                    'reliability': 'high',
                                     'message': 'Using uninitialized value \"a\".',
                                     'extra': {
                                         'category': 'Memory - corruptions',
@@ -595,6 +617,7 @@ def test_coverity_task(mock_try_config, mock_revision):
     assert issue.path == 'test.cpp'
     assert issue.line == 66
     assert issue.kind == 'UNINIT'
+    assert issue.reliability == Reliability.High
     assert issue.bug_type == 'Memory - corruptions'
     assert issue.message == 'Using uninitialized value \"a\".'
     assert issue.is_local()

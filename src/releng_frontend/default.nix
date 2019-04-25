@@ -18,6 +18,7 @@ in mkFrontend {
   inherit nodejs node_modules elm_packages;
   version = fileContents ./VERSION;
   src = ./.;
+  src_path = "src/releng_frontend";
   postInstall = ''
     cp -R src/static/* $out/
   '';

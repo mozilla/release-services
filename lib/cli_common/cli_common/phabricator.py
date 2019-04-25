@@ -300,41 +300,55 @@ class PhabricatorAPI(object):
         )
         return res['targetMap']
 
-    def search_buildable(self, object_phid):
+    def search_buildable(self, object_phid=None, buildable_phid=None):
         '''
         Search HarborMaster buildables linked to an object (diff, revision, ...)
         '''
-        constraints = {
-            'objectPHIDs': [object_phid, ],
-        }
+        assert (object_phid is not None) or (buildable_phid is not None), \
+            'Specify object_phid or buildable_phid'
+        constraints = {}
+        if object_phid is not None:
+            constraints['objectPHIDs'] = [object_phid, ]
+        if buildable_phid is not None:
+            constraints['phids'] = [buildable_phid, ]
         out = self.request(
             'harbormaster.buildable.search',
             constraints=constraints,
         )
         return out['data']
 
-    def search_build(self, buildable_phid, plans=[]):
+    def search_build(self, build_phid=None, buildable_phid=None, plans=[]):
         '''
         Search HarborMaster build for a buildable
         Supports HarborMaster Build Plan filtering
         '''
-        constraints = {
-            'buildables': [buildable_phid, ],
-            'plans': plans,
-        }
+        assert (build_phid is not None) or (buildable_phid is not None), \
+            'Specify build_phid or buildable_phid'
+        constraints = {}
+        if build_phid is not None:
+            constraints['phids'] = [build_phid, ]
+        if buildable_phid is not None:
+            constraints['buildables'] = [buildable_phid, ]
+        if plans:
+            constraints['plans'] = plans
         out = self.request(
             'harbormaster.build.search',
             constraints=constraints,
         )
         return out['data']
 
-    def search_build_target(self, build_phid):
+    def search_build_target(self, build_phid=None, build_target_phid=None):
         '''
         Search HarborMaster build targets for a build
         '''
-        constraints = {
-            'buildPHIDs': [build_phid, ],
-        }
+        assert (build_phid is not None) or (build_target_phid is not None), \
+            'Specify build_phid or build_target_phid'
+        constraints = {}
+        if build_phid is not None:
+            constraints['buildPHIDs'] = [build_phid, ]
+        if build_target_phid is not None:
+            constraints['phids'] = [build_target_phid, ]
+
         out = self.request(
             'harbormaster.target.search',
             constraints=constraints,
@@ -350,22 +364,49 @@ class PhabricatorAPI(object):
         assert build_plan_phid.startswith('PHID-HMCP-')
 
         # First find the buildable for this diff
-        buildables = self.search_buildable(object_phid)
+        buildables = self.search_buildable(object_phid=object_phid)
         assert len(buildables) == 1
         buildable = buildables[0]
         logger.info('Found HarborMaster buildable', id=buildable['id'], phid=buildable['phid'])
 
         # Then find the build in that buildable & plan
-        builds = self.search_build(buildable['phid'], plans=[build_plan_phid, ])
+        builds = self.search_build(
+            buildable_phid=buildable['phid'],
+            plans=[build_plan_phid, ]
+        )
         assert len(buildables) == 1
         build = builds[0]
         logger.info('Found HarborMaster build', id=build['id'], phid=build['phid'])
 
         # Finally look for the build targets
-        targets = self.search_build_target(build['phid'])
+        targets = self.search_build_target(build_phid=build['phid'])
         logger.info('Found HarborMaster build targets', nb=len(targets))
 
         return build, targets
+
+    def find_target_buildable(self, build_target_phid):
+        '''
+        Find a Phabricator buildable from its build target
+        '''
+        assert isinstance(build_target_phid, str)
+        assert build_target_phid.startswith('PHID-HMBT-')
+
+        # First lookup the target
+        targets = self.search_build_target(build_target_phid=build_target_phid)
+        assert len(targets) == 1, 'Build target not found'
+        build_phid = targets[0]['fields']['buildPHID']
+        logger.info('Found HarborMaster build', build=build_phid)
+
+        # Then lookup the build
+        builds = self.search_build(build_phid=build_phid)
+        assert len(builds) == 1
+        buildable_phid = builds[0]['fields']['buildablePHID']
+        logger.info('Found HarborMaster buildable', buildable=buildable_phid)
+
+        # Finally load the buidable
+        buildables = self.search_buildable(buildable_phid=buildable_phid)
+        assert len(buildables) == 1
+        return buildables[0]
 
     def update_build_target(self, build_target_phid, state, unit=[], lint=[]):
         '''

@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import abc
+import enum
 import hashlib
 import itertools
 import json
@@ -194,6 +195,13 @@ class Issue(abc.ABC):
             if self.path.startswith(path):
                 return True
         return False
+
+
+class Reliability(enum.Enum):
+    Unknown = 'unknown'
+    High = 'high'
+    Medium = 'medium'
+    Low = 'low'
 
 
 # Create common stats instance
