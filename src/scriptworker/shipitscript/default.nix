@@ -8,8 +8,8 @@ let
   src-scriptworker-shipitscript = fetchFromGitHub {
     owner = "mozilla-releng";
     repo = "shipitscript";
-    rev = "5db546d7916630a62f8f9f9719b2a3d3a7fa1870";
-    sha256 = "05caga08jd5l2np6h1zi8lx4q89b6pcsj7vs9iv3m3db32d1dkqh";
+    rev = "1aedbc50ffbbfa2f8436ae35a94c2e5955bfe06a";
+    sha256 = "148jph6n07bav1m7gwg3hxk0yagvsw3b7fp0mwm6phli7l6ipfbs";
   };
 
 in import "${src-scriptworker-shipitscript}/nix" { inherit (releng_pkgs) pkgs; }
