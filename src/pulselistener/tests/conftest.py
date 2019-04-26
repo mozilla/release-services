@@ -171,6 +171,11 @@ def PhabricatorMock():
         assert 'sourcePHIDs' in params
         return (200, json_headers, _response('edges-{}'.format(params['sourcePHIDs'][0])))
 
+    def _create_artifact(request):
+        params = _phab_params(request)
+        assert 'buildTargetPHID' in params
+        return (200, json_headers, _response('artifact-{}'.format(params['buildTargetPHID'])))
+
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resp:
 
         resp.add(
@@ -198,10 +203,18 @@ def PhabricatorMock():
             callback=_diff_raw,
         )
 
-        yield PhabricatorAPI(
+        resp.add_callback(
+            responses.POST,
+            'http://phabricator.test/api/harbormaster.createartifact',
+            callback=_create_artifact,
+        )
+
+        api = PhabricatorAPI(
             url='http://phabricator.test/api/',
             api_key='deadbeef',
         )
+        api.mocks = resp  # used to assert in tests on callbacks
+        yield api
 
 
 @pytest.fixture

@@ -352,6 +352,7 @@ class PulseListener(object):
                 repo_url=REPO_UNIFIED,
                 repo_dir=os.path.join(cache_root, 'sa-unified'),
                 batch_size=mercurial_conf.get('batch_size', 100000),
+                publish_treeherder_link=mercurial_conf.get('publish_treeherder_link', False),
             )
         else:
             self.mercurial = None

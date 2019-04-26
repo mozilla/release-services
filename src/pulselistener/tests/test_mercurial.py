@@ -31,6 +31,7 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
+            publish_treeherder_link=False,
         )
         worker.repo = RepoMock
 
@@ -42,6 +43,9 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
             # Revision does not exist, will apply on tip
             'baseRevision': 'abcdef12345',
         })
+
+        # Check the treeherder link was NOT published
+        assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
 
     # The target should have content now
     assert os.path.exists(target)
@@ -117,6 +121,7 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
+            publish_treeherder_link=False,
         )
         worker.repo = RepoMock
 
@@ -128,6 +133,9 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
             # Revision does not exist, will apply on tip
             'baseRevision': base,
         })
+
+        # Check the treeherder link was NOT published
+        assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
 
     # The target should have content now
     assert os.path.exists(target)
@@ -176,3 +184,48 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
     assert parent.node != extra
     assert great_parent.node != extra
     assert 'EXTRA' not in open(os.path.join(repo_dir, 'README.md')).read()
+
+
+@pytest.mark.asyncio
+async def test_treeherder_link(PhabricatorMock, RepoMock):
+    '''
+    Run mercurial worker on a single diff
+    and check the treeherder link publication as an artifact
+    '''
+    # Get initial tip commit in repo
+    initial = RepoMock.tip()
+
+    # The patched and config files should not exist at first
+    repo_dir = RepoMock.root().decode('utf-8')
+    config = os.path.join(repo_dir, 'try_task_config.json')
+    target = os.path.join(repo_dir, 'test.txt')
+    assert not os.path.exists(target)
+    assert not os.path.exists(config)
+
+    with PhabricatorMock as api:
+        worker = MercurialWorker(
+            api,
+            ssh_user='john@doe.com',
+            ssh_key='privateSSHkey',
+            repo_url='http://mozilla-central',
+            repo_dir=repo_dir,
+            batch_size=100,
+            publish_treeherder_link=True,
+        )
+        worker.repo = RepoMock
+
+        await worker.handle_diff({
+            'phid': 'PHID-DIFF-test123',
+            'revisionPHID': 'PHID-DREV-deadbeef',
+            'id': 1234,
+            'build_target_phid': 'PHID-HMBT-somehash',
+            'baseRevision': 'abcdef12345',
+        })
+
+        # Check the treeherder link was published
+        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.createartifact'
+        assert api.mocks.calls[-1].response.status_code == 200
+
+    # Tip should be updated
+    tip = RepoMock.tip()
+    assert tip.node != initial.node
