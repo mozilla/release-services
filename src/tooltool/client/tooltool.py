@@ -22,12 +22,14 @@
 # in which the manifest file resides and it should be called
 # 'manifest.tt'
 
+from __future__ import print_function
+
 import base64
 import calendar
 import hashlib
+import hmac
 import httplib
 import json
-import hmac
 import logging
 import math
 import optparse
@@ -312,14 +314,17 @@ class FileRecord(object):
         self.setup = setup
 
     def __eq__(self, other):
-        return self is other or (
-            self.filename == other.filename and
-            self.size == other.size and
-            self.digest == other.digest and
-            self.algorithm == other.algorithm and
-            self.version == other.version and
-            self.visibility == other.visibility
-        )
+        if self is other:
+            return True
+        if self.filename == other.filename and \
+           self.size == other.size and \
+           self.digest == other.digest and \
+           self.algorithm == other.algorithm and \
+           self.version == other.version and \
+           self.visibility == other.visibility:
+            return True
+        else:
+            return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -354,7 +359,10 @@ class FileRecord(object):
             raise MissingFileException(filename=self.filename)
 
     def validate(self):
-        return self.validate_size() and self.validate_digest()
+        if self.size is None or self.validate_size():
+            if self.validate_digest():
+                return True
+        return False
 
     def describe(self):
         if self.present() and self.validate():
@@ -366,11 +374,12 @@ class FileRecord(object):
 
 
 def create_file_record(filename, algorithm):
-    with open(filename, 'rb') as fo:
-        stored_filename = os.path.split(filename)[1]
-        fr = FileRecord(stored_filename, os.path.getsize(
-            filename), digest_file(fo, algorithm), algorithm)
-        return fr
+    fo = open(filename, 'rb')
+    stored_filename = os.path.split(filename)[1]
+    fr = FileRecord(stored_filename, os.path.getsize(
+        filename), digest_file(fo, algorithm), algorithm)
+    fo.close()
+    return fr
 
 
 class FileRecordJSONEncoder(json.JSONEncoder):
@@ -400,10 +409,10 @@ class FileRecordJSONEncoder(json.JSONEncoder):
 
     def default(self, f):
         if issubclass(type(f), list):
-            return [
-                self.encode_file_record(i)
-                for i in f
-            ]
+            record_list = []
+            for i in f:
+                record_list.append(self.encode_file_record(i))
+            return record_list
         else:
             return self.encode_file_record(f)
 
@@ -547,7 +556,7 @@ def digest_file(f, a):
 
 def execute(cmd):
     """Execute CMD, logging its stdout at the info level"""
-    process = Popen(cmd, shell=True, stdout=PIPE)
+    process = Popen(cmd, shell=True, stdout=PIPE, bufsize=0)
     while True:
         line = process.stdout.readline()
         if not line:
@@ -581,9 +590,9 @@ def list_manifest(manifest_file):
         ))
         return False
     for f in manifest.file_records:
-        print "%s\t%s\t%s" % ("P" if f.present() else "-",
+        print("%s\t%s\t%s" % ("P" if f.present() else "-",
                               "V" if f.present() and f.validate() else "-",
-                              f.filename)
+                              f.filename))
     return True
 
 
@@ -728,14 +737,39 @@ def clean_path(dirname):
         shutil.rmtree(dirname)
 
 
+CHECKSUM_SUFFIX = ".checksum"
+
+
+def _cache_checksum_matches(base_file, checksum):
+    try:
+        with open(base_file + CHECKSUM_SUFFIX, "rb") as f:
+            prev_checksum = f.read().strip()
+            if prev_checksum == checksum:
+                log.info("Cache matches, avoiding extracting in '%s'" % base_file)
+                return True
+            return False
+    except IOError as e:
+        return False
+
+
+def _compute_cache_checksum(filename):
+    with open(filename, "rb") as f:
+        return digest_file(f, "sha256")
+
+
 def unpack_file(filename, setup=None):
     """Untar `filename`, assuming it is uncompressed or compressed with bzip2,
     xz, gzip, or unzip a zip file. The file is assumed to contain a single
     directory with a name matching the base of the given filename.
     Xz support is handled by shelling out to 'tar'."""
+
+    checksum = _compute_cache_checksum(filename)
+
     if tarfile.is_tarfile(filename):
         tar_file, zip_ext = os.path.splitext(filename)
         base_file, tar_ext = os.path.splitext(tar_file)
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         tar = tarfile.open(filename)
@@ -743,12 +777,16 @@ def unpack_file(filename, setup=None):
         tar.close()
     elif filename.endswith('.tar.xz'):
         base_file = filename.replace('.tar.xz', '')
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         if not execute('tar -Jxf %s 2>&1' % filename):
             return False
     elif zipfile.is_zipfile(filename):
         base_file = filename.replace('.zip', '')
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('unzipping "%s"' % filename)
         z = zipfile.ZipFile(filename)
@@ -760,6 +798,10 @@ def unpack_file(filename, setup=None):
 
     if setup and not execute(os.path.join(base_file, setup)):
         return False
+
+    with open(base_file + CHECKSUM_SUFFIX, "wb") as f:
+        f.write(checksum)
+
     return True
 
 
@@ -882,7 +924,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
                 try:
                     if not os.path.exists(cache_folder):
                         log.info("Creating cache in %s..." % cache_folder)
-                        os.makedirs(cache_folder, 0700)
+                        os.makedirs(cache_folder, 0o0700)
                     shutil.copy(os.path.join(os.getcwd(), localfile.filename),
                                 os.path.join(cache_folder, localfile.digest))
                     log.info("Local cache %s updated with %s" % (cache_folder,
