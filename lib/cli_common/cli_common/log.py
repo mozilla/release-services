@@ -78,7 +78,7 @@ def setup_mozdef(project_name, channel, MOZDEF):
     return send
 
 
-def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT):
+def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT, level):
     '''
     Setup papertrail account using taskcluster secrets
     '''
@@ -87,6 +87,7 @@ def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT):
     papertrail = logbook.SyslogHandler(
         application_name=f'mozilla/release-services/{channel}/{project_name}',
         address=(PAPERTRAIL_HOST, int(PAPERTRAIL_PORT)),
+        level=level,
         format_string='{record.time} {record.channel}: {record.message}',
         bubble=True,
     )
@@ -151,7 +152,7 @@ def init_logger(project_name,
 
     # Log to papertrail
     if channel and PAPERTRAIL_HOST and PAPERTRAIL_PORT:
-        setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT)
+        setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT, level)
 
     # Log to sentry
     if channel and SENTRY_DSN:
