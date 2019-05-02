@@ -62,10 +62,15 @@ class RemoteWorkflow(object):
                 logger.info('Skip dependency not in group', task_id=dep_id)
                 return False
             return True
-        dependencies = list(filter(_in_group, dependencies))
+        dependencies = [
+            dep_id
+            for dep_id in dependencies
+            if _in_group(dep_id)
+        ]
 
         # Do not run parsers when we only have a gecko decision task
         # That means no analyzer were triggered by the taskgraph decision task
+        # This can happen if the patch only touches file types for which we have no analyzer defined
         # See issue https://github.com/mozilla/release-services/issues/2055
         if len(dependencies) == 1:
             task = tasks[dependencies[0]]
