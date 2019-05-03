@@ -72,15 +72,16 @@ class PhabricatorReporter(Reporter):
 
         if issues:
             if self.mode == MODE_COMMENT:
-                self.publish_comment(revision, issues, patches)
+                issues_reported = self.publish_comment(revision, issues, patches)
             elif self.mode == MODE_HARBORMASTER:
-                self.publish_harbormaster(revision, issues)
+                issues_reported = self.publish_harbormaster(revision, issues)
             else:
                 raise Exception('Unsupported mode {}'.format(self.mode))
         else:
             logger.info('No issues to publish on phabricator')
+            issues_reported = []
 
-        return issues, patches
+        return issues_reported, patches
 
     def publish_comment(self, revision, issues, patches):
         '''
@@ -93,7 +94,7 @@ class PhabricatorReporter(Reporter):
         coverage_issues = [issue for issue in issues if issue.ANALYZER == COVERAGE]
 
         # First publish inlines as drafts
-        inlines_published = 0
+        inlines_published = []
         inlines_extras = []
         for issue in issues:
             if issue.ANALYZER in ANALYZERS_WITHOUT_INLINES:
@@ -101,7 +102,7 @@ class PhabricatorReporter(Reporter):
 
             try:
                 self.comment_inline(revision, issue, existing_comments)
-                inlines_published += 1
+                inlines_published.append(issue)
             except ConduitError as e:
                 # Publish failures in top comment
                 # https://github.com/mozilla/release-services/issues/2028
@@ -114,13 +115,18 @@ class PhabricatorReporter(Reporter):
             return
         logger.info('Added {} inline comments'.format(inlines_published))
 
-        # Then publish top comment
-        non_coverage_issues = [issue for issue in issues if issue.ANALYZER != COVERAGE]
-        if len(non_coverage_issues):
+        # Then publish top comment about inline comments + clang-forant silent issues
+        # as the coverage ones are sent in a specific comment
+        issues_reported = inlines_published + inlines_extras + [
+            issue
+            for issue in issues
+            if issue.ANALYZER == CLANG_FORMAT
+        ]
+        if len(issues_reported):
             self.api.comment(
                 revision.id,
                 self.build_comment(
-                    issues=non_coverage_issues,
+                    issues=issues_reported,
                     extra_issues=inlines_extras,
                     patches=patches,
                     bug_report_url=BUG_REPORT_URL,
@@ -137,9 +143,11 @@ class PhabricatorReporter(Reporter):
                 ),
             )
 
-        stats.api.increment('report.phabricator.issues', inlines_published + len(inlines_extras))
+        stats.api.increment('report.phabricator.issues', len(issues_reported + coverage_issues))
         stats.api.increment('report.phabricator')
         logger.info('Published phabricator comment')
+
+        return issues_reported + coverage_issues
 
     def publish_harbormaster(self, revision, issues):
         '''
@@ -152,6 +160,7 @@ class PhabricatorReporter(Reporter):
                 for issue in issues
             ]
         )
+        return issues
 
     def comment_inline(self, revision, issue, existing_comments=[]):
         '''

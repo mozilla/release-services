@@ -65,6 +65,20 @@ For your convenience, [here is a patch](None) that fixes all the clang-format de
 If you see a problem in this automated review, [please report it here](https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox+Build+System&component=Source+Code+Analysis&short_desc=[Automated+review]+UPDATE&comment=**Phabricator+URL:**+https://phabricator.services.mozilla.com/...&format=__default__).
 '''  # noqa
 
+VALID_EXTRA_INLINES_SILENT_MESSAGE = '''
+Code analysis found 2 defects in this patch:
+ - 1 defect found by clang-format
+ - 1 defect found by clang-tidy
+
+You can run this analysis locally with:
+ - `./mach clang-format -s -p dom/test.cpp` (C/C++)
+ - `./mach static-analysis check test.cpp` (C/C++)
+
+For your convenience, [here is a patch](None) that fixes all the clang-format defects (use it in your repository with `hg import` or `git apply`).
+
+If you see a problem in this automated review, [please report it here](https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox+Build+System&component=Source+Code+Analysis&short_desc=[Automated+review]+UPDATE&comment=**Phabricator+URL:**+https://phabricator.services.mozilla.com/...&format=__default__).
+'''  # noqa
+
 
 @responses.activate
 def test_phabricator_clang_tidy(mock_repository, mock_phabricator):
@@ -518,19 +532,22 @@ def test_phabricator_inline_failure(mock_repository, mock_phabricator):
         assert payload['output'] == ['json']
         assert len(payload['params']) == 1
         details = json.loads(payload['params'][0])
-        assert details == {
-            'revision_id': 51,
-            'message': VALID_EXTRA_INLINES_MESSAGE,
-            'attach_inlines': 1,
-            '__conduit__': {'token': 'deadbeef'},
-        }
+        assert details['revision_id'] == 51
+        assert 'message' in details
+        assert details['attach_inlines'] == 1
+        assert details['__conduit__'] == {'token': 'deadbeef'}
 
         # Outputs dummy empty response
         resp = {
             'error_code': None,
             'result': None,
         }
-        return 201, {'Content-Type': 'application/json', 'unittest': 'inline-extras'}, json.dumps(resp)
+        headers = {
+            'Content-Type': 'application/json',
+            'unittest': 'inline-extras',
+            'message': details['message'],
+        }
+        return 201, headers, json.dumps(resp)
 
     responses.add_callback(
         responses.POST,
@@ -545,12 +562,16 @@ def test_phabricator_inline_failure(mock_repository, mock_phabricator):
             'dom/test.cpp': [41, 42, 43],
         }
         revision.add_improvement_patch('clang-format', 'Some patch content')
+
+        # Build two reporters : silent & published extra issues
         config = {
             'analyzers': ['clang-tidy', 'clang-format'],
             'modes': ('comment'),
-            'publish_extra_issues': True,
         }
-        reporter = PhabricatorReporter(config, api=api)
+        reporter_silent = PhabricatorReporter(config, api=api)
+
+        config['publish_extra_issues'] = True
+        reporter_extras = PhabricatorReporter(config, api=api)
 
     issues = [
         ClangTidyIssue(revision, 'test.cpp', '42', '51', 'modernize-use-nullptr', 'dummy message', 'error'),
@@ -560,7 +581,8 @@ def test_phabricator_inline_failure(mock_repository, mock_phabricator):
     ]
     assert all([issue.is_publishable() for issue in issues])
 
-    published_issues, patches = reporter.publish(issues, revision)
+    # Check the workflow with extra publication
+    published_issues, patches = reporter_extras.publish(issues, revision)
     assert len(published_issues) == 4
     assert len(patches) == 1
 
@@ -568,4 +590,17 @@ def test_phabricator_inline_failure(mock_repository, mock_phabricator):
     assert len(responses.calls) > 0
     call = responses.calls[-1]
     assert call.request.url == 'http://phabricator.test/api/differential.createcomment'
+    assert call.response.headers['unittest'] == 'inline-extras'
+    assert call.response.headers['message'] == VALID_EXTRA_INLINES_MESSAGE
+
+    # Check the workflow without extra publication
+    published_issues, patches = reporter_silent.publish(issues, revision)
+    assert len(published_issues) == 2
+    assert len(patches) == 1
+
+    # Check the callback has been used
+    assert len(responses.calls) > 0
+    call = responses.calls[-1]
+    assert call.request.url == 'http://phabricator.test/api/differential.createcomment'
     assert call.response.headers.get('unittest') == 'inline-extras'
+    assert call.response.headers['message'] == VALID_EXTRA_INLINES_SILENT_MESSAGE
