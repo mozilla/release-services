@@ -41,7 +41,7 @@ You can run this analysis locally with:
 {analyzers}
 '''
 COMMENT_EXTRA_ISSUES = '''
-The analysis also found these issues affecting other files:
+The analysis also found these issues affecting files outside your revision:
 {issues}
 '''
 COMMENT_COVERAGE = '''

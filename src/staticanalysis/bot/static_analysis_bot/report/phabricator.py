@@ -115,7 +115,7 @@ class PhabricatorReporter(Reporter):
             return
         logger.info('Added {} inline comments'.format(inlines_published))
 
-        # Then publish top comment about inline comments + clang-forant silent issues
+        # Then publish top comment about inline comments + clang-format silent issues
         # as the coverage ones are sent in a specific comment
         issues_reported = inlines_published + inlines_extras + [
             issue

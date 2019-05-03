@@ -55,7 +55,7 @@ You can run this analysis locally with:
  - `./mach clang-format -s -p dom/test.cpp` (C/C++)
  - `./mach static-analysis check test.cpp` (C/C++)
 
-The analysis also found these issues affecting other files:
+The analysis also found these issues affecting files outside your revision:
 * test.cpp on line 41 : Error: Dummy message CrashPhabricatorInline [clang-tidy: modernize-use-nullptr]
 Modernize our code base to C++11
 * test.cpp on line 43 : Warning: Another message in here CrashPhabricatorInline [clang-tidy: readability-redundant-preprocessor]
