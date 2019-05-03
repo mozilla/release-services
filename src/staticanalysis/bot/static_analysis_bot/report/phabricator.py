@@ -40,6 +40,9 @@ class PhabricatorReporter(Reporter):
         assert self.mode in (MODE_COMMENT, MODE_HARBORMASTER), 'Invalid mode'
         logger.info('Will publish using', mode=self.mode)
 
+        self.publish_extra_issues = configuration.get('publish_extra_issues', False)
+        logger.info('Extra issues publication {}'.format(self.publish_extra_issues and 'enabled' or 'disabled'))
+
     def setup_api(self, api):
         assert isinstance(api, PhabricatorAPI)
         self.api = api
@@ -103,7 +106,8 @@ class PhabricatorReporter(Reporter):
                 # Publish failures in top comment
                 # https://github.com/mozilla/release-services/issues/2028
                 logger.warn('Failed to publish inline comment for {}: {}'.format(issue, str(e)))
-                inlines_extras.append(issue)
+                if self.publish_extra_issues:
+                    inlines_extras.append(issue)
 
         if not inlines_published and not inlines_extras and not patches and not coverage_issues:
             logger.info('No new comments found, skipping Phabricator publication')

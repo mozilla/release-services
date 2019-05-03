@@ -545,7 +545,12 @@ def test_phabricator_inline_failure(mock_repository, mock_phabricator):
             'dom/test.cpp': [41, 42, 43],
         }
         revision.add_improvement_patch('clang-format', 'Some patch content')
-        reporter = PhabricatorReporter({'analyzers': ['clang-tidy', 'clang-format'], 'modes': ('comment')}, api=api)
+        config = {
+            'analyzers': ['clang-tidy', 'clang-format'],
+            'modes': ('comment'),
+            'publish_extra_issues': True,
+        }
+        reporter = PhabricatorReporter(config, api=api)
 
     issues = [
         ClangTidyIssue(revision, 'test.cpp', '42', '51', 'modernize-use-nullptr', 'dummy message', 'error'),
