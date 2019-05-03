@@ -40,6 +40,10 @@ COMMENT_RUN_ANALYZERS = '''
 You can run this analysis locally with:
 {analyzers}
 '''
+COMMENT_EXTRA_ISSUES = '''
+The analysis also found these issues affecting other files:
+{issues}
+'''
 COMMENT_COVERAGE = '''
 In our previous code coverage analysis run, we found some files which had no coverage and are being modified in this patch:
 {paths}
@@ -113,7 +117,7 @@ class Reporter(object):
             for cls, items in groups
         ])
 
-    def build_comment(self, issues, bug_report_url, patches=[]):
+    def build_comment(self, issues, bug_report_url, patches=[], extra_issues=[]):
         '''
         Build a Markdown comment about published issues
         '''
@@ -149,6 +153,12 @@ class Reporter(object):
 
         if analyzers:
             comment += COMMENT_RUN_ANALYZERS.format(analyzers='\n'.join(analyzers))
+
+        if extra_issues:
+            comment += COMMENT_EXTRA_ISSUES.format(issues='\n'.join([
+                '* {} on line {} : {}'.format(issue.path, issue.line, issue.as_text())
+                for issue in extra_issues
+            ]))
 
         for patch in patches:
             comment += COMMENT_DIFF_DOWNLOAD.format(

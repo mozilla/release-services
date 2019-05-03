@@ -5,6 +5,7 @@
 
 from cli_common import log
 from cli_common.phabricator import BuildState
+from cli_common.phabricator import ConduitError
 from cli_common.phabricator import PhabricatorAPI
 from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import COVERAGE
@@ -89,15 +90,25 @@ class PhabricatorReporter(Reporter):
         coverage_issues = [issue for issue in issues if issue.ANALYZER == COVERAGE]
 
         # First publish inlines as drafts
-        inlines = list(filter(None, [
-            self.comment_inline(revision, issue, existing_comments)
-            for issue in issues
-            if issue.ANALYZER not in ANALYZERS_WITHOUT_INLINES
-        ]))
-        if not inlines and not patches and not coverage_issues:
+        inlines_published = 0
+        inlines_extras = []
+        for issue in issues:
+            if issue.ANALYZER in ANALYZERS_WITHOUT_INLINES:
+                continue
+
+            try:
+                self.comment_inline(revision, issue, existing_comments)
+                inlines_published += 1
+            except ConduitError as e:
+                # Publish failures in top comment
+                # https://github.com/mozilla/release-services/issues/2028
+                logger.warn('Failed to publish inline comment for {}: {}'.format(issue, str(e)))
+                inlines_extras.append(issue)
+
+        if not inlines_published and not inlines_extras and not patches and not coverage_issues:
             logger.info('No new comments found, skipping Phabricator publication')
             return
-        logger.info('Added inline comments', ids=[i['id'] for i in inlines])
+        logger.info('Added {} inline comments'.format(inlines_published))
 
         # Then publish top comment
         non_coverage_issues = [issue for issue in issues if issue.ANALYZER != COVERAGE]
@@ -106,6 +117,7 @@ class PhabricatorReporter(Reporter):
                 revision.id,
                 self.build_comment(
                     issues=non_coverage_issues,
+                    extra_issues=inlines_extras,
                     patches=patches,
                     bug_report_url=BUG_REPORT_URL,
                 ),
@@ -121,7 +133,7 @@ class PhabricatorReporter(Reporter):
                 ),
             )
 
-        stats.api.increment('report.phabricator.issues', len(inlines))
+        stats.api.increment('report.phabricator.issues', inlines_published + len(inlines_extras))
         stats.api.increment('report.phabricator')
         logger.info('Published phabricator comment')
 
@@ -156,7 +168,7 @@ class PhabricatorReporter(Reporter):
             logger.info('Skipping existing comment', text=comment['content'], filename=comment['filePath'], line=comment['lineNumber'])
             return
 
-        inline = self.api.request(
+        return self.api.request(
             'differential.createinline',
 
             # This displays on the new file (right side)
@@ -166,4 +178,3 @@ class PhabricatorReporter(Reporter):
             # Use comment data
             **comment
         )
-        return inline
