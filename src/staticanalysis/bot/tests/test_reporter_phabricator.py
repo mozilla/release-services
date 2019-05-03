@@ -46,6 +46,26 @@ If you see a problem in this automated review, [please report it here](https://b
 '''  # noqa
 
 
+VALID_EXTRA_INLINES_MESSAGE = '''
+Code analysis found 4 defects in this patch:
+ - 1 defect found by clang-format
+ - 3 defects found by clang-tidy
+
+You can run this analysis locally with:
+ - `./mach clang-format -s -p dom/test.cpp` (C/C++)
+ - `./mach static-analysis check test.cpp` (C/C++)
+
+The analysis also found these issues affecting other files:
+* test.cpp on line 41 : Error: Dummy message CrashPhabricatorInline [clang-tidy: modernize-use-nullptr]
+Modernize our code base to C++11
+* test.cpp on line 43 : Warning: Another message in here CrashPhabricatorInline [clang-tidy: readability-redundant-preprocessor]
+
+For your convenience, [here is a patch](None) that fixes all the clang-format defects (use it in your repository with `hg import` or `git apply`).
+
+If you see a problem in this automated review, [please report it here](https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox+Build+System&component=Source+Code+Analysis&short_desc=[Automated+review]+UPDATE&comment=**Phabricator+URL:**+https://phabricator.services.mozilla.com/...&format=__default__).
+'''  # noqa
+
+
 @responses.activate
 def test_phabricator_clang_tidy(mock_repository, mock_phabricator):
     '''
@@ -480,3 +500,67 @@ def test_phabricator_harbormaster(mock_repository, mock_phabricator):
     call = responses.calls[-1]
     assert call.request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
     assert call.response.headers.get('unittest') == 'clang-tidy'
+
+
+@responses.activate
+def test_phabricator_inline_failure(mock_repository, mock_phabricator):
+    '''
+    Test Phabricator reporter when a failure happen during an inline publication
+    '''
+    from static_analysis_bot.report.phabricator import PhabricatorReporter
+    from static_analysis_bot.revisions import PhabricatorRevision
+    from static_analysis_bot.clang.tidy import ClangTidyIssue
+    from static_analysis_bot.clang.format import ClangFormatIssue
+
+    def _check_comment(request):
+        # Check the Phabricator main comment is well formed
+        payload = urllib.parse.parse_qs(request.body)
+        assert payload['output'] == ['json']
+        assert len(payload['params']) == 1
+        details = json.loads(payload['params'][0])
+        assert details == {
+            'revision_id': 51,
+            'message': VALID_EXTRA_INLINES_MESSAGE,
+            'attach_inlines': 1,
+            '__conduit__': {'token': 'deadbeef'},
+        }
+
+        # Outputs dummy empty response
+        resp = {
+            'error_code': None,
+            'result': None,
+        }
+        return 201, {'Content-Type': 'application/json', 'unittest': 'inline-extras'}, json.dumps(resp)
+
+    responses.add_callback(
+        responses.POST,
+        'http://phabricator.test/api/differential.createcomment',
+        callback=_check_comment,
+    )
+
+    with mock_phabricator as api:
+        revision = PhabricatorRevision(api, 'PHID-DIFF-abcdef')
+        revision.lines = {
+            'test.cpp': [41, 42, 43],
+            'dom/test.cpp': [41, 42, 43],
+        }
+        revision.add_improvement_patch('clang-format', 'Some patch content')
+        reporter = PhabricatorReporter({'analyzers': ['clang-tidy', 'clang-format'], 'modes': ('comment')}, api=api)
+
+    issues = [
+        ClangTidyIssue(revision, 'test.cpp', '42', '51', 'modernize-use-nullptr', 'dummy message', 'error'),
+        ClangTidyIssue(revision, 'test.cpp', '41', '1', 'modernize-use-nullptr', 'dummy message CrashPhabricatorInline', 'error'),
+        ClangTidyIssue(revision, 'test.cpp', '43', '1', 'readability-redundant-preprocessor', 'Another message in here CrashPhabricatorInline', 'warning'),
+        ClangFormatIssue('dom/test.cpp', 42, 1, revision)
+    ]
+    assert all([issue.is_publishable() for issue in issues])
+
+    published_issues, patches = reporter.publish(issues, revision)
+    assert len(published_issues) == 4
+    assert len(patches) == 1
+
+    # Check the callback has been used
+    assert len(responses.calls) > 0
+    call = responses.calls[-1]
+    assert call.request.url == 'http://phabricator.test/api/differential.createcomment'
+    assert call.response.headers.get('unittest') == 'inline-extras'

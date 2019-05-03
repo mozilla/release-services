@@ -4,10 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import itertools
+import json
 import os.path
 import subprocess
 import tempfile
 import time
+import urllib
 from contextlib import contextmanager
 from distutils.spawn import find_executable
 from unittest.mock import Mock
@@ -149,6 +151,18 @@ def mock_phabricator():
         assert os.path.exists(path)
         return open(path).read()
 
+    def _create_inline(request):
+        payload = urllib.parse.parse_qs(request.body)
+        assert payload['output'] == ['json']
+        assert len(payload['params']) == 1
+        details = json.loads(payload['params'][0])
+
+        # Mock crash on specific keywork
+        if 'CrashPhabricatorInline' in details['content']:
+            return (200, {}, _response('failinline'))
+
+        return (200, {}, _response('createinline'))
+
     responses.add(
         responses.POST,
         'http://phabricator.test/api/user.whoami',
@@ -184,10 +198,10 @@ def mock_phabricator():
         content_type='application/json',
     )
 
-    responses.add(
+    responses.add_callback(
         responses.POST,
         'http://phabricator.test/api/differential.createinline',
-        body=_response('createinline'),
+        callback=_create_inline,
         content_type='application/json',
     )
 

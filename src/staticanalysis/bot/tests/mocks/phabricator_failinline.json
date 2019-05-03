@@ -1,0 +1,5 @@
+{
+    "result": null,
+    "error_code": 500,
+    "error_info": "Requested file doesn't exist in this revision."
+}
