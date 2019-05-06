@@ -35,14 +35,15 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
         )
         worker.repo = RepoMock
 
-        await worker.handle_diff({
+        diff = {
             'phid': 'PHID-DIFF-test123',
             'revisionPHID': 'PHID-DREV-deadbeef',
             'id': 1234,
 
             # Revision does not exist, will apply on tip
             'baseRevision': 'abcdef12345',
-        })
+        }
+        await worker.handle_diff('PHID-HMBT-deadbeef', diff)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
@@ -58,7 +59,7 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
         'parameters': {
             'target_tasks_method': 'codereview',
             'optimize_target_tasks': True,
-            'phabricator_diff': 'PHID-DIFF-test123',
+            'phabricator_diff': 'PHID-HMBT-deadbeef',
         }
     }
 
@@ -125,14 +126,15 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
         )
         worker.repo = RepoMock
 
-        await worker.handle_diff({
+        diff = {
             'phid': 'PHID-DIFF-solo',
             'revisionPHID': 'PHID-DREV-solo',
             'id': 9876,
 
             # Revision does not exist, will apply on tip
             'baseRevision': base,
-        })
+        }
+        await worker.handle_diff('PHID-HMBT-deadbeef', diff)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
@@ -148,7 +150,7 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
         'parameters': {
             'target_tasks_method': 'codereview',
             'optimize_target_tasks': True,
-            'phabricator_diff': 'PHID-DIFF-solo',
+            'phabricator_diff': 'PHID-HMBT-deadbeef',
         }
     }
 
@@ -214,13 +216,13 @@ async def test_treeherder_link(PhabricatorMock, RepoMock):
         )
         worker.repo = RepoMock
 
-        await worker.handle_diff({
+        diff = {
             'phid': 'PHID-DIFF-test123',
             'revisionPHID': 'PHID-DREV-deadbeef',
             'id': 1234,
-            'build_target_phid': 'PHID-HMBT-somehash',
             'baseRevision': 'abcdef12345',
-        })
+        }
+        await worker.handle_diff('PHID-HMBT-somehash', diff)
 
         # Check the treeherder link was published
         assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.createartifact'

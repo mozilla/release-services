@@ -76,13 +76,12 @@ class MercurialWorker(object):
 
         # Wait for phabricator diffs to apply
         while True:
-            diff = await self.queue.get()
+            build_target_phid, diff = await self.queue.get()
             assert isinstance(diff, dict)
             assert 'phid' in diff
 
             try:
                 await self.handle_diff(diff)
-
             except hglib.error.CommandError as e:
                 logger.warn('Mercurial error on diff', error=e.err, args=e.args, phid=diff['phid'])
 
@@ -113,7 +112,7 @@ class MercurialWorker(object):
         logger.info('Pull updates from remote repo')
         self.repo.pull()
 
-    async def handle_diff(self, diff):
+    async def handle_diff(self, build_target_phid, diff):
         '''
         Handle a new diff received from Phabricator:
         - apply revision to mercurial repo
@@ -159,11 +158,6 @@ class MercurialWorker(object):
             await asyncio.sleep(1)
 
         # Build and commit try_task_config.json
-        # The build_target_phid variable is stored in the diff
-        # but comes from the Harbormaster query parameters
-        # TODO: use a dedicated variable once we can remove Taskcluster trigger
-        # and simplify this workflow
-        build_target_phid = diff.get('build_target_phid')
         config_path = os.path.join(self.repo_dir, 'try_task_config.json')
         config = {
             'version': 2,
