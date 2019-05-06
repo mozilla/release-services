@@ -531,7 +531,7 @@ class Manifest(object):
             rv = json.dump(
                 self.file_records, output_file, indent=2, cls=FileRecordJSONEncoder,
                 separators=(',', ': '))
-            print >> output_file, ''
+            print('', file=output_file)
             return rv
 
     def dumps(self, fmt='json'):
@@ -748,7 +748,7 @@ def _cache_checksum_matches(base_file, checksum):
                 log.info("Cache matches, avoiding extracting in '%s'" % base_file)
                 return True
             return False
-    except IOError as e:
+    except IOError:
         return False
 
 
