@@ -50,7 +50,14 @@ class AnalysisTask(object):
             logger.info('Load artifact', task_id=self.id, artifact=artifact_name)
             try:
                 artifact = queue_service.getArtifact(self.id, self.run_id, artifact_name)
-                out[artifact_name] = 'response' in artifact and artifact['response'].content or artifact
+
+                if 'response' in artifact:
+                    # When the response's content is empty, set content to None
+                    content = artifact['response'].content or None
+                else:
+                    # Json responses are automatically parsed into Python structures
+                    content = artifact
+                out[artifact_name] = content
             except Exception as e:
                 logger.warn('Failed to read artifact', task_id=self.id, run_id=self.run_id, artifact=artifact_name, error=e)
                 continue
@@ -66,3 +73,11 @@ class AnalysisTask(object):
         if path.startswith('/'):
             path = path[1:]
         return path
+
+    def build_patches(self, artifacts):
+        '''
+        Some analyzers can provide a patch appliable by developers
+        These patches are stored as Taskcluster artifacts and reported to developpers
+        Output is a list of tuple (patch name as str, patch content as str)
+        '''
+        return []
