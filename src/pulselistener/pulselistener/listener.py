@@ -408,20 +408,19 @@ class PulseListener(object):
         # Finally build the webserver coroutine
         return web._run_app(app, port=self.http_port, print=logger.info)
 
-    def add_revision(self, revision):
+    def add_build(self, build_target_phid):
         '''
-        Fetch a phabricator revision and push it in the mercurial queue
+        Fetch a phabricator build and push it in the mercurial queue
         '''
+        assert build_target_phid.startswith('PHID-HMBT-')
         if self.mercurial is None:
-            logger.warn('Skip adding revision, mercurial worker is disabled', revision=revision)
+            logger.warn('Skip adding build, mercurial worker is disabled', build=build_target_phid)
             return
 
-        rev = self.phabricator_api.load_revision(rev_id=revision)
-        logger.info('Found revision', title=rev['fields']['title'])
-
-        diffs = self.phabricator_api.search_diffs(diff_phid=rev['fields']['diffPHID'])
-        assert len(diffs) == 1
+        # Load the diff from the target
+        container = self.phabricator_api.find_target_buildable(build_target_phid)
+        diffs = self.phabricator_api.search_diffs(diff_phid=container['fields']['objectPHID'])
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.mercurial.queue.put(diffs[0]))
-        logger.info('Pushed revision in queue', rev=revision)
+        loop.run_until_complete(self.mercurial.queue.put((build_target_phid, diffs[0])))
+        logger.info('Pushed build in queue', build=build_target_phid)
