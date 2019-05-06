@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 from datetime import datetime
 from datetime import timedelta
 
@@ -35,8 +34,6 @@ class Workflow(object):
     def __init__(self, reporters, analyzers, index_service, queue_service, phabricator_api):
         assert isinstance(analyzers, list)
         self.analyzers = analyzers
-        assert 'MOZCONFIG' in os.environ, \
-            'Missing MOZCONFIG in environment'
 
         # Use share phabricator API client
         assert isinstance(phabricator_api, PhabricatorAPI)
