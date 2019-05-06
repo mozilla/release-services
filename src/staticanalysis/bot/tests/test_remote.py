@@ -530,6 +530,7 @@ def test_clang_format_task(mock_try_config, mock_revision):
             }
         }
     }
+    assert len(mock_revision.improvement_patches) == 0
     workflow = RemoteWorkflow(MockQueue(tasks))
     issues = workflow.run(mock_revision)
     assert len(issues) == 1
@@ -553,6 +554,17 @@ def test_clang_format_task(mock_try_config, mock_revision):
         'validates': False,
         'validation': {}
     }
+    assert len(mock_revision.improvement_patches) == 0
+
+    # Check diffs are reported as improvement patches
+    tasks['clang-format']['artifacts']['public/code-review/clang-format.diff'] = 'A nice diff in here...'
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    issues = workflow.run(mock_revision)
+    assert len(issues) == 1
+    assert len(mock_revision.improvement_patches) == 1
+    patch = mock_revision.improvement_patches[0]
+    assert patch.analyzer == 'clang-format'
+    assert patch.content == 'A nice diff in here...'
 
 
 def test_coverity_task(mock_try_config, mock_revision):
@@ -603,6 +615,22 @@ def test_coverity_task(mock_try_config, mock_revision):
                                     }
                                 }
                             ]
+                        },
+                        '/builds/worker/checkouts/gecko/dom/something.cpp': {
+                            'warnings': [
+                                {
+                                    'line': 123,
+                                    'flag': 'UNINIT',
+                                    'reliability': 'high',
+                                    'message': 'Some error here',
+                                    'extra': {
+                                        'category': 'Nice bug',
+                                        'stateOnServer': {
+                                            'presentInReferenceSnapshot': False
+                                        },
+                                    }
+                                }
+                            ]
                         }
                     }
                 },
@@ -611,7 +639,7 @@ def test_coverity_task(mock_try_config, mock_revision):
     }
     workflow = RemoteWorkflow(MockQueue(tasks))
     issues = workflow.run(mock_revision)
-    assert len(issues) == 1
+    assert len(issues) == 2
     issue = issues[0]
     assert isinstance(issue, CoverityIssue)
     assert issue.path == 'test.cpp'
@@ -620,6 +648,18 @@ def test_coverity_task(mock_try_config, mock_revision):
     assert issue.reliability == Reliability.High
     assert issue.bug_type == 'Memory - corruptions'
     assert issue.message == 'Using uninitialized value \"a\".'
+    assert issue.is_local()
+    assert not issue.is_clang_error()
+    assert issue.validates()
+
+    issue = issues[1]
+    assert isinstance(issue, CoverityIssue)
+    assert issue.path == 'dom/something.cpp'
+    assert issue.line == 123
+    assert issue.kind == 'UNINIT'
+    assert issue.reliability == Reliability.High
+    assert issue.bug_type == 'Nice bug'
+    assert issue.message == 'Some error here'
     assert issue.is_local()
     assert not issue.is_clang_error()
     assert issue.validates()
@@ -709,3 +749,28 @@ def test_infer_task(mock_try_config, mock_revision):
         'publishable': False,
         'validates': True,
     }
+
+
+def test_no_tasks(mock_try_config, mock_revision):
+    '''
+    Test a remote workflow with only a Gecko decision task as dep
+    https://github.com/mozilla/release-services/issues/2055
+    '''
+    from static_analysis_bot.workflows.remote import RemoteWorkflow
+
+    tasks = {
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            },
+            'name': 'Gecko Decision Task',
+        },
+        'remoteTryTask': {
+            'dependencies': ['decision', 'someOtherDockerbuild']
+        },
+    }
+    workflow = RemoteWorkflow(MockQueue(tasks))
+    issues = workflow.run(mock_revision)
+    assert len(issues) == 0
