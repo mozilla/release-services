@@ -9,12 +9,16 @@ import io
 import json
 import os
 import tempfile
+import time
 from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 
 from cli_common.log import get_logger
 from cli_common.mercurial import batch_checkout
+from cli_common.phabricator import BuildState
+from cli_common.phabricator import UnitResult
+from cli_common.phabricator import UnitResultState
 from pulselistener.config import REPO_TRY
 
 logger = get_logger(__name__)
@@ -80,19 +84,42 @@ class MercurialWorker(object):
             assert isinstance(diff, dict)
             assert 'phid' in diff
 
+            failure = None
+            start = time.time()
             try:
-                await self.handle_diff(diff)
+                await self.handle_diff(build_target_phid, diff)
             except hglib.error.CommandError as e:
                 logger.warn('Mercurial error on diff', error=e.err, args=e.args, phid=diff['phid'])
 
-                # Remove uncommited changes
-                self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
+                # Report mercurial failure as a Unit Test issue
+                failure = UnitResult(
+                    namespace='code-review',
+                    name='mercurial',
+                    result=UnitResultState.Fail,
+                    details='WARNING: The code review bot failed to apply your patch.\n\n```{}```'.format(e.err),
+                    format='remarkup',
+                    duration=time.time() - start,
+                )
 
             except Exception as e:
                 logger.warn('Failed to process diff', error=e, phid=diff['phid'])
 
+                # Report generic failure as a Unit Test issue
+                failure = UnitResult(
+                    namespace='code-review',
+                    name='mercurial',
+                    result=UnitResultState.Broken,
+                    details='WARNING: An error occured in the code review bot when applying your patch.\n\n```{}```'.format(e),
+                    format='remarkup',
+                    duration=time.time() - start,
+                )
+
+            if failure is not None:
                 # Remove uncommited changes
                 self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
+
+                # Publish failure
+                self.phabricator_api.update_build_target(build_target_phid, BuildState.Fail, unit=[failure])
 
             # Notify the queue that the message has been processed
             self.queue.task_done()
