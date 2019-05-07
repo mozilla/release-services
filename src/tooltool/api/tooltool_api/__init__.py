@@ -53,4 +53,6 @@ def create_app(config: dict = None) -> flask.Flask:
     app.cli.add_command(tooltool_api.cli.cmd_replicate, 'replicate')
     app.cli.add_command(tooltool_api.cli.cmd_check_pending_uploads, 'check-pending-uploads')
 
+    app.add_url_rule('/tooltool.py', view_func=tooltool_api.api.download_client)
+
     return app
