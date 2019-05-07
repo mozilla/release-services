@@ -241,15 +241,6 @@ class PhabricatorRevision(Revision):
             self.build_target_phid = build_target
         elif hm_target and isinstance(hm_target, str) and hm_target.startswith('PHID-'):
             self.build_target_phid = hm_target
-        elif settings.build_plan:
-            build, targets = self.api.find_diff_build(self.diff_phid, settings.build_plan)
-            build_phid = build['phid']
-            nb = len(targets)
-            assert nb > 0, 'No build target found'
-            if nb > 1:
-                logger.warn('More than 1 build target found !', nb=nb, build_phid=build_phid)
-            target = targets[0]
-            self.build_target_phid = target['phid']
         else:
             logger.info('No build plan specified, no HarborMaster update')
 
