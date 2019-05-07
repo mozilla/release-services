@@ -32,7 +32,7 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
-            publish_treeherder_link=False,
+            publish_phabricator=False,
         )
         worker.repo = RepoMock
 
@@ -123,7 +123,7 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
-            publish_treeherder_link=False,
+            publish_phabricator=False,
         )
         worker.repo = RepoMock
 
@@ -213,7 +213,7 @@ async def test_treeherder_link(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
-            publish_treeherder_link=True,
+            publish_phabricator=True,
         )
         worker.repo = RepoMock
 
@@ -258,7 +258,7 @@ async def test_failure(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
-            publish_treeherder_link=True,
+            publish_phabricator=True,
         )
         worker.repo = RepoMock
 

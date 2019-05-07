@@ -30,13 +30,13 @@ class MercurialWorker(object):
     '''
     Mercurial worker maintaining a local clone of mozilla-unified
     '''
-    def __init__(self, phabricator_api, ssh_user, ssh_key, repo_url, repo_dir, batch_size, publish_treeherder_link):
+    def __init__(self, phabricator_api, ssh_user, ssh_key, repo_url, repo_dir, batch_size, publish_phabricator):
         self.repo_url = repo_url
         self.repo_dir = repo_dir
         self.phabricator_api = phabricator_api
         self.batch_size = batch_size
-        self.publish_treeherder_link = publish_treeherder_link
-        logger.info('Treeherder link publication is {}'.format(self.publish_treeherder_link and 'enabled' or 'disabled'))  # noqa
+        self.publish_phabricator = publish_phabricator
+        logger.info('Phabricator publication is {}'.format(self.publish_phabricator and 'enabled' or 'disabled'))  # noqa
 
         # Build asyncio shared queue
         self.queue = asyncio.Queue()
@@ -130,7 +130,8 @@ class MercurialWorker(object):
             self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
 
             # Publish failure
-            self.phabricator_api.update_build_target(build_target_phid, BuildState.Fail, unit=[failure])
+            if self.publish_phabricator:
+                self.phabricator_api.update_build_target(build_target_phid, BuildState.Fail, unit=[failure])
 
             return False
 
@@ -228,6 +229,6 @@ class MercurialWorker(object):
         logger.info('Diff has been pushed !')
 
         # Publish Treeherder link
-        if build_target_phid and self.publish_treeherder_link:
+        if build_target_phid and self.publish_phabricator:
             uri = TREEHERDER_URL.format(commit.node.decode('utf-8'))
             self.phabricator_api.create_harbormaster_uri(build_target_phid, 'treeherder', 'Treeherder Jobs', uri)
