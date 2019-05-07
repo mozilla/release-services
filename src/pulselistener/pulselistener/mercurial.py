@@ -9,12 +9,16 @@ import io
 import json
 import os
 import tempfile
+import time
 from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 
 from cli_common.log import get_logger
 from cli_common.mercurial import batch_checkout
+from cli_common.phabricator import BuildState
+from cli_common.phabricator import UnitResult
+from cli_common.phabricator import UnitResultState
 from pulselistener.config import REPO_TRY
 
 logger = get_logger(__name__)
@@ -26,13 +30,13 @@ class MercurialWorker(object):
     '''
     Mercurial worker maintaining a local clone of mozilla-unified
     '''
-    def __init__(self, phabricator_api, ssh_user, ssh_key, repo_url, repo_dir, batch_size, publish_treeherder_link):
+    def __init__(self, phabricator_api, ssh_user, ssh_key, repo_url, repo_dir, batch_size, publish_phabricator):
         self.repo_url = repo_url
         self.repo_dir = repo_dir
         self.phabricator_api = phabricator_api
         self.batch_size = batch_size
-        self.publish_treeherder_link = publish_treeherder_link
-        logger.info('Treeherder link publication is {}'.format(self.publish_treeherder_link and 'enabled' or 'disabled'))  # noqa
+        self.publish_phabricator = publish_phabricator
+        logger.info('Phabricator publication is {}'.format(self.publish_phabricator and 'enabled' or 'disabled'))  # noqa
 
         # Build asyncio shared queue
         self.queue = asyncio.Queue()
@@ -76,27 +80,62 @@ class MercurialWorker(object):
 
         # Wait for phabricator diffs to apply
         while True:
-            diff = await self.queue.get()
+            build_target_phid, diff = await self.queue.get()
             assert isinstance(diff, dict)
             assert 'phid' in diff
 
-            try:
-                await self.handle_diff(diff)
-
-            except hglib.error.CommandError as e:
-                logger.warn('Mercurial error on diff', error=e.err, args=e.args, phid=diff['phid'])
-
-                # Remove uncommited changes
-                self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
-
-            except Exception as e:
-                logger.warn('Failed to process diff', error=e, phid=diff['phid'])
-
-                # Remove uncommited changes
-                self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
+            await self.handle_build(build_target_phid, diff)
 
             # Notify the queue that the message has been processed
             self.queue.task_done()
+
+    async def handle_build(self, build_target_phid, diff):
+        '''
+        Try to load and apply a diff on local clone
+        If succesful, push to try and send a treeherder link
+        If failure, send a unit result with a warning message
+        '''
+        failure = None
+        start = time.time()
+        try:
+            await self.push_to_try(build_target_phid, diff)
+        except hglib.error.CommandError as e:
+            logger.warn('Mercurial error on diff', error=e.err, args=e.args, phid=diff['phid'])
+
+            # Report mercurial failure as a Unit Test issue
+            failure = UnitResult(
+                namespace='code-review',
+                name='mercurial',
+                result=UnitResultState.Fail,
+                details='WARNING: The code review bot failed to apply your patch.\n\n```{}```'.format(e.err),
+                format='remarkup',
+                duration=time.time() - start,
+            )
+
+        except Exception as e:
+            logger.warn('Failed to process diff', error=e, phid=diff['phid'])
+
+            # Report generic failure as a Unit Test issue
+            failure = UnitResult(
+                namespace='code-review',
+                name='general',
+                result=UnitResultState.Broken,
+                details='WARNING: An error occured in the code review bot.\n\n```{}```'.format(e),
+                format='remarkup',
+                duration=time.time() - start,
+            )
+
+        if failure is not None:
+            # Remove uncommited changes
+            self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
+
+            # Publish failure
+            if self.publish_phabricator:
+                self.phabricator_api.update_build_target(build_target_phid, BuildState.Fail, unit=[failure])
+
+            return False
+
+        return True
 
     def clean(self):
         '''
@@ -113,7 +152,7 @@ class MercurialWorker(object):
         logger.info('Pull updates from remote repo')
         self.repo.pull()
 
-    async def handle_diff(self, diff):
+    async def push_to_try(self, build_target_phid, diff):
         '''
         Handle a new diff received from Phabricator:
         - apply revision to mercurial repo
@@ -159,11 +198,6 @@ class MercurialWorker(object):
             await asyncio.sleep(1)
 
         # Build and commit try_task_config.json
-        # The build_target_phid variable is stored in the diff
-        # but comes from the Harbormaster query parameters
-        # TODO: use a dedicated variable once we can remove Taskcluster trigger
-        # and simplify this workflow
-        build_target_phid = diff.get('build_target_phid')
         config_path = os.path.join(self.repo_dir, 'try_task_config.json')
         config = {
             'version': 2,
@@ -195,6 +229,6 @@ class MercurialWorker(object):
         logger.info('Diff has been pushed !')
 
         # Publish Treeherder link
-        if build_target_phid and self.publish_treeherder_link:
+        if build_target_phid and self.publish_phabricator:
             uri = TREEHERDER_URL.format(commit.node.decode('utf-8'))
             self.phabricator_api.create_harbormaster_uri(build_target_phid, 'treeherder', 'Treeherder Jobs', uri)

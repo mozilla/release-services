@@ -140,7 +140,7 @@ def PhabricatorMock():
 
     def _response(name):
         path = os.path.join(MOCK_DIR, 'phabricator', '{}.json'.format(name))
-        assert os.path.exists(path)
+        assert os.path.exists(path), 'Missing mock {}'.format(path)
         return open(path).read()
 
     def _phab_params(request):
@@ -176,6 +176,17 @@ def PhabricatorMock():
         assert 'buildTargetPHID' in params
         return (200, json_headers, _response('artifact-{}'.format(params['buildTargetPHID'])))
 
+    def _send_message(request):
+        params = _phab_params(request)
+        print(params)
+        assert 'buildTargetPHID' in params
+        name = 'message-{}-{}'.format(params['buildTargetPHID'], params['type'])
+        if params['unit']:
+            name += '-unit'
+        if params['lint']:
+            name += '-lint'
+        return (200, json_headers, _response(name))
+
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resp:
 
         resp.add(
@@ -207,6 +218,12 @@ def PhabricatorMock():
             responses.POST,
             'http://phabricator.test/api/harbormaster.createartifact',
             callback=_create_artifact,
+        )
+
+        resp.add_callback(
+            responses.POST,
+            'http://phabricator.test/api/harbormaster.sendmessage',
+            callback=_send_message,
         )
 
         api = PhabricatorAPI(
