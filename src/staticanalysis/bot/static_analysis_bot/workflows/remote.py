@@ -6,7 +6,6 @@
 from cli_common.log import get_logger
 from static_analysis_bot.clang.format import ClangFormatTask
 from static_analysis_bot.clang.tidy import ClangTidyTask
-from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import settings
 from static_analysis_bot.coverage import ZeroCoverageTask
 from static_analysis_bot.coverity.coverity import CoverityTask
@@ -27,8 +26,6 @@ class RemoteWorkflow(object):
         self.index_service = index_service
 
     def run(self, revision):
-        assert settings.source == SOURCE_TRY, \
-            'Cannot run without Try source'
         assert settings.try_task_id is not None, \
             'Cannot run without Try task id'
         assert settings.try_group_id is not None, \

@@ -122,7 +122,7 @@ class Workflow(object):
         payload['indexed'] = now.strftime(TASKCLUSTER_DATE_FORMAT)
 
         # Always add the source and try config
-        payload['source'] = settings.source
+        payload['source'] = 'try'
         payload['try_task_id'] = settings.try_task_id
         payload['try_group_id'] = settings.try_group_id
 

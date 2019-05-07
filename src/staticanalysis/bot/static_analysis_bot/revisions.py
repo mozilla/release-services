@@ -18,7 +18,6 @@ from static_analysis_bot import AnalysisException
 from static_analysis_bot import Issue
 from static_analysis_bot import stats
 from static_analysis_bot.config import REPO_TRY
-from static_analysis_bot.config import SOURCE_TRY
 from static_analysis_bot.config import settings
 
 logger = log.get_logger(__name__)
@@ -255,8 +254,7 @@ class PhabricatorRevision(Revision):
             logger.info('No build plan specified, no HarborMaster update')
 
         # Load target patch from Phabricator for Try mode
-        if settings.source == SOURCE_TRY:
-            self.patch = self.api.load_raw_diff(self.diff_id)
+        self.patch = self.api.load_raw_diff(self.diff_id)
 
     @property
     def namespaces(self):

@@ -21,8 +21,6 @@ CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-ti
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_UNIFIED = b'https://hg.mozilla.org/mozilla-unified'
 REPO_TRY = b'https://hg.mozilla.org/try'
-SOURCE_PHABRICATOR = 'phabricator'
-SOURCE_TRY = 'try'
 TASKCLUSTER_CACHE = '/cache'
 
 logger = get_logger(__name__)
@@ -44,7 +42,6 @@ class Settings(object):
     def __init__(self):
         self.config = None
         self.app_channel = None
-        self.source = None
         self.publication = None
         self.max_clone_runtime = 0
 
@@ -78,11 +75,10 @@ class Settings(object):
               ):
         # Detect source from env
         if 'TRY_TASK_ID' in os.environ and 'TRY_TASK_GROUP_ID' in os.environ:
-            self.source = SOURCE_TRY
             self.try_task_id = os.environ['TRY_TASK_ID']
             self.try_group_id = os.environ['TRY_TASK_GROUP_ID']
         else:
-            self.source = SOURCE_PHABRICATOR
+            raise Exception('Only TRY mode is supported')
 
         self.app_channel = app_channel
         self.download({
