@@ -25,17 +25,17 @@ from pulselistener.listener import PulseListener
     default=os.path.join(tempfile.gettempdir(), 'pulselistener'),
 )
 @click.option(
-    '--phab-revision',
-    type=int,
+    '--phab-build-target',
+    type=str,
     required=False,
-    help='A Phabricator revision ID to test'
+    help='A Phabricator build target PHID to test'
 )
 @taskcluster_options
 def main(taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
          cache_root,
-         phab_revision,
+         phab_build_target,
          ):
 
     secrets = get_secrets(taskcluster_secret,
@@ -84,8 +84,8 @@ def main(taskcluster_secret,
                        )
     click.echo('Listening to pulse messages...')
 
-    if phab_revision:
-        pl.add_revision(phab_revision)
+    if phab_build_target:
+        pl.add_build(phab_build_target)
 
     pl.run()
 
