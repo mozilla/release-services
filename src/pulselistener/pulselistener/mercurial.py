@@ -118,9 +118,9 @@ class MercurialWorker(object):
             # Report generic failure as a Unit Test issue
             failure = UnitResult(
                 namespace='code-review',
-                name='mercurial',
+                name='general',
                 result=UnitResultState.Broken,
-                details='WARNING: An error occured in the code review bot when applying your patch.\n\n```{}```'.format(e),
+                details='WARNING: An error occured in the code review bot.\n\n```{}```'.format(e),
                 format='remarkup',
                 duration=time.time() - start,
             )

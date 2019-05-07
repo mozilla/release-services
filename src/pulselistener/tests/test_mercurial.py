@@ -280,10 +280,10 @@ async def test_failure(PhabricatorMock, RepoMock):
             'type': 'fail',
             'unit': [
                 {
-                    'name': 'mercurial',
+                    'name': 'general',
                     'result': 'broken',
                     'namespace': 'code-review',
-                    'details': 'WARNING: An error occured in the code review bot when applying your patch.\n\n``````',
+                    'details': 'WARNING: An error occured in the code review bot.\n\n``````',
                     'format': 'remarkup',
                 }
             ],

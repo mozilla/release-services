@@ -130,7 +130,7 @@ class UnitResult(dict):
 
     def validates(self):
         '''
-        Check the input is a lint issue compatible with Phabricator
+        Check the input is a unit result compatible with Phabricator
         '''
         # Check name
         assert isinstance(self['name'], str), 'name should be a string'
