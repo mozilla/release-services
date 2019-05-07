@@ -47,7 +47,6 @@ class CoverityIssue(Issue):
     ANALYZER = COVERITY
 
     def __init__(self, revision, issue, file_path=None):
-        assert not settings.repo_dir.endswith('/')
         self.revision = revision
         self.reliability = Reliability.Unknown
 

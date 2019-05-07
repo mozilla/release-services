@@ -7,7 +7,6 @@ from cli_common.log import get_logger
 from cli_common.phabricator import LintResult
 from static_analysis_bot import INFER
 from static_analysis_bot import Issue
-from static_analysis_bot.config import settings
 from static_analysis_bot.task import AnalysisTask
 
 logger = get_logger(__name__)
@@ -42,7 +41,6 @@ class InferIssue(Issue):
 
     def __init__(self, entry, revision):
         assert isinstance(entry, dict)
-        assert not settings.repo_dir.endswith('/')
         self.revision = revision
         self.path = entry['file']
         self.line = entry['line']

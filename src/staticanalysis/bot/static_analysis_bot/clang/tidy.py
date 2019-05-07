@@ -57,13 +57,10 @@ class ClangTidyIssue(Issue):
     ANALYZER = CLANG_TIDY
 
     def __init__(self, revision, path, line, char, check, message, level='warning', reliability=Reliability.Unknown):
-        assert not settings.repo_dir.endswith('/')
         assert isinstance(reliability, Reliability)
 
         self.revision = revision
         self.path = path
-        if self.path.startswith(settings.repo_dir):
-            self.path = self.path[len(settings.repo_dir)+1:]  # skip heading /
         self.line = int(line)
         self.nb_lines = 1  # Only 1 line affected on clang-tidy
         self.char = int(char)

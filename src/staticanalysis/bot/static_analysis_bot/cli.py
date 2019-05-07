@@ -3,9 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os.path
-import tempfile
-
 import click
 
 from cli_common.cli import taskcluster_options
@@ -28,22 +25,8 @@ logger = get_logger(__name__)
 
 @click.command()
 @taskcluster_options
-@click.option(
-    '--id',
-    envvar='ANALYSIS_ID',
-)
-@click.option(
-    '--work-dir',
-    default=os.path.join(
-        tempfile.gettempdir(),
-        'staticanalysis',
-    ),
-    help='Work directory, used to pull changesets'
-)
 @stats.api.timer('runtime.analysis')
-def main(id,
-         work_dir,
-         taskcluster_secret,
+def main(taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
          ):
@@ -78,11 +61,9 @@ def main(id,
     phabricator = secrets['PHABRICATOR']
     settings.setup(
         secrets['APP_CHANNEL'],
-        work_dir,
         secrets['PUBLICATION'],
         secrets['ALLOWED_PATHS'],
         secrets.get('COVERITY_CONFIG'),
-        phabricator.get('build_plan'),
     )
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')

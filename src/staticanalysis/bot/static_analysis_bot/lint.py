@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-import os
-
 from cli_common.log import get_logger
 from cli_common.phabricator import LintResult
 from static_analysis_bot import MOZLINT
 from static_analysis_bot import Issue
-from static_analysis_bot.config import settings
 from static_analysis_bot.task import AnalysisTask
 
 logger = get_logger(__name__)
@@ -39,17 +36,7 @@ class MozLintIssue(Issue):
         self.message = message
         self.rule = rule
         self.revision = revision
-
-        # Ensure path is always relative to the repository
         self.path = path
-        if settings.has_local_clone:
-            if self.path.startswith(settings.repo_dir):
-                self.path = os.path.relpath(self.path, settings.repo_dir)
-            assert os.path.exists(os.path.join(settings.repo_dir, self.path)), \
-                'Missing {} in repo {}'.format(self.path, settings.repo_dir)
-        elif self.path.startswith('/builds/worker/checkouts/'):
-            # Remove Try path prefix
-            self.path = self.path[25:]
 
     def __str__(self):
         return '{} issue {} {} line {}'.format(

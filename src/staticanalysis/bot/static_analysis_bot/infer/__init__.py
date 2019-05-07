@@ -15,7 +15,6 @@ import taskcluster.exceptions
 import cli_common.log
 import cli_common.utils
 from static_analysis_bot import AnalysisException
-from static_analysis_bot.config import settings
 
 logger = cli_common.log.get_logger(__name__)
 
@@ -99,7 +98,7 @@ class AndroidConfig():
     def __enter__(self):
         # we copy the old mozconfig into the repository, so that we can
         # enable the android build
-        self.__android_mozconfig = os.path.join(settings.repo_dir, 'mozconfig')
+        self.__android_mozconfig = 'NOPE'
         self.__old_config = os.getenv('MOZCONFIG')
         shutil.copy(self.__old_config, self.__android_mozconfig)
         os.environ['MOZCONFIG'] = self.__android_mozconfig
