@@ -54,7 +54,6 @@ def test_coverage(mock_config, mock_repository, mock_revision, mock_coverage_art
         'analyzer': 'coverage',
         'path': 'my/path/file1.cpp',
         'line': 0,
-        'nb_lines': 1,
         'message': 'This file is uncovered',
         'is_third_party': False,
         'in_patch': True,
@@ -88,7 +87,7 @@ This file is uncovered
     assert issue.message == 'This file is uncovered'
     assert str(issue) == 'test/dummy/thirdparty.c'
 
-    assert issue.build_lines_hash() == '0b3ed69ca643edb6acc6fb43a1b9a235d7e773d43818396d4e05ead684e8f7c9'
+    assert issue.build_lines_hash() == 'c73b73af8851e9e91bc6b4dc12e7dace0a2bfb931c1d0b8b36ef367319f58cd1'
 
     assert issue.is_third_party()
     assert issue.validates()
@@ -97,7 +96,6 @@ This file is uncovered
         'analyzer': 'coverage',
         'path': 'test/dummy/thirdparty.c',
         'line': 0,
-        'nb_lines': 3,
         'message': 'This file is uncovered',
         'is_third_party': True,
         'in_patch': True,
@@ -131,7 +129,7 @@ This file is uncovered
     assert issue.message == 'This file is uncovered'
     assert str(issue) == 'my/path/header.h'
 
-    assert issue.build_lines_hash() == '7d7681fc8eb9cc1fb0547f3f832195943ea1b36816110cb0016c47d53225d318'
+    assert issue.build_lines_hash() == 'c73b73af8851e9e91bc6b4dc12e7dace0a2bfb931c1d0b8b36ef367319f58cd1'
 
     assert not issue.is_third_party()
     assert not issue.validates()
@@ -140,7 +138,6 @@ This file is uncovered
         'analyzer': 'coverage',
         'path': 'my/path/header.h',
         'line': 0,
-        'nb_lines': 4,
         'message': 'This file is uncovered',
         'is_third_party': False,
         'in_patch': True,
