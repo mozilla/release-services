@@ -4,29 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import fnmatch
-import os
 import re
-import subprocess
 
 from cli_common.log import get_logger
 from cli_common.phabricator import LintResult
 from static_analysis_bot import CLANG_TIDY
-from static_analysis_bot import AnalysisException
-from static_analysis_bot import DefaultAnalyzer
 from static_analysis_bot import Issue
 from static_analysis_bot import Reliability
-from static_analysis_bot import stats
-from static_analysis_bot.config import CONFIG_URL
 from static_analysis_bot.config import settings
-from static_analysis_bot.revisions import Revision
 from static_analysis_bot.task import AnalysisTask
 
 logger = get_logger(__name__)
-
-REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
-REGEX_FOOTER = re.compile(r'^(Warning: [\.\w-]+ in .+:)|(Suppressed \d+ warnings)|(\d+ warnings? and \d+ errors? generated.)|(Error while processing)', re.MULTILINE)  # noqa
-REGEX_HAS_WARNINGS = re.compile(r'^(\d+) warnings|errors present.$', re.MULTILINE)
 
 
 ISSUE_MARKDOWN = '''
@@ -60,186 +48,6 @@ ISSUE_NOTE_MARKDOWN = '''
 '''
 
 CLANG_MACRO_DETECTION = re.compile(r'^expanded from macro')
-
-CLANG_SETUP_CMD = [
-    'gecko-env',
-    './mach', 'artifact', 'toolchain',
-    '--from-build', 'linux64-clang-tidy'
-]
-
-
-class ClangTidy(DefaultAnalyzer):
-    '''
-    Clang Tidy Parallel runner
-    Inspired by run-clang-tidy.py
-    '''
-    def __init__(self, validate_checks=True):
-        self.binary = os.path.join(
-            os.environ['MOZBUILD_STATE_PATH'],
-            'clang-tools', 'clang-tidy', 'bin', 'clang-tidy',
-        )
-        assert os.path.exists(self.binary), \
-            'Missing clang-tidy in {}'.format(self.binary)
-
-        # Verify that all specified clang-tidy checks still exist
-        if validate_checks:
-            for missing in self.list_missing_checks():
-                logger.error('Specified clang-tidy check "{}" not found.'.format(missing))
-
-    @stats.api.timed('runtime.clang-tidy')
-    def run(self, revision):
-        '''
-        Run modified files with specified checks through clang-tidy
-        using threaded workers (communicate through queues)
-        Output a list of ClangTidyIssue
-        '''
-        assert isinstance(revision, Revision)
-        self.revision = revision
-
-        # Run all files in a single command
-        # through mach static-analysis
-        cmd = [
-            'gecko-env',
-            './mach', '--log-no-times', 'static-analysis', 'check',
-
-            # Limit warnings to current files
-            '--header-filter={}'.format('|'.join(
-                os.path.basename(filename)
-                for filename in revision.files
-            )),
-
-            '--checks={}'.format(','.join(c['name'] for c in settings.clang_checkers)),
-        ] + list(revision.files)
-        logger.info('Running static-analysis', cmd=' '.join(cmd))
-
-        # Run command, without checking its exit code as clang-tidy 7+
-        # exits with an error code when finding errors (which we want to report !)
-        try:
-            clang = subprocess.run(cmd, cwd=settings.repo_dir, check=False, stdout=subprocess.PIPE)
-        except subprocess.CalledProcessError as e:
-            raise AnalysisException('clang-tidy', 'Mach static analysis failed: {}'.format(e.output))
-
-        clang_output = clang.stdout.decode('utf-8')
-
-        # Dump raw clang-tidy output as a Taskcluster artifact (for debugging)
-        clang_output_path = os.path.join(
-            settings.taskcluster.results_dir,
-            '{}-clang-tidy.txt'.format(repr(revision)),
-        )
-        with open(clang_output_path, 'w') as f:
-            f.write(clang_output)
-
-        issues = self.parse_issues(clang_output, revision)
-
-        # Report stats for these issues
-        stats.report_issues('clang-tidy', issues)
-
-        return issues
-
-    def parse_issues(self, clang_output, revision):
-        '''
-        Parse clang-tidy output into structured issues
-        '''
-        # Detect end of file warnings count
-        # When an invalid file is used, this line does not appear
-        has_warnings = REGEX_HAS_WARNINGS.search(clang_output)
-        if has_warnings is None:
-            logger.info('Empty clang output, skipping analysis.')
-            return []
-        nb_warnings = int(has_warnings.group(1))
-        if nb_warnings == 0:
-            logger.info('Mach static analysis did not find any issue')
-            return []
-        logger.info('Mach static analysis found some issues', nb=nb_warnings)
-
-        # Sort headers by positions
-        headers = sorted(
-            REGEX_HEADER.finditer(clang_output),
-            key=lambda h: h.start()
-        )
-        if not headers:
-            raise AnalysisException('clang-tidy', 'No clang-tidy header was found even though a clang output was provided')
-
-        def _remove_footer(start_pos, end_pos):
-            '''
-            Build an issue body from clang-tidy output
-            and stops when an extra paylaod is detected (footer)
-            '''
-            assert isinstance(start_pos, int)
-            assert isinstance(end_pos, int)
-            body = clang_output[start_pos:end_pos]
-            footer = REGEX_FOOTER.search(body)
-            if footer is None:
-                return body
-            return body[:footer.start()-1]
-
-        issues = []
-        for i, header in enumerate(headers):
-            path, line, char, level, message, check = header.groups()
-            issue = ClangTidyIssue(
-                revision,
-                path=path,
-                line=line,
-                char=char,
-                level=level,
-                message=message,
-                check=check,
-            )
-
-            # Get next header
-            if i+1 < len(headers):
-                # Parse body until next header
-                next_header = headers[i+1]
-                issue.body = _remove_footer(header.end(), next_header.start() - 1)
-            else:
-                # Limit last element to 3 lines to avoid parsing extra metadatas
-                issue.body = _remove_footer(header.end(), header.end() + 3)
-
-            if issue.is_problem():
-                # Save problem to append notes
-                # Skip diagnostic errors, but warn through Sentry
-                if issue.check == 'clang-diagnostic-error':
-                    logger.error('Encountered a clang-diagnostic-error: {}'.format(issue))
-                else:
-                    issues.append(issue)
-                    mode = issue.is_third_party() and '3rd party' or 'in-tree'
-                    logger.info('Found {} code issue {}'.format(mode, issue))
-
-            elif issues:
-                # Link notes to last problem
-                issues[-1].notes.append(issue)
-
-        return issues
-
-    def list_available_checks(self):
-        '''
-        Build the set of all available checks that the local clang-tidy offers
-        '''
-        cmd = [
-            self.binary,
-            '-list-checks',
-            '-checks=*'
-        ]
-        clang_output = subprocess.check_output(cmd).decode('utf-8')
-        available_checks = set(line.strip() for line in clang_output.split('\n')[1:])
-        return available_checks
-
-    def list_missing_checks(self):
-        '''
-        List all the clang-tidy missing checks according to config
-        '''
-        available_checks = self.list_available_checks()
-        if len(settings.clang_checkers) > 0:
-            logger.info('Available clang-tidy checks:\n\t{}'.format('\n\t'.join(available_checks)))
-        else:
-            logger.error('Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL))
-
-        return [
-            check['name']
-            for check in settings.clang_checkers
-            if not len(fnmatch.filter(available_checks, check['name'])) > 0
-            and check['name'] != '-*'  # Special check -* is not listed by clang-tidy
-        ]
 
 
 class ClangTidyIssue(Issue):

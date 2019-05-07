@@ -31,27 +31,6 @@ class AnalysisException(Exception):
         super().__init__(message)
 
 
-class DefaultAnalyzer(abc.ABC):
-    '''
-    Default base analzer that must be implemented by each analyzer in particular
-    '''
-    @abc.abstractmethod
-    def run(self, revision):
-        '''
-        The run procedure that each analyzer must implement, this is the entry
-        point where the execution of the checker starts
-        '''
-        raise NotImplementedError
-
-    def can_run_before_patch(self):
-        '''
-        By default an analyzer can be ran two times, before the patch is applied
-        and after. By there are special cases where this behaviour is not wanted,
-        hence it must be reflected in the re-implementation of this method.
-        '''
-        return True
-
-
 class Issue(abc.ABC):
     '''
     Common reported issue interface
