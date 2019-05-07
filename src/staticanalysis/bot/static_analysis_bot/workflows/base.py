@@ -47,9 +47,6 @@ class Workflow(object):
         self.index_service = index_service
         self.queue_service = queue_service
 
-        # Build analysis workflows to run
-        self.workflows = []
-
     def run(self, revision):
         '''
         Build analysis workflows and directly run them
