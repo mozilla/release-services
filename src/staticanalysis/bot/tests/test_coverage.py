@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
 
-import responses
-
-from static_analysis_bot.coverage import Coverage
+from static_analysis_bot.coverage import ZeroCoverageTask
 
 
-@responses.activate
-def test_coverage(mock_config, mock_repository, mock_revision, mock_coverage):
-    cov = Coverage()
+def test_coverage(mock_config, mock_repository, mock_revision, mock_coverage_artifact):
+    task_status = {
+        'task': {},
+        'status': {},
+    }
+    cov = ZeroCoverageTask('covTaskId', task_status)
 
     mock_revision.files = [
         # Uncovered file
@@ -32,7 +33,7 @@ def test_coverage(mock_config, mock_repository, mock_revision, mock_coverage):
         with open(full_path, 'w') as f:
             f.write('line\n' * (i + 1))
 
-    issues = cov.run(mock_revision)
+    issues = cov.parse_issues(mock_coverage_artifact, mock_revision)
 
     # The list must have three elements
     assert len(issues) == 3
