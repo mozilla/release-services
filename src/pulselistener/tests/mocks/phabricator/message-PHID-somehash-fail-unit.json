@@ -1,0 +1,10 @@
+{
+    "result": {
+      "type": "fail",
+      "buildTargetPHID": "PHID-somehash",
+      "unit": [],
+      "lint": []
+    },
+    "error_code": null,
+    "error_info": null
+}
