@@ -108,12 +108,6 @@ class Issue(abc.ABC):
         '''
         raise NotImplementedError
 
-    def is_third_party(self):
-        '''
-        Is this issue in a third party path ?
-        Once we are using only try, we should not need this check anymore
-        '''
-        return False
 
 class Reliability(enum.Enum):
     Unknown = 'unknown'

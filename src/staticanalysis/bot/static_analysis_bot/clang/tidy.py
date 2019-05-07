@@ -25,7 +25,6 @@ ISSUE_MARKDOWN = '''
 - **In patch**: {in_patch}
 - **Clang check**: {check}
 - **Publishable check**: {publishable_check}
-- **Third Party**: {third_party}
 - **Expanded Macro**: {expanded_macro}
 - **Publishable **: {publishable}
 - **Is new**: {is_new}
@@ -99,7 +98,6 @@ class ClangTidyIssue(Issue):
         * is not from an expanded macro
         '''
         return self.has_publishable_check() \
-            and not self.is_third_party() \
             and not self.is_expanded_macro()
 
     def is_expanded_macro(self):
@@ -155,7 +153,6 @@ class ClangTidyIssue(Issue):
             reason=self.reason,
             check=self.check,
             in_patch='yes' if self.revision.contains(self) else 'no',
-            third_party='yes' if self.is_third_party() else 'no',
             publishable_check='yes' if self.has_publishable_check() else 'no',
             publishable='yes' if self.is_publishable() else 'no',
             expanded_macro='yes' if self.is_expanded_macro() else 'no',
@@ -188,7 +185,6 @@ class ClangTidyIssue(Issue):
             'notes': [note.as_dict() for note in self.notes],
             'validation': {
                 'publishable_check': self.has_publishable_check(),
-                'third_party': self.is_third_party(),
                 'is_expanded_macro': self.is_expanded_macro(),
             },
             'in_patch': self.revision.contains(self),
