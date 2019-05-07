@@ -84,45 +84,57 @@ class MercurialWorker(object):
             assert isinstance(diff, dict)
             assert 'phid' in diff
 
-            failure = None
-            start = time.time()
-            try:
-                await self.handle_diff(build_target_phid, diff)
-            except hglib.error.CommandError as e:
-                logger.warn('Mercurial error on diff', error=e.err, args=e.args, phid=diff['phid'])
-
-                # Report mercurial failure as a Unit Test issue
-                failure = UnitResult(
-                    namespace='code-review',
-                    name='mercurial',
-                    result=UnitResultState.Fail,
-                    details='WARNING: The code review bot failed to apply your patch.\n\n```{}```'.format(e.err),
-                    format='remarkup',
-                    duration=time.time() - start,
-                )
-
-            except Exception as e:
-                logger.warn('Failed to process diff', error=e, phid=diff['phid'])
-
-                # Report generic failure as a Unit Test issue
-                failure = UnitResult(
-                    namespace='code-review',
-                    name='mercurial',
-                    result=UnitResultState.Broken,
-                    details='WARNING: An error occured in the code review bot when applying your patch.\n\n```{}```'.format(e),
-                    format='remarkup',
-                    duration=time.time() - start,
-                )
-
-            if failure is not None:
-                # Remove uncommited changes
-                self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
-
-                # Publish failure
-                self.phabricator_api.update_build_target(build_target_phid, BuildState.Fail, unit=[failure])
+            await self.handle_build(build_target_phid, diff)
 
             # Notify the queue that the message has been processed
             self.queue.task_done()
+
+    async def handle_build(self, build_target_phid, diff):
+        '''
+        Try to load and apply a diff on local clone
+        If succesful, push to try and send a treeherder link
+        If failure, send a unit result with a warning message
+        '''
+        failure = None
+        start = time.time()
+        try:
+            await self.push_to_try(build_target_phid, diff)
+        except hglib.error.CommandError as e:
+            logger.warn('Mercurial error on diff', error=e.err, args=e.args, phid=diff['phid'])
+
+            # Report mercurial failure as a Unit Test issue
+            failure = UnitResult(
+                namespace='code-review',
+                name='mercurial',
+                result=UnitResultState.Fail,
+                details='WARNING: The code review bot failed to apply your patch.\n\n```{}```'.format(e.err),
+                format='remarkup',
+                duration=time.time() - start,
+            )
+
+        except Exception as e:
+            logger.warn('Failed to process diff', error=e, phid=diff['phid'])
+
+            # Report generic failure as a Unit Test issue
+            failure = UnitResult(
+                namespace='code-review',
+                name='mercurial',
+                result=UnitResultState.Broken,
+                details='WARNING: An error occured in the code review bot when applying your patch.\n\n```{}```'.format(e),
+                format='remarkup',
+                duration=time.time() - start,
+            )
+
+        if failure is not None:
+            # Remove uncommited changes
+            self.repo.revert(self.repo_dir.encode('utf-8'), all=True)
+
+            # Publish failure
+            self.phabricator_api.update_build_target(build_target_phid, BuildState.Fail, unit=[failure])
+
+            return False
+
+        return True
 
     def clean(self):
         '''
@@ -139,7 +151,7 @@ class MercurialWorker(object):
         logger.info('Pull updates from remote repo')
         self.repo.pull()
 
-    async def handle_diff(self, build_target_phid, diff):
+    async def push_to_try(self, build_target_phid, diff):
         '''
         Handle a new diff received from Phabricator:
         - apply revision to mercurial repo
