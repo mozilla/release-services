@@ -53,7 +53,6 @@ def main(id,
                           required=(
                               'APP_CHANNEL',
                               'REPORTERS',
-                              'ANALYZERS',
                               'PHABRICATOR',
                               'ALLOWED_PATHS',
                               'MAX_CLONE_RUNTIME',
@@ -61,7 +60,6 @@ def main(id,
                           existing={
                               'APP_CHANNEL': 'development',
                               'REPORTERS': [],
-                              'ANALYZERS': [],
                               'PUBLICATION': 'IN_PATCH',
                               'ALLOWED_PATHS': ['*', ],
                               'MAX_CLONE_RUNTIME': 15 * 60,
@@ -131,7 +129,7 @@ def main(id,
     )
 
     # Run workflow according to source
-    w = Workflow(reporters, secrets['ANALYZERS'], index_service, queue_service, phabricator_api)
+    w = Workflow(reporters, index_service, queue_service, phabricator_api)
     try:
         w.run(revision)
     except Exception as e:

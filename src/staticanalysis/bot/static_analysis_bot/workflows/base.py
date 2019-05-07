@@ -29,9 +29,7 @@ class Workflow(object):
     - runs workflow to build issues
     - publish issues
     '''
-    def __init__(self, reporters, analyzers, index_service, queue_service, phabricator_api):
-        assert isinstance(analyzers, list)
-        self.analyzers = analyzers
+    def __init__(self, reporters, index_service, queue_service, phabricator_api):
 
         # Use share phabricator API client
         assert isinstance(phabricator_api, PhabricatorAPI)
