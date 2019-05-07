@@ -110,7 +110,7 @@ class MockIndex(object):
         }
 
 
-def test_no_deps(mock_try_config, mock_revision):
+def test_no_deps(mock_config, mock_revision):
     '''
     Test an error occurs when no dependencies are found on root task
     '''
@@ -133,7 +133,7 @@ def test_no_deps(mock_try_config, mock_revision):
     assert str(e.value) == 'No task dependencies to analyze'
 
 
-def test_baseline(mock_try_config, mock_revision):
+def test_baseline(mock_config, mock_revision):
     '''
     Test a normal remote workflow (aka Try mode)
     - current task with analyzer deps
@@ -145,12 +145,8 @@ def test_baseline(mock_try_config, mock_revision):
     from static_analysis_bot.coverage import CoverageIssue
 
     # We run on a mock TC, with a try source
-    assert mock_try_config.taskcluster.task_id == 'local instance'
-    assert mock_try_config.source == 'try'
-    assert mock_try_config.try_task_id == 'remoteTryTask'
-
-    # We do not want to check local files with this worfklow
-    mock_try_config.has_local_clone = False
+    assert mock_config.taskcluster.task_id == 'local instance'
+    assert mock_config.try_task_id == 'remoteTryTask'
 
     tasks = {
         'decision': {
@@ -220,7 +216,7 @@ def test_baseline(mock_try_config, mock_revision):
     assert issue.validates()
 
 
-def test_no_failed(mock_try_config, mock_revision):
+def test_no_failed(mock_config, mock_revision):
     '''
     Test a remote workflow without any failed tasks
     '''
@@ -246,7 +242,7 @@ def test_no_failed(mock_try_config, mock_revision):
     assert len(issues) == 0
 
 
-def test_no_issues(mock_try_config, mock_revision):
+def test_no_issues(mock_config, mock_revision):
     '''
     Test a remote workflow without any issues in its artifacts
     '''
@@ -280,7 +276,7 @@ def test_no_issues(mock_try_config, mock_revision):
     assert len(issues) == 0
 
 
-def test_unsupported_analyzer(mock_try_config, mock_revision):
+def test_unsupported_analyzer(mock_config, mock_revision):
     '''
     Test a remote workflow with an unsupported analyzer (not mozlint)
     '''
@@ -313,7 +309,7 @@ def test_unsupported_analyzer(mock_try_config, mock_revision):
     assert str(e.value) == 'Unsupported task custom-analyzer-from-vendor'
 
 
-def test_decision_task(mock_try_config, mock_revision):
+def test_decision_task(mock_config, mock_revision):
     '''
     Test a remote workflow with different decision task setup
     '''
@@ -404,7 +400,7 @@ def test_decision_task(mock_try_config, mock_revision):
     assert mock_revision.mercurial_revision == 'someRevision'
 
 
-def test_mozlint_task(mock_try_config, mock_revision):
+def test_mozlint_task(mock_config, mock_revision):
     '''
     Test a remote workflow with a mozlint analyzer
     '''
@@ -454,7 +450,7 @@ def test_mozlint_task(mock_try_config, mock_revision):
     assert issue.message == 'dummy issue'
 
 
-def test_clang_tidy_task(mock_try_config, mock_revision):
+def test_clang_tidy_task(mock_config, mock_revision):
     '''
     Test a remote workflow with a clang-tidy analyzer
     '''
@@ -527,7 +523,7 @@ def test_clang_tidy_task(mock_try_config, mock_revision):
     assert issue.message == 'some harder issue with c++'
 
 
-def test_clang_format_task(mock_try_config, mock_revision):
+def test_clang_format_task(mock_config, mock_revision):
     '''
     Test a remote workflow with a clang-format analyzer
     '''
@@ -601,7 +597,7 @@ def test_clang_format_task(mock_try_config, mock_revision):
     assert patch.content == 'A nice diff in here...'
 
 
-def test_coverity_task(mock_try_config, mock_revision):
+def test_coverity_task(mock_config, mock_revision):
     '''
     Test a remote workflow with a clang-tidy analyzer
     '''
@@ -699,7 +695,7 @@ def test_coverity_task(mock_try_config, mock_revision):
     assert issue.validates()
 
 
-def test_infer_task(mock_try_config, mock_revision):
+def test_infer_task(mock_config, mock_revision):
     '''
     Test a remote workflow with an infer analyzer
     '''
@@ -785,7 +781,7 @@ def test_infer_task(mock_try_config, mock_revision):
     }
 
 
-def test_no_tasks(mock_try_config, mock_revision):
+def test_no_tasks(mock_config, mock_revision):
     '''
     Test a remote workflow with only a Gecko decision task as dep
     https://github.com/mozilla/release-services/issues/2055

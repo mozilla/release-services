@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import os
 import unittest
 import urllib
 
@@ -47,7 +46,7 @@ If you see a problem in this automated review, [please report it here](https://b
 
 
 @responses.activate
-def test_phabricator_clang_tidy(mock_repository, mock_phabricator):
+def test_phabricator_clang_tidy(mock_phabricator):
     '''
     Test Phabricator reporter publication on a mock clang-tidy issue
     '''
@@ -105,7 +104,7 @@ def test_phabricator_clang_tidy(mock_repository, mock_phabricator):
 
 
 @responses.activate
-def test_phabricator_clang_format(mock_config, mock_repository, mock_phabricator):
+def test_phabricator_clang_format(mock_config, mock_phabricator):
     '''
     Test Phabricator reporter publication on a mock clang-format issue
     '''
@@ -163,7 +162,7 @@ def test_phabricator_clang_format(mock_config, mock_repository, mock_phabricator
 
 
 @responses.activate
-def test_phabricator_coverage(mock_config, mock_repository, mock_phabricator):
+def test_phabricator_coverage(mock_config, mock_phabricator):
     '''
     Test Phabricator reporter publication on a mock coverage issue
     '''
@@ -217,7 +216,7 @@ def test_phabricator_coverage(mock_config, mock_repository, mock_phabricator):
 
 
 @responses.activate
-def test_phabricator_clang_tidy_and_coverage(mock_config, mock_repository, mock_phabricator):
+def test_phabricator_clang_tidy_and_coverage(mock_config, mock_phabricator):
     '''
     Test Phabricator reporter publication on a mock coverage issue
     '''
@@ -308,7 +307,7 @@ def test_phabricator_clang_tidy_and_coverage(mock_config, mock_repository, mock_
 
 
 @responses.activate
-def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
+def test_phabricator_analyzers(mock_config, mock_phabricator):
     '''
     Test analyzers filtering on phabricator reporter
     '''
@@ -319,10 +318,6 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
     from static_analysis_bot.clang.tidy import ClangTidyIssue
     from static_analysis_bot.lint import MozLintIssue
     from static_analysis_bot.coverage import CoverageIssue
-
-    # needed by Mozlint issue
-    with open(os.path.join(mock_config.repo_dir, 'test.cpp'), 'w') as f:
-        f.write('empty')
 
     def _test_reporter(api, analyzers):
         # Always use the same setup, only varies the analyzers
@@ -415,7 +410,7 @@ def test_phabricator_analyzers(mock_config, mock_repository, mock_phabricator):
 
 
 @responses.activate
-def test_phabricator_harbormaster(mock_repository, mock_phabricator):
+def test_phabricator_harbormaster(mock_phabricator):
     '''
     Test Phabricator reporter publication on a mock clang-tidy issue
     using harbormaster

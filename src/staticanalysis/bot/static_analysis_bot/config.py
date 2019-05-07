@@ -17,6 +17,7 @@ import yaml
 from cli_common.log import get_logger
 
 PROJECT_NAME = 'static-analysis-bot'
+REPO_TRY = b'https://hg.mozilla.org/try'
 CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'
 
 logger = get_logger(__name__)

@@ -7,13 +7,10 @@ import itertools
 import json
 import os.path
 import subprocess
-import tempfile
 import time
 from contextlib import contextmanager
 from distutils.spawn import find_executable
-from unittest.mock import Mock
 
-import hglib
 import pytest
 import responses
 
@@ -21,17 +18,17 @@ from cli_common.phabricator import PhabricatorAPI
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
-TEST_CPP = '''include <cstdio>
 
-int main(void){
-    printf("Hello world!");
-    return 0;
-}
-'''
-
-
+@pytest.fixture(scope='class')
 @responses.activate
-def build_config():
+def mock_config():
+    '''
+    Mock configuration for bot
+    Using try source
+    '''
+    os.environ['TRY_TASK_ID'] = 'remoteTryTask'
+    os.environ['TRY_TASK_GROUP_ID'] = 'remoteTryGroup'
+
     path = os.path.join(MOCK_DIR, 'config.yaml')
     responses.add(
         responses.GET,
@@ -42,69 +39,8 @@ def build_config():
 
     from static_analysis_bot.config import settings
     settings.config = None
-    settings.setup('test', tempfile.mkdtemp(), 'IN_PATCH', ['dom/*', 'tests/*.py', 'test/*.c'])
+    settings.setup('test', 'IN_PATCH', ['dom/*', 'tests/*.py', 'test/*.c'])
     return settings
-
-
-@pytest.fixture(scope='class')
-def mock_config():
-    '''
-    Mock configuration for bot
-    '''
-    for key in ('TRY_TASK_ID', 'TRY_TASK_GROUP_ID'):
-        if key in os.environ:
-            del os.environ[key]
-    return build_config()
-
-
-@pytest.fixture(scope='class')
-def mock_try_config():
-    '''
-    Mock configuration for bot
-    Using try source
-    '''
-    os.environ['TRY_TASK_ID'] = 'remoteTryTask'
-    os.environ['TRY_TASK_GROUP_ID'] = 'remoteTryGroup'
-    return build_config()
-
-
-@pytest.fixture(scope='class')
-def mock_repository(mock_config):
-    '''
-    Create a dummy mercurial repository
-    '''
-    # Init repo
-    hglib.init(mock_config.repo_dir)
-
-    # Init clean client
-    client = hglib.open(mock_config.repo_dir)
-
-    # Add test.txt file
-    path = os.path.join(mock_config.repo_dir, 'test.txt')
-    with open(path, 'w') as f:
-        f.write('Hello World\n')
-    client.add(path.encode('utf-8'))
-
-    path = os.path.join(mock_config.repo_dir, 'test.cpp')
-    with open(path, 'w') as f:
-        f.write('Hello World\n')
-    client.add(path.encode('utf-8'))
-
-    # Initiall commit
-    client.commit(b'Hello World', user=b'Tester')
-
-    # Write dummy 3rd party file
-    third_party = os.path.join(mock_config.repo_dir, mock_config.third_party)
-    with open(third_party, 'w') as f:
-        f.write('test/dummy')
-
-    # Remove pull capabilities
-    client.pull = Mock(return_value=True)
-
-    # Mark clone is available
-    mock_config.has_local_clone = True
-
-    return client
 
 
 @pytest.fixture
@@ -141,7 +77,7 @@ def mock_issues():
 @pytest.fixture
 @responses.activate
 @contextmanager
-def mock_phabricator():
+def mock_phabricator(mock_config):
     '''
     Mock phabricator authentication process
     '''
@@ -265,7 +201,7 @@ def mock_stats(mock_config):
 
 @pytest.fixture(scope='function')
 @responses.activate
-def mock_revision(mock_phabricator):
+def mock_revision(mock_phabricator, mock_config):
     '''
     Mock a mercurial revision
     '''
@@ -321,80 +257,19 @@ def mock_clang(mock_config, tmpdir, monkeypatch):
 
 @pytest.fixture
 @responses.activate
-def mock_local_workflow(tmpdir, mock_repository, mock_config):
-    '''
-    Mock the local workflow, without cloning
-    '''
-    from static_analysis_bot.workflows.local import LocalWorkflow
-
-    class MockWorkflow(LocalWorkflow):
-        def clone(self):
-            return hglib.open(mock_config.repo_dir)
-
-    # Needed for Taskcluster build
-    if 'MOZCONFIG' not in os.environ:
-        os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
-
-    workflow = MockWorkflow(
-        analyzers=['clang-tidy', 'clang-format', 'mozlint'],
-        index_service=None,
-    )
-    workflow.hg = workflow.clone()
-    return workflow
-
-
-@pytest.fixture
-@responses.activate
-def mock_workflow(tmpdir, mock_phabricator, mock_repository, mock_config):
+def mock_workflow(tmpdir, mock_phabricator, mock_config):
     '''
     Mock the top level workflow
     '''
     from static_analysis_bot.workflows.base import Workflow
 
-    # Needed for Taskcluster build
-    if 'MOZCONFIG' not in os.environ:
-        os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
-
     with mock_phabricator as api:
         return Workflow(
             reporters={},
-            analyzers=['clang-tidy', 'clang-format', 'mozlint'],
             index_service=None,
             queue_service=None,
             phabricator_api=api,
         )
-
-
-@pytest.fixture
-@responses.activate
-def mock_try_workflow(tmpdir, mock_phabricator, mock_try_config):
-    '''
-    Mock the top level workflow
-    '''
-    from static_analysis_bot.workflows.base import Workflow
-
-    # Needed for Taskcluster build
-    if 'MOZCONFIG' not in os.environ:
-        os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
-
-    with mock_phabricator as api:
-        return Workflow(
-            reporters={},
-            analyzers=['clang-tidy', 'clang-format', 'mozlint'],
-            index_service=None,
-            queue_service=None,
-            phabricator_api=api,
-        )
-
-
-@pytest.fixture
-def test_cpp(mock_config, mock_repository):
-    '''
-    Build a dummy test.cpp file in repo
-    '''
-    path = os.path.join(mock_config.repo_dir, 'test.cpp')
-    with open(path, 'w') as f:
-        f.write(TEST_CPP)
 
 
 @pytest.fixture
@@ -415,23 +290,6 @@ def mock_clang_issues():
     path = os.path.join(MOCK_DIR, 'clang-issues.txt')
     with open(path) as f:
         return f.read()
-
-
-@pytest.fixture(scope='class')
-def mock_clang_repeats(mock_config, mock_repository):
-    '''
-    Load parsed issues with repeated issues
-    '''
-    # Write dummy test_repeat.cpp file in repo
-    # Needed to build line hash
-    test_cpp = os.path.join(mock_config.repo_dir, 'test_repeats.cpp')
-    with open(test_cpp, 'w') as f:
-        for i in range(5):
-            f.write('line {}\n'.format(i))
-
-    path = os.path.join(MOCK_DIR, 'clang-repeats.txt')
-    with open(path) as f:
-        return f.read().replace('{REPO}', mock_config.repo_dir)
 
 
 @pytest.fixture
@@ -478,20 +336,6 @@ def mock_infer_repeats(mock_config):
     path = os.path.join(MOCK_DIR, 'infer-repeats.txt')
     with open(path) as f:
         return f.read().replace('{REPO}', mock_config.repo_dir)
-
-
-@pytest.fixture
-def mock_coverity(tmpdir):
-    '''
-    Mocks the coverity environment
-    '''
-    from static_analysis_bot.config import settings
-    settings.cov_package_name = 'coverity'
-    settings.cov_package_ver = '1'
-
-    # Build the mock directory
-    os.environ['MOZBUILD_STATE_PATH'] = str(tmpdir.realpath())
-    tmpdir.mkdir('coverity').mkdir(settings.cov_package_name)
 
 
 @pytest.fixture
