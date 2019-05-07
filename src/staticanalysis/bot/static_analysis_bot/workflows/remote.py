@@ -12,6 +12,7 @@ from static_analysis_bot.coverage import ZeroCoverageTask
 from static_analysis_bot.coverity.coverity import CoverityTask
 from static_analysis_bot.infer.infer import InferTask
 from static_analysis_bot.lint import MozLintTask
+from static_analysis_bot.task import AnalysisTask
 
 logger = get_logger(__name__)
 
@@ -87,7 +88,7 @@ class RemoteWorkflow(object):
         issues = []
         for dep in dependencies:
             try:
-                if isinstance(dep, type):
+                if isinstance(dep, type) and issubclass(dep, AnalysisTask):
                     # Build a class instance from its definition and route
                     task = dep.build_from_route(self.index_service, self.queue_service)
                     if task is None:
