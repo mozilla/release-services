@@ -116,38 +116,13 @@ class HookPhabricator(Hook):
 
     async def build_consumer(self, *args, **kwargs):
         '''
-        Main consumer:
-        * Query phabricator differentials regularly
-        * Check queued builds
+        Main consumer, running queued builds
         '''
         while True:
+            await self.run_builds()
 
-            # Get new differential ids
-            if self.mode == MODE_PHABRICATOR_POLLING:
-                await self.poll_phabricator()
-
-                # Sleep a bit before trying new diffs
-                await asyncio.sleep(60)
-
-            elif self.mode == MODE_PHABRICATOR_WEBHOOK:
-                await self.run_builds()
-
-                # Sleep just a bit between two runs
-                await asyncio.sleep(2)
-
-    async def poll_phabricator(self):
-        '''
-        Poll Phabricator Diff search endpoint to trigger new tasks
-        '''
-        for diff in self.list_differential():
-            try:
-                # Load revision to get repository
-                rev = self.api.load_revision(diff['revisionPHID'])
-
-                logger.info('Triggering task from polling', diff=diff['id'])
-                await self.trigger_task(diff, rev['fields']['repositoryPHID'])
-            except Exception as e:
-                logger.error('Failed to trigger task from polling', error=str(e))
+            # Sleep just a bit between two runs
+            await asyncio.sleep(2)
 
     async def run_builds(self):
         '''
@@ -159,7 +134,7 @@ class HookPhabricator(Hook):
             if build.state == PhabricatorBuildState.Queued and build.check_visibility(self.api, self.secure_projects):
                 try:
                     logger.info('Triggering task from webhook', build=build)
-                    await self.trigger_task(build.diff, build.repo_phid)
+                    await self.trigger_task(target_phid, build.diff, build.repo_phid)
                     # TODO: better integration with mercurial queue
                     # to get the revisions produced
                 except Exception as e:
@@ -200,7 +175,7 @@ class HookPhabricator(Hook):
         logger.info('Queued new build', build=build)
         return web.Response(text='Build queued')
 
-    async def trigger_task(self, diff, repo_phid):
+    async def trigger_task(self, build_target_phid, diff, repo_phid):
         '''
         Trigger a code review task using configured modes: Try or Taskcluster
         '''
@@ -218,7 +193,7 @@ class HookPhabricator(Hook):
             await self.create_task({
                 'ANALYSIS_SOURCE': 'phabricator',
                 'ANALYSIS_ID': diff['phid'],
-                'HARBORMASTER_TARGET': diff.get('build_target_phid'),
+                'HARBORMASTER_TARGET': build_target_phid,
             })
         else:
             logger.info('Skipping Taskcluster task', diff=diff['phid'])
@@ -227,7 +202,7 @@ class HookPhabricator(Hook):
         if ACTION_TRY in self.actions:
             assert self.mercurial_queue is not None, \
                 'No mercurial queue to push on try!'
-            await self.mercurial_queue.put(diff)
+            await self.mercurial_queue.put((build_target_phid, diff))
         else:
             logger.info('Skipping Try job', diff=diff['phid'])
 
@@ -433,20 +408,19 @@ class PulseListener(object):
         # Finally build the webserver coroutine
         return web._run_app(app, port=self.http_port, print=logger.info)
 
-    def add_revision(self, revision):
+    def add_build(self, build_target_phid):
         '''
-        Fetch a phabricator revision and push it in the mercurial queue
+        Fetch a phabricator build and push it in the mercurial queue
         '''
+        assert build_target_phid.startswith('PHID-HMBT-')
         if self.mercurial is None:
-            logger.warn('Skip adding revision, mercurial worker is disabled', revision=revision)
+            logger.warn('Skip adding build, mercurial worker is disabled', build=build_target_phid)
             return
 
-        rev = self.phabricator_api.load_revision(rev_id=revision)
-        logger.info('Found revision', title=rev['fields']['title'])
-
-        diffs = self.phabricator_api.search_diffs(diff_phid=rev['fields']['diffPHID'])
-        assert len(diffs) == 1
+        # Load the diff from the target
+        container = self.phabricator_api.find_target_buildable(build_target_phid)
+        diffs = self.phabricator_api.search_diffs(diff_phid=container['fields']['objectPHID'])
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.mercurial.queue.put(diffs[0]))
-        logger.info('Pushed revision in queue', rev=revision)
+        loop.run_until_complete(self.mercurial.queue.put((build_target_phid, diffs[0])))
+        logger.info('Pushed build in queue', build=build_target_phid)

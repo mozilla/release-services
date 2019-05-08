@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os.path
+import urllib
 
 import pytest
 
@@ -31,18 +32,19 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
-            publish_treeherder_link=False,
+            publish_phabricator=False,
         )
         worker.repo = RepoMock
 
-        await worker.handle_diff({
+        diff = {
             'phid': 'PHID-DIFF-test123',
             'revisionPHID': 'PHID-DREV-deadbeef',
             'id': 1234,
 
             # Revision does not exist, will apply on tip
             'baseRevision': 'abcdef12345',
-        })
+        }
+        await worker.push_to_try('PHID-HMBT-deadbeef', diff)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
@@ -58,7 +60,7 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
         'parameters': {
             'target_tasks_method': 'codereview',
             'optimize_target_tasks': True,
-            'phabricator_diff': 'PHID-DIFF-test123',
+            'phabricator_diff': 'PHID-HMBT-deadbeef',
         }
     }
 
@@ -121,18 +123,19 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
-            publish_treeherder_link=False,
+            publish_phabricator=False,
         )
         worker.repo = RepoMock
 
-        await worker.handle_diff({
+        diff = {
             'phid': 'PHID-DIFF-solo',
             'revisionPHID': 'PHID-DREV-solo',
             'id': 9876,
 
             # Revision does not exist, will apply on tip
             'baseRevision': base,
-        })
+        }
+        await worker.push_to_try('PHID-HMBT-deadbeef', diff)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
@@ -148,7 +151,7 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
         'parameters': {
             'target_tasks_method': 'codereview',
             'optimize_target_tasks': True,
-            'phabricator_diff': 'PHID-DIFF-solo',
+            'phabricator_diff': 'PHID-HMBT-deadbeef',
         }
     }
 
@@ -210,17 +213,17 @@ async def test_treeherder_link(PhabricatorMock, RepoMock):
             repo_url='http://mozilla-central',
             repo_dir=repo_dir,
             batch_size=100,
-            publish_treeherder_link=True,
+            publish_phabricator=True,
         )
         worker.repo = RepoMock
 
-        await worker.handle_diff({
+        diff = {
             'phid': 'PHID-DIFF-test123',
             'revisionPHID': 'PHID-DREV-deadbeef',
             'id': 1234,
-            'build_target_phid': 'PHID-HMBT-somehash',
             'baseRevision': 'abcdef12345',
-        })
+        }
+        await worker.push_to_try('PHID-HMBT-somehash', diff)
 
         # Check the treeherder link was published
         assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.createartifact'
@@ -229,3 +232,66 @@ async def test_treeherder_link(PhabricatorMock, RepoMock):
     # Tip should be updated
     tip = RepoMock.tip()
     assert tip.node != initial.node
+
+
+@pytest.mark.asyncio
+async def test_failure(PhabricatorMock, RepoMock):
+    '''
+    Run mercurial worker on a single diff
+    and check the treeherder link publication as an artifact
+    '''
+    # Get initial tip commit in repo
+    initial = RepoMock.tip()
+
+    # The patched and config files should not exist at first
+    repo_dir = RepoMock.root().decode('utf-8')
+    config = os.path.join(repo_dir, 'try_task_config.json')
+    target = os.path.join(repo_dir, 'test.txt')
+    assert not os.path.exists(target)
+    assert not os.path.exists(config)
+
+    with PhabricatorMock as api:
+        worker = MercurialWorker(
+            api,
+            ssh_user='john@doe.com',
+            ssh_key='privateSSHkey',
+            repo_url='http://mozilla-central',
+            repo_dir=repo_dir,
+            batch_size=100,
+            publish_phabricator=True,
+        )
+        worker.repo = RepoMock
+
+        diff = {
+            # Missing revisionPHID will give an assertion error
+            'phid': 'PHID-DIFF-test123',
+            'id': 1234,
+        }
+        out = await worker.handle_build('PHID-somehash', diff)
+        assert out is False
+
+        # Check the unit result was published
+        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
+        params = json.loads(urllib.parse.parse_qs(api.mocks.calls[-1].request.body)['params'][0])
+        assert params['unit'][0]['duration'] > 0
+        del params['unit'][0]['duration']
+        assert params == {
+            'buildTargetPHID': 'PHID-somehash',
+            'type': 'fail',
+            'unit': [
+                {
+                    'name': 'general',
+                    'result': 'broken',
+                    'namespace': 'code-review',
+                    'details': 'WARNING: An error occured in the code review bot.\n\n``````',
+                    'format': 'remarkup',
+                }
+            ],
+            'lint': [],
+            '__conduit__': {'token': 'deadbeef'}
+        }
+        assert api.mocks.calls[-1].response.status_code == 200
+
+        # Clone should not be modified
+        tip = RepoMock.tip()
+        assert tip.node == initial.node

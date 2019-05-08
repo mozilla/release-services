@@ -59,7 +59,9 @@ For example, you can create a secret called ``garbage/LOGIN/staticanalysis-bot-d
           - YOUR@EMAIL.COM
       - reporter: phabricator
 
-Just replace ``LOGIN`` with your username (e.g. ``michel``); ``api-YOURTOKEN`` with a new Conduit API Token from `Phabricator-dev https://phabricator-dev.allizom.org/settings/`_ (hint: on Bugzilla-dev, you can just "Sign in with GitHub"); and ``YOUR@EMAIL.COM`` with your email address.
+Just replace ``LOGIN`` with your username (e.g. ``michel``); ``api-YOURTOKEN`` with a new Conduit API Token from `Phabricator-dev`_ (hint: on Bugzilla-dev, you can just "Sign in with GitHub"); and ``YOUR@EMAIL.COM`` with your email address.
+
+.. _`Phabricator-dev`: https://phabricator-dev.allizom.org/settings
 
 
 2. Taskcluster client
