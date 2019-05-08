@@ -6,10 +6,8 @@
 import itertools
 import json
 import os.path
-import subprocess
 import time
 from contextlib import contextmanager
-from distutils.spawn import find_executable
 
 import pytest
 import responses
@@ -148,7 +146,7 @@ def mock_phabricator(mock_config):
     )
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture
 def mock_stats(mock_config):
     '''
     Mock Datadog authentication and stats management
@@ -199,7 +197,7 @@ def mock_stats(mock_config):
     yield stats.api.reporter
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 @responses.activate
 def mock_revision(mock_phabricator, mock_config):
     '''
@@ -208,51 +206,6 @@ def mock_revision(mock_phabricator, mock_config):
     from static_analysis_bot.revisions import PhabricatorRevision
     with mock_phabricator as api:
         return PhabricatorRevision(api, diff_phid='PHID-DIFF-XXX')
-
-
-@pytest.fixture
-def mock_clang(mock_config, tmpdir, monkeypatch):
-    '''
-    Mock clang binary setup by linking the system wide
-    clang tools into the expected repo sub directory
-    '''
-
-    # Create a temp mozbuild path
-    clang_dir = tmpdir.mkdir('clang-tools').mkdir('clang-tidy').mkdir('bin')
-    os.environ['MOZBUILD_STATE_PATH'] = str(tmpdir.realpath())
-
-    for tool in ('clang-tidy', 'clang-format'):
-        os.symlink(
-            find_executable(tool),
-            str(clang_dir.join(tool).realpath()),
-        )
-
-    # Monkeypatch the mach static analysis by using directly clang-tidy
-    real_run = subprocess.run
-
-    def mock_mach(command, *args, **kwargs):
-        if command[:5] == ['gecko-env', './mach', '--log-no-times', 'static-analysis', 'check']:
-            command = ['clang-tidy', ] + command[5:]
-            res = real_run(command, *args, **kwargs)
-            res.stdout = res.stdout + b'\n42 warnings present.'
-            return res
-
-        if command[:4] == ['gecko-env', './mach', '--log-no-times', 'clang-format']:
-            # Mock ./mach clang-format behaviour by analysing repo bad file
-            # with the embedded clang-format from Nix
-            # and replace this file with the output
-            target = os.path.join(mock_config.repo_dir, 'dom', 'bad.cpp')
-            out = real_run(['clang-format', target], *args, **kwargs)
-            with open(target, 'w') as f:
-                f.write(out.stdout.decode('utf-8'))
-
-            # Must return command output as it's saved as TC artifact
-            return out
-
-        # Really run command through normal run
-        return real_run(command, *args, **kwargs)
-
-    monkeypatch.setattr(subprocess, 'run', mock_mach)
 
 
 @pytest.fixture
@@ -273,86 +226,8 @@ def mock_workflow(tmpdir, mock_phabricator, mock_config):
 
 
 @pytest.fixture
-def mock_clang_output():
-    '''
-    Load a real case clang output
-    '''
-    path = os.path.join(MOCK_DIR, 'clang-output.txt')
-    with open(path) as f:
-        return f.read()
-
-
-@pytest.fixture
-def mock_clang_issues():
-    '''
-    Load parsed issues from a real case (above)
-    '''
-    path = os.path.join(MOCK_DIR, 'clang-issues.txt')
-    with open(path) as f:
-        return f.read()
-
-
-@pytest.fixture
-def mock_infer(tmpdir, monkeypatch):
-    # Create a temp mozbuild path
-    infer_dir = tmpdir.mkdir('infer').mkdir('infer').mkdir('bin')
-    os.environ['MOZBUILD_STATE_PATH'] = str(tmpdir.realpath())
-
-    open(str(infer_dir.join('infer').realpath()), 'w+')
-
-
-@pytest.fixture
-def mock_infer_output():
-    '''
-    Load a real case clang output
-    '''
-    path = os.path.join(MOCK_DIR, 'infer-output.txt')
-    with open(path) as f:
-        return f.read()
-
-
-@pytest.fixture
-def mock_infer_issues():
-    '''
-    Load parsed issues from a real case (above)
-    '''
-    path = os.path.join(MOCK_DIR, 'infer-issues.txt')
-    with open(path) as f:
-        return f.read()
-
-
-@pytest.fixture
-def mock_infer_repeats(mock_config):
-    '''
-    Load parsed issues with repeated issues
-    '''
-    # Write dummy test_repeat.cpp file in repo
-    # Needed to build line hash
-    test_java = os.path.join(mock_config.repo_dir, 'test_repeats.java')
-    with open(test_java, 'w') as f:
-        for i in range(5):
-            f.write('line {}\n'.format(i))
-
-    path = os.path.join(MOCK_DIR, 'infer-repeats.txt')
-    with open(path) as f:
-        return f.read().replace('{REPO}', mock_config.repo_dir)
-
-
-@pytest.fixture
 def mock_coverage_artifact():
     path = os.path.join(MOCK_DIR, 'zero_coverage_report.json')
     return {
         'public/zero_coverage_report.json': json.load(open(path)),
     }
-
-
-@pytest.fixture
-def mock_coverage():
-    path = os.path.join(MOCK_DIR, 'zero_coverage_report.json')
-    assert os.path.exists(path)
-    responses.add(
-        responses.GET,
-        'https://index.taskcluster.net/v1/task/project.releng.services.project.production.code_coverage_bot.latest/artifacts/public/zero_coverage_report.json',
-        body=open(path).read(),
-        content_type='application/json',
-    )
