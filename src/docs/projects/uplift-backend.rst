@@ -1,7 +1,7 @@
 .. _uplift-backend-project:
 
 Project: uplift-backend
-======================
+=======================
 
 :production: https://uplift.shipit.mozilla-releng.net
 :staging: https://upligt.shipit.staging.mozilla-releng.net
