@@ -939,6 +939,7 @@ in rec {
           include ${self.dirname}/*.json
           include ${self.dirname}/*.mako
           include ${self.dirname}/*.yml
+          include ${self.dirname}/*.download
 
           recursive-exclude * __pycache__
           recursive-exclude * *.py[co]
