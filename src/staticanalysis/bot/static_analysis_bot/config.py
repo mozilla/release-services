@@ -41,8 +41,6 @@ class Settings(object):
         self.app_channel = None
         self.publication = None
         self.taskcluster = None
-
-        # For remote analysis
         self.try_task_id = None
         self.try_group_id = None
 
