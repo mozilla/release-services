@@ -35,7 +35,7 @@ These artifacts can be obtained from the `taskcluster index`_.
 .. _taskcluster index: https://tools.taskcluster.net/index/project.releng.services.project.production.shipit_code_coverage/latest
 
 Is the code coverage project working correctly?
---------------------------------
+-----------------------------------------------
 
 .. _verify-codecoverage/bot:
 

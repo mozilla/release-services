@@ -1147,21 +1147,21 @@ PROJECTS_CONFIG = {
                 'target': 'DOCKERHUB',
                 'options': {
                     'testing': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'scriptworker_shipitscript_docker_testing',
                     },
                     'staging': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'scriptworker_shipitscript_docker_staging',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',

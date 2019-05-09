@@ -508,6 +508,14 @@ def mock_coverity(tmpdir):
 
 
 @pytest.fixture
+def mock_coverage_artifact():
+    path = os.path.join(MOCK_DIR, 'zero_coverage_report.json')
+    return {
+        'public/zero_coverage_report.json': json.load(open(path)),
+    }
+
+
+@pytest.fixture
 def mock_coverage():
     path = os.path.join(MOCK_DIR, 'zero_coverage_report.json')
     assert os.path.exists(path)

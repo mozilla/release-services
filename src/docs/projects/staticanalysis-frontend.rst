@@ -1,7 +1,7 @@
 .. _staticanalysis/frontend-project:
 
 Project: staticanalysis/frontend
-===============================
+================================
 
 :contact: `Bastien Abadie`_, (backup `Release Management`_)
 
