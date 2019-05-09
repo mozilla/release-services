@@ -141,8 +141,8 @@ def test_baseline(mock_config, mock_revision):
     - with some issues in its log
     '''
     from static_analysis_bot.workflows.remote import RemoteWorkflow
-    from static_analysis_bot.lint import MozLintIssue
-    from static_analysis_bot.coverage import CoverageIssue
+    from static_analysis_bot.tasks.lint import MozLintIssue
+    from static_analysis_bot.tasks.coverage import CoverageIssue
 
     # We run on a mock TC, with a try source
     assert mock_config.taskcluster.task_id == 'local instance'
@@ -405,7 +405,7 @@ def test_mozlint_task(mock_config, mock_revision):
     Test a remote workflow with a mozlint analyzer
     '''
     from static_analysis_bot.workflows.remote import RemoteWorkflow
-    from static_analysis_bot.lint import MozLintIssue
+    from static_analysis_bot.tasks.lint import MozLintIssue
 
     tasks = {
         'decision': {
@@ -456,7 +456,7 @@ def test_clang_tidy_task(mock_config, mock_revision):
     '''
     from static_analysis_bot import Reliability
     from static_analysis_bot.workflows.remote import RemoteWorkflow
-    from static_analysis_bot.clang.tidy import ClangTidyIssue
+    from static_analysis_bot.tasks.clang_tidy import ClangTidyIssue
 
     tasks = {
         'decision': {
@@ -528,7 +528,7 @@ def test_clang_format_task(mock_config, mock_revision):
     Test a remote workflow with a clang-format analyzer
     '''
     from static_analysis_bot.workflows.remote import RemoteWorkflow
-    from static_analysis_bot.clang.format import ClangFormatIssue
+    from static_analysis_bot.tasks.clang_format import ClangFormatIssue
 
     tasks = {
         'decision': {
@@ -603,7 +603,7 @@ def test_coverity_task(mock_config, mock_revision):
     '''
     from static_analysis_bot import Reliability
     from static_analysis_bot.workflows.remote import RemoteWorkflow
-    from static_analysis_bot.coverity.coverity import CoverityIssue
+    from static_analysis_bot.tasks.coverity import CoverityIssue
 
     tasks = {
         'decision': {
@@ -700,7 +700,7 @@ def test_infer_task(mock_config, mock_revision):
     Test a remote workflow with an infer analyzer
     '''
     from static_analysis_bot.workflows.remote import RemoteWorkflow
-    from static_analysis_bot.infer.infer import InferIssue
+    from static_analysis_bot.tasks.infer import InferIssue
 
     tasks = {
         'decision': {

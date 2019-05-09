@@ -10,7 +10,7 @@ from static_analysis_bot import AnalysisException
 from static_analysis_bot import Issue
 from static_analysis_bot import Reliability
 from static_analysis_bot.config import settings
-from static_analysis_bot.task import AnalysisTask
+from static_analysis_bot.tasks.base import AnalysisTask
 
 logger = get_logger(__name__)
 
