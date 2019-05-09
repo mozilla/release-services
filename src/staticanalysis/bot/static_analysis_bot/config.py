@@ -18,7 +18,7 @@ from cli_common.log import get_logger
 
 PROJECT_NAME = 'static-analysis-bot'
 REPO_TRY = b'https://hg.mozilla.org/try'
-CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'
+RAW_FILE_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/{}'
 
 logger = get_logger(__name__)
 
@@ -114,16 +114,34 @@ class Settings(object):
         Configuration is stored on mozilla central
         It has to be downloaded on each run
         '''
+        def _fetch(path):
+            url = RAW_FILE_URL.format(path)
+            resp = requests.get(url)
+            logger.debug('Fetching repository file', url=url)
+            assert resp.ok, \
+                'Failed to retrieve configuration from mozilla-central #{}'.format(resp.status_code)  # noqa
+            return resp.content
+
         assert isinstance(defaults, dict)
         assert self.config is None, \
             'Config already set.'
-        resp = requests.get(CONFIG_URL)
-        assert resp.ok, \
-            'Failed to retrieve configuration from mozilla-central #{}'.format(resp.status_code)  # noqa
 
         self.config = defaults
-        self.config.update(yaml.load(resp.content))
+        self.config.update(yaml.load(_fetch('tools/clang-tidy/config.yaml')))
         logger.info('Loaded configuration from mozilla-central')
+
+        # Also downloads the 3rd party file
+        self.third_party_paths = _fetch(self.third_party).decode('utf-8').splitlines()
+        logger.info('Loaded {} third party paths'.format(len(self.third_party_paths)))
+
+    def is_third_party(self, path):
+        '''
+        Check if a file is a 3rd party
+        '''
+        for third_party_path in self.third_party_paths:
+            if path.startswith(third_party_path):
+                return True
+        return False
 
     def is_publishable_check(self, check):
         '''

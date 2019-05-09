@@ -45,6 +45,7 @@ def test_coverage(mock_config, mock_revision, mock_coverage_artifact):
         'message': 'This file is uncovered',
         'in_patch': True,
         'is_new': False,
+        'is_third_party': False,
         'validates': True,
         'publishable': True,
     }
@@ -60,6 +61,7 @@ def test_coverage(mock_config, mock_revision, mock_coverage_artifact):
 ## coverage problem
 
 - **Path**: my/path/file1.cpp
+- **Third Party**: no
 - **Publishable**: yes
 
 ```
@@ -82,6 +84,7 @@ This file is uncovered
         'message': 'This file is uncovered',
         'in_patch': True,
         'is_new': False,
+        'is_third_party': True,
         'validates': True,
         'publishable': True,
     }
@@ -97,6 +100,7 @@ This file is uncovered
 ## coverage problem
 
 - **Path**: test/dummy/thirdparty.c
+- **Third Party**: yes
 - **Publishable**: yes
 
 ```
@@ -119,6 +123,7 @@ This file is uncovered
         'message': 'This file is uncovered',
         'in_patch': True,
         'is_new': False,
+        'is_third_party': False,
         'validates': False,
         'publishable': False,
     }
@@ -134,6 +139,7 @@ This file is uncovered
 ## coverage problem
 
 - **Path**: my/path/header.h
+- **Third Party**: no
 - **Publishable**: no
 
 ```

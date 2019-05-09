@@ -108,6 +108,12 @@ class Issue(abc.ABC):
         '''
         raise NotImplementedError
 
+    def is_third_party(self):
+        '''
+        Is this issue in a third party path ?
+        '''
+        return settings.is_third_party(self.path)
+
 
 class Reliability(enum.Enum):
     Unknown = 'unknown'

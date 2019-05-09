@@ -26,12 +26,22 @@ def mock_config():
     '''
     os.environ['TRY_TASK_ID'] = 'remoteTryTask'
     os.environ['TRY_TASK_GROUP_ID'] = 'remoteTryGroup'
+    third_party = [
+        'test/dummy/',
+        '3rdparty/',
+    ]
 
     path = os.path.join(MOCK_DIR, 'config.yaml')
     responses.add(
         responses.GET,
         'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml',
         body=open(path).read(),
+        content_type='text/plain',
+    )
+    responses.add(
+        responses.GET,
+        'https://hg.mozilla.org/mozilla-central/raw-file/tip/3rdparty.txt',
+        body='\n'.join(third_party),
         content_type='text/plain',
     )
 
