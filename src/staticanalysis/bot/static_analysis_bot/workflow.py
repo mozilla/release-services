@@ -166,7 +166,7 @@ class Workflow(object):
 
     def find_issues(self, revision):
         '''
-        Find all issues on rmeote Taskcluster task group
+        Find all issues on remote Taskcluster task group
         '''
         # Load all tasks in task group
         tasks = self.queue_service.listTaskGroup(settings.try_group_id)
