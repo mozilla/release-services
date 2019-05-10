@@ -64,13 +64,32 @@ class ImprovementPatch(object):
 
 class Revision(object):
     '''
-    A common DCM revision
+    A Phabricator revision to analyze and report on
     '''
-    def __init__(self):
+    def __init__(self, api, diff_phid=None, try_task=None, update_build=True):
+        assert isinstance(api, PhabricatorAPI)
+        assert (diff_phid is not None) ^ (try_task is not None)
         self.files = []
         self.lines = {}
         self.patch = None
         self.improvement_patches = []
+        self.diff_phid = None
+        self.build_target_phid = None
+        self.api = api
+        self.mercurial_revision = None
+        self.update_build = update_build
+
+        if diff_phid is not None:
+            # Load directly from the diff phid
+            self.load_phabricator(diff_phid)
+        elif try_task is not None:
+            # Load build target phid from the task env
+            # And get the diff from the phabricator api
+            build_target = try_task['extra']['code-review']['phabricator-diff']
+            buildable = self.api.find_target_buildable(build_target)
+            self.load_phabricator(buildable['fields']['objectPHID'], build_target)
+        else:
+            raise Exception('Invalid revision configuration')
 
     def analyze_patch(self):
         '''
@@ -186,34 +205,6 @@ class Revision(object):
         * improvement patches
         '''
         self.improvement_patches = []
-
-
-class PhabricatorRevision(Revision):
-    '''
-    A phabricator revision to process
-    '''
-    diff_phid = None
-    build_target_phid = None
-
-    def __init__(self, api, diff_phid=None, try_task=None, update_build=True):
-        super().__init__()
-        assert isinstance(api, PhabricatorAPI)
-        assert (diff_phid is not None) ^ (try_task is not None)
-        self.api = api
-        self.mercurial_revision = None
-        self.update_build = update_build
-
-        if diff_phid is not None:
-            # Load directly from the diff phid
-            self.load_phabricator(diff_phid)
-        elif try_task is not None:
-            # Load build target phid from the task env
-            # And get the diff from the phabricator api
-            build_target = try_task['extra']['code-review']['phabricator-diff']
-            buildable = self.api.find_target_buildable(build_target)
-            self.load_phabricator(buildable['fields']['objectPHID'], build_target)
-        else:
-            raise Exception('Invalid revision configuration')
 
     def load_phabricator(self, diff_phid, build_target=None):
         '''
