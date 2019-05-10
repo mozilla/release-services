@@ -13,7 +13,7 @@ class MockQueue(object):
     Mock the Taskcluster queue, by using fake tasks descriptions, relations and artifacts
     '''
 
-    def __init__(self, relations):
+    def configure(self, relations):
         # Create tasks
         assert isinstance(relations, dict)
         self._tasks = {
@@ -96,7 +96,7 @@ class MockQueue(object):
 
 
 class MockIndex(object):
-    def __init__(self, tasks):
+    def configure(self, tasks):
         self.tasks = tasks
 
     def findTask(self, route):
