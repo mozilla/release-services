@@ -14,14 +14,14 @@ def test_publication(tmpdir, mock_issues, mock_phabricator):
     Test debug publication and report analysis
     '''
     from static_analysis_bot.report.debug import DebugReporter
-    from static_analysis_bot.revisions import PhabricatorRevision
+    from static_analysis_bot.revisions import Revision
 
     report_dir = str(tmpdir.mkdir('public').realpath())
     report_path = os.path.join(report_dir, 'report.json')
     assert not os.path.exists(report_path)
 
     with mock_phabricator as api:
-        prev = PhabricatorRevision(api, 'PHID-DIFF-abcdef')
+        prev = Revision(api, 'PHID-DIFF-abcdef')
 
     r = DebugReporter(report_dir)
     r.publish(mock_issues, prev)

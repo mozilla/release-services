@@ -75,7 +75,7 @@ def test_mail(mock_config, mock_issues, mock_phabricator):
     Test mail sending through Taskcluster
     '''
     from static_analysis_bot.report.mail import MailReporter
-    from static_analysis_bot.revisions import PhabricatorRevision, ImprovementPatch
+    from static_analysis_bot.revisions import Revision, ImprovementPatch
 
     def _check_email(request):
         payload = json.loads(request.body)
@@ -105,7 +105,7 @@ def test_mail(mock_config, mock_issues, mock_phabricator):
     r = MailReporter(conf, 'test_tc', 'token_tc')
 
     with mock_phabricator as api:
-        prev = PhabricatorRevision(api, 'PHID-DIFF-test')
+        prev = Revision(api, 'PHID-DIFF-test')
         prev.improvement_patches = [
             ImprovementPatch('clang-tidy', repr(prev), 'Some code fixes'),
             ImprovementPatch('clang-format', repr(prev), 'Some lint fixes'),

@@ -215,9 +215,9 @@ def mock_revision(mock_phabricator, mock_config):
     '''
     Mock a mercurial revision
     '''
-    from static_analysis_bot.revisions import PhabricatorRevision
+    from static_analysis_bot.revisions import Revision
     with mock_phabricator as api:
-        return PhabricatorRevision(api, diff_phid='PHID-DIFF-XXX')
+        return Revision(api, diff_phid='PHID-DIFF-XXX')
 
 
 @pytest.fixture
