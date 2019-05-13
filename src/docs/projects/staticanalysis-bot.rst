@@ -5,7 +5,7 @@ Project: staticanalysis/bot
 
 :contact: `Bastien Abadie`_, (backup `Release Management`_)
 
-Static analysis bot is a set of Taskcluster tasks, triggered by *Pulse Listener* on every new Phabricator patch, using a `HarborMaster build plan`_.
+Static Analysis bot is composed of a set of Taskcluster tasks, triggered by *Pulse Listener* on every new Phabricator patch, using a `HarborMaster build plan`_.
 
 For each patch:
 
@@ -22,7 +22,7 @@ Developer setup
 
 .. note::
 
-  Static analysis bot is now a pure Python project (no system dependencies). You can develop it without using Docker.
+  Static analysis bot is a pure Python project (no system dependencies). You can develop it without using Docker.
 
 You'll need:
 
@@ -74,7 +74,7 @@ Once created, please add the required scope to read your secret: ``secrets:get:r
 3. Develop with Docker
 """"""""""""""""""""""
 
-Run the following (where ``XXX`` is the Taskcluster access token):
+Run the following:
 
 .. code-block:: shell
 
@@ -92,7 +92,7 @@ Once the initial build finishes, you should get a green Nix shell, running in ``
 4. Develop without Docker
 """""""""""""""""""""""""
 
-It's now possible to develop the project without using Docker.
+It's possible to develop the project without using Docker.
 
 .. warning::
 
@@ -123,7 +123,7 @@ Now you should be able to run succesfully the unit tests and lint tools:
 
 The project does not support reading your Taskcluster credentials without using ``please`` commands and Docker.
 
-Here is a workaround to use automatically your credentials, by populating the necessary environment variables (i suggest writing these lines to a custom script...)
+Here is a workaround to automatically use your credentials, by populating the necessary environment variables (I suggest writing these lines to a custom script...)
 
 .. code-block:: shell
 
@@ -149,7 +149,7 @@ You need a valid Taskcluster group, with code review tasks to run the bot and co
  * ``TRY_GROUP_ID`` is the Taskcluster Task Group ID with all the analysis
  * ``TRY_TASK_ID`` is the `code-review-issues`` Taskcluster Task ID in the above group
 
-You can find all the analysis on Treeherder, using that `query (try + author=reviewbot) <https://treeherder.mozilla.org/#/jobs?repo=try&author=reviewbot>`_
+You can find all the analyses on Treeherder, using this `query (try + author=reviewbot) <https://treeherder.mozilla.org/#/jobs?repo=try&author=reviewbot>`_
 
 By clicking on an analysis Taskcluster task, you'll be redirected to the group, and will be able to retrieve both ids.
 
