@@ -5,18 +5,14 @@ Project: staticanalysis/bot
 
 :contact: `Bastien Abadie`_, (backup `Release Management`_)
 
-Static analysis bot is a Taskcluster task, triggered by *Pulse Listener* on every new Mozreview or Phabricator patch.
-The task applies several code analyzers on each patch:
+Static analysis bot is a set of Taskcluster tasks, triggered by *Pulse Listener* on every new Phabricator patch, using a `HarborMaster build plan`_.
 
- * clang-tidy through ./mach static-analysis
- * clang-format through ./mach static-analysis
- * ./mach lint (mozlint)
+For each patch:
 
-And reports the results through several channels:
-
- * emails,
- * MozReview comments,
- * Phabricator reviews.
+1. A try job is created in ``code-review`` mode
+2. Analyzers described in the mozilla-central repository are run on the source code
+3. Issues are reported are stored in a JSON file on each task, and reported as Taskcluster artifacts
+4. Finally, a final task is triggered and uses this project to group all issues, filter them, and report them (email & Phabricator comments).
 
 Developer setup
 ---------------
@@ -24,10 +20,14 @@ Developer setup
 0. Requirements
 """""""""""""""
 
+.. note::
+
+  Static analysis bot is now a pure Python project (no system dependencies). You can develop it without using Docker.
+
 You'll need:
 
 1. A `Taskcluster`_ account
-2. Docker
+2. *optional* Docker
 
 1. Taskcluster secret
 """""""""""""""""""""
@@ -45,11 +45,6 @@ For example, you can create a secret called ``garbage/LOGIN/staticanalysis-bot-d
   common:
     APP_CHANNEL: master
   static-analysis-bot:
-    ANALYZERS:
-      - clang-tidy
-      - clang-format
-      - infer
-      - mozlint
     PHABRICATOR:
       url: 'https://phabricator-dev.allizom.org/api/'
       api_key: api-YOURTOKEN
@@ -64,105 +59,99 @@ Just replace ``LOGIN`` with your username (e.g. ``michel``); ``api-YOURTOKEN`` w
 .. _`Phabricator-dev`: https://phabricator-dev.allizom.org/settings
 
 
-2. Taskcluster client
-"""""""""""""""""""""
+2. Taskcluster authentication
+"""""""""""""""""""""""""""""
 
-You need to create a `Taskcluster client`_ to run the static analysis task on your computer.
+You can simply use ``./please tools signin`` to create a new client on your Taskcluster account.
 
-Use the form to create a new client in your own namespace (the ``ClientId`` should be pre-filled with ``mozilla-auth0/ad|Mozilla-LDAP|login/``, simply add an explicit suffix, like ``static-analysis-dev``)
+Once created, please add the required scope to read your secret: ``secrets:get:repo:github.com/mozilla-releng/services:branch:master`` (or ``secrets:get:garbage/michel/staticanalysis-bot-dev`` if you're using your own secret)
 
-Add an explicit description, you can leave the ``Expires`` setting into the far future.
+.. note:: 
 
-Add the Taskcluster scope needed to read the secret previously mentioned: ``secrets:get:repo:github.com/mozilla-releng/services:branch:master`` (or ``secrets:get:garbage/michel/staticanalysis-bot-dev`` if you're using your own secret)
-
-You may also want to add the scope needed to send you an email report: ``notify:email:michel@email.com`` (if your email is ``michel@email.com``)
-
-To summarize, you need to setup your client (if your login is ``michel``), like this:
-
-============= ====================================================================
-Key           Value
-============= ====================================================================
-ClientId      ``mozilla-auth0/ad|Mozilla-LDAP|michel/static-analysis-dev``
-Description   My own static analysis dev. client
-Client Scopes ``secrets:get:repo:github.com/mozilla-releng/services:branch:master``
-              ``notify:email:michel@email.com``
-============= ====================================================================
+  Your newly created credentials are stored in ``~/.config/please/config.toml``
 
 
-.. warning::
-
-  Save the **access token** provided by Taskcluster after creating your client, it won't be displayed afterwards
-
-
-3. Project shell
-""""""""""""""""
+3. Develop with Docker
+""""""""""""""""""""""
 
 Run the following (where ``XXX`` is the Taskcluster access token):
 
 .. code-block:: shell
 
-  ./please shell staticanalysis/bot \
-    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|michel/static-analysis-dev" \
-    --taskcluster-access-token=XXX
+  ./please shell staticanalysis/bot
 
 Once the initial build finishes, you should get a green Nix shell, running in ``/app/src/staticanalysis/bot``.
 
+.. code-block:: shell
 
-4. Setup a Phabricator test
-"""""""""""""""""""""""""""
+  export TRY_TASK_ID="xxx"
+  export TRY_GROUP_ID="yyy"
+  export TASKCLUSTER_SECRET="path/to/your/secret"
+  static-analysis-bot
 
+4. Develop without Docker
+"""""""""""""""""""""""""
 
-.. note::
-  Make sure your Taskcluster secret has a ``phabricator`` reporter setup, as follows (with a valid Phabricator uri & token):
+It's now possible to develop the project without using Docker.
 
-  .. code-block:: yaml
+.. warning::
 
-    staticanalysis/bot:
-      ...
-      PHABRICATOR:
-        url: 'https://phabricator-dev.allizom.org/api/'
-        api_key: api-XXXX
-      REPORTERS:
-        - reporter: phabricator
+  This is pretty experimental at this point, and you will encounter some pain points around Taskcluster integration.
 
 
-The bot needs an environment variable ``PHABRICATOR`` containing the PHID of the diff to be reviewed.
-
-So you'll need to do the following in the nix shell:
+First, you need to create Python 3 virtual environment, and setup the project and its dependencies there:
 
 .. code-block:: shell
 
-  export PHABRICATOR="<DIFF_PHID>"
+  mkvirtualenv -p /usr/bin/python3 sa-bot
 
-Here is an example with this `Phabricator Diff review <https://phabricator-dev.allizom.org/D41>`_:
+  # Setup mozilla-cli-common
+  pip install -e lib/cli_common
 
-1. You can get the diff ID from the url (this is ``41``)
-2. Login on the Phabricator instance (needed for API queries)
-3. Go to the Conduit API web interface (``/conduit`` of the Phabricator instance), and click on the endpoint ``differential.query`` (direct link to `Phabricator DEV <https://phabricator-dev.allizom.org/conduit/method/differential.query/>`_)
-4. Fill the form field ``ids`` as a JSON list of integer using the diff ID, so for our example : ``[41]``
-5. Click ``Call Method``
-6. The method result should have a ``activeDiffPHID`` key, that's our ``DIFF_PHID`` (in our example: ``PHID-DIFF-b5wsvctabxjmwqonwryv``)
-
-Here is the final command line:
-
-.. code-block:: shell
-
-  export PHABRICATOR="PHID-DIFF-b5wsvctabxjmwqonwryv"
+  # Setup our bot
+  pip install -r src/staticanalysis/bot/requirements_frozen.txt
+  pip install -e src/staticanalysis/bot
 
 
-5. Run the bot
-""""""""""""""
-
-Finally, you can run the bot with this command (in the Nix Shell):
+Now you should be able to run succesfully the unit tests and lint tools:
 
 .. code-block:: shell
 
-  mkdir -p /app/tmp
-  static-analysis-bot \
-    --source=phabricator \
-    --id=$PHABRICATOR \
-    --taskcluster-secret=repo:github.com/mozilla-releng/services:branch:master \
-    --cache-root=/app/tmp
+  cd src/staticanalysis/bot
+  pytest
+  flake8
+
+The project does not support reading your Taskcluster credentials without using ``please`` commands and Docker.
+
+Here is a workaround to use automatically your credentials, by populating the necessary environment variables (i suggest writing these lines to a custom script...)
+
+.. code-block:: shell
+
+  export TASKCLUSTER_SECRET=path/to/your/secret
+  export TASKCLUSTER_CLIENT_ID=$(grep 'taskcluster_client_id' ~/.config/please/config.toml | awk '{gsub(/"/, "", $3); print $3}')
+  export TASKCLUSTER_ACCESS_TOKEN=$(grep 'taskcluster_access_token' ~/.config/please/config.toml | awk '{gsub(/"/, "", $3); print $3}')
+
+
+Finally, you can run the project exactly like in the ``nix-shell`` above:
+
+.. code-block:: shell
+
+  export TRY_TASK_ID="xxx"
+  export TRY_GROUP_ID="yyy"
+  export TASKCLUSTER_SECRET="path/to/your/secret"
+  static-analysis-bot
+
+5. How to find a Taskcluster group to analyze
+"""""""""""""""""""""""""""""""""""""""""""""
+
+You need a valid Taskcluster group, with code review tasks to run the bot and configure the analysis with these 2 environment variables:
+
+ * ``TRY_GROUP_ID`` is the Taskcluster Task Group ID with all the analysis
+ * ``TRY_TASK_ID`` is the `code-review-issues`` Taskcluster Task ID in the above group
+
+You can find all the analysis on Treeherder, using that `query (try + author=reviewbot) <https://treeherder.mozilla.org/#/jobs?repo=try&author=reviewbot>`_
+
+By clicking on an analysis Taskcluster task, you'll be redirected to the group, and will be able to retrieve both ids.
 
 
 Is the static analysis project working correctly ?
@@ -187,5 +176,6 @@ You'll be redirected to the task running (hopefully), and will see the logs. A s
 .. _`Release Management`: https://wiki.mozilla.org/Release_Management
 .. _`Taskcluster`: https://tools.taskcluster.net/
 .. _`Taskcluster client`: https://tools.taskcluster.net/auth/clients
+.. _`HarborMaster build plan`: https://phabricator.services.mozilla.com/harbormaster/plan/4/
 
 .. _`Taskcluster task inspector`: https://tools.taskcluster.net/task-inspector
