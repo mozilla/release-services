@@ -7,6 +7,14 @@ import pytest
 
 from pulselistener.mercurial import MercurialWorker
 
+MERCURIAL_FAILURE = '''WARNING: The code review bot failed to apply your patch.
+
+```unable to find 'crash.txt' for patching
+(use '--prefix' to apply patch relative to the current directory)
+1 out of 1 hunks FAILED -- saving rejects to file crash.txt.rej
+abort: patch failed to apply
+```'''
+
 
 @pytest.mark.asyncio
 async def test_push_to_try(PhabricatorMock, RepoMock):
@@ -235,10 +243,11 @@ async def test_treeherder_link(PhabricatorMock, RepoMock):
 
 
 @pytest.mark.asyncio
-async def test_failure(PhabricatorMock, RepoMock):
+async def test_failure_general(PhabricatorMock, RepoMock):
     '''
     Run mercurial worker on a single diff
     and check the treeherder link publication as an artifact
+    Use a Python common exception to trigger a broken build
     '''
     # Get initial tip commit in repo
     initial = RepoMock.tip()
@@ -284,6 +293,71 @@ async def test_failure(PhabricatorMock, RepoMock):
                     'result': 'broken',
                     'namespace': 'code-review',
                     'details': 'WARNING: An error occured in the code review bot.\n\n``````',
+                    'format': 'remarkup',
+                }
+            ],
+            'lint': [],
+            '__conduit__': {'token': 'deadbeef'}
+        }
+        assert api.mocks.calls[-1].response.status_code == 200
+
+        # Clone should not be modified
+        tip = RepoMock.tip()
+        assert tip.node == initial.node
+
+
+@pytest.mark.asyncio
+async def test_failure_mercurial(PhabricatorMock, RepoMock):
+    '''
+    Run mercurial worker on a single diff
+    and check the treeherder link publication as an artifact
+    Apply a bad mercurial patch to trigger a mercurial fail
+    '''
+    # Get initial tip commit in repo
+    initial = RepoMock.tip()
+
+    # The patched and config files should not exist at first
+    repo_dir = RepoMock.root().decode('utf-8')
+    config = os.path.join(repo_dir, 'try_task_config.json')
+    target = os.path.join(repo_dir, 'test.txt')
+    assert not os.path.exists(target)
+    assert not os.path.exists(config)
+
+    with PhabricatorMock as api:
+        worker = MercurialWorker(
+            api,
+            ssh_user='john@doe.com',
+            ssh_key='privateSSHkey',
+            repo_url='http://mozilla-central',
+            repo_dir=repo_dir,
+            batch_size=100,
+            publish_phabricator=True,
+        )
+        worker.repo = RepoMock
+
+        diff = {
+            'revisionPHID': 'PHID-DREV-666',
+            'baseRevision': 'missing',
+            'phid': 'PHID-DIFF-666',
+            'id': 666,
+        }
+        out = await worker.handle_build('PHID-build-666', diff)
+        assert out is False
+
+        # Check the unit result was published
+        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
+        params = json.loads(urllib.parse.parse_qs(api.mocks.calls[-1].request.body)['params'][0])
+        assert params['unit'][0]['duration'] > 0
+        del params['unit'][0]['duration']
+        assert params == {
+            'buildTargetPHID': 'PHID-build-666',
+            'type': 'fail',
+            'unit': [
+                {
+                    'name': 'mercurial',
+                    'result': 'fail',
+                    'namespace': 'code-review',
+                    'details': MERCURIAL_FAILURE,
                     'format': 'remarkup',
                 }
             ],
