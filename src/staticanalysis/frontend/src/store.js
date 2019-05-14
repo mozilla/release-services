@@ -155,7 +155,7 @@ export default new Vuex.Store({
           } else if (issue.analyzer === 'Coverity') {
             check = issue.kind
           } else if (issue.analyzer === 'coverage') {
-            check = '0 coverage'
+            check = 'zero coverage'
           } else {
             console.warn('Unsupported analyzer', issue.analyzer)
             return
