@@ -617,6 +617,7 @@ class PhabricatorAPI(object):
         patches[diff['phid']] = diff['id']
 
         parents = self.load_parents(diff['revisionPHID'])
+        hg_base = None
         if parents:
 
             # Load all parent diffs
@@ -631,9 +632,13 @@ class PhabricatorAPI(object):
                 last_diff = parent_diffs[-1]
                 patches[last_diff['phid']] = last_diff['id']
 
-                # Use base revision of last parent
-                hg_base = last_diff['baseRevision']
-
+                # Use parent until a base revision is available in the repository
+                # This is needed to support stack of patches with already merged patches
+                diff_base = last_diff['baseRevision']
+                if revision_available(repo, diff_base):
+                    logger.info('Found a parent with a landed revision, stopping stack here', rev=diff_base)
+                    hg_base = diff_base
+                    break
         else:
             # Use base revision from top diff
             hg_base = diff['baseRevision']
