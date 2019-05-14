@@ -21,7 +21,7 @@ ISSUE_MARKDOWN = '''
 - **Publishable **: {publishable}
 - **Is Clang Error**: {is_clang_error}
 - **Is Local**: {is_local}
-- **Reliability**: {reliability}
+- **Reliability**: {reliability} (false positive risk)
 
 ```
 {body}
@@ -109,7 +109,7 @@ class CoverityIssue(Issue):
         Build the text body published on reporters
         '''
         # If there is the reliability index use it
-        return f'Checker reliability (false positive risk) is {self.reliability.value}.\n{self.message}' \
+        return f'Checker reliability is {self.reliability.value} (false positive risk).\n{self.message}' \
             if self.reliability != Reliability.Unknown \
             else self.message
 
@@ -155,7 +155,7 @@ class CoverityIssue(Issue):
         Outputs a Phabricator lint result
         '''
         # If there is the reliability index use it
-        message = f'Checker reliability (false positive risk) is {self.reliability.value}.\n{self.message}' \
+        message = f'Checker reliability is {self.reliability.value} (false positive risk).\n{self.message}' \
             if self.reliability != Reliability.Unknown \
             else self.message
 
