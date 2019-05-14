@@ -98,6 +98,14 @@ It's possible to develop the project without using Docker.
 
   This is pretty experimental at this point, and you will encounter some pain points around Taskcluster integration.
 
+You'll need to have `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/>`_ installed on your computer.
+
+On MacOSX, we presume that virtualenvwrapper will be installed in ``/usr/local/virtualenvwrapper.sh`` as a default instalation based on ``python3`` installed from ``brew`` as:
+
+.. code-block:: shell
+
+  pip install virtualenvwrapper
+  source /usr/local/bin/virtualenvwrapper.sh
 
 First, you need to create Python 3 virtual environment, and setup the project and its dependencies there:
 
