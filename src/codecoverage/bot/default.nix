@@ -12,9 +12,9 @@ let
   rustPlatform = mkRustPlatform {};
   project_name = "codecoverage/bot";
 
-  # Marco grcov
+  # Mozilla grcov
   grcov = rustPlatform.buildRustPackage rec {
-    version = "0.4.2";
+    version = "0.5.0";
     name = "grcov-${version}";
 
     buildInputs = [
@@ -22,10 +22,10 @@ let
     ];
 
     src = releng_pkgs.pkgs.fetchFromGitHub {
-      owner = "marco-c";
+      owner = "mozilla";
       repo = "grcov";
       rev = "v${version}";
-      sha256 = "1bpjsapdbcydsi2rq7iikkzn88an77wwaiw46c0izc9h5ns24a7z";
+      sha256 = "0jk4ppf40iacdgb94az8kwr6rig8m6hpxab9c1fbp6hzq7z9kka3";
     };
 
 	# ...
@@ -35,11 +35,11 @@ let
     # error: test failed, to rerun pass '--test test'
     doCheck = false;
 
-    cargoSha256 = "1dlv6pl1j1wbi8sb76g64ynr5ba7krnxywsbhcw5s5z1y0ga32cl";
+    cargoSha256 = "1gvrdxjxk599zg2h0gkhyvay7sjfkchyhv6v2hjnasmfd31jgjdy";
 
     meta = with releng_pkgs.pkgs.stdenv.lib; {
       description = "grcov collects and aggregates code coverage information for multiple source files.";
-      homepage = https://github.com/marco-c/grcov;
+      homepage = https://github.com/mozilla/grcov;
       license = with releng_pkgs.pkgs.lib.licenses; [ mit ];
       platforms = platforms.all;
     };
