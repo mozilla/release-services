@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import gzip
+import json
+import tempfile
 
 import requests
+from google.cloud import storage as gcp_storage
 
 from cli_common import utils
 from cli_common.log import get_logger
@@ -91,3 +94,30 @@ def codecov_wait(commit):
         return utils.retry(check_codecov_job, retries=30)
     except TotalsNoneError:
         return False
+
+
+def gcp_upload(path, data):
+    '''
+    Upload a data payload on Google Cloud Storage
+    '''
+    assert isinstance(path, str)
+    assert isinstance(data, (bytes, str))
+
+    # Load credentials from Taskcluster secret
+    creds = secrets[secrets.GOOGLE_CLOUD_STORAGE]
+    if 'bucket' not in creds:
+        raise KeyError('Missing bucket in GOOGLE_CLOUD_STORAGE')
+    bucket = creds.pop('bucket')
+
+    # Write temporary file for client creation
+    with tempfile.NamedTemporaryFile(mode='w') as temp:
+        temp.write(json.dumps(creds))
+        temp.flush()
+        client = gcp_storage.Client.from_service_account_json(temp.name)
+
+    # Upload payload in bucket
+    bucket = client.get_bucket(bucket)
+    blob = bucket.blob(path)
+    blob.upload_from_string(data)
+
+    logger.info('Uploaded {} on {}'.format(path, bucket))
