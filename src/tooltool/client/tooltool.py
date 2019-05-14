@@ -24,6 +24,7 @@
 
 from __future__ import print_function
 
+import StringIO
 import base64
 import calendar
 import hashlib
@@ -741,7 +742,7 @@ def unpack_file(filename):
     xz, gzip, or unzip a zip file. The file is assumed to contain a single
     directory with a name matching the base of the given filename.
     Xz support is handled by shelling out to 'tar'."""
-    if tarfile.is_tarfile(filename):
+    if os.path.isfile(filename) and tarfile.is_tarfile(filename):
         tar_file, zip_ext = os.path.splitext(filename)
         base_file, tar_ext = os.path.splitext(tar_file)
         clean_path(base_file)
@@ -749,18 +750,22 @@ def unpack_file(filename):
         tar = tarfile.open(filename)
         tar.extractall()
         tar.close()
-    elif filename.endswith('.tar.xz'):
+    elif os.path.isfile(filename) and filename.endswith('.tar.xz'):
         base_file = filename.replace('.tar.xz', '')
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         # Not using tar -Jxf because it fails on Windows for some reason.
         process = Popen(['xz', '-d', '-c', filename], stdout=PIPE)
-        tar = tarfile.open(fileobj=process.stdout, mode='r|')
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            return False
+        fileobj = StringIO.StringIO()
+        fileobj.write(stdout)
+        fileobj.seek(0)
+        tar = tarfile.open(fileobj=fileobj, mode='r|')
         tar.extractall()
         tar.close()
-        if not process.wait():
-            return False
-    elif zipfile.is_zipfile(filename):
+    elif os.path.isfile(filename) and zipfile.is_zipfile(filename):
         base_file = filename.replace('.zip', '')
         clean_path(base_file)
         log.info('unzipping "%s"' % filename)
