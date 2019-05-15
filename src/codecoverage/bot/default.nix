@@ -120,6 +120,7 @@ let
         rustPlatform.rust.rustc
         rustPlatform.rust.cargo
         grcov
+        git
       ];
     postInstall = ''
       mkdir -p $out/tmp
