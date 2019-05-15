@@ -2,3 +2,4 @@
 
 pytz
 google-cloud-storage
+zstandard

@@ -1597,6 +1597,22 @@ let
         description = "Yet another URL library";
       };
     };
+
+    "zstandard" = python.mkDerivation {
+      name = "zstandard-0.11.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/bd/6e/1dc9995c216c7c520b522b4949c78f0c71eb2594cee0de46cda62c476829/zstandard-0.11.1.tar.gz";
+        sha256 = "3c31da5d78a7b07e722e8a3e0b1295bc9b316b7e90a1666659c451a42750ffe4";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/indygreg/python-zstandard";
+        license = licenses.bsdOriginal;
+        description = "Zstandard bindings for Python";
+      };
+    };
   };
   localOverridesFile = ./requirements_override.nix;
   localOverrides = import localOverridesFile { inherit pkgs python; };
