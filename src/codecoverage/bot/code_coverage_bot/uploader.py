@@ -4,6 +4,7 @@ import gzip
 import requests
 from google.cloud import storage as gcp_storage
 from google.oauth2.service_account import Credentials
+import zstandard as zstd
 
 from cli_common import utils
 from cli_common.log import get_logger
@@ -98,26 +99,29 @@ def codecov_wait(commit):
 def gcp(repository, revision, data):
     '''
     Upload a grcov raw report on Google Cloud Storage
-    * Compress with gzip
+    * Compress with zstandard
     * Upload on bucket using revision in name
     '''
     assert isinstance(data, bytes)
     bucket = gcp_bucket()
 
     # Compress report
-    archive = gzip.compress(data)
+    compressor = zstd.ZstdCompressor()
+    archive = compressor.compress(data)
 
     # Upload archive
-    path = '{}/{}.json'.format(repository, revision)
+    path = '{}/{}.json.zstd'.format(repository, revision)
     blob = bucket.blob(path)
     blob.upload_from_string(archive)
 
     # Update headers
     blob.content_type = 'application/json'
-    blob.content_encoding = 'gzip'
+    blob.content_encoding = 'zstd'
     blob.patch()
 
     logger.info('Uploaded {} on {}'.format(path, bucket))
+
+    return blob
 
 
 def gcp_bucket():
