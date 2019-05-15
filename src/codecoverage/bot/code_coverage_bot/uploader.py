@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import gzip
-import json
-import tempfile
 
 import requests
 from google.cloud import storage as gcp_storage
+from google.oauth2.service_account import Credentials
 
 from cli_common import utils
 from cli_common.log import get_logger
@@ -127,15 +126,14 @@ def gcp_bucket():
     from Taskcluster secret
     '''
     # Load credentials from Taskcluster secret
-    creds = secrets[secrets.GOOGLE_CLOUD_STORAGE]
-    if 'bucket' not in creds:
+    service_account = secrets[secrets.GOOGLE_CLOUD_STORAGE]
+    if 'bucket' not in service_account:
         raise KeyError('Missing bucket in GOOGLE_CLOUD_STORAGE')
-    bucket = creds.pop('bucket')
+    bucket = service_account.pop('bucket')
 
-    # Write temporary file for client creation
-    with tempfile.NamedTemporaryFile(mode='w') as temp:
-        temp.write(json.dumps(creds))
-        temp.flush()
-        client = gcp_storage.Client.from_service_account_json(temp.name)
+    # Use those credentials to create a Storage client
+    # The project is needed to avoid checking env variables and crashing
+    creds = Credentials.from_service_account_info(service_account)
+    client = gcp_storage.Client(project=creds.project_id, credentials=creds)
 
     return client.get_bucket(bucket)
