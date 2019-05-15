@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import fnmatch
 import os
 import time
 
@@ -21,9 +22,10 @@ STATUS_VALUE = {
 
 class ArtifactsHandler(object):
 
-    def __init__(self, task_ids, parent_dir='ccov-artifacts'):
+    def __init__(self, task_ids, parent_dir='ccov-artifacts', task_name_filter='*'):
         self.task_ids = task_ids
         self.parent_dir = parent_dir
+        self.task_name_filter = task_name_filter
 
     def generate_path(self, platform, chunk, artifact):
         file_name = '%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
@@ -67,6 +69,19 @@ class ArtifactsHandler(object):
             taskcluster.download_artifact(artifact_path, test_task_id, artifact['name'])
             logger.info('%s artifact downloaded' % artifact_path)
 
+    def is_active_task(self, task):
+        '''
+        Validate a task, according to name filter given on CLI
+        '''
+        assert isinstance(task, dict)
+        name = task['task']['metadata']['name']
+
+        if not fnmatch.fnmatch(name, self.task_name_filter):
+            logger.debug('Skipping inactive task', name=name)
+            return False
+
+        return True
+
     def download_all(self):
         os.makedirs(self.parent_dir, exist_ok=True)
 
@@ -78,8 +93,9 @@ class ArtifactsHandler(object):
             task
             for group in groups
             for task in taskcluster.get_tasks_in_group(group)
-            if taskcluster.is_coverage_task(task)
+            if taskcluster.is_coverage_task(task) and self.is_active_task(task)
         ]
+        logger.info('Downloading artifacts from {} tasks'.format(len(test_tasks)))
 
         for test_task in test_tasks:
             status = test_task['status']['state']

@@ -36,7 +36,7 @@ TRY_REPOSITORY = '{}try'.format(HG_BASE)
 
 class CodeCov(object):
 
-    def __init__(self, repository, revision, cache_root, client_id, access_token):
+    def __init__(self, repository, revision, task_name_filter, cache_root, client_id, access_token):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
@@ -87,7 +87,7 @@ class CodeCov(object):
             elif self.repository == MOZILLA_CENTRAL_REPOSITORY and not platform.startswith('android'):
                 raise Exception('Code coverage build failed and was not indexed.')
 
-        self.artifactsHandler = ArtifactsHandler(task_ids, self.artifacts_dir)
+        self.artifactsHandler = ArtifactsHandler(task_ids, self.artifacts_dir, task_name_filter)
 
     def clone_repository(self, repository, revision):
         cmd = hglib.util.cmdbuilder('robustcheckout',
