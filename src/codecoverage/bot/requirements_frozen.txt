@@ -73,7 +73,7 @@ taskcluster==7.0.1
 taskcluster-urls==11.0.0
 testfixtures==6.6.2
 typed-ast==1.3.1
-urllib3==1.24.3
+urllib3==1.24.1
 wmctrl==0.3
 yarl==1.3.0
 zstandard==0.11.1
