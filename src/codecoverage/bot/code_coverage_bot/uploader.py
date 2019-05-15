@@ -101,7 +101,6 @@ def gcp(repository, revision, data):
     Upload a grcov raw report on Google Cloud Storage
     * Compress with gzip
     * Upload on bucket using revision in name
-    * Copy as latest file
     '''
     assert isinstance(data, bytes)
     bucket = gcp_bucket()
@@ -120,9 +119,6 @@ def gcp(repository, revision, data):
     blob.patch()
 
     logger.info('Uploaded {} on {}'.format(path, bucket))
-
-    # Copy as latest file in same bucket
-    bucket.copy_blob(blob, bucket, new_name='{}/latest.json'.format(repository))
 
 
 def gcp_bucket():

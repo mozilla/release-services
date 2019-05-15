@@ -159,12 +159,14 @@ class CodeCov(object):
             commit_sha=commit_sha,
             token=secrets[secrets.COVERALLS_TOKEN]
         )
+        logger.info('Codecov/coveralls report generated successfully')
+
         output_covdir = grcov.report(
             self.artifactsHandler.get(),
             source_dir=self.repo_dir,
             out_format='covdir',
         )
-        logger.info('Reports generated successfully')
+        logger.info('Covdir report generated successfully')
 
         report = json.loads(output)
         expected_extensions = ['.js', '.cpp']
