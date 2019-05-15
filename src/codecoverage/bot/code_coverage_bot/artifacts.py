@@ -69,18 +69,18 @@ class ArtifactsHandler(object):
             taskcluster.download_artifact(artifact_path, test_task_id, artifact['name'])
             logger.info('%s artifact downloaded' % artifact_path)
 
-    def is_active_task(self, task):
+    def is_filtered_task(self, task):
         '''
-        Validate a task, according to name filter given on CLI
+        Apply name filter from CLI args on task name
         '''
         assert isinstance(task, dict)
         name = task['task']['metadata']['name']
 
         if not fnmatch.fnmatch(name, self.task_name_filter):
-            logger.debug('Skipping inactive task', name=name)
-            return False
+            logger.debug('Filtered task', name=name)
+            return True
 
-        return True
+        return False
 
     def download_all(self):
         os.makedirs(self.parent_dir, exist_ok=True)
@@ -93,7 +93,7 @@ class ArtifactsHandler(object):
             task
             for group in groups
             for task in taskcluster.get_tasks_in_group(group)
-            if taskcluster.is_coverage_task(task) and self.is_active_task(task)
+            if taskcluster.is_coverage_task(task) and not self.is_filtered_task(task)
         ]
         logger.info('Downloading artifacts from {} tasks'.format(len(test_tasks)))
 
