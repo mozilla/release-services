@@ -68,16 +68,16 @@ class CodeCov(object):
             self.revision = revision
             self.from_pulse = True
 
-        branch = self.repository[len(HG_BASE):]
+        self.branch = self.repository[len(HG_BASE):]
 
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
-        self.repo_dir = os.path.join(cache_root, branch)
+        self.repo_dir = os.path.join(cache_root, self.branch)
 
         logger.info('Mercurial revision', revision=self.revision)
 
         task_ids = {}
         for platform in ['linux', 'windows', 'android-test', 'android-emulator']:
-            task = taskcluster.get_task(branch, self.revision, platform)
+            task = taskcluster.get_task(self.branch, self.revision, platform)
 
             # On try, developers might have requested to run only one platform, and we trust them.
             # On mozilla-central, we want to assert that every platform was run (except for android platforms
@@ -159,7 +159,12 @@ class CodeCov(object):
             commit_sha=commit_sha,
             token=secrets[secrets.COVERALLS_TOKEN]
         )
-        logger.info('Report generated successfully')
+        output_covdir = grcov.report(
+            self.artifactsHandler.get(),
+            source_dir=self.repo_dir,
+            out_format='covdir',
+        )
+        logger.info('Reports generated successfully')
 
         report = json.loads(output)
         expected_extensions = ['.js', '.cpp']
@@ -174,6 +179,7 @@ class CodeCov(object):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             executor.submit(uploader.coveralls, output)
             executor.submit(uploader.codecov, output, commit_sha)
+            executor.submit(uploader.gcp, self.branch, self.revision, output_covdir)
 
         logger.info('Waiting for build to be ingested by Codecov...')
         # Wait until the build has been ingested by Codecov.

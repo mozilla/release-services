@@ -96,13 +96,40 @@ def codecov_wait(commit):
         return False
 
 
-def gcp_upload(path, data):
+def gcp(repository, revision, data):
     '''
-    Upload a data payload on Google Cloud Storage
+    Upload a grcov raw report on Google Cloud Storage
+    * Compress with gzip
+    * Upload on bucket using revision in name
+    * Copy as latest file
     '''
-    assert isinstance(path, str)
-    assert isinstance(data, (bytes, str))
+    assert isinstance(data, bytes)
+    bucket = gcp_bucket()
 
+    # Compress report
+    archive = gzip.compress(data)
+
+    # Upload archive
+    path = '{}/{}.json'.format(repository, revision)
+    blob = bucket.blob(path)
+    blob.upload_from_string(archive)
+
+    # Update headers
+    blob.content_type = 'application/json'
+    blob.content_encoding = 'gzip'
+    blob.patch()
+
+    logger.info('Uploaded {} on {}'.format(path, bucket))
+
+    # Copy as latest file in same bucket
+    bucket.copy_blob(blob, bucket, new_name='{}/latest.json'.format(repository))
+
+
+def gcp_bucket():
+    '''
+    Build a Google Cloud Storage client & bucket
+    from Taskcluster secret
+    '''
     # Load credentials from Taskcluster secret
     creds = secrets[secrets.GOOGLE_CLOUD_STORAGE]
     if 'bucket' not in creds:
@@ -115,9 +142,4 @@ def gcp_upload(path, data):
         temp.flush()
         client = gcp_storage.Client.from_service_account_json(temp.name)
 
-    # Upload payload in bucket
-    bucket = client.get_bucket(bucket)
-    blob = bucket.blob(path)
-    blob.upload_from_string(data)
-
-    logger.info('Uploaded {} on {}'.format(path, bucket))
+    return client.get_bucket(bucket)
