@@ -100,14 +100,19 @@ class MercurialWorker(object):
         try:
             await self.push_to_try(build_target_phid, diff)
         except hglib.error.CommandError as e:
-            logger.warn('Mercurial error on diff', error=e.err, args=e.args, phid=diff['phid'])
+            # Format nicely the error log
+            error_log = e.err
+            if isinstance(error_log, bytes):
+                error_log = error_log.decode('utf-8')
+
+            logger.warn('Mercurial error on diff', error=error_log, args=e.args, phid=diff['phid'])
 
             # Report mercurial failure as a Unit Test issue
             failure = UnitResult(
                 namespace='code-review',
                 name='mercurial',
                 result=UnitResultState.Fail,
-                details='WARNING: The code review bot failed to apply your patch.\n\n```{}```'.format(e.err),
+                details='WARNING: The code review bot failed to apply your patch.\n\n```{}```'.format(error_log),
                 format='remarkup',
                 duration=time.time() - start,
             )

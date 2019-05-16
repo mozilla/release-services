@@ -1,36 +1,73 @@
-.. _tooltool-api-project:
+.. _tooltool-project:
 
-Project: tooltool/api
-=====================
+Project: ToolTool
+=================
 
-:Url:
-  `production <https://tooltool.mozilla-releng.net>`_,
-  `staging <https://tooltool.staging.mozilla-releng.net>`_
-:Papertrail:
-  `production <https://papertrailapp.com/groups/4472992/events?q=program%3Amozilla-releng%2Fservices%2Fproduction%2Freleng-tooltool>`_,
-  `staging <https://papertrailapp.com/groups/4472992/events?q=program%3Amozilla-releng%2Fservices%2Fstaging%2Freleng-tooltool>`_
-:Sentry:
-  `production <https://sentry.prod.mozaws.net/operations/mozilla-releng-services/?query=environment%3Aproduction+site%3Areleng-tooltool+>`_,
-  `staging <https://sentry.prod.mozaws.net/operations/mozilla-releng-services/?query=environment%3Astaging+site%3Areleng-tooltool+>`_
-:Heroku:
-  `production <https://dashboard.heroku.com/apps/releng-production-tooltool>`_,
-  `staging <https://dashboard.heroku.com/apps/releng-staging-tooltool>`_
-:Database (PostreSQL):
-  `production <https://data.heroku.com/datastores/dad34d86-54d0-46fc-911e-82768c73f247>`_,
-  `staging <https://data.heroku.com/datastores/81feab6a-0a7c-4489-a6a1-9c0106c5e0ea>`_
 :Contact: `Rok Garbas`_, (backup `Release Engineering`_)
 
+.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
+.. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
 
-Some of the jobs in the RelEng infrastructure make use of generic binary
-artifacts, which are stored in dedicated artifacts repositories (S3 buckets).
-``tooltool/api`` application provides an interface to those artifacts
-repositories.
+Tasks in the RelEng infrastructure and make use of generic binary artifacts,
+which are stored in dedicated artifacts repositories (S3 buckets). ToolTool
+application provides an interface to those artifacts repositories.
 
 
-.. todo:: write about relengapi tokenauth
+Request authentication credentials for the client (tooltool.py)
+---------------------------------------------------------------
 
-Troubleshooting
----------------
+`Open a bug on bugzila`_ and request new taskcluster client credentials that
+that you will then use in.
+
+Use the following points to guide you opening the bug:
+
+#. **Product** field should be ``Release Engineering``
+#. **Component** field should be ``Applications: ToolTool``
+#. **Summary** field should be ``Requesting taskcluster client credentials to use with tooltoo.py``
+#. **Description** field should contain:
+
+   - who is the responsible person and which is the responsible team
+   - what is the purpose of usage
+   - what should be the expiration date of the credentials (suggested is one year)
+   - which level of access is required:
+     - Download PUBLIC files from tooltool.
+     - Download INTERNAL files from tooltool.
+     - Upload PUBLIC files to tooltool.
+     - Upload INTERNAL files to tooltool.
+     - Manage tooltool files, including deleting and changing visibility levels.
+
+
+.. _`Open a bug on bugzila`: https://bugzilla.mozilla.org/enter_bug.cgi?product=Release%20Engineering&component=Applications%3A%20ToolTool
+
+
+How to generate taskcluster client credentials
+----------------------------------------------
+
+#. Go to https://tools.taskcluster.net/auth/clients.
+
+#. Make sure you are logged into taskcluster.
+
+#. Fill the ``Create New Client`` form:
+   
+   :ClientId: Make sure to include the Bug number by following the template ``project/releng/services/tooltool/bug<NUMBER>``.
+   :Description: Who is responsible and which team, also where is this token used.
+   :Expires: Requested expiration, by default set it to 1 year.
+   :Client Scopes: List of scopes requested based on the requested level of access:
+
+      - Download PUBLIC files from tooltool
+        (``project:releng:services/tooltool/api/download/public``).
+      - Download INTERNAL files from tooltool
+        (``project:releng:services/tooltool/api/download/internal``).
+      - Upload PUBLIC files to tooltool
+        (``project:releng:services/tooltool/api/upload/public``).
+      - Upload INTERNAL files to tooltool
+        (``project:releng:services/tooltool/api/upload/internal``).
+      - Manage tooltool files, including deleting and changing visibility levels
+        (``project:releng:services/tooltool/api/manage``).
+
+
+Troubleshooting deployment
+--------------------------
 
 In case of an incident this five steps that should help you narrow down the
 problem.
@@ -48,42 +85,15 @@ problem.
 
 #. Sometimes restarting an application might solve the issue (at least
    temporary). Once you restart the application also verify that it is working
-   correctly (follow :ref:`instructions below <verify-tooltool-api>`).
+   correctly (follow :ref:`instructions below <verify-tooltool>`).
 
 
-Deploying
----------
+How to check if ToolTool is working correctly?
+----------------------------------------------
 
-``tooltool/api`` is a Flask application deployed to Heroku. Please follow
-the :ref:`Heroku deployment guide <deploy-heroku-target>` how to manually
-deploy hotfixes.
+.. _verify-tooltool:
 
-The architecture
-
-.. blockdiag::
-    :align: center
-
-    orientation = portrait
-
-    B [ label = "https://tooltool.mozilla-releng.net/\ntooltool/api on Heroku"
-      , width = 280
-      , height = 60
-      ];
-
-    C [ label = "PostgreSQL\nTARGET: Heroku"
-      , width = 180
-      , height = 60
-      ];
-
-    B -> C
-
-
-Is ToolTool working correctly?
-------------------------------
-
-.. _verify-tooltool-api:
-
-**To test and verify** that ``tooltool/api`` is running correctly please
+**To test and verify** that the JSON API is running correctly please
 follow the following steps:
 
 #. Select which environement (production or staging).
@@ -166,7 +176,5 @@ To start developing ``tooltool/api`` you would need to:
      with `SQLAlchemy`_),
 
 
-.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
-.. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
 .. _`Taskcluster Auth service`: https://docs.taskcluster.net/reference/platform/taskcluster-auth
 .. _`SQLAlchemy`: https://pypi.python.org/pypi/SQLAlchemy
