@@ -9,6 +9,10 @@ import os
 
 import codecoverage_backend.config
 import codecoverage_backend.datadog
+import codecoverage_backend.services.gcp
+from cli_common import log
+
+logger = log.get_logger(__name__)
 
 
 def create_app(config=None):
@@ -30,5 +34,11 @@ def create_app(config=None):
 
     # Setup datadog stats
     codecoverage_backend.datadog.get_stats()
+
+    # Warm up GCP cache
+    try:
+        codecoverage_backend.services.gcp.load_cache()
+    except Exception as e:
+        logger.warn('GCP cache warmup failed: {}'.format(e))
 
     return app

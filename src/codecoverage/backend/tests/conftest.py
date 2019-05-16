@@ -32,6 +32,12 @@ def mock_secrets():
         },
         'PHABRICATOR_TOKEN': 'api-correct',
         'APP_CHANNEL': 'test',
+        'GOOGLE_CLOUD_STORAGE': {
+            'token_uri': 'secret',
+            'client_email': 'xxx@mozilla.test',
+            'private_key': 'somethingHere',
+            'bucket': 'unittest',
+        }
     })
 
 

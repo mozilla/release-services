@@ -76,6 +76,21 @@ paths:
       tags:
         - legacy
 
+  /v2/latest:
+    get:
+      operationId: "codecoverage_backend.v2.coverage_latest"
+      parameters:
+      - name: repository
+        in: query
+        description: Mozilla repository for these reports (default to mozilla-central)
+        required: false
+        type: string
+      responses:
+        200:
+          description: Latest coverage builds
+      tags:
+        - v2
+
   /v2/path:
     get:
       operationId: "codecoverage_backend.v2.coverage_for_path"
@@ -88,6 +103,11 @@ paths:
       - name: path
         in: query
         description: File
+        required: false
+        type: string
+      - name: repository
+        in: query
+        description: Mozilla repository for this changeset (default to mozilla-central)
         required: false
         type: string
       responses:
