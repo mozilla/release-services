@@ -599,19 +599,20 @@ def get_primary_builds(breakpoint_version: int,
 
     if product is Product.FIREFOX:
         firefox_versions = get_firefox_versions(releases)
-        versions = [
+        versions = set([
             firefox_versions['FIREFOX_NIGHTLY'],
+            firefox_versions['FIREFOX_DEVEDITION'],
             firefox_versions['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
             firefox_versions['LATEST_FIREFOX_VERSION'],
             firefox_versions['FIREFOX_ESR'],
-        ]
+        ])
     elif product is Product.THUNDERBIRD:
         thunderbird_versions = get_thunderbird_versions(releases)
-        versions = [
+        versions = set([
             thunderbird_versions['LATEST_THUNDERBIRD_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_DEVEL_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_NIGHTLY_VERSION'],
-        ]
+        ])
     else:
         raise click.ClickException(f'We don\'t generate product history for "{product.value}" product.')
 
