@@ -87,6 +87,7 @@ def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT):
     papertrail = logbook.SyslogHandler(
         application_name=f'mozilla/release-services/{channel}/{project_name}',
         address=(PAPERTRAIL_HOST, int(PAPERTRAIL_PORT)),
+        level=logbook.INFO,
         format_string='{record.time} {record.channel}: {record.message}',
         bubble=True,
     )

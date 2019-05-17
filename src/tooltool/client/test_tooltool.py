@@ -1258,8 +1258,12 @@ class FetchTests(TestDirMixin, unittest.TestCase):
         open("basename/LEFTOVER.txt", "w").write("rm me")
         self.failUnless(tooltool.unpack_file(filename))
         self.failUnless(os.path.exists('basename'))
+        self.failUnless(os.path.exists('basename.checksum'))
         self.failUnless(os.path.exists('basename/README.txt'))
         self.failIf(os.path.exists('basename/LEFTOVER.txt'))
+        self.failUnless(tooltool.unpack_file(filename))
+        open('basename.checksum', "w+").write("wrong checksum")
+        self.failUnless(tooltool.unpack_file(filename))
 
     def setup_archive(self, cmd):
         os.mkdir('basename')

@@ -89,13 +89,13 @@ if 'CACHE_KEY_PREFIX' not in CACHE:
 
 # We require REDIS_URL set by environment variables for branches deployed to Dockerflow.
 if secrets['APP_CHANNEL'] in ('testing', 'staging', 'production'):
+    CACHE['CACHE_TYPE'] = 'redis'
     if 'REDIS_URL' not in os.environ:
-        pass
+        CACHE['CACHE_REDIS_URL'] = secrets['REDIS_URL']
         # XXX: until we only deploy to GCP
         # raise RuntimeError(f'REDIS_URL has to be set as an environment variable, when '
         #                    f'APP_CHANNEL is set to {secrets["APP_CHANNEL"]}')
     else:
-        CACHE['CACHE_TYPE'] = 'redis'
         CACHE['CACHE_REDIS_URL'] = os.environ['REDIS_URL']
 
 

@@ -27,6 +27,14 @@ class BuildState(enum.Enum):
     Fail = 'fail'
 
 
+class UnitResultState(enum.Enum):
+    Pass = 'pass'
+    Fail = 'fail'
+    Skip = 'skip'
+    Broken = 'broken'
+    Unsound = 'unsound'
+
+
 class ArtifactType(enum.Enum):
     Host = 'host'
     WorkingCopy = 'working-copy'
@@ -87,7 +95,7 @@ class LintResult(dict):
 
     def validates(self):
         '''
-        Check the input is a lint issue compatible with
+        Check the input is a lint issue compatible with Phabricator
         '''
 
         # Check required strings
@@ -105,6 +113,41 @@ class LintResult(dict):
                 assert isinstance(value, int), '{} should be an int'.format(key)
 
         return True
+
+
+class UnitResult(dict):
+    def __init__(self, name, result, **kwargs):
+        self['name'] = name
+        assert isinstance(result, UnitResultState), 'result must be a UnitResultState'
+        self['result'] = result.value
+
+        for key in ('namespace', 'engine', 'duration', 'path', 'coverage', 'details', 'format'):
+            value = kwargs.get(key)
+            if value is not None:
+                self[key] = value
+
+        self.validates()
+
+    def validates(self):
+        '''
+        Check the input is a unit result compatible with Phabricator
+        '''
+        # Check name
+        assert isinstance(self['name'], str), 'name should be a string'
+
+        # Check special optional types
+        if 'duration' in self:
+            assert isinstance(self['duration'], (float, int)), \
+                'Duration should be an int or float'
+        if 'coverage' in self:
+            assert isinstance(self['coverage'], dict), 'Coverage should be a dict'
+        if 'format' in self:
+            assert self['format'] in ('text', 'remarkup'), 'Invalid format value'
+
+        # Check optional strings
+        for key in ('namespace', 'engine', 'path', 'details'):
+            if key in self:
+                assert isinstance(self[key], str), '{} should be a string'.format(key)
 
 
 class PhabricatorRevisionNotFoundException(Exception):
@@ -414,6 +457,8 @@ class PhabricatorAPI(object):
         '''
         assert all(map(lambda i: isinstance(i, LintResult), lint)), \
             'Only support LintResult instances'
+        assert all(map(lambda i: isinstance(i, UnitResult), unit)), \
+            'Only support UnitResult instances'
         assert isinstance(state, BuildState)
         return self.request(
             'harbormaster.sendmessage',
@@ -482,11 +527,11 @@ class PhabricatorAPI(object):
             build_target_phid,
             BuildState.Pass,
             unit=[
-                {
-                    'name': 'Aggregate coverage information',
-                    'result': 'pass',
-                    'coverage': coverage_data,
-                }
+                UnitResult(
+                    name='Aggregate coverage information',
+                    result=UnitResultState.Pass,
+                    coverage=coverage_data,
+                )
             ]
         )
 
@@ -572,6 +617,7 @@ class PhabricatorAPI(object):
         patches[diff['phid']] = diff['id']
 
         parents = self.load_parents(diff['revisionPHID'])
+        hg_base = None
         if parents:
 
             # Load all parent diffs
@@ -586,9 +632,13 @@ class PhabricatorAPI(object):
                 last_diff = parent_diffs[-1]
                 patches[last_diff['phid']] = last_diff['id']
 
-                # Use base revision of last parent
-                hg_base = last_diff['baseRevision']
-
+                # Use parent until a base revision is available in the repository
+                # This is needed to support stack of patches with already merged patches
+                diff_base = last_diff['baseRevision']
+                if revision_available(repo, diff_base):
+                    logger.info('Found a parent with a landed revision, stopping stack here', rev=diff_base)
+                    hg_base = diff_base
+                    break
         else:
             # Use base revision from top diff
             hg_base = diff['baseRevision']

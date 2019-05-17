@@ -54,6 +54,10 @@ let
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);
+    prePatch = ''
+      rm -f tooltool_api/tooltool.py.download
+      ln -s ${../client/tooltool.py} tooltool_api/tooltool.py.download
+    '';
     passthru = {
       cron = {
         check_pending_uploads = mkCronJob { schedule = [ "*/10 * * * *" ];  # every 10 min;

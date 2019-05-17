@@ -14,7 +14,6 @@ import sqlalchemy.orm
 
 import shipit_api.config
 from backend_common.db import db
-from cli_common.log import get_logger
 from shipit_api.release import bump_version
 from shipit_api.release import is_eme_free_enabled
 from shipit_api.release import is_partner_enabled
@@ -26,8 +25,6 @@ from shipit_api.tasks import generate_action_hook
 from shipit_api.tasks import generate_action_task
 from shipit_api.tasks import render_action_hook
 from shipit_api.tasks import render_action_task
-
-log = get_logger(__name__)
 
 
 class Signoff(db.Model):
