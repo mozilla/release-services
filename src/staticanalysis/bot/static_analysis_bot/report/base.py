@@ -33,7 +33,7 @@ COMMENT_PARTS = {
     },
 }
 COMMENT_FAILURE = '''
-Code analysis found {defects_total} in the Diff {diff_id}{extras_comments}:
+Code analysis found {defects_total} in the diff {diff_id}{extras_comments}:
 {defects}
 '''
 COMMENT_RUN_ANALYZERS = '''
