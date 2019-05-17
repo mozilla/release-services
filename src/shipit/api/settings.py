@@ -107,13 +107,13 @@ GROUPS = {
 AUTH0_AUTH_SCOPES = dict()
 
 # releng signoff scopes
-for product in ['firefox', 'fennec', 'fennec_beta', 'fennec_release', 'devedition']:
+for product in ['firefox', 'fennec', 'devedition']:
     scopes = {
         f'add_release/{product}': GROUPS['firefox-signoff'],
         f'abandon_release/{product}': GROUPS['firefox-signoff'],
     }
     phases = []
-    for flavor in [product, f'{product}_rc']:
+    for flavor in [product, f'{product}_rc', f'{product}_release', f'{product}_beta']:
         phases += [i['name'] for i in shipit_api.config.SUPPORTED_FLAVORS.get(flavor, [])]
     for phase in set(phases):
         scopes.update({
