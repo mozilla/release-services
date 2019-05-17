@@ -599,6 +599,8 @@ def get_primary_builds(breakpoint_version: int,
 
     if product is Product.FIREFOX:
         firefox_versions = get_firefox_versions(releases)
+        # make sure that Devedition is included in the list
+        products = [Product.FIREFOX, Product.DEVEDITION]
         versions = set([
             firefox_versions['FIREFOX_NIGHTLY'],
             firefox_versions['FIREFOX_DEVEDITION'],
@@ -608,6 +610,7 @@ def get_primary_builds(breakpoint_version: int,
         ])
     elif product is Product.THUNDERBIRD:
         thunderbird_versions = get_thunderbird_versions(releases)
+        products = [Product.THUNDERBIRD]
         versions = set([
             thunderbird_versions['LATEST_THUNDERBIRD_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_DEVEL_VERSION'],
@@ -620,7 +623,7 @@ def get_primary_builds(breakpoint_version: int,
 
     for release in releases:
         # Skip other products and older versions
-        if product is not Product(release.product) or \
+        if Product(release.product) not in products or \
            release.version not in versions:
             continue
         # Make sure to add en-US, it's not listed in the l10n changesets file
