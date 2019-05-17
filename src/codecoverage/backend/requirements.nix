@@ -2091,10 +2091,10 @@ let
     };
 
     "redis" = python.mkDerivation {
-      name = "redis-2.10.6";
+      name = "redis-3.2.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/09/8d/6d34b75326bf96d4139a2ddd8e74b80840f800a0a79f9294399e212cb9a7/redis-2.10.6.tar.gz";
-        sha256 = "a22ca993cea2962dbb588f9f30d0015ac4afcc45bee27d3978c0dbe9e97c6c0f";
+        url = "https://files.pythonhosted.org/packages/24/d4/06486dee0f66ef8c5080dc576fdfb33131fd2e0be3747f2be4e5634088a2/redis-3.2.1.tar.gz";
+        sha256 = "0wwj8il4c3aff15xwwcjfci367zxsakq05ps1a2il6yavp91i94c";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2173,10 +2173,10 @@ let
     };
 
     "rq" = python.mkDerivation {
-      name = "rq-0.12.0";
+      name = "rq-1.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/bf/64/29e23a46bdc084199398288d0cd2e183b64cb375483bfe8bba797331858a/rq-0.12.0.tar.gz";
-        sha256 = "7ac5989a27bdff713dd40517498c1b3bf720f8ebc47305055496f653a29da899";
+        url = "https://github.com/rq/rq/archive/v1.0.tar.gz";
+        sha256 = "0zncsjpvjliy4zvr4v83kl610bmj2r7rrin0jw5dbii9jpg4f8v1";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
