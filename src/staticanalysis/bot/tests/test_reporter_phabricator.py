@@ -11,7 +11,7 @@ import pytest
 import responses
 
 VALID_CLANG_TIDY_MESSAGE = '''
-Code analysis found 1 defect in the Diff 42:
+Code analysis found 1 defect in the diff 42:
  - 1 defect found by clang-tidy
 
 You can run this analysis locally with:
