@@ -67,15 +67,16 @@ class HookPhabricator(Hook):
         '''
         assert self.web_queue is not None, 'Missing web server queue'
 
+        def wait_build():
+            return self.web_queue.get()
+
+        loop = asyncio.get_event_loop()
+
         while True:
+            build = await loop.run_in_executor(None, wait_build)
 
             # Process next build in queue
-            if not self.web_queue.empty():
-                build = self.web_queue.get_nowait()
-                await self.run_build(build)
-
-            # Sleep just a bit between builds
-            await asyncio.sleep(1)
+            await self.run_build(build)
 
     async def run_build(self, build):
         '''
