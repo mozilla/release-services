@@ -681,10 +681,7 @@ def test_no_tasks(mock_config, mock_revision, mock_workflow):
 
 def test_zero_coverage_option(mock_config, mock_revision, mock_workflow):
     '''
-    Test a normal remote workflow (aka Try mode)
-    - current task with analyzer deps
-    - an analyzer in failed status
-    - with some issues in its log
+    Test the zero coverage trigger on the workflow
     '''
     from static_analysis_bot.tasks.coverage import CoverageIssue
 
