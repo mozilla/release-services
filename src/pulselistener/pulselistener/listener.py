@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import collections
 import os.path
 
 import requests
-from aiohttp import web
 
 from cli_common.log import get_logger
 from cli_common.phabricator import BuildState
@@ -17,14 +15,9 @@ from pulselistener.hook import PulseHook
 from pulselistener.mercurial import MercurialWorker
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
+from pulselistener.web import WebServer
 
 logger = get_logger(__name__)
-
-ACTION_TASKCLUSTER = 'taskcluster'
-ACTION_TRY = 'try'
-
-MODE_PHABRICATOR_POLLING = 'polling'
-MODE_PHABRICATOR_WEBHOOK = 'webhook'
 
 
 class HookPhabricator(Hook):
@@ -32,20 +25,12 @@ class HookPhabricator(Hook):
     Taskcluster hook handling the static analysis
     for Phabricator differentials
     '''
-    latest_id = None
-
     def __init__(self, configuration):
         assert 'hookId' in configuration
         super().__init__(
             'project-releng',
             configuration['hookId'],
         )
-        self.builds = collections.OrderedDict()
-
-        # Choose a mode between polling and webhook
-        self.mode = configuration.get('mode', MODE_PHABRICATOR_POLLING)
-        assert self.mode in (MODE_PHABRICATOR_POLLING, MODE_PHABRICATOR_WEBHOOK)
-        logger.info('Running in mode', mode=self.mode)
 
         # Connect to Phabricator API
         assert 'phabricator_api' in configuration
@@ -60,19 +45,6 @@ class HookPhabricator(Hook):
         }
         assert len(self.repos) > 0, 'No repositories enabled'
         logger.info('Enabled Phabricator repositories', repos=[r['fields']['name'] for r in self.repos.values()])
-
-        # Get actions to do on new diff
-        self.actions = configuration.get('actions', [ACTION_TASKCLUSTER, ])
-        logger.info('Enabled actions', actions=self.actions)
-
-        # Start by getting top id
-        diffs = self.api.search_diffs(limit=1)
-        assert len(diffs) == 1
-        self.latest_id = diffs[0]['id']
-
-        # Add web route for new code review
-        if self.mode == MODE_PHABRICATOR_WEBHOOK:
-            self.routes.append(web.post('/codereview/new', self.create_code_review))
 
         # Load secure projects
         projects = self.api.search_projects(slugs=['secure-revision'])
@@ -89,124 +61,65 @@ class HookPhabricator(Hook):
         assert isinstance(self.phabricator_sleep, int)
         logger.info('Will retry Phabricator secure revision queries', retries=self.phabricator_retries, sleep=self.phabricator_sleep)  # noqa
 
-    def list_differential(self):
-        '''
-        List new differential items using pagination
-        using an iterator
-        '''
-        cursor = self.latest_id
-        while cursor is not None:
-            diffs, cursor = self.api.search_diffs(
-                order='oldest',
-                limit=20,
-                after=self.latest_id,
-                output_cursor=True,
-            )
-            if not diffs:
-                break
-
-            for diff in diffs:
-                yield diff
-
-            # Update the latest id
-            if cursor and cursor['after']:
-                self.latest_id = cursor['after']
-            elif len(diffs) > 0:
-                self.latest_id = diffs[-1]['id']
-
     async def build_consumer(self, *args, **kwargs):
         '''
-        Main consumer, running queued builds
+        Main consumer, running queued builds from the web server
         '''
+        assert self.web_queue is not None, 'Missing web server queue'
+
+        def wait_build():
+            return self.web_queue.get()
+
+        loop = asyncio.get_event_loop()
+
         while True:
-            await self.run_builds()
+            build = await loop.run_in_executor(None, wait_build)
 
-            # Sleep just a bit between two runs
-            await asyncio.sleep(2)
+            # Process next build in queue
+            await self.run_build(build)
 
-    async def run_builds(self):
+    async def run_build(self, build):
         '''
         Start asynchronously new builds when their revision become public
         '''
-        for target_phid, build in self.builds.items():
+        assert isinstance(build, PhabricatorBuild)
 
-            # Run builds that just became public
-            if build.state == PhabricatorBuildState.Queued and build.check_visibility(self.api, self.secure_projects):
-                try:
-                    logger.info('Triggering task from webhook', build=build)
-                    await self.trigger_task(target_phid, build.diff, build.repo_phid)
-                    # TODO: better integration with mercurial queue
-                    # to get the revisions produced
-                except Exception as e:
-                    logger.error('Failed to trigger task from webhook', error=str(e))
+        # Check visibility of builds in queue
+        # The build state is updated to public/secured there
+        if build.state == PhabricatorBuildState.Queued:
+            build.check_visibility(self.api, self.secure_projects, self.phabricator_retries, self.phabricator_sleep)
 
-                # Report public bug as working
-                self.api.update_build_target(target_phid, BuildState.Work)
-                logger.info('Published public build as working', build=str(build))
+        if build.state == PhabricatorBuildState.Public:
+            # Push to try public builds
+            try:
+                logger.info('Triggering task from webhook', build=build)
 
+                # Skip unsupported repos
+                if build.repo_phid not in self.repos:
+                    logger.info('Repository not enabled', repo=build.repo_phid)
+                    return
+
+                # Enqueue push to try
+                # TODO: better integration with mercurial queue
+                # to get the revisions produced
+                await self.mercurial_queue.put((build.target_phid, build.diff))
+
+            except Exception as e:
+                logger.error('Failed to queue task from webhook', error=str(e))
+
+            # Report public bug as working
+            self.api.update_build_target(build.target_phid, BuildState.Work)
+            logger.info('Published public build as working', build=str(build))
+
+        elif build.state == PhabricatorBuildState.Secured:
             # Report secured bug as failing
             # and remove it from queue
-            if build.state == PhabricatorBuildState.Secured:
-                self.api.update_build_target(target_phid, BuildState.Fail)
-                logger.info('Published secure build as failing', build=str(build))
+            self.api.update_build_target(build.target_phid, BuildState.Fail)
+            logger.info('Published secure build as failing', build=str(build))
 
-                del self.builds[target_phid]
-                logger.info('Removed secure build from queue', build=str(build))
-
-    async def create_code_review(self, request):
-        '''
-        HTTP POST webhook used by HarborMaster on new builds
-        It only stores build ids and reply ASAP
-        Mandatory query parameters:
-        * diff as ID
-        * repo as PHID
-        * revision as ID
-        * target as PHID
-        '''
-        try:
-            build = PhabricatorBuild(request, self.phabricator_retries, self.phabricator_sleep)
-            if build.target_phid in self.builds:
-                raise Exception('Build target already queued')
-            self.builds[build.target_phid] = build
-        except Exception as e:
-            logger.error(str(e), path=request.path_qs)
-            raise web.HTTPBadRequest(text=str(e))
-
-        logger.info('Queued new build', build=build)
-        return web.Response(text='Build queued')
-
-    async def trigger_task(self, build_target_phid, diff, repo_phid):
-        '''
-        Trigger a code review task using configured modes: Try or Taskcluster
-        '''
-        assert isinstance(diff, dict)
-        assert 'phid' in diff and 'type' in diff
-        assert diff['type'] == 'DIFF'
-
-        # Skip unsupported repos
-        if repo_phid not in self.repos:
-            logger.info('Repository not enabled', repo=repo_phid)
-            return False
-
-        # Create new task
-        if ACTION_TASKCLUSTER in self.actions:
-            await self.create_task({
-                'ANALYSIS_SOURCE': 'phabricator',
-                'ANALYSIS_ID': diff['phid'],
-                'HARBORMASTER_TARGET': build_target_phid,
-            })
         else:
-            logger.info('Skipping Taskcluster task', diff=diff['phid'])
-
-        # Put message in mercurial queue for try jobs
-        if ACTION_TRY in self.actions:
-            assert self.mercurial_queue is not None, \
-                'No mercurial queue to push on try!'
-            await self.mercurial_queue.put((build_target_phid, diff))
-        else:
-            logger.info('Skipping Try job', diff=diff['phid'])
-
-        return True
+            # By default requeue build until it's marked secured or public
+            self.web_queue.put(build)
 
 
 class HookCodeCoverage(PulseHook):
@@ -310,8 +223,6 @@ class PulseListener(object):
         self.taskcluster_client_id = taskcluster_client_id
         self.taskcluster_access_token = taskcluster_access_token
         self.phabricator_api = phabricator_api
-        self.http_port = int(os.environ.get('PORT', 9000))
-        logger.info('HTTP webhook server will listen', port=self.http_port)
 
         task_monitoring.connect_taskcluster(
             self.taskcluster_client_id,
@@ -333,6 +244,9 @@ class PulseListener(object):
             self.mercurial = None
             logger.info('Mercurial worker is disabled')
 
+        # Create web server
+        self.webserver = WebServer()
+
     def run(self):
 
         # Build hooks for each conf
@@ -350,8 +264,10 @@ class PulseListener(object):
                 self.taskcluster_client_id,
                 self.taskcluster_access_token,
             )
-            if self.mercurial is not None:
-                out &= hook.connect_mercurial_queue(self.mercurial.queue)
+            out &= hook.connect_queues(
+                mercurial_queue=self.mercurial.queue if self.mercurial else None,
+                web_queue=self.webserver.queue,
+            )
             return out
         consumers = [
             hook.build_consumer(self.pulse_user, self.pulse_password)
@@ -359,18 +275,20 @@ class PulseListener(object):
             if _connect(hook)
         ]
 
-        # Add monitoring process
+        # Add monitoring task
         consumers.append(task_monitoring.run())
 
-        # Add mercurial process
+        # Add mercurial task
         if self.mercurial is not None:
             consumers.append(self.mercurial.run())
 
-        # Hooks through web server
-        consumers.append(self.build_webserver(hooks))
+        # Start the web server in its own process
+        web_process = self.webserver.start()
 
-        # Run all consumers together
+        # Run all tasks concurrently
         run_consumer(asyncio.gather(*consumers))
+
+        web_process.join()
 
     def build_hook(self, conf):
         '''
@@ -388,25 +306,6 @@ class PulseListener(object):
             raise Exception('Unsupported hook {}'.format(conf['type']))
 
         return hook_class(conf)
-
-    def build_webserver(self, hooks):
-        '''
-        Build an async web server used by hooks
-        '''
-        app = web.Application()
-
-        # Always add a simple test endpoint
-        async def ping(request):
-            return web.Response(text='pong')
-
-        app.add_routes([web.get('/ping', ping)])
-
-        # Add routes from hooks
-        for hook in hooks:
-            app.add_routes(hook.routes)
-
-        # Finally build the webserver coroutine
-        return web._run_app(app, port=self.http_port, print=logger.info)
 
     def add_build(self, build_target_phid):
         '''

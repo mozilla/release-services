@@ -18,6 +18,7 @@ class Hook(object):
         self.hook_id = hook_id
         self.hooks = None  # TC hooks
         self.mercurial_queue = None
+        self.web_queue = None
         self.routes = []
 
     def connect_taskcluster(self, client_id=None, access_token=None):
@@ -29,11 +30,12 @@ class Hook(object):
 
         return True
 
-    def connect_mercurial_queue(self, queue):
+    def connect_queues(self, mercurial_queue, web_queue):
         '''
-        Save local queue to mercurial worker
+        Save queues to communicate across processes
         '''
-        self.mercurial_queue = queue
+        self.mercurial_queue = mercurial_queue
+        self.web_queue = web_queue
 
         return True
 
