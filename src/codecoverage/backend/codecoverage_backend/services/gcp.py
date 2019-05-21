@@ -60,28 +60,32 @@ class GCPCache(object):
             for rev, _ in self.list_reports(repo, nb=1):
                 self.download_report(repo, rev)
 
-    def ingest_pushes(self, repository, max_push_id=None, max_pushes_pages=3):
+    def ingest_pushes(self, repository, min_push_id=None, nb_pages=3):
         '''
         Ingest HGMO changesets and pushes into our Redis Cache
+        The pagination goes from oldest to newest, starting from the optional min_push_id
         '''
+        chunk_size = 8
         params = {
             'version': 2,
         }
-        if max_push_id is not None:
-            assert isinstance(max_push_id, int)
-            params['startID'] = max_push_id - 8
-            params['endID'] = max_push_id
+        if min_push_id is not None:
+            assert isinstance(min_push_id, int)
+            params['startID'] = min_push_id
+            params['endID'] = min_push_id + chunk_size
 
-        for page in range(max_pushes_pages):
+        for page in range(nb_pages):
 
             r = requests.get(HGMO_PUSHES_URL.format(repository=repository), params=params)
             data = r.json()
 
-            # Sort pushes to go from most recent to older
+            # Sort pushes to go from oldest to newest
             pushes = sorted([
                 (int(push_id), push)
                 for push_id, push in data['pushes'].items()
-            ], key=lambda p: p[0], reverse=True)
+            ], key=lambda p: p[0])
+            if not pushes:
+                return
 
             for push_id, push in pushes:
 
@@ -96,8 +100,9 @@ class GCPCache(object):
                 if reports:
                     logger.info('Found reports in that push', push_id=push_id)
 
-            params['startID'] = push_id - 9
-            params['endID'] = push_id - 1
+            newest = pushes[-1][0]
+            params['startID'] = newest
+            params['endID'] = newest + chunk_size
 
     def ingest_report(self, repository, push_id, changeset):
         '''
@@ -132,7 +137,7 @@ class GCPCache(object):
         json_path = os.path.join(self.reports_dir, blob.name.rstrip('.zstd'))
         if os.path.exists(json_path):
             logger.info('Report already available', path=json_path)
-            return False
+            return True
 
         os.makedirs(os.path.dirname(archive_path), exist_ok=True)
         blob.download_to_filename(archive_path)
@@ -168,11 +173,11 @@ class GCPCache(object):
 
         logger.info('Stored new push data', push_id=push_id)
 
-    def find_report(self, repository, max_push_id=None):
+    def find_report(self, repository, min_push_id=None, max_push_id=None):
         '''
         Find the first report available before that push
         '''
-        results = self.list_reports(repository, nb=1, max_push_id=max_push_id)
+        results = self.list_reports(repository, nb=1, min_push_id=min_push_id, max_push_id=max_push_id)
         if not results:
             raise Exception('No report found')
         return results[0]
@@ -182,7 +187,7 @@ class GCPCache(object):
         Find the closest report from specified revision:
         1. Lookup the revision push in cache
         2. Lookup the revision push in HGMO
-        3. Find the first report before that push
+        3. Find the first report after that push
         '''
 
         # Lookup push from cache (fast)
@@ -205,12 +210,12 @@ class GCPCache(object):
             push_id = data['pushid']
 
             # Ingest pushes as we clearly don't have it in cache
-            self.ingest_pushes(repository, max_push_id=push_id, max_pushes_pages=1)
+            self.ingest_pushes(repository, min_push_id=push_id-1, nb_pages=1)
 
         # Load report from that push
-        return self.find_report(repository, max_push_id=push_id)
+        return self.find_report(repository, min_push_id=push_id)
 
-    def list_reports(self, repository, nb=5, max_push_id=None):
+    def list_reports(self, repository, nb=5, min_push_id=None, max_push_id=None):
         '''
         List the last reports available on the server
         When max_push_id is not set, we use the whole range
@@ -218,9 +223,10 @@ class GCPCache(object):
         assert isinstance(nb, int)
         assert nb > 0
         start = max_push_id or '+inf'
+        end = min_push_id or '-inf'
         reports = self.redis.zrevrangebyscore(
             KEY_REPORTS.format(repository=repository),
-            start, '-inf',
+            start, end,
             start=0,
             num=nb,
             withscores=True,
