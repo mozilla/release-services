@@ -57,7 +57,7 @@ class GCPCache(object):
 
         # Load most recent reports in cache
         for repo in ('mozilla-central', ):
-            for rev, _ in self.list_reports(repo):
+            for rev, _ in self.list_reports(repo, nb=1):
                 self.download_report(repo, rev)
 
     def ingest_pushes(self, repository, max_push_id=None, max_pushes_pages=3):
