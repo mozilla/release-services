@@ -10,8 +10,10 @@ import re
 import unittest
 import urllib.parse
 
+import fakeredis
 import pytest
 import responses
+import zstandard as zstd
 
 import backend_common.testing
 
@@ -25,6 +27,7 @@ def mock_secrets():
     '''
     import cli_common.taskcluster
     cli_common.taskcluster.get_secrets = unittest.mock.Mock(return_value={
+        'REDIS_URL': 'redis://unitest:1234',
         'ACTIVE_DATA': {
             'url': 'http://mock-active-data:8000',
             'user': 'test@allizom.org',
@@ -272,3 +275,63 @@ def mock_active_data(mock_secrets, aresponses):
     # Activate callbacks for coverage endpoints on mock server
     aresponses.add('mock-active-data:8000', '/coverage/_count', 'get', _count)
     aresponses.add('mock-active-data:8000', '/coverage/_search', 'get', _search)
+
+
+@pytest.fixture
+def mock_bucket(mock_secrets):
+    '''
+    Mock a GCP bucket & blobs
+    '''
+    class MockBlob(object):
+        def __init__(self, name, content=None, exists=False):
+            self.name = name
+            if content is not None:
+                assert isinstance(content, bytes)
+
+                # Auto zstandard compression
+                if self.name.endswith('.zstd'):
+                    compressor = zstd.ZstdCompressor()
+                    self._content = compressor.compress(content)
+                else:
+                    self._content = content
+            else:
+                self._content = None
+            self._exists = exists
+
+        def exists(self):
+            return self._exists
+
+        def download_to_filename(self, path):
+            assert self._exists and self._content
+            with open(path, 'wb') as f:
+                f.write(self._content)
+
+    class MockBucket(object):
+        _blobs = {}
+
+        def add_mock_blob(self, name, content):
+            self._blobs[name] = MockBlob(name, content, exists=True)
+
+        def blob(self, name):
+            if name in self._blobs:
+                return self._blobs[name]
+            return MockBlob(name)
+
+    return MockBucket()
+
+
+@pytest.fixture
+def mock_cache(mock_secrets, mock_bucket, tmpdir):
+    '''
+    Mock a GCPCache instance, using fakeredis and a mocked GCP bucket
+    '''
+    from codecoverage_backend.services.gcp import GCPCache
+
+    class MockCache(GCPCache):
+
+        def __init__(self):
+            self.redis = fakeredis.FakeStrictRedis()
+            self.reports_dir = tmpdir.mkdtemp()
+            self.bucket = mock_bucket
+
+    return MockCache()
