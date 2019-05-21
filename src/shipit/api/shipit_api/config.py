@@ -38,7 +38,7 @@ ESR_BRANCH_PREFIX = 'releases/mozilla-esr'
 # day).
 # We could have used the in-tree version, but there can be race conditions,
 # e.g. version bumped, but still no builds available.
-FIREFOX_NIGHTLY = '68.0a1'
+FIREFOX_NIGHTLY = '69.0a1'
 # The next three dates are information about next release
 # They must be updated at the same time as FIREFOX_NIGHTLY
 # They can be found: https://wiki.mozilla.org/Release_Management/Calendar
