@@ -4,11 +4,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import glob
+import hashlib
 import json
 import os
+import random
 import re
 import unittest
 import urllib.parse
+import uuid
 
 import fakeredis
 import pytest
@@ -335,3 +338,65 @@ def mock_cache(mock_secrets, mock_bucket, tmpdir):
             self.bucket = mock_bucket
 
     return MockCache()
+
+
+@pytest.fixture
+def mock_hgmo():
+    '''
+    Mock HGMO responses for pushes
+    '''
+    headers = {
+        'content-type': 'application/json'
+    }
+    max_push = 1000
+
+    def _test_rev(request):
+        resp = {}
+        return (200, headers, json.dumps(resp))
+
+    def _changesets(push_id):
+
+        # random changesets
+        changesets = [
+            uuid.uuid4().hex
+            for _ in range(random.randint(2, 20))
+        ]
+
+        # Add the MD5 hash of the push id to test specific cases
+        changesets.append(hashlib.md5(str(push_id).encode('utf-8')).hexdigest())
+
+        return changesets
+
+    def _test_pushes(request):
+        '''
+        Build pushes list, limited to a maximum push id
+        '''
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(request.path_url).query)
+        assert int(query['version'][0]) == 2
+        start = 'startID' in query and int(query['startID'][0]) or (max_push - 8)
+        end = 'endID' in query and int(query['endID'][0]) or max_push
+        assert end > start
+        resp = {
+            'lastpushid': max_push,
+            'pushes': {
+                push: {
+                    'changesets': _changesets(push)
+                }
+                for push in range(start, end + 1)
+                if push <= max_push
+            }
+        }
+        return (200, headers, json.dumps(resp))
+
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
+        resps.add_callback(
+            responses.GET,
+            re.compile('https://hg.mozilla.org/(.+)/json-rev/(.+)'),
+            callback=_test_rev,
+        )
+        resps.add_callback(
+            responses.GET,
+            re.compile('https://hg.mozilla.org/(.+)/json-pushes'),
+            callback=_test_pushes,
+        )
+        yield resps

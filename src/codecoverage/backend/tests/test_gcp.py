@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import hashlib
 import json
 import os
 
@@ -87,3 +88,23 @@ def test_ingestion(mock_cache):
     ]
     assert mock_cache.find_report('myrepo') == ('rev10', 10)
     assert mock_cache.find_report('myrepo', max_push_id=7) == ('rev5', 5)
+
+
+def test_ingest_hgmo(mock_cache, mock_hgmo):
+    '''
+    Test ingestion using a mock HGMO
+    '''
+
+    # Add a report on push 995
+    rev = hashlib.md5(b'995').hexdigest()
+    mock_cache.bucket.add_mock_blob('myrepo/{}.json.zstd'.format(rev), b'["some coverage"]')
+
+    # Ingest last pushes
+    assert mock_cache.redis.zcard('reports') == 0
+    assert len(mock_cache.redis.keys('changeset:myrepo:*')) == 0
+    mock_cache.ingest_pushes('myrepo')
+    assert len(mock_cache.redis.keys('changeset:myrepo:*')) > 0
+    assert mock_cache.redis.zcard('reports') == 0
+    assert mock_cache.list_reports('myrepo') == [
+        (rev, 995)
+    ]
