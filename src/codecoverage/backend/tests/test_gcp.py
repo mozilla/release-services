@@ -40,8 +40,8 @@ def test_download_report(mock_cache):
     # Valid blob
     assert mock_cache.download_report('myrepo', 'deadbeef123') is True
 
-    # Files are now on FS
-    assert os.path.exists(archive)
+    # Only the payload remains after download
+    assert not os.path.exists(archive)
     assert os.path.exists(payload)
 
     assert json.load(open(payload)) == ['test']
