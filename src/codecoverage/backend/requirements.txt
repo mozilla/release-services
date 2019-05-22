@@ -5,8 +5,10 @@ aiohttp
 async-lru
 cachetools
 datadog
-redis<3 # due to fakeredis
-rq==0.12.0 # due to 0.13 requiring redis>=3 which colides with fakeredis
+google-cloud-storage
+redis
+rq
 gunicorn
 elasticsearch-async
 setuptools-scm # needed by py-1.5.4 buildInputs
+zstandard
