@@ -49,13 +49,6 @@ in skipOverrides {
       ];
   };
 
-  "bugbug" = self: old: {
-    patchPhase = ''
-      sed -i 's/python-dateutil==2.8.0/python-dateutil/' requirements.txt
-      sed -i 's/spacy==2.1.3/spacy==2.0.18/' requirements.txt
-    '';
-  };
-
   "cryptography" = self: old: {
     propagatedBuildInputs =
       builtins.filter
