@@ -56,99 +56,18 @@ in skipOverrides {
         old.propagatedBuildInputs;
   };
 
-  "cymem" = self: old: {
-    patchPhase = ''
-      sed -i -e "s|setup_requires=\['wheel>=0.32.0,<0.33.0'\],|setup_requires=\['wheel'\],|" setup.py
-    '';
-  };
-
-  "en-core-web-sm" = self: old: {
-    propagatedBuildInputs =
-      builtins.filter
-        (x: ! (pkgs.lib.hasSuffix "-spacy" (builtins.parseDrvName x.name).name))
-        old.propagatedBuildInputs;
-    patchPhase = ''
-      sed -i -e "s|return requirements|return []|" setup.py
-    '';
-  };
-
-  "murmurhash" = self: old: {
-    patchPhase = ''
-      sed -i -e "s|setup_requires=\['wheel>=0.32.0,<0.33.0'\],|setup_requires=\['wheel'\],|" setup.py
-    '';
-  };
-
-  "numpy" = self: old: {
-    preConfigure = ''
-      sed -i 's/-faltivec//' numpy/distutils/system_info.py
-    '';
-    preBuild = ''
-      echo "Creating site.cfg file..."
-      cat << EOF > site.cfg
-      [openblas]
-      include_dirs = ${pkgs.openblasCompat}/include
-      library_dirs = ${pkgs.openblasCompat}/lib
-      EOF
-    '';
-    passthru = {
-      blas = pkgs.openblasCompat;
-    };
-  };
-
   "pluggy" = self: old: {
     buildInputs = old.buildInputs ++ [ self."setuptools-scm" ];
-  };
-
-  "preshed" = self: old: {
-    patchPhase = ''
-      sed -i -e "s|setup_requires=\['wheel>=0.32.0,<0.33.0'\],|setup_requires=\['wheel'\],|" setup.py
-    '';
   };
 
   "pytest" = self: old: {
     buildInputs = old.buildInputs ++ [ self."setuptools-scm" ];
   };
 
-  "scikit-image" = self: old: {
-    buildInputs = old.buildInputs ++ [ self."Cython" ];
-  };
-
-  "scipy" = self: old: {
-    prePatch = ''
-      rm scipy/linalg/tests/test_lapack.py
-    '';
-    preConfigure = ''
-      sed -i '0,/from numpy.distutils.core/s//import setuptools;from numpy.distutils.core/' setup.py
-    '';
-    preBuild = ''
-      echo "Creating site.cfg file..."
-      cat << EOF > site.cfg
-      [openblas]
-      include_dirs = ${pkgs.openblasCompat}/include
-      library_dirs = ${pkgs.openblasCompat}/lib
-      EOF
-    '';
-    setupPyBuildFlags = [ "--fcompiler='gnu95'" ];
-    passthru = {
-      blas = pkgs.openblasCompat;
-    };
-  };
-
-  "spacy" = self: old: {
-    patchPhase = ''
-      sed -i -e "s|setup_requires=\['wheel>=0.32.0,<0.33.0'\],|setup_requires=\['wheel'\],|" setup.py
-    '';
-  };
   "taskcluster-urls" = self: old: {
     patchPhase = ''
       # until this is fixed https://github.com/taskcluster/taskcluster-proxy/pull/37
       sed -i -e "s|/api/|/|" taskcluster_urls/__init__.py
-    '';
-  };
-
-  "thinc" = self: old: {
-    patchPhase = ''
-      sed -i -e "s|setup_requires=\[\"wheel>=0.32.0,<0.33.0\"\],|setup_requires=\['wheel'\],|" setup.py
     '';
   };
 
