@@ -351,7 +351,12 @@ def mock_hgmo():
     max_push = 1000
 
     def _test_rev(request):
-        resp = {}
+        # The push id is in the first 3 characters of the revision requested
+        revision = request.path_url[17:]
+        assert len(revision) == 32
+        resp = {
+            'pushid': int(revision[:3]),
+        }
         return (200, headers, json.dumps(resp))
 
     def _changesets(push_id):
@@ -400,3 +405,11 @@ def mock_hgmo():
             callback=_test_pushes,
         )
         yield resps
+
+
+@pytest.fixture
+def mock_covdir_report():
+    '''
+    Path to the covdir mock in repository
+    '''
+    return os.path.join(FIXTURES_DIR, 'covdir.json')

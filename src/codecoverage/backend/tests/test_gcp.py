@@ -2,6 +2,9 @@
 import hashlib
 import json
 import os
+import uuid
+
+import pytest
 
 
 def test_store_push(mock_cache):
@@ -100,11 +103,41 @@ def test_ingest_hgmo(mock_cache, mock_hgmo):
     mock_cache.bucket.add_mock_blob('myrepo/{}.json.zstd'.format(rev), b'["some coverage"]')
 
     # Ingest last pushes
-    assert mock_cache.redis.zcard('reports') == 0
+    assert mock_cache.list_reports('myrepo') == []
     assert len(mock_cache.redis.keys('changeset:myrepo:*')) == 0
     mock_cache.ingest_pushes('myrepo')
     assert len(mock_cache.redis.keys('changeset:myrepo:*')) > 0
-    assert mock_cache.redis.zcard('reports') == 0
     assert mock_cache.list_reports('myrepo') == [
         (rev, 995)
+    ]
+
+
+def test_closest_report(mock_cache, mock_hgmo):
+    '''
+    Test algo to find the closest report for any changeset
+    '''
+    # Build revision for push 992
+    revision = '992{}'.format(uuid.uuid4().hex[3:])
+
+    # No data at first
+    assert mock_cache.redis.zcard('reports') == 0
+    assert len(mock_cache.redis.keys('changeset:myrepo:*')) == 0
+
+    # Try to find a report, but none is available
+    with pytest.raises(Exception) as e:
+        mock_cache.find_closest_report('myrepo', revision)
+    assert str(e.value) == 'No report found'
+
+    # Some pushes were ingested though
+    assert len(mock_cache.redis.keys('changeset:myrepo:*')) > 0
+
+    # Add a report on 994, 2 pushes after our revision
+    report_rev = hashlib.md5(b'994').hexdigest()
+    mock_cache.bucket.add_mock_blob('myrepo/{}.json.zstd'.format(report_rev), b'["some coverage"]')
+
+    # Now we have a report !
+    assert mock_cache.list_reports('myrepo') == []
+    assert mock_cache.find_closest_report('myrepo', revision) == (report_rev, 994)
+    assert mock_cache.list_reports('myrepo') == [
+        (report_rev, 994)
     ]
