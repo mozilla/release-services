@@ -85,7 +85,7 @@ Once the initial build finishes, you should get a green Nix shell, running in ``
 .. code-block:: shell
 
   export TRY_TASK_ID="xxx"
-  export TRY_GROUP_ID="yyy"
+  export TRY_TASK_GROUP_ID="yyy"
   export TASKCLUSTER_SECRET="path/to/your/secret"
   static-analysis-bot
 
@@ -145,7 +145,7 @@ Finally, you can run the project exactly like in the ``nix-shell`` above:
 .. code-block:: shell
 
   export TRY_TASK_ID="xxx"
-  export TRY_GROUP_ID="yyy"
+  export TRY_TASK_GROUP_ID="yyy"
   export TASKCLUSTER_SECRET="path/to/your/secret"
   static-analysis-bot
 
@@ -154,7 +154,7 @@ Finally, you can run the project exactly like in the ``nix-shell`` above:
 
 You need a valid Taskcluster group, with code review tasks to run the bot and configure the analysis with these 2 environment variables:
 
- * ``TRY_GROUP_ID`` is the Taskcluster Task Group ID with all the analysis
+ * ``TRY_TASK_GROUP_ID`` is the Taskcluster Task Group ID with all the analysis
  * ``TRY_TASK_ID`` is the `code-review-issues`` Taskcluster Task ID in the above group
 
 You can find all the analyses on Treeherder, using this `query (try + author=reviewbot) <https://treeherder.mozilla.org/#/jobs?repo=try&author=reviewbot>`_
