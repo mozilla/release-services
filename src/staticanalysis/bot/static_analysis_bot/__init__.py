@@ -121,6 +121,20 @@ class Reliability(enum.Enum):
     Medium = 'medium'
     Low = 'low'
 
+    def invert(self):
+        '''
+        Verbalizez the opposite of `value` of reliability to be used in coherent
+        sentences.
+        '''
+        if self.value == 'high':
+            return 'low'
+        if self.value == 'low':
+            return 'high'
+        if self.value == 'medium':
+            return 'medium'
+
+        return 'unknown'
+
 
 # Create common stats instance
 stats = Datadog()

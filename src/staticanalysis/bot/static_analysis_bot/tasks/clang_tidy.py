@@ -143,7 +143,8 @@ class ClangTidyIssue(Issue):
             body += '\n{}'.format(self.reason)
         # Also add the reliability of the checker
         if self.reliability != Reliability.Unknown:
-            body += '\nChecker reliability is {} (false positive risk).'.format(self.reliability.value)
+            body += '\nChecker reliability is {0}, this mean that the risk to have a false positive for this checker is {1}.'.format(
+                self.reliability.value, self.reliability.invert())
         return body
 
     def as_markdown(self):
@@ -206,7 +207,8 @@ class ClangTidyIssue(Issue):
 
         # Append to description the reliability index if any
         if self.reliability != Reliability.Unknown:
-            description += '\nChecker reliability is {} (false positive risk).'.format(self.reliability.value)
+            description += '\nChecker reliability is {0}, this mean that the risk to have a false positive for this checker is {1}.'.format(
+                self.reliability.value, self.reliability.invert())
 
         if self.body:
             description += '\n\n > {}'.format(self.body)
