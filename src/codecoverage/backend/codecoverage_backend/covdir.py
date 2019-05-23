@@ -57,8 +57,7 @@ def get_overall_coverage(report_path, max_depth=2):
 
     def _extract(obj, base_path='', depth=0):
         if 'children' not in obj or depth > max_depth:
-            return []
-
+            return {}
         out = {
             base_path:  obj['coveragePercent'],
         }

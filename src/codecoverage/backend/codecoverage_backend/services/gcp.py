@@ -129,6 +129,7 @@ class GCPCache(object):
             changeset=changeset,
         )
         overall_coverage = covdir.get_overall_coverage(report_path)
+        assert len(overall_coverage) > 0, 'No overall coverage'
         self.redis.hmset(key, overall_coverage)
 
         # Add the changeset to the sorted sets of known reports
