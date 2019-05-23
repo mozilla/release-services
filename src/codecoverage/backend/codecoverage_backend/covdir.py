@@ -44,3 +44,26 @@ def get_path_coverage(report_path, object_path, max_depth=1):
         return obj
 
     return _clean_object(report, object_path)
+
+
+def get_overall_coverage(report_path, max_depth=2):
+    '''
+    Load a covdir report and recursively extract the overall coverage
+    of folders until the max depth is reached
+    '''
+    assert os.path.exists(report_path)
+    # TODO: move to ijson to reduce loading time
+    report = json.load(open(report_path))
+
+    def _extract(obj, base_path='', depth=0):
+        if 'children' not in obj or depth > max_depth:
+            return []
+
+        out = {
+            base_path:  obj['coveragePercent'],
+        }
+        for child_name, child in obj['children'].items():
+            out.update(_extract(child, os.path.join(base_path, child_name), depth+1))
+        return out
+
+    return _extract(report)

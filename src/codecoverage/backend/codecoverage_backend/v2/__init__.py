@@ -63,3 +63,19 @@ def coverage_for_path(path='', changeset=None, repository=DEFAULT_REPOSITORY):
     except Exception as e:
         logger.warn('Failed to load coverage', repo=repository, changeset=changeset, path=path, error=str(e))
         abort(400)
+
+
+def coverage_history(repository=DEFAULT_REPOSITORY, path='', start=None, end=None):
+    '''
+    List overall coverage from ingested reports over a period of time
+    '''
+    gcp = load_cache()
+    if gcp is None:
+        logger.error('No GCP cache available')
+        abort(500)
+
+    try:
+        return gcp.get_history(repository, path=path, start=start, end=end)
+    except Exception as e:
+        logger.warn('Failed to load history', repo=repository, path=path, start=start, end=end, error=str(e))
+        abort(400)

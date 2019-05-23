@@ -116,6 +116,36 @@ paths:
       tags:
         - v2
 
+  /v2/history:
+    get:
+      operationId: "codecoverage_backend.v2.coverage_history"
+      parameters:
+      - name: repository
+        in: query
+        description: Mozilla repository for these reports (default to mozilla-central)
+        required: false
+        type: string
+      - name: start
+        in: query
+        description: Start timestamp for the history date range (default to a year before end)
+        required: false
+        type: string
+      - name: end
+        in: query
+        description: End timestamp for the history date range (default to current timestamp)
+        required: false
+        type: string
+      - name: path
+        in: query
+        description: Path of the repository folder to get coverage info on.
+        required: false
+        type: string
+      responses:
+        200:
+          description: Overall coverage of specified path over a period of time
+      tags:
+        - v2
+
   /phabricator/base_revision_from_phid/{revision_phid}:
     get:
       operationId: "codecoverage_backend.api.phabricator_base_revision_from_phid"
