@@ -2,3 +2,4 @@
 
 parsepatch
 datadog
+libmozdata

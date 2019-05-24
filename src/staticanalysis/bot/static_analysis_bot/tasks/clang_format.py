@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from cli_common.log import get_logger
-from cli_common.phabricator import LintResult
+from libmozdata.phabricator import LintResult
 from static_analysis_bot import CLANG_FORMAT
 from static_analysis_bot import Issue
 from static_analysis_bot.config import settings

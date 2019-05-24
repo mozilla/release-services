@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common.log import get_logger
-from cli_common.phabricator import LintResult
+from libmozdata.phabricator import LintResult
 from static_analysis_bot import INFER
 from static_analysis_bot import Issue
 from static_analysis_bot.tasks.base import AnalysisTask

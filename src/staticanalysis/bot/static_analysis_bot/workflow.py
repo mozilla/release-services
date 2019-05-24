@@ -7,8 +7,8 @@ from datetime import datetime
 from datetime import timedelta
 
 from cli_common.log import get_logger
-from cli_common.phabricator import BuildState
-from cli_common.phabricator import PhabricatorAPI
+from libmozdata.phabricator import BuildState
+from libmozdata.phabricator import PhabricatorAPI
 from cli_common.taskcluster import TASKCLUSTER_DATE_FORMAT
 from static_analysis_bot import stats
 from static_analysis_bot.config import settings
