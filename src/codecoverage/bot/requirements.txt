@@ -1,6 +1,6 @@
 -e ./../../../lib/cli_common[pulse,taskcluster,mercurial,log] #egg=mozilla-cli-common
 
-libmozdata
+libmozdata>=0.1.55
 pytz
 google-cloud-storage
 zstandard

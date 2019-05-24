@@ -2,4 +2,4 @@
 
 parsepatch
 datadog
-libmozdata
+libmozdata>=0.1.55

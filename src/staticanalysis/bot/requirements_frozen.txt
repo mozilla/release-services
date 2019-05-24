@@ -41,7 +41,7 @@ idna==2.8
 intreehooks==1.0
 isort==4.3.12
 jmespath==0.9.4
-libmozdata==0.1.48
+libmozdata==0.1.55
 Logbook==1.4.3
 mccabe==0.6.1
 mohawk==0.3.4

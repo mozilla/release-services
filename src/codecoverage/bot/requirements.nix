@@ -1616,10 +1616,10 @@ let
     };
 
     "libmozdata" = python.mkDerivation {
-      name = "libmozdata-0.1.48";
+      name = "libmozdata-0.1.55";
       src = pkgs.fetchurl {
-        url = "https://github.com/mozilla/libmozdata/archive/d55e6cdd3f57276c497557efadb916ea88187dc7.tar.gz";
-        sha256 = "0qirkrv8l54a7gbaxycnl56ikcyz0zpa8bz2vfgkfrxxhmvx8593";
+        url = "https://files.pythonhosted.org/packages/cb/a3/d743c43bd84d93db192b8ea3fd32686ecb813f4307e6abc6ab1490b2f5f5/libmozdata-0.1.55.tar.gz";
+        sha256 = "0llvkhp70w0pr8hh4f42x8cziw6fkb904w99cma8jz8kn2qifxk5";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
