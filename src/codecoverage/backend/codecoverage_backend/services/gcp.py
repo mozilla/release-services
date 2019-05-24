@@ -7,6 +7,7 @@ from datetime import datetime
 import redis
 import requests
 import zstandard as zstd
+from dateutil.relativedelta import relativedelta
 
 from cli_common import log
 from cli_common.gcp import get_bucket
@@ -280,7 +281,8 @@ class GCPCache(object):
         if end is None:
             end = calendar.timegm(datetime.utcnow().timetuple())
         if start is None:
-            start = end - 365*24*3600
+            start = datetime.fromtimestamp(end) - relativedelta(years=1)
+            start = int(datetime.timestamp(start))
         assert isinstance(start, int)
         assert isinstance(end, int)
         assert end > start
