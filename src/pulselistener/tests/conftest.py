@@ -16,7 +16,7 @@ import pytest
 import responses
 from taskcluster.utils import stringDate
 
-from cli_common.phabricator import PhabricatorAPI
+from libmozdata.phabricator import PhabricatorAPI
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
