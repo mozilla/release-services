@@ -39,9 +39,12 @@ ESR_BRANCH_PREFIX = 'releases/mozilla-esr'
 # We could have used the in-tree version, but there can be race conditions,
 # e.g. version bumped, but still no builds available.
 FIREFOX_NIGHTLY = '69.0a1'
-# The next three dates are information about next release
+# The next 6 dates are information about the current and next release
 # They must be updated at the same time as FIREFOX_NIGHTLY
 # They can be found: https://wiki.mozilla.org/Release_Management/Calendar
+LAST_SOFTFREEZE_DATE = '2019-05-13'
+LAST_MERGE_DATE = '2019-05-20'
+LAST_RELEASE_DATE = '2019-05-21'
 NEXT_SOFTFREEZE_DATE = '2019-07-01'
 NEXT_MERGE_DATE = '2019-07-08'
 NEXT_RELEASE_DATE = '2019-07-09'
