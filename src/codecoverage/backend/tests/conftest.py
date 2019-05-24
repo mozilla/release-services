@@ -9,6 +9,7 @@ import json
 import os
 import random
 import re
+import time
 import unittest
 import urllib.parse
 import uuid
@@ -312,7 +313,11 @@ def mock_bucket(mock_secrets):
     class MockBucket(object):
         _blobs = {}
 
-        def add_mock_blob(self, name, content):
+        def add_mock_blob(self, name, coverage=0.0):
+            content = json.dumps({
+                'coveragePercent': coverage,
+                'children': {}
+            }).encode('utf-8')
             self._blobs[name] = MockBlob(name, content, exists=True)
 
         def blob(self, name):
@@ -381,11 +386,13 @@ def mock_hgmo():
         start = 'startID' in query and int(query['startID'][0]) or (max_push - 8)
         end = 'endID' in query and int(query['endID'][0]) or max_push
         assert end > start
+        now = time.time()
         resp = {
             'lastpushid': max_push,
             'pushes': {
                 push: {
-                    'changesets': _changesets(push)
+                    'changesets': _changesets(push),
+                    'date': int((now % 1000000) + push * 10),  # fake timestamp
                 }
                 for push in range(start, end + 1)
                 if push <= max_push
