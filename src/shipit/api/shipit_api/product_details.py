@@ -736,7 +736,7 @@ def get_firefox_versions(releases: typing.List[shipit_api.models.Release]) -> Fi
                "LATEST_FIREFOX_VERSION":                 "58.0.2",
                "LAST_SOFTFREEZE_DATE":                   "2019-03-11",
                "LAST_MERGE_DATE":                        "2019-03-18",
-               "LAST_RELEASE_DATE":                      "2019-03-19"
+               "LAST_RELEASE_DATE":                      "2019-03-19",
                "NEXT_SOFTFREEZE_DATE":                   "2019-05-06",
                "NEXT_MERGE_DATE":                        "2019-05-13",
                "NEXT_RELEASE_DATE":                      "2019-05-14"
