@@ -1618,8 +1618,8 @@ let
     "libmozdata" = python.mkDerivation {
       name = "libmozdata-0.1.48";
       src = pkgs.fetchurl {
-        url = "https://github.com/mozilla/libmozdata/archive/55061305eba7a6cdd811e5c8eb615459daa7a2a3.tar.gz";
-        sha256 = "0ik24gqrqaf80x4fnlay1d467qqxdxisjmhcxyx97kvcz7q1x363";
+        url = "https://github.com/mozilla/libmozdata/archive/d55e6cdd3f57276c497557efadb916ea88187dc7.tar.gz";
+        sha256 = "0qirkrv8l54a7gbaxycnl56ikcyz0zpa8bz2vfgkfrxxhmvx8593";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
