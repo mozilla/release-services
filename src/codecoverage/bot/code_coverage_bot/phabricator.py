@@ -2,10 +2,11 @@
 
 import re
 
-from cli_common.log import get_logger
 from libmozdata.phabricator import BuildState
 from libmozdata.phabricator import PhabricatorAPI
 from libmozdata.phabricator import PhabricatorRevisionNotFoundException
+
+from cli_common.log import get_logger
 from code_coverage_bot import hgmo
 from code_coverage_bot.secrets import secrets
 

@@ -14,9 +14,8 @@ from unittest.mock import MagicMock
 import hglib
 import pytest
 import responses
-from taskcluster.utils import stringDate
-
 from libmozdata.phabricator import PhabricatorAPI
+from taskcluster.utils import stringDate
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 

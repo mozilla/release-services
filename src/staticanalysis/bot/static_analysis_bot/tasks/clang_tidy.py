@@ -6,8 +6,9 @@
 
 import re
 
-from cli_common.log import get_logger
 from libmozdata.phabricator import LintResult
+
+from cli_common.log import get_logger
 from static_analysis_bot import CLANG_TIDY
 from static_analysis_bot import Issue
 from static_analysis_bot import Reliability
