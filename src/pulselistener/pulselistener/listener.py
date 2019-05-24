@@ -112,10 +112,9 @@ class HookPhabricator(Hook):
             logger.info('Published public build as working', build=str(build))
 
         elif build.state == PhabricatorBuildState.Secured:
-            # Report secured bug as failing
-            # and remove it from queue
-            self.api.update_build_target(build.target_phid, BuildState.Fail)
-            logger.info('Published secure build as failing', build=str(build))
+            # We cannot send any update on a Secured build
+            # as the bot has no edit access on it
+            logger.info('Secured revision, skipping.', build=build.target_phid)
 
         else:
             # By default requeue build until it's marked secured or public
