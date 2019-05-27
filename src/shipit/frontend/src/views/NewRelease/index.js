@@ -236,7 +236,6 @@ export default class NewRelease extends React.Component {
       });
       releaseObj.partial_updates = partialUpdatesFlattened;
     }
-    console.log(branch);
     if (productKey) {
       releaseObj.product_key = productKey;
     }
