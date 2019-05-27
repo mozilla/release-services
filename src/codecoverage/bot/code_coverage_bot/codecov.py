@@ -135,6 +135,14 @@ class CodeCov(object):
             uploader.get_codecov(commit_sha)
             logger.warn('Build was already injested')
 
+            # Check the covdir report does not already exists
+            if uploader.gcp_covdir_exists(self.branch, self.revision):
+                logger.warn('Covdir report already on GCP')
+                return
+
+            # The artifacts are still needed to build the covdir report
+            self.retrieve_source_and_artifacts()
+
             # Update GCP covdir report anyway
             uploader.gcp(self.branch, self.revision, self.generate_covdir())
             return
