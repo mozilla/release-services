@@ -208,7 +208,7 @@ def normalize_string(mac_type,
                        name or '',
                        host,
                        port,
-                       content_hash or ''
+                       content_hash or '',
                        '',  # for ext which is empty in this case
                        '',  # Add trailing new line.
                        ]
@@ -237,8 +237,6 @@ def calculate_mac(mac_type,
     log.debug(u'normalized resource for mac calc: {norm}'.format(norm=normalized))
     digestmod = getattr(hashlib, algorithm)
 
-    # Make sure we are about to hash binary strings.
-
     if not isinstance(normalized, six_binary_type):
         normalized = normalized.encode('utf8')
 
@@ -264,7 +262,8 @@ def make_taskcluster_header(credentials, req):
         content_hash = calculate_payload_hash(  # pragma: no cover
             algorithm,
             req.get_data(),
-            req.get_method(),
+            # maybe we should detect this from req.headers but we anyway expect json
+            content_type='application/json',
         )
 
     mac = calculate_mac('header',
