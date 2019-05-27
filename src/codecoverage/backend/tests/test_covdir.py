@@ -69,3 +69,36 @@ def test_get_path_coverage(mock_covdir_report):
     with pytest.raises(Exception) as e:
         covdir.get_path_coverage(mock_covdir_report, 'nope.py')
     assert str(e.value) == 'Path nope.py not found in report'
+
+
+def test_get_overall_coverage(mock_covdir_report):
+    '''
+    Test covdir report overall coverage extraction
+    '''
+    from codecoverage_backend import covdir
+
+    out = covdir.get_overall_coverage(mock_covdir_report, max_depth=1)
+    assert out == {
+        '': 85.11,
+        'builtin': 84.4,
+        'ctypes': 80.83,
+        'frontend': 78.51,
+        'perf': 65.45,
+        'shell': 69.95,
+        'threading': 90.54,
+        'util': 73.29,
+    }
+
+    out = covdir.get_overall_coverage(mock_covdir_report, max_depth=2)
+    assert out == {
+        '': 85.11,
+        'builtin': 84.4,
+        'builtin/intl': 78.62,
+        'ctypes': 80.83,
+        'ctypes/libffi': 49.59,
+        'frontend': 78.51,
+        'perf': 65.45,
+        'shell': 69.95,
+        'threading': 90.54,
+        'util': 73.29
+    }
