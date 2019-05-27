@@ -4,12 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import click
+from libmozdata.phabricator import BuildState
+from libmozdata.phabricator import PhabricatorAPI
 
 from cli_common.cli import taskcluster_options
 from cli_common.log import get_logger
 from cli_common.log import init_logger
-from cli_common.phabricator import BuildState
-from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import get_secrets
 from cli_common.taskcluster import get_service
 from static_analysis_bot import AnalysisException
@@ -43,6 +43,7 @@ def main(taskcluster_secret,
                               'APP_CHANNEL': 'development',
                               'REPORTERS': [],
                               'PUBLICATION': 'IN_PATCH',
+                              'ZERO_COVERAGE_ENABLED': True,
                               'ALLOWED_PATHS': ['*', ],
                           },
                           taskcluster_client_id=taskcluster_client_id,
@@ -63,7 +64,6 @@ def main(taskcluster_secret,
         secrets['APP_CHANNEL'],
         secrets['PUBLICATION'],
         secrets['ALLOWED_PATHS'],
-        secrets.get('COVERITY_CONFIG'),
     )
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')
@@ -107,7 +107,7 @@ def main(taskcluster_secret,
     )
 
     # Run workflow according to source
-    w = Workflow(reporters, index_service, queue_service, phabricator_api)
+    w = Workflow(reporters, index_service, queue_service, phabricator_api, secrets['ZERO_COVERAGE_ENABLED'])
     try:
         w.run(revision)
     except Exception as e:

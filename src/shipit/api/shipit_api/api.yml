@@ -312,6 +312,9 @@ definitions:
       partial_updates:
         type: object
         default: {}
+      product_key:
+        type: string
+        example: fennec_beta
 
   ReleaseStatus:
     type: object

@@ -17,7 +17,7 @@ class PhabricatorBuild(object):
     '''
     A Phabricator buildable, triggered by HarborMaster
     '''
-    def __init__(self, request, retries=5, sleep=10):
+    def __init__(self, request):
         self.diff_id = int(request.rel_url.query.get('diff', 0))
         self.repo_phid = request.rel_url.query.get('repo')
         self.revision_id = int(request.rel_url.query.get('revision', 0))
@@ -26,8 +26,7 @@ class PhabricatorBuild(object):
 
         # State
         self.state = PhabricatorBuildState.Queued
-        self.retries = retries
-        self.sleep = sleep
+        self.retries_left = None
         self.last_try = None
 
         if not self.diff_id or not self.repo_phid or not self.revision_id or not self.target_phid:
@@ -39,29 +38,32 @@ class PhabricatorBuild(object):
     def __str__(self):
         return 'Revison {} - {}'.format(self.revision_id, self.target_phid)
 
-    def check_visibility(self, api, secure_projects):
+    def check_visibility(self, api, secure_projects, max_retries=5, sleep=10):
         '''
         Check the visibility of the revision, by retrying N times with a specified time
         This method is executed regularly by the hook to check on the status evolution
         as the BMO daemon can take several minutes to update the status
         '''
+        if self.retries_left is None:
+            self.retries_left = max_retries
+
         # Only when queued
         if self.state != PhabricatorBuildState.Queued:
             return False
 
         # Check this build has some retries left
-        if self.retries <= 0:
+        if self.retries_left <= 0:
             return False
 
         # Check this build has been awaited between tries
         now = time.time()
-        if self.last_try is not None and now - self.last_try < self.sleep:
+        if self.last_try is not None and now - self.last_try < sleep:
             return False
 
         # Now we can check if this revision is public
-        self.retries -= 1
+        self.retries_left -= 1
         self.last_try = now
-        logger.info('Checking visibility status', build=str(self), retries_left=self.retries)
+        logger.info('Checking visibility status', build=str(self), retries_left=self.retries_left)
         try:
 
             # Load revision with projects
@@ -83,7 +85,7 @@ class PhabricatorBuild(object):
             logger.info('Revision not accessible', build=str(self), error=str(e))
 
             # Mark as secured when no retries are left
-            if self.retries <= 0:
+            if self.retries_left <= 0:
                 self.state = PhabricatorBuildState.Secured
                 logger.info('Revision is marked as secure', build=str(self))
 

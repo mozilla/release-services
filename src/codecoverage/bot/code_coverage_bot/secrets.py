@@ -22,6 +22,7 @@ class Secrets(dict):
     PHABRICATOR_ENABLED = 'PHABRICATOR_ENABLED'
     PHABRICATOR_URL = 'PHABRICATOR_URL'
     PHABRICATOR_TOKEN = 'PHABRICATOR_TOKEN'
+    GOOGLE_CLOUD_STORAGE = 'GOOGLE_CLOUD_STORAGE'
 
     def load(self, taskcluster_secret, taskcluster_client_id, taskcluster_access_token):
         secrets = get_secrets(
@@ -34,6 +35,7 @@ class Secrets(dict):
                 Secrets.CODECOV_REPO,
                 Secrets.CODECOV_TOKEN,
                 Secrets.CODECOV_ACCESS_TOKEN,
+                Secrets.GOOGLE_CLOUD_STORAGE,
                 Secrets.PHABRICATOR_ENABLED,
                 Secrets.PHABRICATOR_URL,
                 Secrets.PHABRICATOR_TOKEN,
