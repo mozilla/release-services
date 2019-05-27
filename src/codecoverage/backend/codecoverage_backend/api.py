@@ -7,13 +7,10 @@ import asyncio
 
 from rq import Queue
 
-from cli_common.phabricator import PhabricatorAPI
-from cli_common.phabricator import revision_exists_on_central
 from codecoverage_backend import coverage
 from codecoverage_backend import coverage_by_changeset_impl
 from codecoverage_backend import coverage_for_file_impl
 from codecoverage_backend import coverage_summary_by_changeset_impl
-from codecoverage_backend import secrets
 from codecoverage_backend.worker import conn
 
 q = Queue(connection=conn)
@@ -72,19 +69,3 @@ def coverage_supported_extensions():
 
 def coverage_latest():
     return asyncio.get_event_loop().run_until_complete(coverage.get_latest_build_info())
-
-
-def phabricator_base_revision_from_phid(revision_phid):
-    try:
-        phabricator = PhabricatorAPI(secrets.PHABRICATOR_TOKEN)
-        diffs = phabricator.search_diffs(revision_phid=revision_phid)
-        if len(diffs) > 0:
-            revision = diffs[-1]['baseRevision']
-            if revision and revision_exists_on_central(revision):
-                return {'revision': revision}, 200
-        return {'error': 'Base revision not found.'}, 404
-    except Exception as e:
-        return {
-            'error': str(e),
-            'error_code': getattr(e, 'error_code', 'unknown')
-        }, 500
