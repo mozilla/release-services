@@ -144,7 +144,7 @@ class ClangTidyIssue(Issue):
             body += '\n{}'.format(self.reason)
         # Also add the reliability of the checker
         if self.reliability != Reliability.Unknown:
-            body += '\nChecker reliability is {0}, this means that the risk to have a false positive for this checker is {1}.'.format(
+            body += '\nChecker reliability is {0}, meaning that the false positive ratio is {1}.'.format(
                 self.reliability.value, self.reliability.invert)
         return body
 
