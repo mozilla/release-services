@@ -60,11 +60,12 @@ def find_action(name, actions):
         return None
 
 
-def extract_our_flavors(avail_flavors, product, version, partial_updates):
-    if is_rc(version, partial_updates):
-        product_key = f'{product}_rc'
-    else:
-        product_key = product
+def extract_our_flavors(avail_flavors, product, version, partial_updates, product_key=None):
+    if not product_key:
+        if is_rc(version, partial_updates):
+            product_key = f'{product}_rc'
+        else:
+            product_key = product
     # sanity check
     all_flavors = set([fl['name'] for fl in SUPPORTED_FLAVORS[product_key]])
     if not set(avail_flavors).issuperset(all_flavors):
