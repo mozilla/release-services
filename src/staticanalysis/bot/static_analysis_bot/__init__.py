@@ -123,7 +123,7 @@ class Reliability(enum.Enum):
 
     def invert(self):
         '''
-        Verbalizez the opposite of `value` of reliability to be used in coherent
+        Verbalize the opposite of `value` of reliability to be used in coherent
         sentences.
         '''
         if self.value == 'high':
