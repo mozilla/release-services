@@ -106,5 +106,7 @@ possibleTreeTags =
     , ( "infra", "infra", "Infrastructure related" )
     , ( "backlog", "backlog", "Job backlog" )
     , ( "planned", "planned", "Planned closure" )
+    , ( "merges", "merges", "Merges" )
+    , ( "waiting-for-coverage", "waiting_for_coverage", "Waiting for coverage" )
     , ( "other", "other", "Other" )
     ]
