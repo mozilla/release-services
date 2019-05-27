@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import calendar
 import os
 import tempfile
+from datetime import datetime
 
 import redis
 import requests
 import zstandard as zstd
+from dateutil.relativedelta import relativedelta
 
 from cli_common import log
 from cli_common.gcp import get_bucket
@@ -16,6 +19,8 @@ __cache = None
 
 KEY_REPORTS = 'reports:{repository}'
 KEY_CHANGESET = 'changeset:{repository}:{changeset}'
+KEY_HISTORY = 'history:{repository}'
+KEY_OVERALL_COVERAGE = 'overall:{repository}:{changeset}'
 
 HGMO_REVISION_URL = 'https://hg.mozilla.org/{repository}/json-rev/{revision}'
 HGMO_PUSHES_URL = 'https://hg.mozilla.org/{repository}/json-pushes'
@@ -92,12 +97,13 @@ class GCPCache(object):
             for push_id, push in pushes:
 
                 changesets = push['changesets']
-                self.store_push(repository, push_id, changesets)
+                date = push['date']
+                self.store_push(repository, push_id, changesets, date)
 
                 reports = [
                     changeset
                     for changeset in changesets
-                    if self.ingest_report(repository, push_id, changeset)
+                    if self.ingest_report(repository, push_id, changeset, date)
                 ]
                 if reports:
                     logger.info('Found reports in that push', push_id=push_id)
@@ -106,20 +112,34 @@ class GCPCache(object):
             params['startID'] = newest
             params['endID'] = newest + chunk_size
 
-    def ingest_report(self, repository, push_id, changeset):
+    def ingest_report(self, repository, push_id, changeset, date):
         '''
         When a report exist for a changeset, download it and update redis data
         '''
         assert isinstance(push_id, int)
+        assert isinstance(date, int)
 
         # Download the report
-        if not self.download_report(repository, changeset):
-            return
+        report_path = self.download_report(repository, changeset)
+        if not report_path:
+            return False
+
+        # Read overall coverage for history
+        key = KEY_OVERALL_COVERAGE.format(
+            repository=repository,
+            changeset=changeset,
+        )
+        overall_coverage = covdir.get_overall_coverage(report_path)
+        assert len(overall_coverage) > 0, 'No overall coverage'
+        self.redis.hmset(key, overall_coverage)
 
         # Add the changeset to the sorted sets of known reports
         # The numeric push_id is used as a score to keep the ingested
         # changesets ordered
         self.redis.zadd(KEY_REPORTS.format(repository=repository), {changeset: push_id})
+
+        # Add the changeset to the sorted sets of known reports by date
+        self.redis.zadd(KEY_HISTORY.format(repository=repository), {changeset: date})
 
         logger.info('Ingested report', changeset=changeset)
         return True
@@ -139,7 +159,7 @@ class GCPCache(object):
         json_path = os.path.join(self.reports_dir, blob.name.rstrip('.zstd'))
         if os.path.exists(json_path):
             logger.info('Report already available', path=json_path)
-            return True
+            return json_path
 
         os.makedirs(os.path.dirname(archive_path), exist_ok=True)
         blob.download_to_filename(archive_path)
@@ -157,9 +177,9 @@ class GCPCache(object):
 
         os.unlink(archive_path)
         logger.info('Decompressed report', path=json_path)
-        return True
+        return json_path
 
-    def store_push(self, repository, push_id, changesets):
+    def store_push(self, repository, push_id, changesets, date):
         '''
         Store a push on redis cache, with its changesets
         '''
@@ -172,7 +192,10 @@ class GCPCache(object):
                 repository=repository,
                 changeset=changeset,
             )
-            self.redis.hset(key, 'push', push_id)
+            self.redis.hmset(key, {
+                'push': push_id,
+                'date': date,
+            })
 
         logger.info('Stored new push data', push_id=push_id)
 
@@ -249,3 +272,45 @@ class GCPCache(object):
         assert os.path.exists(report_path), 'Missing report {}'.format(report_path)
 
         return covdir.get_path_coverage(report_path, path)
+
+    def get_history(self, repository, path='', start=None, end=None):
+        '''
+        Load the history overall coverage from the redis cache
+        Default to date range from now back to a year
+        '''
+        if end is None:
+            end = calendar.timegm(datetime.utcnow().timetuple())
+        if start is None:
+            start = datetime.fromtimestamp(end) - relativedelta(years=1)
+            start = int(datetime.timestamp(start))
+        assert isinstance(start, int)
+        assert isinstance(end, int)
+        assert end > start
+
+        # Load changesets ordered by date, in that range
+        history = self.redis.zrevrangebyscore(
+            KEY_HISTORY.format(repository=repository),
+            end, start,
+            withscores=True,
+        )
+
+        def _coverage(changeset, date):
+            # Load overall coverage for specified path
+            changeset = changeset.decode('utf-8')
+            key = KEY_OVERALL_COVERAGE.format(
+                repository=repository,
+                changeset=changeset,
+            )
+            coverage = self.redis.hget(key, path)
+            if coverage is not None:
+                coverage = float(coverage)
+            return {
+                'changeset': changeset,
+                'date': int(date),
+                'coverage': coverage,
+            }
+
+        return [
+            _coverage(changeset, date)
+            for changeset, date in history
+        ]

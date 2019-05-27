@@ -989,8 +989,8 @@ def get_mobile_versions(releases: typing.List[shipit_api.models.Release]) -> Mob
     return dict(
         ios_beta_version=shipit_api.config.IOS_BETA_VERSION,
         ios_version=shipit_api.config.IOS_VERSION,
-        nightly_version=shipit_api.config.FIREFOX_NIGHTLY,
-        alpha_version=shipit_api.config.FIREFOX_NIGHTLY,
+        nightly_version=shipit_api.config.FENNEC_NIGHTLY,
+        alpha_version=shipit_api.config.FENNEC_NIGHTLY,
         beta_version=get_latest_version(releases,
                                         shipit_api.config.BETA_BRANCH,
                                         Product.FENNEC,
