@@ -32,11 +32,6 @@ def mock_secrets():
     import cli_common.taskcluster
     cli_common.taskcluster.get_secrets = unittest.mock.Mock(return_value={
         'REDIS_URL': 'redis://unitest:1234',
-        'ACTIVE_DATA': {
-            'url': 'http://mock-active-data:8000',
-            'user': 'test@allizom.org',
-            'password': 'dummySecret',
-        },
         'PHABRICATOR_TOKEN': 'api-correct',
         'APP_CHANNEL': 'test',
         'GOOGLE_CLOUD_STORAGE': {
@@ -233,52 +228,6 @@ def mock_coverage_by_changeset_job_success(job_changeset):
         if changeset == job_changeset or changeset[:12] == job_changeset[:12]:
             return expected
     raise NotImplementedError('Not implemented return values for changeset %s' % job_changeset)
-
-
-@pytest.fixture
-def mock_active_data(mock_secrets, aresponses):
-    '''
-    Mock elastic search HTTP responses
-     * available revisions
-     * count
-    '''
-    async def _search(request):
-        assert request.has_body
-        body = json.loads(await request.read())
-
-        if 'aggs' in body:
-            # Available revisions
-            filename = 'revisions.json'
-
-        else:
-            filename = 'tests_full.json'
-
-        payload = open(os.path.join(FIXTURES_DIR, 'active_data', filename)).read()
-        return aresponses.Response(text=payload, content_type='application/json')
-
-    # Tests count per filename/changeset
-    async def _count(request):
-        # By default gives empty count
-        filename = 'count_empty.json'
-
-        # Detect specific queries
-        if request.has_body:
-            body = json.loads(await request.read())
-            terms = {
-                k: v
-                for t in body['query']['bool']['must']
-                for k, v in t['term'].items()
-            }
-
-            if terms['source.file.name.~s~'] == 'js/src/jsutil.cpp' and terms['repo.changeset.id.~s~'] == '2d83e1843241d869a2fc5cf06f96d3af44c70e70':  # noqa
-                filename = 'count_full.json'
-
-        payload = open(os.path.join(FIXTURES_DIR, 'active_data', filename)).read()
-        return aresponses.Response(text=payload, content_type='application/json')
-
-    # Activate callbacks for coverage endpoints on mock server
-    aresponses.add('mock-active-data:8000', '/coverage/_count', 'get', _count)
-    aresponses.add('mock-active-data:8000', '/coverage/_search', 'get', _search)
 
 
 @pytest.fixture
