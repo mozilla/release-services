@@ -105,8 +105,7 @@ Dummy body
         'code': 'clang-tidy.dummy-check',
         'line': 42,
         'name': 'Clang-Tidy - dummy-check',
-        'description': 'dummy message\nChecker reliability is high, this mean that the risk to'
-        ' have a false positive for this checker is low.\n\n > Dummy body',
+        'description': 'dummy message\nChecker reliability is high, meaning that the false positive ratio is low.\n\n > Dummy body',
         'path': 'test.cpp',
         'severity': 'warning',
     }

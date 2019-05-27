@@ -121,17 +121,20 @@ class Reliability(enum.Enum):
     Medium = 'medium'
     Low = 'low'
 
+    @property
     def invert(self):
         '''
         Verbalize the opposite of `value` of reliability to be used in coherent
         sentences.
         '''
-        if self.value == 'high':
-            return 'low'
-        if self.value == 'low':
-            return 'high'
-        if self.value == 'medium':
-            return 'medium'
+        inversions = {
+            'high': 'low',
+            'medium': 'medium',
+            'low': 'high'
+        }
+
+        if (self.value in inversions):
+            return inversions[self.value]
 
         return 'unknown'
 

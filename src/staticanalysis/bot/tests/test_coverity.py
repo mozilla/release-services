@@ -83,7 +83,7 @@ The path that leads to this defect is:
     assert issue.validates()
     assert not issue.is_publishable()
 
-    checker_desc = '''Checker reliability is medium, this mean that the risk to have a false positive for this checker is medium.
+    checker_desc = '''Checker reliability is medium, meaning that the false positive ratio is medium.
 Dereferencing a pointer that might be "nullptr" "env" when calling "lookupImport".
 The path that leads to this defect is:
 
