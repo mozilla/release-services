@@ -13,7 +13,7 @@ def get_bucket(service_account):
     # Load credentials from Taskcluster secret
     if 'bucket' not in service_account:
         raise KeyError('Missing bucket in GOOGLE_CLOUD_STORAGE')
-    bucket = service_account.pop('bucket')
+    bucket = service_account['bucket']
 
     # Use those credentials to create a Storage client
     # The project is needed to avoid checking env variables and crashing
