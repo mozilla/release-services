@@ -145,20 +145,3 @@ paths:
           description: Overall coverage of specified path over a period of time
       tags:
         - v2
-
-  /phabricator/base_revision_from_phid/{revision_phid}:
-    get:
-      operationId: "codecoverage_backend.api.phabricator_base_revision_from_phid"
-      parameters:
-      - name: revision_phid
-        in: path
-        description: Revision PHID
-        required: true
-        type: string
-      responses:
-        200:
-          description: hg.mozilla.org/mozilla-central base revision of the given revision
-        404:
-          description: No base revision has been found on hg.mozilla.org/mozilla-central
-      tags:
-        - legacy
