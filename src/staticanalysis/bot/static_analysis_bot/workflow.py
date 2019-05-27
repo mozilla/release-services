@@ -6,9 +6,10 @@
 from datetime import datetime
 from datetime import timedelta
 
+from libmozdata.phabricator import BuildState
+from libmozdata.phabricator import PhabricatorAPI
+
 from cli_common.log import get_logger
-from cli_common.phabricator import BuildState
-from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import TASKCLUSTER_DATE_FORMAT
 from static_analysis_bot import stats
 from static_analysis_bot.config import settings
@@ -35,11 +36,12 @@ class Workflow(object):
     - find issues from remote tasks
     - publish issues
     '''
-    def __init__(self, reporters, index_service, queue_service, phabricator_api):
+    def __init__(self, reporters, index_service, queue_service, phabricator_api, zero_coverage_enabled=True):
         assert settings.try_task_id is not None, \
             'Cannot run without Try task id'
         assert settings.try_group_id is not None, \
             'Cannot run without Try task id'
+        self.zero_coverage_enabled = zero_coverage_enabled
 
         # Use share phabricator API client
         assert isinstance(phabricator_api, PhabricatorAPI)
@@ -213,7 +215,8 @@ class Workflow(object):
                 return []
 
         # Add zero-coverage task
-        dependencies.append(ZeroCoverageTask)
+        if self.zero_coverage_enabled:
+            dependencies.append(ZeroCoverageTask)
 
         # Find issues and patches in dependencies
         issues = []

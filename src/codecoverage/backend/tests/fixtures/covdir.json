@@ -1,0 +1,972 @@
+{
+    "children": {
+        "builtin": {
+            "children": {
+                "Array.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        4072196,
+                        94,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 89.84,
+                    "linesCovered": 2086,
+                    "linesMissed": 236,
+                    "linesTotal": 2322,
+                    "name": "Array.cpp"
+                },
+                "BigInt.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        326,
+                        32,
+                        155
+                    ],
+                    "coveragePercent": 95.5,
+                    "linesCovered": 106,
+                    "linesMissed": 5,
+                    "linesTotal": 111,
+                    "name": "BigInt.cpp"
+                },
+                "DataViewObject.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        167,
+                        -1,
+                        -1,
+                        -1,
+                        48,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 12,
+                    "linesMissed": 0,
+                    "linesTotal": 12,
+                    "name": "DataViewObject.h"
+                },
+                "MapObject.cpp": {
+                    "coverage": [
+                        -1,
+                        129903185,
+                        -1,
+                        45228051,
+                        145560253
+                    ],
+                    "coveragePercent": 89.9,
+                    "linesCovered": 881,
+                    "linesMissed": 99,
+                    "linesTotal": 980,
+                    "name": "MapObject.cpp"
+                },
+                "Object.cpp": {
+                    "coverage": [
+                        1048685,
+                        0,
+                        5885,
+                        -1,
+                        4321292,
+                        322,
+                        27502240
+                    ],
+                    "coveragePercent": 91.37,
+                    "linesCovered": 974,
+                    "linesMissed": 92,
+                    "linesTotal": 1066,
+                    "name": "Object.cpp"
+                },
+                "String.cpp": {
+                    "coverage": [
+                        0,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        1542,
+                        -1
+                    ],
+                    "coveragePercent": 91.07,
+                    "linesCovered": 1917,
+                    "linesMissed": 188,
+                    "linesTotal": 2105,
+                    "name": "String.cpp"
+                },
+                "Symbol.h": {
+                    "coverage": [
+                        -1,
+                        8203,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 5,
+                    "linesMissed": 0,
+                    "linesTotal": 5,
+                    "name": "Symbol.h"
+                },
+                "TypedObject.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        5,
+                        2847,
+                        -1,
+                        85708,
+                        1725739
+                    ],
+                    "coveragePercent": 84.82,
+                    "linesCovered": 1179,
+                    "linesMissed": 211,
+                    "linesTotal": 1390,
+                    "name": "TypedObject.cpp"
+                },
+                "TypedObject.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 95.61,
+                    "linesCovered": 109,
+                    "linesMissed": 5,
+                    "linesTotal": 114,
+                    "name": "TypedObject.h"
+                },
+                "WeakMapObject-inl.h": {
+                    "coverage": [
+                        14300000,
+                        7150000,
+                        15169218,
+                        854201,
+                        -1,
+                        -1,
+                        -1,
+                        7150000,
+                        11159609
+                    ],
+                    "coveragePercent": 80.0,
+                    "linesCovered": 24,
+                    "linesMissed": 6,
+                    "linesTotal": 30,
+                    "name": "WeakMapObject-inl.h"
+                },
+                "WeakSetObject.cpp": {
+                    "coverage": [
+                        64,
+                        -1,
+                        -1,
+                        160983,
+                        -1,
+                        214,
+                        316665,
+                        214,
+                        -1,
+                        393888
+                    ],
+                    "coveragePercent": 94.69,
+                    "linesCovered": 107,
+                    "linesMissed": 6,
+                    "linesTotal": 113,
+                    "name": "WeakSetObject.cpp"
+                },
+                "intl": {
+                    "children": {
+                        "Collator.cpp": {
+                            "coverage": [
+                                -1,
+                                -1,
+                                -1,
+                                1298337,
+                                -1,
+                                10035,
+                                -1
+                            ],
+                            "coveragePercent": 79.18,
+                            "linesCovered": 213,
+                            "linesMissed": 56,
+                            "linesTotal": 269,
+                            "name": "Collator.cpp"
+                        },
+                        "CommonFunctions.h": {
+                            "coverage": [
+                                -1,
+                                -1,
+                                987,
+                                -1,
+                                9509622,
+                                -1,
+                                -1,
+                                -1,
+                                -1
+                            ],
+                            "coveragePercent": 84.38,
+                            "linesCovered": 27,
+                            "linesMissed": 5,
+                            "linesTotal": 32,
+                            "name": "CommonFunctions.h"
+                        },
+                        "ScopedICUObject.h": {
+                            "coverage": [
+                                -1,
+                                871376,
+                                -1,
+                                -1,
+                                -1,
+                                5978,
+                                412412,
+                                -1,
+                                412412,
+                                -1
+                            ],
+                            "coveragePercent": 100.0,
+                            "linesCovered": 10,
+                            "linesMissed": 0,
+                            "linesTotal": 10,
+                            "name": "ScopedICUObject.h"
+                        }
+                    },
+                    "coveragePercent": 78.62,
+                    "linesCovered": 1758,
+                    "linesMissed": 478,
+                    "linesTotal": 2236,
+                    "name": "intl"
+                }
+            },
+            "coveragePercent": 84.4,
+            "linesCovered": 21145,
+            "linesMissed": 3909,
+            "linesTotal": 25054,
+            "name": "builtin"
+        },
+        "ctypes": {
+            "children": {
+                "CTypes.h": {
+                    "coverage": [
+                        -1,
+                        221667,
+                        -1,
+                        89143751,
+                        -1,
+                        -1,
+                        414
+                    ],
+                    "coveragePercent": 83.7,
+                    "linesCovered": 113,
+                    "linesMissed": 22,
+                    "linesTotal": 135,
+                    "name": "CTypes.h"
+                },
+                "libffi": {
+                    "children": {},
+                    "coveragePercent": 49.59,
+                    "linesCovered": 540,
+                    "linesMissed": 549,
+                    "linesTotal": 1089,
+                    "name": "libffi"
+                }
+            },
+            "coveragePercent": 80.83,
+            "linesCovered": 4723,
+            "linesMissed": 1120,
+            "linesTotal": 5843,
+            "name": "ctypes"
+        },
+        "frontend": {
+            "children": {
+                "BinASTParser.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        16,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 3,
+                    "linesMissed": 0,
+                    "linesTotal": 3,
+                    "name": "BinASTParser.h"
+                },
+                "BinASTParserBase.cpp": {
+                    "coverage": [
+                        -1,
+                        16,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 3,
+                    "linesMissed": 0,
+                    "linesTotal": 3,
+                    "name": "BinASTParserBase.cpp"
+                },
+                "BinASTParserPerTokenizer.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 46.0,
+                    "linesCovered": 23,
+                    "linesMissed": 27,
+                    "linesTotal": 50,
+                    "name": "BinASTParserPerTokenizer.h"
+                },
+                "BinASTTokenReaderBase.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        112,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 82.05,
+                    "linesCovered": 32,
+                    "linesMissed": 7,
+                    "linesTotal": 39,
+                    "name": "BinASTTokenReaderBase.h"
+                },
+                "BinASTTokenReaderContext.cpp": {
+                    "coverage": [
+                        0,
+                        -1,
+                        0,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 0.0,
+                    "linesCovered": 0,
+                    "linesMissed": 88,
+                    "linesTotal": 88,
+                    "name": "BinASTTokenReaderContext.cpp"
+                },
+                "BinASTTokenReaderMultipart.cpp": {
+                    "coverage": [
+                        6130,
+                        -1,
+                        10,
+                        -1,
+                        -1,
+                        90,
+                        0,
+                        16
+                    ],
+                    "coveragePercent": 69.46,
+                    "linesCovered": 166,
+                    "linesMissed": 73,
+                    "linesTotal": 239,
+                    "name": "BinASTTokenReaderMultipart.cpp"
+                },
+                "BytecodeCompilation.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 29,
+                    "linesMissed": 0,
+                    "linesTotal": 29,
+                    "name": "BytecodeCompilation.h"
+                },
+                "BytecodeCompiler.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 1,
+                    "linesMissed": 0,
+                    "linesTotal": 1,
+                    "name": "BytecodeCompiler.h"
+                },
+                "BytecodeEmitter.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        4153558976,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 81,
+                    "linesMissed": 0,
+                    "linesTotal": 81,
+                    "name": "BytecodeEmitter.h"
+                },
+                "CForEmitter.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 1,
+                    "linesMissed": 0,
+                    "linesTotal": 1,
+                    "name": "CForEmitter.h"
+                },
+                "DefaultEmitter.h": {
+                    "coverage": [
+                        -1,
+                        30240237,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 1,
+                    "linesMissed": 0,
+                    "linesTotal": 1,
+                    "name": "DefaultEmitter.h"
+                },
+                "ForOfEmitter.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        0,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 70.19,
+                    "linesCovered": 73,
+                    "linesMissed": 31,
+                    "linesTotal": 104,
+                    "name": "ForOfEmitter.cpp"
+                },
+                "ForOfEmitter.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 1,
+                    "linesMissed": 0,
+                    "linesTotal": 1,
+                    "name": "ForOfEmitter.h"
+                },
+                "FullParseHandler.h": {
+                    "coverage": [
+                        -1,
+                        4041040,
+                        330917233,
+                        248049,
+                        1572,
+                        21814237,
+                        1442811438,
+                        482,
+                        -1
+                    ],
+                    "coveragePercent": 96.52,
+                    "linesCovered": 554,
+                    "linesMissed": 20,
+                    "linesTotal": 574,
+                    "name": "FullParseHandler.h"
+                },
+                "IfEmitter.cpp": {
+                    "coverage": [
+                        164940229,
+                        9100611,
+                        422680206,
+                        56589688,
+                        422680203,
+                        164940105,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 88.65,
+                    "linesCovered": 125,
+                    "linesMissed": 16,
+                    "linesTotal": 141,
+                    "name": "IfEmitter.cpp"
+                },
+                "LabelEmitter.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        899203,
+                        442788,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 91.3,
+                    "linesCovered": 21,
+                    "linesMissed": 2,
+                    "linesTotal": 23,
+                    "name": "LabelEmitter.cpp"
+                },
+                "LexicalScopeEmitter.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        664992660,
+                        1217300415,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 27,
+                    "linesMissed": 0,
+                    "linesTotal": 27,
+                    "name": "LexicalScopeEmitter.cpp"
+                },
+                "LexicalScopeEmitter.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        25276761,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 2,
+                    "linesMissed": 0,
+                    "linesTotal": 2,
+                    "name": "LexicalScopeEmitter.h"
+                },
+                "NameAnalysisTypes.h": {
+                    "coverage": [
+                        6312861,
+                        0,
+                        67773,
+                        1253119912,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 97.94,
+                    "linesCovered": 95,
+                    "linesMissed": 2,
+                    "linesTotal": 97,
+                    "name": "NameAnalysisTypes.h"
+                },
+                "NameCollections.h": {
+                    "coverage": [
+                        2175767810,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 98.97,
+                    "linesCovered": 96,
+                    "linesMissed": 1,
+                    "linesTotal": 97,
+                    "name": "NameCollections.h"
+                },
+                "ObjectEmitter.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 2,
+                    "linesMissed": 0,
+                    "linesTotal": 2,
+                    "name": "ObjectEmitter.h"
+                },
+                "PropOpEmitter.cpp": {
+                    "coverage": [
+                        0,
+                        2129160,
+                        6,
+                        1287200406,
+                        210422485,
+                        208605171,
+                        107032632,
+                        2401685,
+                        2401685
+                    ],
+                    "coveragePercent": 85.61,
+                    "linesCovered": 113,
+                    "linesMissed": 19,
+                    "linesTotal": 132,
+                    "name": "PropOpEmitter.cpp"
+                },
+                "SharedContext.h": {
+                    "coverage": [
+                        1351119109,
+                        -1,
+                        -1,
+                        -1,
+                        776912344,
+                        -1,
+                        -1,
+                        -1,
+                        18830678
+                    ],
+                    "coveragePercent": 99.39,
+                    "linesCovered": 164,
+                    "linesMissed": 1,
+                    "linesTotal": 165,
+                    "name": "SharedContext.h"
+                }
+            },
+            "coveragePercent": 78.51,
+            "linesCovered": 18874,
+            "linesMissed": 5167,
+            "linesTotal": 24041,
+            "name": "frontend"
+        },
+        "jsapi.cpp": {
+            "coverage": [
+                2381275,
+                6326357,
+                332759,
+                -1,
+                0,
+                304222689,
+                534151,
+                0,
+                -1,
+                -1
+            ],
+            "coveragePercent": 83.56,
+            "linesCovered": 2897,
+            "linesMissed": 570,
+            "linesTotal": 3467,
+            "name": "jsapi.cpp"
+        },
+        "jsdate.cpp": {
+            "coverage": [
+                54,
+                189361,
+                54717,
+                216,
+                -1,
+                134,
+                -1,
+                555,
+                -1,
+                -1
+            ],
+            "coveragePercent": 94.43,
+            "linesCovered": 1476,
+            "linesMissed": 87,
+            "linesTotal": 1563,
+            "name": "jsdate.cpp"
+        },
+        "jsexn.cpp": {
+            "coverage": [
+                -1,
+                -1,
+                66,
+                185233,
+                -1
+            ],
+            "coveragePercent": 90.48,
+            "linesCovered": 513,
+            "linesMissed": 54,
+            "linesTotal": 567,
+            "name": "jsexn.cpp"
+        },
+        "jsexn.h": {
+            "coverage": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ],
+            "coveragePercent": 100.0,
+            "linesCovered": 14,
+            "linesMissed": 0,
+            "linesTotal": 14,
+            "name": "jsexn.h"
+        },
+        "jsmath.cpp": {
+            "coverage": [
+                -1,
+                196929012,
+                -1,
+                -1,
+                457205
+            ],
+            "coveragePercent": 93.54,
+            "linesCovered": 521,
+            "linesMissed": 36,
+            "linesTotal": 557,
+            "name": "jsmath.cpp"
+        },
+        "perf": {
+            "children": {
+                "pm_linux.cpp": {
+                    "coverage": [
+                        66,
+                        138,
+                        6,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 81.69,
+                    "linesCovered": 58,
+                    "linesMissed": 13,
+                    "linesTotal": 71,
+                    "name": "pm_linux.cpp"
+                },
+                "pm_stub.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        0,
+                        6,
+                        0,
+                        6,
+                        -1
+                    ],
+                    "coveragePercent": 15.79,
+                    "linesCovered": 3,
+                    "linesMissed": 16,
+                    "linesTotal": 19,
+                    "name": "pm_stub.cpp"
+                }
+            },
+            "coveragePercent": 65.45,
+            "linesCovered": 125,
+            "linesMissed": 66,
+            "linesTotal": 191,
+            "name": "perf"
+        },
+        "shell": {
+            "children": {
+                "OSObject.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        0,
+                        15
+                    ],
+                    "coveragePercent": 45.67,
+                    "linesCovered": 232,
+                    "linesMissed": 276,
+                    "linesTotal": 508,
+                    "name": "OSObject.cpp"
+                },
+                "jsoptparse.cpp": {
+                    "coverage": [
+                        0,
+                        -1,
+                        -1,
+                        318866,
+                        0,
+                        -1
+                    ],
+                    "coveragePercent": 53.55,
+                    "linesCovered": 196,
+                    "linesMissed": 170,
+                    "linesTotal": 366,
+                    "name": "jsoptparse.cpp"
+                }
+            },
+            "coveragePercent": 69.95,
+            "linesCovered": 4859,
+            "linesMissed": 2087,
+            "linesTotal": 6946,
+            "name": "shell"
+        },
+        "threading": {
+            "children": {
+                "ExclusiveData.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 44,
+                    "linesMissed": 0,
+                    "linesTotal": 44,
+                    "name": "ExclusiveData.h"
+                },
+                "Mutex.h": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        14039876,
+                        -1,
+                        -1,
+                        14039850,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 6,
+                    "linesMissed": 0,
+                    "linesTotal": 6,
+                    "name": "Mutex.h"
+                },
+                "ProtectedData.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        373463444,
+                        4535294225388,
+                        491143401,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 100.0,
+                    "linesCovered": 41,
+                    "linesMissed": 0,
+                    "linesTotal": 41,
+                    "name": "ProtectedData.cpp"
+                }
+            },
+            "coveragePercent": 90.54,
+            "linesCovered": 383,
+            "linesMissed": 40,
+            "linesTotal": 423,
+            "name": "threading"
+        },
+        "util": {
+            "children": {
+                "CompleteFile.cpp": {
+                    "coverage": [
+                        -1,
+                        -1,
+                        -1,
+                        40,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 82.14,
+                    "linesCovered": 23,
+                    "linesMissed": 5,
+                    "linesTotal": 28,
+                    "name": "CompleteFile.cpp"
+                },
+                "DoubleToString.cpp": {
+                    "coverage": [
+                        16008659,
+                        -1,
+                        16008659,
+                        -1,
+                        270328,
+                        1521433,
+                        1013364,
+                        19741,
+                        -1
+                    ],
+                    "coveragePercent": 90.5,
+                    "linesCovered": 219,
+                    "linesMissed": 23,
+                    "linesTotal": 242,
+                    "name": "DoubleToString.cpp"
+                },
+                "Unicode.cpp": {
+                    "coverage": [
+                        0,
+                        0,
+                        0,
+                        -1,
+                        -1,
+                        -1,
+                        0,
+                        -1,
+                        -1,
+                        -1
+                    ],
+                    "coveragePercent": 65.77,
+                    "linesCovered": 980,
+                    "linesMissed": 510,
+                    "linesTotal": 1490,
+                    "name": "Unicode.cpp"
+                }
+            },
+            "coveragePercent": 73.29,
+            "linesCovered": 1937,
+            "linesMissed": 706,
+            "linesTotal": 2643,
+            "name": "util"
+        }
+    },
+    "coveragePercent": 85.11,
+    "linesCovered": 267432,
+    "linesMissed": 46779,
+    "linesTotal": 314211,
+    "name": "src"
+}

@@ -11,8 +11,8 @@ from contextlib import contextmanager
 
 import pytest
 import responses
+from libmozdata.phabricator import PhabricatorAPI
 
-from cli_common.phabricator import PhabricatorAPI
 from mock_taskcluster import MockIndex
 from mock_taskcluster import MockQueue
 
@@ -277,6 +277,7 @@ def mock_workflow(mock_phabricator):
             self.phabricator_api = None
             self.index_service = MockIndex()
             self.queue_service = MockQueue()
+            self.zero_coverage_enabled = True
 
         def setup_mock_tasks(self, tasks):
             '''

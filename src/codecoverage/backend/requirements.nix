@@ -2091,10 +2091,10 @@ let
     };
 
     "redis" = python.mkDerivation {
-      name = "redis-2.10.6";
+      name = "redis-3.2.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/09/8d/6d34b75326bf96d4139a2ddd8e74b80840f800a0a79f9294399e212cb9a7/redis-2.10.6.tar.gz";
-        sha256 = "a22ca993cea2962dbb588f9f30d0015ac4afcc45bee27d3978c0dbe9e97c6c0f";
+        url = "https://files.pythonhosted.org/packages/24/d4/06486dee0f66ef8c5080dc576fdfb33131fd2e0be3747f2be4e5634088a2/redis-3.2.1.tar.gz";
+        sha256 = "0wwj8il4c3aff15xwwcjfci367zxsakq05ps1a2il6yavp91i94c";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2173,10 +2173,10 @@ let
     };
 
     "rq" = python.mkDerivation {
-      name = "rq-0.12.0";
+      name = "rq-1.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/bf/64/29e23a46bdc084199398288d0cd2e183b64cb375483bfe8bba797331858a/rq-0.12.0.tar.gz";
-        sha256 = "7ac5989a27bdff713dd40517498c1b3bf720f8ebc47305055496f653a29da899";
+        url = "https://github.com/rq/rq/archive/v1.0.tar.gz";
+        sha256 = "0zncsjpvjliy4zvr4v83kl610bmj2r7rrin0jw5dbii9jpg4f8v1";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -2521,6 +2521,159 @@ let
         homepage = "https://github.com/aio-libs/yarl/";
         license = licenses.asl20;
         description = "Yet another URL library";
+      };
+    };
+
+    "google-api-core" = python.mkDerivation {
+      name = "google-api-core-1.10.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/ec/c2/333bf9bab97f11b1a6afa1335dc9ab5a94fd21d662e756dd016abaa29893/google-api-core-1.10.0.tar.gz";
+        sha256 = "9e6f4daf193be1c0230fc7a539058f7681c0a9741a02292614d0c9e3e091f4fc";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-auth"
+        self."googleapis-common-protos"
+        self."protobuf"
+        self."pytz"
+        self."requests"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python";
+        license = licenses.asl20;
+        description = "Google API client core library";
+      };
+    };
+
+    "google-auth" = python.mkDerivation {
+      name = "google-auth-1.6.3";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/ef/77/eb1d3288dbe2ba6f4fe50b9bb41770bac514cd2eb91466b56d44a99e2f8d/google-auth-1.6.3.tar.gz";
+        sha256 = "0f7c6a64927d34c1a474da92cfc59e552a5d3b940d3266606c6a28b72888b9e4";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."cachetools"
+        self."pyasn1-modules"
+        self."rsa"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-auth-library-python";
+        license = licenses.asl20;
+        description = "Google Authentication Library";
+      };
+    };
+
+    "google-cloud-core" = python.mkDerivation {
+      name = "google-cloud-core-0.29.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/8f/79/aba910c76b12c13e31be779bb580556757b47ee331efc10e30c4785a2156/google-cloud-core-0.29.1.tar.gz";
+        sha256 = "d85b1aaaf3bad9415ad1d8ee5eadce96d7007a82f13ce0a0629a003a11e83f29";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-api-core"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python";
+        license = licenses.asl20;
+        description = "Google Cloud API client core library";
+      };
+    };
+
+    "google-cloud-storage" = python.mkDerivation {
+      name = "google-cloud-storage-1.15.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/39/f4/d7568bd6789fa21b4005c02d6a3b4adc0f6cfc18619d01e73a711f2bc6b0/google-cloud-storage-1.15.0.tar.gz";
+        sha256 = "d66bfed1fd51f392ee361b5b7d84efd912f47db52a28722ee2e3994f0a54698d";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-api-core"
+        self."google-cloud-core"
+        self."google-resumable-media"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python";
+        license = licenses.asl20;
+        description = "Google Cloud Storage API client library";
+      };
+    };
+
+    "google-resumable-media" = python.mkDerivation {
+      name = "google-resumable-media-0.3.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/7e/80/21b397208d19346e29c4f4cd96249f55013fe8932a94ea22681b4ba23d35/google-resumable-media-0.3.2.tar.gz";
+        sha256 = "3e38923493ca0d7de0ad91c31acfefc393c78586db89364e91cb4f11990e51ba";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."requests"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-resumable-media-python";
+        license = licenses.asl20;
+        description = "Utilities for Google Media Downloads and Resumable Uploads";
+      };
+    };
+
+    "googleapis-common-protos" = python.mkDerivation {
+      name = "googleapis-common-protos-1.5.10";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/81/ca/295515dff932fc41cdcb7c80babbba7fe96643d16ce34211fff0ecd48528/googleapis-common-protos-1.5.10.tar.gz";
+        sha256 = "d564872083af40bbcc7091340f17db778a316525c7c76497d58d11b98ca2aa74";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."protobuf"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/googleapis/googleapis";
+        license = "Apache-2.0";
+        description = "Common protobufs used in Google APIs";
+      };
+    };
+
+    "protobuf" = python.mkDerivation {
+      name = "protobuf-3.7.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/cf/72/8c1ed9148ded82adbb76c30f958c6d456a2abc08f092b62a586bdf973b80/protobuf-3.7.1.tar.gz";
+        sha256 = "21e395d7959551e759d604940a115c51c6347d90a475c9baf471a1a86b5604a9";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://developers.google.com/protocol-buffers/";
+        license = licenses.bsd3;
+        description = "Protocol Buffers";
+      };
+    };
+
+    "zstandard" = python.mkDerivation {
+      name = "zstandard-0.11.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/bd/6e/1dc9995c216c7c520b522b4949c78f0c71eb2594cee0de46cda62c476829/zstandard-0.11.1.tar.gz";
+        sha256 = "3c31da5d78a7b07e722e8a3e0b1295bc9b316b7e90a1666659c451a42750ffe4";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/indygreg/python-zstandard";
+        license = licenses.bsdOriginal;
+        description = "Zstandard bindings for Python";
       };
     };
   };

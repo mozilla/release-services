@@ -2,11 +2,10 @@
 import gzip
 
 import requests
-from google.cloud import storage as gcp_storage
-from google.oauth2.service_account import Credentials
 import zstandard as zstd
 
 from cli_common import utils
+from cli_common.gcp import get_bucket
 from cli_common.log import get_logger
 from code_coverage_bot.secrets import secrets
 
@@ -103,7 +102,7 @@ def gcp(repository, revision, data):
     * Upload on bucket using revision in name
     '''
     assert isinstance(data, bytes)
-    bucket = gcp_bucket()
+    bucket = get_bucket(secrets[secrets.GOOGLE_CLOUD_STORAGE])
 
     # Compress report
     compressor = zstd.ZstdCompressor()
@@ -122,22 +121,3 @@ def gcp(repository, revision, data):
     logger.info('Uploaded {} on {}'.format(path, bucket))
 
     return blob
-
-
-def gcp_bucket():
-    '''
-    Build a Google Cloud Storage client & bucket
-    from Taskcluster secret
-    '''
-    # Load credentials from Taskcluster secret
-    service_account = secrets[secrets.GOOGLE_CLOUD_STORAGE]
-    if 'bucket' not in service_account:
-        raise KeyError('Missing bucket in GOOGLE_CLOUD_STORAGE')
-    bucket = service_account.pop('bucket')
-
-    # Use those credentials to create a Storage client
-    # The project is needed to avoid checking env variables and crashing
-    creds = Credentials.from_service_account_info(service_account)
-    client = gcp_storage.Client(project=creds.project_id, credentials=creds)
-
-    return client.get_bucket(bucket)
