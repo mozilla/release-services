@@ -7,10 +7,10 @@ import os
 import tempfile
 
 import click
+from libmozdata.phabricator import PhabricatorAPI
 
 from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
-from cli_common.phabricator import PhabricatorAPI
 from cli_common.taskcluster import get_secrets
 from pulselistener import config
 from pulselistener import task_monitoring

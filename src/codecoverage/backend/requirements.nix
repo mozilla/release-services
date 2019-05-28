@@ -910,54 +910,6 @@ let
       };
     };
 
-    "elasticsearch" = python.mkDerivation {
-      name = "elasticsearch-6.3.1";
-      src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/9d/ce/c4664e8380e379a9402ecfbaf158e56396da90d520daba21cfa840e0eb71/elasticsearch-6.3.1.tar.gz";
-        sha256 = "aada5cfdc4a543c47098eb3aca6663848ef5d04b4324935ced441debc11ec98b";
-      };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [
-        self."coverage"
-        self."nose"
-        self."requests"
-        self."urllib3"
-      ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/elastic/elasticsearch-py";
-        license = licenses.asl20;
-        description = "Python client for Elasticsearch";
-      };
-    };
-
-    "elasticsearch-async" = python.mkDerivation {
-      name = "elasticsearch-async-6.2.0";
-      src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/e3/43/80b154f47f281ccdb3dc7d717b47094c4f32f493fdcc80391a592dc89f0f/elasticsearch-async-6.2.0.tar.gz";
-        sha256 = "2534f3ec80da275723cabd6d354c83eb4b4f6241ad1432b48c2c05fb12175ab1";
-      };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [
-        self."aiohttp"
-        self."async-timeout"
-        self."elasticsearch"
-        self."pytest"
-        self."pytest-asyncio"
-        self."pytest-cov"
-      ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/elastic/elasticsearch-py-async";
-        license = licenses.asl20;
-        description = "Async backend for elasticsearch-py";
-      };
-    };
-
     "entrypoints" = python.mkDerivation {
       name = "entrypoints-0.3";
       src = pkgs.fetchurl {

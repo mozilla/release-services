@@ -3,9 +3,9 @@ import asyncio
 import os.path
 
 import requests
+from libmozdata.phabricator import BuildState
 
 from cli_common.log import get_logger
-from cli_common.phabricator import BuildState
 from cli_common.pulse import run_consumer
 from cli_common.utils import retry
 from pulselistener import task_monitoring

@@ -139,7 +139,7 @@ class Release(db.Model):
     completed = sa.Column(sa.DateTime)
 
     def __init__(self, product, version, branch, revision, build_number,
-                 release_eta, partial_updates, status):
+                 release_eta, partial_updates, status, product_key=None):
         self.name = f'{product.capitalize()}-{version}-build{build_number}'
         self.product = product
         self.version = version
@@ -151,6 +151,7 @@ class Release(db.Model):
         self.release_eta = release_eta or None
         self.partial_updates = partial_updates
         self.status = status
+        self.product_key = product_key
 
     @property
     def project(self):
@@ -249,7 +250,7 @@ class Release(db.Model):
         relpro = find_action('release-promotion', self.actions)
         avail_flavors = relpro['schema']['properties']['release_promotion_flavor']['enum']
         our_flavors = extract_our_flavors(avail_flavors, self.product,
-                                          self.version, self.partial_updates)
+                                          self.version, self.partial_updates, self.product_key)
         return our_flavors
 
     @property

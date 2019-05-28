@@ -6,8 +6,9 @@
 
 import re
 
+from libmozdata.phabricator import LintResult
+
 from cli_common.log import get_logger
-from cli_common.phabricator import LintResult
 from static_analysis_bot import CLANG_TIDY
 from static_analysis_bot import Issue
 from static_analysis_bot import Reliability
@@ -143,7 +144,8 @@ class ClangTidyIssue(Issue):
             body += '\n{}'.format(self.reason)
         # Also add the reliability of the checker
         if self.reliability != Reliability.Unknown:
-            body += '\nChecker reliability is {} (false positive risk).'.format(self.reliability.value)
+            body += '\nChecker reliability is {0}, meaning that the false positive ratio is {1}.'.format(
+                self.reliability.value, self.reliability.invert)
         return body
 
     def as_markdown(self):
@@ -206,7 +208,8 @@ class ClangTidyIssue(Issue):
 
         # Append to description the reliability index if any
         if self.reliability != Reliability.Unknown:
-            description += '\nChecker reliability is {} (false positive risk).'.format(self.reliability.value)
+            description += '\nChecker reliability is {0}, meaning that the false positive ratio is {1}.'.format(
+                self.reliability.value, self.reliability.invert)
 
         if self.body:
             description += '\n\n > {}'.format(self.body)

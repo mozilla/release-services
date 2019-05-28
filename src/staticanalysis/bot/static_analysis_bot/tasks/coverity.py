@@ -3,8 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from libmozdata.phabricator import LintResult
+
 from cli_common.log import get_logger
-from cli_common.phabricator import LintResult
 from static_analysis_bot import COVERITY
 from static_analysis_bot import Issue
 from static_analysis_bot import Reliability
@@ -109,7 +110,7 @@ class CoverityIssue(Issue):
         Build the text body published on reporters
         '''
         # If there is the reliability index use it
-        return f'Checker reliability is {self.reliability.value} (false positive risk).\n{self.message}' \
+        return f'Checker reliability is {self.reliability.value}, meaning that the false positive ratio is {self.reliability.invert}.\n{self.message}' \
             if self.reliability != Reliability.Unknown \
             else self.message
 
@@ -155,7 +156,7 @@ class CoverityIssue(Issue):
         Outputs a Phabricator lint result
         '''
         # If there is the reliability index use it
-        message = f'Checker reliability is {self.reliability.value} (false positive risk).\n{self.message}' \
+        message = f'Checker reliability is {self.reliability.value}, meaning that the false positive ratio is {self.reliability.invert}.\n{self.message}'\
             if self.reliability != Reliability.Unknown \
             else self.message
 

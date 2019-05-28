@@ -49,6 +49,11 @@ def good_version(release):
 def notify_via_irc(product, message):
     owners_section = current_app.config.get('IRC_NOTIFICATIONS_OWNERS_PER_PRODUCT')
     channels_section = current_app.config.get('IRC_NOTIFICATIONS_CHANNELS_PER_PRODUCT')
+
+    if not (owners_section and channels_section):
+        logger.info(f'Product "{product}" IRC notifications are not enabled')
+        return
+
     owners = owners_section.get(product, owners_section.get('default'))
     channels = channels_section.get(product, channels_section.get('default'))
 
@@ -78,7 +83,8 @@ def add_release(body):
         build_number=body['build_number'],
         release_eta=body.get('release_eta'),
         status='scheduled',
-        partial_updates=body.get('partial_updates')
+        partial_updates=body.get('partial_updates'),
+        product_key=body.get('product_key'),
     )
     try:
         r.generate_phases(
