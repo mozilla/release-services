@@ -103,6 +103,7 @@ def test_diff_build(mock_datetime, mock_revision):
         'path/to/xx.rs': [1, 2, 3, 30, 31, 32, 33, 34],
         'test.rs': [200, 201, 202, 300],
     }
+    mock_revision.files = mock_revision.lines.keys()
 
     # Parse issues from mock mozlint artifact
     path = os.path.join(MOCK_DIR, 'mozlint_rust_issues.json')

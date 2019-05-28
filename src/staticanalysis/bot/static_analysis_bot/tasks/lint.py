@@ -86,8 +86,9 @@ class MozLintIssue(Issue):
         A mozlint issues is publishable when:
         * file is not 3rd party
         * rule is not disabled
+        * issues without diff (those are published through a patch)
         '''
-        return not self.is_third_party() and not self.is_disabled_rule()
+        return not self.is_third_party() and not self.is_disabled_rule() and self.diff is None
 
     def as_text(self):
         '''
@@ -199,11 +200,12 @@ class MozLintTask(AnalysisTask):
     def build_patches(self, artifacts, issues):
         '''
         Build an improvement patch from issues with diff
+        Any issue on a file in patch will be posted
         '''
         diff_issues = [
             i
             for i in issues
-            if i.is_publishable() and i.diff is not None
+            if i.revision.has_file(i.path) and i.diff is not None
         ]
         if not diff_issues:
             return []
