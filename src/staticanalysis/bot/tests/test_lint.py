@@ -29,7 +29,7 @@ def test_flake8_rules(mock_config, mock_revision):
 
 def test_as_text(mock_config, mock_revision):
     '''
-    Test text export for ClangTidyIssue
+    Test text export for MozLintIssue
     '''
     from static_analysis_bot.tasks.lint import MozLintIssue
 
@@ -46,3 +46,29 @@ def test_as_text(mock_config, mock_revision):
         'path': 'test.py',
         'severity': 'error',
     }
+
+
+def test_diff(mock_config, mock_revision):
+    '''
+    Test diff parsing in MozLintIssue
+    '''
+    from static_analysis_bot.tasks.lint import MozLintIssue
+
+    mock_revision.lines = {
+        'test.rs': [1, 2, 44],
+    }
+
+    issue = MozLintIssue('test.rs', 1, 'error', 42, 'rustfmt', 'nodiff', 'dummy rule', mock_revision)
+    assert str(issue) == 'rustfmt issue error test.rs line 42'
+    assert issue.diff is None
+    assert issue.nb_lines == 1
+    assert not mock_revision.contains(issue)
+
+    diff = '''This
+is
+a
+test'''
+    issue = MozLintIssue('test.rs', 1, 'error', 42, 'rustfmt', 'withdiff', 'dummy rule', mock_revision, diff=diff)
+    assert str(issue) == 'rustfmt issue error test.rs line 42-46'
+    assert issue.diff is not None
+    assert mock_revision.contains(issue)
