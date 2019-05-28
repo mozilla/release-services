@@ -9,6 +9,5 @@ google-cloud-storage
 redis
 rq
 gunicorn
-elasticsearch-async
 setuptools-scm # needed by py-1.5.4 buildInputs
 zstandard

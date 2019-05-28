@@ -27,6 +27,8 @@ type alias UpadateTreeTags =
     , infra : Bool
     , backlog : Bool
     , planned : Bool
+    , merges : Bool
+    , waiting_for_coverage : Bool
     , other : Bool
     }
 
@@ -48,12 +50,14 @@ validateAddTree =
 
 validateUpdateTreeTags : Form.Field.Field -> Result (Form.Error.Error a) UpadateTreeTags
 validateUpdateTreeTags =
-    Form.Validate.map6 UpadateTreeTags
+    Form.Validate.map8 UpadateTreeTags
         (Form.Validate.field "checkin_compilation" Form.Validate.bool)
         (Form.Validate.field "checkin_test" Form.Validate.bool)
         (Form.Validate.field "infra" Form.Validate.bool)
         (Form.Validate.field "backlog" Form.Validate.bool)
         (Form.Validate.field "planned" Form.Validate.bool)
+        (Form.Validate.field "merges" Form.Validate.bool)
+        (Form.Validate.field "waiting_for_coverage" Form.Validate.bool)
         (Form.Validate.field "other" Form.Validate.bool)
 
 
@@ -182,6 +186,8 @@ updateUpdateTree route model formMsg =
                 , ( "infra", tags.infra )
                 , ( "backlog", tags.backlog )
                 , ( "planned", tags.planned )
+                , ( "merges", tags.merges )
+                , ( "waiting-for-coverage", tags.waiting_for_coverage )
                 , ( "other", tags.other )
                 ]
 
