@@ -133,10 +133,7 @@ class Reliability(enum.Enum):
             'low': 'high'
         }
 
-        if (self.value in inversions):
-            return inversions[self.value]
-
-        return 'unknown'
+        return inversions.get(self.value, 'unknown')
 
 
 # Create common stats instance
