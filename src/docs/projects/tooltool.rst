@@ -23,7 +23,7 @@ Use the following points to guide you opening the bug:
 
 #. **Product** field should be ``Release Engineering``
 #. **Component** field should be ``Applications: ToolTool``
-#. **Summary** field should be ``Requesting taskcluster client credentials to use with tooltoo.py``
+#. **Summary** field should be ``Requesting taskcluster client credentials to use with tooltool.py``
 #. **Description** field should contain:
 
    - who is the responsible person and which is the responsible team
