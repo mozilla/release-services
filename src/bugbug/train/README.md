@@ -1,2 +1,0 @@
-bugbug Training Bot
-=================

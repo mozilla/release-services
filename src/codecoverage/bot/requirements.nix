@@ -286,6 +286,22 @@ let
       };
     };
 
+    "cachetools" = python.mkDerivation {
+      name = "cachetools-3.1.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/05/07/c117b9527a0cd5beb7990fcdb7b0abf57e84f2d82eaf130921b43e594df4/cachetools-3.1.0.tar.gz";
+        sha256 = "9efcc9fab3b49ab833475702b55edd5ae07af1af7a4c627678980b45e459c460";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/tkem/cachetools";
+        license = licenses.mit;
+        description = "Extensible memoizing collections and decorators";
+      };
+    };
+
     "certifi" = python.mkDerivation {
       name = "certifi-2019.3.9";
       src = pkgs.fetchurl {
@@ -293,8 +309,6 @@ let
         sha256 = "b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -311,8 +325,6 @@ let
         sha256 = "84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -627,6 +639,125 @@ let
       };
     };
 
+    "google-api-core" = python.mkDerivation {
+      name = "google-api-core-1.10.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/ec/c2/333bf9bab97f11b1a6afa1335dc9ab5a94fd21d662e756dd016abaa29893/google-api-core-1.10.0.tar.gz";
+        sha256 = "9e6f4daf193be1c0230fc7a539058f7681c0a9741a02292614d0c9e3e091f4fc";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-auth"
+        self."googleapis-common-protos"
+        self."protobuf"
+        self."pytz"
+        self."requests"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python";
+        license = licenses.asl20;
+        description = "Google API client core library";
+      };
+    };
+
+    "google-auth" = python.mkDerivation {
+      name = "google-auth-1.6.3";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/ef/77/eb1d3288dbe2ba6f4fe50b9bb41770bac514cd2eb91466b56d44a99e2f8d/google-auth-1.6.3.tar.gz";
+        sha256 = "0f7c6a64927d34c1a474da92cfc59e552a5d3b940d3266606c6a28b72888b9e4";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."cachetools"
+        self."pyasn1-modules"
+        self."rsa"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-auth-library-python";
+        license = licenses.asl20;
+        description = "Google Authentication Library";
+      };
+    };
+
+    "google-cloud-core" = python.mkDerivation {
+      name = "google-cloud-core-0.29.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/8f/79/aba910c76b12c13e31be779bb580556757b47ee331efc10e30c4785a2156/google-cloud-core-0.29.1.tar.gz";
+        sha256 = "d85b1aaaf3bad9415ad1d8ee5eadce96d7007a82f13ce0a0629a003a11e83f29";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-api-core"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python";
+        license = licenses.asl20;
+        description = "Google Cloud API client core library";
+      };
+    };
+
+    "google-cloud-storage" = python.mkDerivation {
+      name = "google-cloud-storage-1.15.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/39/f4/d7568bd6789fa21b4005c02d6a3b4adc0f6cfc18619d01e73a711f2bc6b0/google-cloud-storage-1.15.0.tar.gz";
+        sha256 = "d66bfed1fd51f392ee361b5b7d84efd912f47db52a28722ee2e3994f0a54698d";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-api-core"
+        self."google-cloud-core"
+        self."google-resumable-media"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python";
+        license = licenses.asl20;
+        description = "Google Cloud Storage API client library";
+      };
+    };
+
+    "google-resumable-media" = python.mkDerivation {
+      name = "google-resumable-media-0.3.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/7e/80/21b397208d19346e29c4f4cd96249f55013fe8932a94ea22681b4ba23d35/google-resumable-media-0.3.2.tar.gz";
+        sha256 = "3e38923493ca0d7de0ad91c31acfefc393c78586db89364e91cb4f11990e51ba";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."requests"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-resumable-media-python";
+        license = licenses.asl20;
+        description = "Utilities for Google Media Downloads and Resumable Uploads";
+      };
+    };
+
+    "googleapis-common-protos" = python.mkDerivation {
+      name = "googleapis-common-protos-1.5.10";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/81/ca/295515dff932fc41cdcb7c80babbba7fe96643d16ce34211fff0ecd48528/googleapis-common-protos-1.5.10.tar.gz";
+        sha256 = "d564872083af40bbcc7091340f17db778a316525c7c76497d58d11b98ca2aa74";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."protobuf"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/googleapis/googleapis";
+        license = "Apache-2.0";
+        description = "Common protobufs used in Google APIs";
+      };
+    };
+
     "idna" = python.mkDerivation {
       name = "idna-2.8";
       src = pkgs.fetchurl {
@@ -634,14 +765,98 @@ let
         sha256 = "c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/kjd/idna";
         license = licenses.bsdOriginal;
         description = "Internationalized Domain Names in Applications (IDNA)";
+      };
+    };
+
+    "protobuf" = python.mkDerivation {
+      name = "protobuf-3.7.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/cf/72/8c1ed9148ded82adbb76c30f958c6d456a2abc08f092b62a586bdf973b80/protobuf-3.7.1.tar.gz";
+        sha256 = "21e395d7959551e759d604940a115c51c6347d90a475c9baf471a1a86b5604a9";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://developers.google.com/protocol-buffers/";
+        license = licenses.bsd3;
+        description = "Protocol Buffers";
+      };
+    };
+
+    "pyasn1" = python.mkDerivation {
+      name = "pyasn1-0.4.5";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/46/60/b7e32f6ff481b8a1f6c8f02b0fd9b693d1c92ddd2efb038ec050d99a7245/pyasn1-0.4.5.tar.gz";
+        sha256 = "da2420fe13a9452d8ae97a0e478adde1dee153b11ba832a95b223a2ba01c10f7";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/etingof/pyasn1";
+        license = licenses.bsdOriginal;
+        description = "ASN.1 types and codecs";
+      };
+    };
+
+    "pyasn1-modules" = python.mkDerivation {
+      name = "pyasn1-modules-0.2.5";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/ec/0b/69620cb04a016e4a1e8e352e8a42717862129b574b3479adb2358a1f12f7/pyasn1-modules-0.2.5.tar.gz";
+        sha256 = "ef721f68f7951fab9b0404d42590f479e30d9005daccb1699b0a51bb4177db96";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."pyasn1"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/etingof/pyasn1-modules";
+        license = licenses.bsdOriginal;
+        description = "A collection of ASN.1-based protocols modules.";
+      };
+    };
+
+    "pytz" = python.mkDerivation {
+      name = "pytz-2019.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/df/d5/3e3ff673e8f3096921b3f1b79ce04b832e0100b4741573154b72b756a681/pytz-2019.1.tar.gz";
+        sha256 = "d747dd3d23d77ef44c6a3526e274af6efeb0a6f1afd5a69ba4d5be4098c8e141";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://pythonhosted.org/pytz";
+        license = licenses.mit;
+        description = "World timezone definitions, modern and historical";
+      };
+    };
+
+    "rsa" = python.mkDerivation {
+      name = "rsa-4.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/cb/d0/8f99b91432a60ca4b1cd478fd0bdf28c1901c58e3a9f14f4ba3dba86b57f/rsa-4.0.tar.gz";
+        sha256 = "1a836406405730121ae9823e19c6e806c62bbad73f890574fff50efa4122c487";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."pyasn1"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://stuvel.eu/rsa";
+        license = "ASL 2";
+        description = "Pure-Python RSA implementation";
       };
     };
 
@@ -1067,24 +1282,6 @@ let
       };
     };
 
-    "pytz" = python.mkDerivation {
-      name = "pytz-2018.9";
-      src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/af/be/6c59e30e208a5f28da85751b93ec7b97e4612268bb054d0dff396e758a90/pytz-2018.9.tar.gz";
-        sha256 = "d5f05e487007e29e03409f9398d074e158d920d36eb82eaf66fb1136b0c5374c";
-      };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://pythonhosted.org/pytz";
-        license = licenses.mit;
-        description = "World timezone definitions, modern and historical";
-      };
-    };
-
     "raven" = python.mkDerivation {
       name = "raven-6.10.0";
       src = pkgs.fetchurl {
@@ -1118,6 +1315,7 @@ let
         self."chardet"
         self."idna"
         self."urllib3"
+        self."pyOpenSSL"
       ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://python-requests.org";
@@ -1398,6 +1596,296 @@ let
         homepage = "https://github.com/aio-libs/yarl/";
         license = licenses.asl20;
         description = "Yet another URL library";
+      };
+    };
+
+    "zstandard" = python.mkDerivation {
+      name = "zstandard-0.11.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/bd/6e/1dc9995c216c7c520b522b4949c78f0c71eb2594cee0de46cda62c476829/zstandard-0.11.1.tar.gz";
+        sha256 = "3c31da5d78a7b07e722e8a3e0b1295bc9b316b7e90a1666659c451a42750ffe4";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/indygreg/python-zstandard";
+        license = licenses.bsdOriginal;
+        description = "Zstandard bindings for Python";
+      };
+    };
+
+    "libmozdata" = python.mkDerivation {
+      name = "libmozdata-0.1.55";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/cb/a3/d743c43bd84d93db192b8ea3fd32686ecb813f4307e6abc6ab1490b2f5f5/libmozdata-0.1.55.tar.gz";
+        sha256 = "0llvkhp70w0pr8hh4f42x8cziw6fkb904w99cma8jz8kn2qifxk5";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-api-python-client"
+        self."httplib2"
+        self."icalendar"
+        self."oauth2client"
+        self."python-dateutil"
+        self."python-hglib"
+        self."requests"
+        self."requests-futures"
+        self."six"
+        self."whatthepatch"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/mozilla/libmozdata";
+        license = licenses.mpl20;
+        description = "Library to access and aggregate several Mozilla data sources.";
+      };
+    };
+
+    "google-api-python-client" = python.mkDerivation {
+      name = "google-api-python-client-1.7.7";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/e0/91/0e6a42ea3e0898a75d819a9690c8c8d0eecd31275d8a85503c8fc33949f2/google-api-python-client-1.7.7.tar.gz";
+        sha256 = "9106e7d09d80f59a9472a91edd85c2d6ad420aef28c9440ce1691b4a19ba9ada";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-auth"
+        self."google-auth-httplib2"
+        self."httplib2"
+        self."six"
+        self."uritemplate"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/google/google-api-python-client/";
+        license = licenses.asl20;
+        description = "Google API Client Library for Python";
+      };
+    };
+
+    "google-auth-httplib2" = python.mkDerivation {
+      name = "google-auth-httplib2-0.0.3";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/e7/32/ac7f30b742276b4911a1439c5291abab1b797ccfd30bc923c5ad67892b13/google-auth-httplib2-0.0.3.tar.gz";
+        sha256 = "098fade613c25b4527b2c08fa42d11f3c2037dda8995d86de0745228e965d445";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."google-auth"
+        self."httplib2"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/GoogleCloudPlatform/google-auth-library-python-httplib2";
+        license = licenses.asl20;
+        description = "Google Authentication Library: httplib2 transport";
+      };
+    };
+
+    "httplib2" = python.mkDerivation {
+      name = "httplib2-0.12.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/ce/ed/803905d670b52fa0edfdd135337e545b4496c2ab3a222f1449b7256eb99f/httplib2-0.12.0.tar.gz";
+        sha256 = "f61fb838a94ce3b349aa32c92fd8430f7e3511afdb18bf9640d647e30c90a6d6";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/httplib2/httplib2";
+        license = licenses.mit;
+        description = "A comprehensive HTTP client library.";
+      };
+    };
+
+    "icalendar" = python.mkDerivation {
+      name = "icalendar-4.0.3";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/5d/92/647cd84120b8d9c2ac9a03ccff21bb44c267c993b88881a32c1837d250bd/icalendar-4.0.3.tar.gz";
+        sha256 = "07c2447a1d44cbb27c90b8c6a5c98e890cc1853c6223e2a52195cddec26c6356";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."python-dateutil"
+        self."pytz"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/collective/icalendar";
+        license = licenses.bsdOriginal;
+        description = "iCalendar parser/generator";
+      };
+    };
+
+    "uritemplate" = python.mkDerivation {
+      name = "uritemplate-3.0.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/cd/db/f7b98cdc3f81513fb25d3cbe2501d621882ee81150b745cdd1363278c10a/uritemplate-3.0.0.tar.gz";
+        sha256 = "c02643cebe23fc8adb5e6becffe201185bf06c40bda5c0b4028a93f1527d011d";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://uritemplate.readthedocs.org";
+        license = "BSD 3-Clause License or Apache License, Version 2.0";
+        description = "URI templates";
+      };
+    };
+
+    "oauth2client" = python.mkDerivation {
+      name = "oauth2client-4.1.3";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/a6/7b/17244b1083e8e604bf154cf9b716aecd6388acd656dd01893d0d244c94d9/oauth2client-4.1.3.tar.gz";
+        sha256 = "d486741e451287f69568a4d26d70d9acd73a2bbfa275746c535b4209891cccc6";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."httplib2"
+        self."pyasn1"
+        self."pyasn1-modules"
+        self."rsa"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/google/oauth2client/";
+        license = licenses.asl20;
+        description = "OAuth 2.0 client library";
+      };
+    };
+
+    "pyOpenSSL" = python.mkDerivation {
+      name = "pyOpenSSL-19.0.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/40/d0/8efd61531f338a89b4efa48fcf1972d870d2b67a7aea9dcf70783c8464dc/pyOpenSSL-19.0.0.tar.gz";
+        sha256 = "aeca66338f6de19d1aa46ed634c3b9ae519a64b458f8468aec688e7e3c20f200";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."cryptography"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://pyopenssl.org/";
+        license = licenses.asl20;
+        description = "Python wrapper module around the OpenSSL library";
+      };
+    };
+
+    "whatthepatch" = python.mkDerivation {
+      name = "whatthepatch-0.0.5";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/64/1e/7a63cba8a0d70245b9ab1c03694dabe36476fa65ee546e6dff6c8660434c/whatthepatch-0.0.5.tar.gz";
+        sha256 = "494a2ec6c05b80f9ed1bd773f5ac9411298e1af6f0385f179840b5d60d001aa6";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/cscorley/whatthepatch";
+        license = licenses.mit;
+        description = "A patch parsing library.";
+      };
+    };
+
+    "cryptography" = python.mkDerivation {
+      name = "cryptography-2.4.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/f3/39/d3904df7c56f8654691c4ae1bdb270c1c9220d6da79bd3b1fbad91afd0e1/cryptography-2.4.2.tar.gz";
+        sha256 = "05a6052c6a9f17ff78ba78f8e6eb1d777d25db3b763343a1ae89a7a8670386dd";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."asn1crypto"
+        self."cffi"
+        self."flake8"
+        self."idna"
+        self."six"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/pyca/cryptography";
+        license = licenses.bsdOriginal;
+        description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers.";
+      };
+    };
+
+    "asn1crypto" = python.mkDerivation {
+      name = "asn1crypto-0.24.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/fc/f1/8db7daa71f414ddabfa056c4ef792e1461ff655c2ae2928a2b675bfed6b4/asn1crypto-0.24.0.tar.gz";
+        sha256 = "9d5c20441baf0cb60a4ac34cc447c6c189024b6b4c6cd7877034f4965c464e49";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/wbond/asn1crypto";
+        license = licenses.mit;
+        description = "Fast ASN.1 parser and serializer with definitions for private keys, public keys, certificates, CRL, OCSP, CMS, PKCS#3, PKCS#7, PKCS#8, PKCS#12, PKCS#5, X.509 and TSP";
+      };
+    };
+
+    "cffi" = python.mkDerivation {
+      name = "cffi-1.11.5";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/e7/a7/4cd50e57cc6f436f1cc3a7e8fa700ff9b8b4d471620629074913e3735fb2/cffi-1.11.5.tar.gz";
+        sha256 = "e90f17980e6ab0f3c2f3730e56d1fe9bcba1891eeea58966e89d352492cc74f4";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."pycparser"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://cffi.readthedocs.org";
+        license = licenses.mit;
+        description = "Foreign Function Interface for Python calling C code.";
+      };
+    };
+
+    "pycparser" = python.mkDerivation {
+      name = "pycparser-2.19";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/68/9e/49196946aee219aead1290e00d1e7fdeab8567783e83e1b9ab5585e6206a/pycparser-2.19.tar.gz";
+        sha256 = "a988718abfad80b6b157acce7bf130a30876d27603738ac39f140993246b25b3";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/eliben/pycparser";
+        license = licenses.bsdOriginal;
+        description = "C parser in Python";
       };
     };
   };

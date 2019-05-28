@@ -599,19 +599,23 @@ def get_primary_builds(breakpoint_version: int,
 
     if product is Product.FIREFOX:
         firefox_versions = get_firefox_versions(releases)
-        versions = [
+        # make sure that Devedition is included in the list
+        products = [Product.FIREFOX, Product.DEVEDITION]
+        versions = set([
             firefox_versions['FIREFOX_NIGHTLY'],
+            firefox_versions['FIREFOX_DEVEDITION'],
             firefox_versions['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
             firefox_versions['LATEST_FIREFOX_VERSION'],
             firefox_versions['FIREFOX_ESR'],
-        ]
+        ])
     elif product is Product.THUNDERBIRD:
         thunderbird_versions = get_thunderbird_versions(releases)
-        versions = [
+        products = [Product.THUNDERBIRD]
+        versions = set([
             thunderbird_versions['LATEST_THUNDERBIRD_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_DEVEL_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_NIGHTLY_VERSION'],
-        ]
+        ])
     else:
         raise click.ClickException(f'We don\'t generate product history for "{product.value}" product.')
 
@@ -619,7 +623,7 @@ def get_primary_builds(breakpoint_version: int,
 
     for release in releases:
         # Skip other products and older versions
-        if product is not Product(release.product) or \
+        if Product(release.product) not in products or \
            release.version not in versions:
             continue
         # Make sure to add en-US, it's not listed in the l10n changesets file
@@ -985,8 +989,8 @@ def get_mobile_versions(releases: typing.List[shipit_api.models.Release]) -> Mob
     return dict(
         ios_beta_version=shipit_api.config.IOS_BETA_VERSION,
         ios_version=shipit_api.config.IOS_VERSION,
-        nightly_version=shipit_api.config.FIREFOX_NIGHTLY,
-        alpha_version=shipit_api.config.FIREFOX_NIGHTLY,
+        nightly_version=shipit_api.config.FENNEC_NIGHTLY,
+        alpha_version=shipit_api.config.FENNEC_NIGHTLY,
         beta_version=get_latest_version(releases,
                                         shipit_api.config.BETA_BRANCH,
                                         Product.FENNEC,

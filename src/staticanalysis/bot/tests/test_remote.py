@@ -549,7 +549,11 @@ def test_coverity_task(mock_config, mock_revision, mock_workflow):
     assert issue.kind == 'UNINIT'
     assert issue.reliability == Reliability.High
     assert issue.bug_type == 'Memory - corruptions'
-    assert issue.message == 'Using uninitialized value \"a\".'
+    assert issue.message == '''Using uninitialized value "a".
+The path that leads to this defect is:
+
+- //dom/animation/Animation.cpp:61//:
+-- `path: Condition \"!target.oper…", taking false branch.`.\n'''
     assert issue.is_local()
     assert not issue.is_clang_error()
     assert issue.validates()
@@ -565,17 +569,7 @@ def test_coverity_task(mock_config, mock_revision, mock_workflow):
     assert issue.is_local()
     assert not issue.is_clang_error()
     assert issue.validates()
-    assert issue.as_text() == f'Checker reliability (false positive risk) is high.\nSome error here'
-
-    # Testing will coverity full stack support
-    mock_config.cov_full_stack = True
-    issues = mock_workflow.run(mock_revision)
-    issue = issues[0]
-    assert issue.message == '''Using uninitialized value "a".
-The path that leads to this defect is:
-
-- //dom/animation/Animation.cpp:61//:
--- `path: Condition \"!target.oper…", taking false branch.`.\n'''
+    assert issue.as_text() == f'Checker reliability is high (false positive risk).\nSome error here'
 
 
 def test_infer_task(mock_config, mock_revision, mock_workflow):
@@ -683,3 +677,45 @@ def test_no_tasks(mock_config, mock_revision, mock_workflow):
     })
     issues = mock_workflow.run(mock_revision)
     assert len(issues) == 0
+
+
+def test_zero_coverage_option(mock_config, mock_revision, mock_workflow):
+    '''
+    Test the zero coverage trigger on the workflow
+    '''
+    from static_analysis_bot.tasks.coverage import CoverageIssue
+
+    mock_workflow.setup_mock_tasks({
+        'decision': {
+            'image': 'taskcluster/decision:XXX',
+            'env': {
+                'GECKO_HEAD_REPOSITORY': 'https://hg.mozilla.org/try',
+                'GECKO_HEAD_REV': 'deadbeef1234',
+            }
+        },
+        'remoteTryTask': {
+            'dependencies': ['xxx']
+        },
+        'zero-cov': {
+            'route': 'project.releng.services.project.production.code_coverage_bot.latest',
+            'artifacts': {
+                'public/zero_coverage_report.json': {
+                    'files': [
+                        {
+                            'uncovered': True,
+                            'name': 'test.cpp',
+                        }
+                    ],
+                },
+            }
+        },
+    })
+
+    mock_workflow.zero_coverage_enabled = False
+    issues = mock_workflow.run(mock_revision)
+    assert len(issues) == 0
+
+    mock_workflow.zero_coverage_enabled = True
+    issues = mock_workflow.run(mock_revision)
+    assert len(issues) == 1
+    assert isinstance(issues[0], CoverageIssue)

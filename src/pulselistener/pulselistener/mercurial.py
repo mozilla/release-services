@@ -13,12 +13,12 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 
 import hglib
+from libmozdata.phabricator import BuildState
+from libmozdata.phabricator import UnitResult
+from libmozdata.phabricator import UnitResultState
 
 from cli_common.log import get_logger
 from cli_common.mercurial import batch_checkout
-from cli_common.phabricator import BuildState
-from cli_common.phabricator import UnitResult
-from cli_common.phabricator import UnitResultState
 from pulselistener.config import REPO_TRY
 
 logger = get_logger(__name__)

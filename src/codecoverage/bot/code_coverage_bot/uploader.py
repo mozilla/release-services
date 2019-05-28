@@ -2,8 +2,10 @@
 import gzip
 
 import requests
+import zstandard as zstd
 
 from cli_common import utils
+from cli_common.gcp import get_bucket
 from cli_common.log import get_logger
 from code_coverage_bot.secrets import secrets
 
@@ -91,3 +93,31 @@ def codecov_wait(commit):
         return utils.retry(check_codecov_job, retries=30)
     except TotalsNoneError:
         return False
+
+
+def gcp(repository, revision, data):
+    '''
+    Upload a grcov raw report on Google Cloud Storage
+    * Compress with zstandard
+    * Upload on bucket using revision in name
+    '''
+    assert isinstance(data, bytes)
+    bucket = get_bucket(secrets[secrets.GOOGLE_CLOUD_STORAGE])
+
+    # Compress report
+    compressor = zstd.ZstdCompressor()
+    archive = compressor.compress(data)
+
+    # Upload archive
+    path = '{}/{}.json.zstd'.format(repository, revision)
+    blob = bucket.blob(path)
+    blob.upload_from_string(archive)
+
+    # Update headers
+    blob.content_type = 'application/json'
+    blob.content_encoding = 'zstd'
+    blob.patch()
+
+    logger.info('Uploaded {} on {}'.format(path, bucket))
+
+    return blob

@@ -21,9 +21,15 @@ from code_coverage_bot.secrets import secrets
     required=True,
     help='Cache root, used to pull changesets'
 )
+@click.option(
+    '--task-name-filter',
+    default='*',
+    help='Filter Taskcluster tasks using a glob expression',
+)
 def main(repository,
          revision,
          cache_root,
+         task_name_filter,
          taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
@@ -37,7 +43,7 @@ def main(repository,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
-    c = CodeCov(repository, revision, cache_root, taskcluster_client_id, taskcluster_access_token)
+    c = CodeCov(repository, revision, task_name_filter, cache_root, taskcluster_client_id, taskcluster_access_token)
     c.go()
 
 
