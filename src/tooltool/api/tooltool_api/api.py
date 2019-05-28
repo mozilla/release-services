@@ -109,7 +109,7 @@ def upload_batch(body: dict, region: typing.Optional[str] = None) -> dict:
         digest = info['digest']
         file = tooltool_api.models.File.query.filter(tooltool_api.models.File.sha512 == digest).first()
         if file and file.visibility != info['visibility']:
-            raise werkzeug.exceptions.BadRequest('Cannot change a file\'s visibility level')
+            raise werkzeug.exceptions.BadRequest('Cannot change already existing file\'s visibility level.')
 
         if file and file.instances != []:
             if file.size != info['size']:
