@@ -5,7 +5,6 @@
 
 from cli_common import log
 from codecoverage_backend import secrets
-from codecoverage_backend.services import active_data
 from codecoverage_backend.services import codecov
 from codecoverage_backend.services import coveralls
 
@@ -19,7 +18,6 @@ def build_coverage_service():
     services = {
         'codecov': codecov.CodecovCoverage,
         'coveralls': coveralls.CoverallsCoverage,
-        'activedata': active_data.ActiveDataCoverage,
     }
     if secrets.COVERAGE_SERVICE not in services:
         raise Exception(f'Unknown coverage service : {secrets.COVERAGE_SERVICE}')

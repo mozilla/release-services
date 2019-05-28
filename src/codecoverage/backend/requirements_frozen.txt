@@ -25,8 +25,6 @@ decorator==4.4.0
 docopt==0.6.2
 docutils==0.14
 ecdsa==0.13
-elasticsearch==6.3.1
-elasticsearch-async==6.2.0
 entrypoints==0.3
 fakeredis==1.0.3
 fancycompleter==0.8
@@ -52,7 +50,6 @@ googleapis-common-protos==1.5.10
 google-auth==1.6.3
 google-cloud-core==0.29.1
 google-cloud-storage==1.15.0
-google-cloud-storage=1.15.0
 google-resumable-media==0.3.2
 gunicorn==19.9.0
 httplib2==0.12.1
