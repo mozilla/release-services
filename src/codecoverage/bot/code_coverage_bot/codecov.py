@@ -116,12 +116,35 @@ class CodeCov(object):
             # Thread 2 - Clone repository.
             executor.submit(self.clone_repository, self.repository, self.revision)
 
+    def generate_covdir(self):
+        '''
+        Build the covdir report using current artifacts
+        '''
+        output = grcov.report(
+            self.artifactsHandler.get(),
+            source_dir=self.repo_dir,
+            out_format='covdir',
+        )
+        logger.info('Covdir report generated successfully')
+        return output
+
     # This function is executed when the bot is triggered at the end of a mozilla-central build.
     def go_from_trigger_mozilla_central(self):
         commit_sha = self.githubUtils.mercurial_to_git(self.revision)
         try:
             uploader.get_codecov(commit_sha)
             logger.warn('Build was already injested')
+
+            # Check the covdir report does not already exists
+            if uploader.gcp_covdir_exists(self.branch, self.revision):
+                logger.warn('Covdir report already on GCP')
+                return
+
+            # The artifacts are still needed to build the covdir report
+            self.retrieve_source_and_artifacts()
+
+            # Update GCP covdir report anyway
+            uploader.gcp(self.branch, self.revision, self.generate_covdir())
             return
         except requests.exceptions.HTTPError:
             pass
@@ -161,12 +184,7 @@ class CodeCov(object):
         )
         logger.info('Codecov/coveralls report generated successfully')
 
-        output_covdir = grcov.report(
-            self.artifactsHandler.get(),
-            source_dir=self.repo_dir,
-            out_format='covdir',
-        )
-        logger.info('Covdir report generated successfully')
+        output_covdir = self.generate_covdir()
 
         report = json.loads(output)
         expected_extensions = ['.js', '.cpp']
