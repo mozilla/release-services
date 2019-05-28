@@ -28,8 +28,7 @@ ISSUE_MARKDOWN = '''
 class MozLintIssue(Issue):
     ANALYZER = MOZLINT
 
-    def __init__(self, path, column, level, lineno, linter, message, rule, revision, **kwargs):
-        self.nb_lines = 1
+    def __init__(self, path, column, level, lineno, linter, message, rule, revision, diff=None):
         self.column = column
         self.level = level
         self.line = lineno and int(lineno) or 0  # mozlint sometimes produce strings here
@@ -38,13 +37,22 @@ class MozLintIssue(Issue):
         self.rule = rule
         self.revision = revision
         self.path = path
+        self.diff = diff
+
+        # Calc number of lines from patch when available
+        if isinstance(self.diff, str):
+            lines = self.diff.splitlines()
+            self.nb_lines = len(lines)
+        else:
+            self.nb_lines = 1
 
     def __str__(self):
         return '{} issue {} {} line {}'.format(
             self.linter,
             self.level,
             self.path,
-            self.line,
+            # Display line range when multiple lines are in patch
+            '{}-{}'.format(self.line, self.line + self.nb_lines) if self.nb_lines > 1 else self.line,
         )
 
     def build_extra_identifiers(self):
@@ -178,6 +186,7 @@ class MozLintTask(AnalysisTask):
                 linter=issue['linter'],
                 message=issue['message'],
                 rule=issue['rule'],
+                diff=issue.get('diff'),
             )
             for artifact in artifacts.values()
             for path, path_issues in artifact.items()
