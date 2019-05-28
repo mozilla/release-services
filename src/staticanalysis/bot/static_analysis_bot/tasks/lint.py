@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import itertools
+from datetime import datetime
+
 from libmozdata.phabricator import LintResult
 
 from cli_common.log import get_logger
@@ -191,4 +194,41 @@ class MozLintTask(AnalysisTask):
             for artifact in artifacts.values()
             for path, path_issues in artifact.items()
             for issue in path_issues
+        ]
+
+    def build_patches(self, artifacts, issues):
+        '''
+        Build an improvement patch from issues with diff
+        '''
+        diff_issues = [
+            i
+            for i in issues
+            if i.is_publishable() and i.diff is not None
+        ]
+        if not diff_issues:
+            return []
+
+        header_fmt = '--- {path}\t{date}\n+++ {path}\t{date}\n'
+
+        # Group issues by path
+        patch = ''
+        for path, path_issues in itertools.groupby(diff_issues, lambda i: i.path):
+
+            if patch:
+                patch += '\n'
+
+            # Add header for path
+            patch += header_fmt.format(
+                date=datetime.utcnow(),
+                path=path,
+            )
+
+            # Add each diff block, avoiding duplicates
+            patch += '\n'.join({
+                issue.as_diff()
+                for issue in path_issues
+            })
+
+        return [
+            ('mozlint', patch),
         ]

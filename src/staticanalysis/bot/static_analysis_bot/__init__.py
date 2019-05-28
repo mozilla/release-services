@@ -70,6 +70,32 @@ class Issue(abc.ABC):
 
         raise Exception('Unsupported publication mode {}'.format(settings.publication))
 
+    def as_diff(self):
+        '''
+        Outputs as a diff block
+        '''
+        assert self.diff is not None, 'Missing diff source'
+        fmt = '@@ -{line},{nb_minus} +{line},{nb_plus} @@\n{diff}'
+
+        # Count the number of +/-
+        counts = {'common': 0, 'plus': 0, 'minus': 0}
+        for line in self.diff.splitlines():
+            if not line:
+                counts['common'] += 1
+            elif line[0] == '+':
+                counts['plus'] += 1
+            elif line[0] == '-':
+                counts['minus'] += 1
+            else:
+                counts['common'] += 1
+
+        return fmt.format(
+            line=self.line,
+            diff=self.diff,
+            nb_plus=counts['common'] + counts['plus'],
+            nb_minus=counts['common'] + counts['minus'],
+        )
+
     @abc.abstractmethod
     def validates(self):
         '''
