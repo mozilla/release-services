@@ -10,6 +10,7 @@ from cli_common.log import get_logger
 from code_coverage_bot.secrets import secrets
 
 logger = get_logger(__name__)
+GCP_COVDIR_PATH = '{repository}/{revision}.json.zstd'
 
 
 def coveralls(data):
@@ -109,7 +110,7 @@ def gcp(repository, revision, data):
     archive = compressor.compress(data)
 
     # Upload archive
-    path = '{}/{}.json.zstd'.format(repository, revision)
+    path = GCP_COVDIR_PATH.format(repository=repository, revision=revision)
     blob = bucket.blob(path)
     blob.upload_from_string(archive)
 
@@ -121,3 +122,13 @@ def gcp(repository, revision, data):
     logger.info('Uploaded {} on {}'.format(path, bucket))
 
     return blob
+
+
+def gcp_covdir_exists(repository, revision):
+    '''
+    Check if a covdir report exists on the Google Cloud Storage bucket
+    '''
+    bucket = get_bucket(secrets[secrets.GOOGLE_CLOUD_STORAGE])
+    path = GCP_COVDIR_PATH.format(repository=repository, revision=revision)
+    blob = bucket.blob(path)
+    return blob.exists()
