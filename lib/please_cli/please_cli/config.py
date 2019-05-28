@@ -270,7 +270,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        'url': 'https://mapper.testing.mozilla-releng.net',
+                        'url': 'https://dev.mapper.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -278,7 +278,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        'url': 'https://mapper.staging.mozilla-releng.net',
+                        'url': 'https://stage.mapper.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -413,7 +413,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        'url': 'https://tooltool.testing.mozilla-releng.net',
+                        'url': 'https://dev.tooltool.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -421,7 +421,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        'url': 'https://tooltool.staging.mozilla-releng.net',
+                        'url': 'https://stage.tooltool.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -561,7 +561,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        'url': 'https://treestatus.testing.mozilla-releng.net',
+                        'url': 'https://dev.treestatus.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -569,7 +569,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        'url': 'https://treestatus.staging.mozilla-releng.net',
+                        'url': 'https://stage.treestatus.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
