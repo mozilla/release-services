@@ -1,0 +1,58 @@
+{
+    "path/to/xx.rs": [
+        {
+            "column": null,
+            "diff": "\n include!(concat!(env!(\"OUT_DIR\"), \"/bindings.rs\"));\n\n-impl CraneliftFuncCompileInput\n-{\n+impl CraneliftFuncCompileInput {\n     pub fn bytecode(&self) -> &[u8] {\n         use std::slice;\n         unsafe { slice::from_raw_parts(self.bytecode, self.bytecodeSize) }",
+            "hint": null,
+            "level": "warning",
+            "lineno": 33,
+            "lineoffset": null,
+            "linter": "rust",
+            "message": "Reformat rust",
+            "path": "path/to/xx.rs",
+            "rule": null,
+            "source": null
+        },
+        {
+            "column": null,
+            "diff": "\n include!(concat!(env!(\"OUT_DIR\"), \"/bindings.rs\"));\n\n-impl CraneliftFuncCompileInput\n-{\n+impl CraneliftFuncCompileInput {\n     pub fn bytecode(&self) -> &[u8] {\n         use std::slice;\n         unsafe { slice::from_raw_parts(self.bytecode, self.bytecodeSize) }",
+            "hint": null,
+            "level": "warning",
+            "lineno": 33,
+            "lineoffset": null,
+            "linter": "rust",
+            "message": "Reformat rust",
+            "path": "path/to/xx.rs",
+            "rule": null,
+            "source": null
+        }
+    ],
+    "test.rs": [
+        {
+            "column": null,
+            "diff": "                     \"Failed to generate bindings, flags: {:?}\",\n                     command_line_opts\n                 );\n-            },\n+            }\n         };\n\n         for fixup in fixups.iter() {\n",
+            "hint": null,
+            "level": "warning",
+            "lineno": 202,
+            "lineoffset": null,
+            "linter": "rust",
+            "message": "Reformat rust",
+            "path": "test.rs",
+            "rule": null,
+            "source": null
+        },
+        {
+            "column": null,
+            "diff": "                     \"Failed to generate bindings, flags: {:?}\",\n                     command_line_opts\n                 );\n-            },\n+            }\n         };\n\n         for fixup in fixups.iter() {\n",
+            "hint": null,
+            "level": "warning",
+            "lineno": 202,
+            "lineoffset": null,
+            "linter": "rust",
+            "message": "Reformat rust",
+            "path": "test.rs",
+            "rule": null,
+            "source": null
+        }
+    ]
+}

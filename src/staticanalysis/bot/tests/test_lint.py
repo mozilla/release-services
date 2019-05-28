@@ -2,6 +2,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import json
+import os
+from datetime import datetime
+from unittest.mock import Mock
+from unittest.mock import patch
+
+from conftest import MOCK_DIR
 
 
 def test_flake8_rules(mock_config, mock_revision):
@@ -72,3 +79,41 @@ test'''
     assert str(issue) == 'rustfmt issue error test.rs line 42-46'
     assert issue.diff is not None
     assert mock_revision.contains(issue)
+
+
+@patch('static_analysis_bot.tasks.lint.datetime')
+def test_diff_build(mock_datetime, mock_revision):
+    '''
+    Build a full diff from a list of issues
+    '''
+    from static_analysis_bot.tasks.lint import MozLintTask
+
+    # Set a constant now datetime
+    mock_datetime.utcnow = Mock(return_value=datetime(2019, 1, 1))
+
+    task_status = {
+        'task': {},
+        'status': {
+            'status': 'completed',
+        },
+    }
+    task = MozLintTask('someTaskId', task_status)
+
+    mock_revision.lines = {
+        'path/to/xx.rs': [1, 2, 3, 30, 31, 32, 33, 34],
+        'test.rs': [200, 201, 202, 300],
+    }
+
+    # Parse issues from mock mozlint artifact
+    path = os.path.join(MOCK_DIR, 'mozlint_rust_issues.json')
+    artifacts = {
+        'public/code-review/mozlint.json': json.load(open(path)),
+    }
+    issues = task.parse_issues(artifacts, mock_revision)
+    assert len(issues) == 4
+
+    # Build patches from issues
+    patches = task.build_patches(artifacts, issues)
+    assert len(patches) == 1
+    path = os.path.join(MOCK_DIR, 'mozlint_rust_issues.diff')
+    assert patches[0] == ('mozlint', open(path).read())
