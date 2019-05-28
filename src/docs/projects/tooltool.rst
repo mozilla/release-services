@@ -23,7 +23,7 @@ Use the following points to guide you opening the bug:
 
 #. **Product** field should be ``Release Engineering``
 #. **Component** field should be ``Applications: ToolTool``
-#. **Summary** field should be ``Requesting taskcluster client credentials to use with tooltoo.py``
+#. **Summary** field should be ``Requesting taskcluster client credentials to use with tooltool.py``
 #. **Description** field should contain:
 
    - who is the responsible person and which is the responsible team
@@ -35,6 +35,9 @@ Use the following points to guide you opening the bug:
      - Upload PUBLIC files to tooltool.
      - Upload INTERNAL files to tooltool.
      - Manage tooltool files, including deleting and changing visibility levels.
+
+You should receive an authentication file in return which you pass into
+``tooltool.py`` script via ``--authentication-file`` option.
 
 
 .. _`Open a bug on bugzila`: https://bugzilla.mozilla.org/enter_bug.cgi?product=Release%20Engineering&component=Applications%3A%20ToolTool
@@ -48,22 +51,44 @@ How to generate taskcluster client credentials
 #. Make sure you are logged into taskcluster.
 
 #. Fill the ``Create New Client`` form:
-   
-   :ClientId: Make sure to include the Bug number by following the template ``project/releng/services/tooltool/bug<NUMBER>``.
+
+   :ClientId: Make sure to include the Bug number by following the template
+              ::
+                  project/releng/services/tooltool/bug<NUMBER>
+
    :Description: Who is responsible and which team, also where is this token used.
    :Expires: Requested expiration, by default set it to 1 year.
    :Client Scopes: List of scopes requested based on the requested level of access:
 
       - Download PUBLIC files from tooltool
-        (``project:releng:services/tooltool/api/download/public``).
+        ::
+           project:releng:services/tooltool/api/download/public
+
       - Download INTERNAL files from tooltool
-        (``project:releng:services/tooltool/api/download/internal``).
+        ::
+           project:releng:services/tooltool/api/download/internal
+
       - Upload PUBLIC files to tooltool
-        (``project:releng:services/tooltool/api/upload/public``).
+        ::
+           project:releng:services/tooltool/api/upload/public
+
       - Upload INTERNAL files to tooltool
-        (``project:releng:services/tooltool/api/upload/internal``).
+        ::
+           project:releng:services/tooltool/api/upload/internal
+
       - Manage tooltool files, including deleting and changing visibility levels
-        (``project:releng:services/tooltool/api/manage``).
+        ::
+           project:releng:services/tooltool/api/manage
+
+#. Send ``clientId`` and ``accessToken`` in a JSON authentication file via
+   https://send.firefox.com. Format of authentication file should be:
+
+   .. code-block:: json
+
+      {
+          "clientId": "project/releng/services/tooltool/bug<NUMBER>",
+          "accessToken": "<TOKEN-WHICH-WAS-PROMPTED-IN-TASKCLUSTER-TOOLS>"
+      }
 
 
 Troubleshooting deployment
