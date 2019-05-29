@@ -71,8 +71,6 @@ def main():
                 PAPERTRAIL_HOST=taskcluster.secrets.get('PAPERTRAIL_HOST'),
                 PAPERTRAIL_PORT=taskcluster.secrets.get('PAPERTRAIL_PORT'),
                 SENTRY_DSN=taskcluster.secrets.get('SENTRY_DSN'),
-                MOZDEF=taskcluster.secrets.get('MOZDEF'),
-                timestamp=True,
                 )
 
     # Setup settings before stats
