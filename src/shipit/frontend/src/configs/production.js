@@ -54,6 +54,7 @@ module.exports = {
           branch: 'releases/mozilla-beta',
           repo: 'https://hg.mozilla.org/releases/mozilla-beta',
           enableReleaseEta: false,
+          versionFile: 'mobile/android/config/version-files/beta/version_display.txt',
         },
         {
           prettyName: 'Release',
