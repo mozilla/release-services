@@ -130,6 +130,7 @@ in rec {
     , Cmd ? []
     , src
     , githubCommit ? builtins.getEnv "GITHUB_COMMIT"
+    , taskId ? builtins.getEnv "TASK_ID"
     , taskGroupId ? builtins.getEnv "TASK_GROUP_ID"
     , defaultConfig ? {}
     }:
@@ -139,8 +140,8 @@ in rec {
         source = "https://github.com/mozilla/release-services";
         commit = githubCommit;
         build =
-          if taskGroupId != ""
-            then "https://tools.taskcluster.net/groups/${taskGroupId}"
+          if taskGroupId != "" || taskId != ""
+            then "https://tools.taskcluster.net/groups/${taskGroupId}/tasks/${taskId}"
             else "unknown";
       };
     in mkDocker {
