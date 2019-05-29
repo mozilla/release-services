@@ -140,7 +140,7 @@ in rec {
         source = "https://github.com/mozilla/release-services";
         commit = githubCommit;
         build =
-          if taskGroupId != "" || taskId != ""
+          if taskGroupId != "" && taskId != ""
             then "https://tools.taskcluster.net/groups/${taskGroupId}/tasks/${taskId}"
             else "unknown";
       };
