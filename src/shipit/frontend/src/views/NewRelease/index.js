@@ -125,7 +125,6 @@ export default class NewRelease extends React.Component {
     this.version = await getVersion(
       this.state.selectedBranch.repo, rev.node,
       this.state.selectedProduct.appName,
-      this.state.selectedBranch.productKey,
     );
     await this.guessBuildId();
     if (this.state.selectedProduct.enablePartials) {
@@ -152,7 +151,6 @@ export default class NewRelease extends React.Component {
     this.version = await getVersion(
       this.state.selectedBranch.repo, event.target.value,
       this.state.selectedProduct.appName,
-      this.state.selectedBranch.productKey,
     );
     await this.guessBuildId();
     if (this.state.selectedProduct.enablePartials) {
