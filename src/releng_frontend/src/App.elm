@@ -1,7 +1,5 @@
 module App exposing (..)
 
-import App.Notifications
-import App.Notifications.Types
 import App.Tokens
 import App.ToolTool
 import App.TreeStatus
@@ -27,7 +25,6 @@ type Route
     | HomeRoute
     | LoginRoute (Maybe String) (Maybe String)
     | LogoutRoute
-    | NotificationRoute App.Notifications.Types.Route
     | TokensRoute
     | ToolToolRoute
     | TreeStatusRoute App.TreeStatus.Types.Route
@@ -38,7 +35,6 @@ pages =
     [ App.Tokens.page TokensRoute
     , App.ToolTool.page ToolToolRoute
     , App.TreeStatus.page TreeStatusRoute
-    , App.Notifications.page NotificationRoute
     ]
 
 
@@ -62,9 +58,6 @@ routeParser =
 reverseRoute : Route -> String
 reverseRoute route =
     case route of
-        NotificationRoute route ->
-            App.Notifications.reverseRoute route
-
         NotFoundRoute ->
             "/404"
 
@@ -133,7 +126,6 @@ type alias Model =
     , treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
     , docsUrl : String
     , version : String
-    , notifications : App.Notifications.Types.Model
     }
 
 
@@ -152,4 +144,3 @@ type Msg
     | TokensMsg App.Tokens.Msg
     | ToolToolMsg App.ToolTool.Msg
     | TreeStatusMsg App.TreeStatus.Types.Msg
-    | NotificationMsg App.Notifications.Types.Msg
