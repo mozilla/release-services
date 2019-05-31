@@ -1,7 +1,6 @@
 module App.Home exposing (..)
 
 import App
-import App.Notifications.Types
 import App.TreeStatus.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -38,8 +37,4 @@ view model =
             "ToolTool"
             "Tooltool is tool for fetching binary artifacts for builds and tests. The web interface lets you browse the files currently available from the service."
             (href "/tooltool")
-        , viewCard
-            "Notifications"
-            "Manage notification policies and preferences for RelEng Notification services (aka NagBot)."
-            (Utils.onClick <| App.NavigateTo (App.NotificationRoute App.Notifications.Types.BaseRoute))
         ]

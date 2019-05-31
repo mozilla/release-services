@@ -3,9 +3,6 @@ module Main exposing (..)
 import App
 import App.Home
 import App.Layout
-import App.Notifications
-import App.Notifications.Api
-import App.Notifications.Types
 import App.Tokens
 import App.ToolTool
 import App.TreeStatus
@@ -50,7 +47,6 @@ init flags location =
             , tokens = App.Tokens.init
             , tooltool = App.ToolTool.init
             , treestatus = App.TreeStatus.init flags.treestatusUrl
-            , notifications = App.Notifications.init flags.identityUrl flags.policyUrl
             }
 
         ( model_, appCmd ) =
@@ -67,12 +63,6 @@ init flags location =
 initRoute : App.Model -> App.Route -> ( App.Model, Cmd App.Msg )
 initRoute model route =
     case route of
-        App.NotificationRoute route ->
-            model
-                ! [ Utils.performMsg (App.NotificationMsg (App.Notifications.Types.NavigateTo route))
-                  , Utils.performMsg (App.UserScopesMsg App.UserScopes.FetchScopes)
-                  ]
-
         App.NotFoundRoute ->
             model ! []
 
@@ -189,11 +179,6 @@ update msg model =
                             |> String.dropLeft (String.length "UserScopes")
                             |> App.UserScopes.hawkResponse response
                             |> Cmd.map App.UserScopesMsg
-                    else if String.startsWith "Notifications" route then
-                        route
-                            |> String.dropLeft (String.length "Notifications")
-                            |> App.Notifications.Api.hawkResponse response
-                            |> Cmd.map App.NotificationMsg
                     else
                         Cmd.none
 
@@ -261,47 +246,6 @@ update msg model =
                 |> Cmd.batch
             )
 
-        App.NotificationMsg msg_ ->
-            let
-                new_route =
-                    case model.route of
-                        App.NotificationRoute x ->
-                            x
-
-                        _ ->
-                            App.Notifications.Types.BaseRoute
-
-                oldModel =
-                    model.notifications
-
-                ( newModel, newCmd, hawkCmd ) =
-                    App.Notifications.update new_route msg_ model.notifications
-            in
-            case model.user.credentials of
-                Just credentials ->
-                    ( { model | notifications = newModel }
-                    , hawkCmd
-                        |> Maybe.map (\req -> [ hawkSend model.user "Notifications" req ])
-                        |> Maybe.withDefault []
-                        |> List.append [ Cmd.map App.NotificationMsg newCmd ]
-                        |> Cmd.batch
-                    )
-
-                Nothing ->
-                    ( { model
-                        | notifications =
-                            { oldModel
-                                | status_html =
-                                    Just (error App.Notifications.Types.ClearStatusMessage "You must log in to continue.")
-                            }
-                      }
-                    , Cmd.none
-                    )
-
-
-
---Cmd.map App.NotificationMsg newCmd)
-
 
 hawkSend :
     TaskclusterLogin.Model
@@ -325,13 +269,6 @@ hawkSend user page request =
 viewRoute : App.Model -> Html App.Msg
 viewRoute model =
     case model.route of
-        App.NotificationRoute route ->
-            App.Notifications.view
-                route
-                model.userScopes
-                model.notifications
-                |> Html.map App.NotificationMsg
-
         App.NotFoundRoute ->
             App.Layout.viewNotFound model
 
