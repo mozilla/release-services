@@ -4,13 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
-import datetime
-import hashlib
 import os
 import re
 
 import click
-import requests
 import taskcluster
 
 from cli_common.log import get_logger
@@ -187,53 +184,3 @@ def get_hook_artifact(hook_group_id, hook_id, artifact_name, client_id=None,
 
     # Load artifact from task run
     return queue.getArtifact(task_id, run_id, artifact_name)
-
-
-def create_blob_artifact(queue_service, task_id, run_id, path, content, content_type, ttl):
-    '''
-    Manually create and upload a blob artifact to use a specific content type
-    '''
-    assert isinstance(content, str)
-    assert isinstance(ttl, datetime.timedelta)
-
-    # Create artifact on Taskcluster
-    sha256 = hashlib.sha256(content.encode('utf-8')).hexdigest()
-    resp = queue_service.createArtifact(
-        task_id,
-        run_id,
-        path,
-        {
-            'storageType': 'blob',
-            'expires': (datetime.datetime.utcnow() + ttl).strftime(TASKCLUSTER_DATE_FORMAT),
-            'contentType': content_type,
-            'contentSha256': sha256,
-            'contentLength': len(content),
-        }
-    )
-    assert resp['storageType'] == 'blob', 'Not a blob storage'
-    assert len(resp['requests']) == 1, 'Should only get one request'
-    request = resp['requests'][0]
-    assert request['method'] == 'PUT', 'Should get a PUT request'
-
-    # Push the artifact on storage service
-    push = requests.put(
-        url=request['url'],
-        headers=request['headers'],
-        data=content,
-    )
-    push.raise_for_status()
-
-    # Mark artifact as completed
-    queue_service.completeArtifact(
-        task_id,
-        run_id,
-        path,
-        {
-            'etags': [
-                push.headers['ETag'],
-            ],
-        }
-    )
-
-    # Build the absolute url
-    return f'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/{path}'
