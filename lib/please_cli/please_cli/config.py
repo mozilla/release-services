@@ -86,88 +86,6 @@ PROJECTS_CONFIG = {
             'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
-    'notification/policy': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8006,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.testing.mozilla-releng.net',
-                        'dns': 'policy.notification.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.staging.mozilla-releng.net',
-                        'dns': 'policy.notification.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.mozilla-releng.net',
-                        'dns': 'policy.notification.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-        ],
-    },
-    'notification/identity': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8007,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-notif-identity',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.testing.mozilla-releng.net',
-                        'dns': 'identity.notification.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-notif-identity',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.staging.mozilla-releng.net',
-                        'dns': 'identity.notification.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-notif-ident',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.mozilla-releng.net',
-                        'dns': 'identity.notification.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-        ],
-    },
     'docs': {
         'update': True,
         'run': 'SPHINX',
@@ -213,8 +131,6 @@ PROJECTS_CONFIG = {
             'tokens/api',
             'treestatus/api',
             'mapper/api',
-            'notification/policy',
-            'notification/identity',
         ],
         'deploys': [
             {
