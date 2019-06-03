@@ -57,6 +57,7 @@ module.exports = {
           repo: 'https://hg.mozilla.org/try',
           enableReleaseEta: false,
           productKey: 'fennec_beta',
+          versionFile: 'mobile/android/config/version-files/beta/version_display.txt',
         },
         {
           prettyName: 'Try Release',
@@ -65,6 +66,7 @@ module.exports = {
           repo: 'https://hg.mozilla.org/try',
           enableReleaseEta: false,
           productKey: 'fennec_release',
+          versionFile: 'mobile/android/config/version-files/release/version_display.txt',
         },
       ],
       enablePartials: false,
