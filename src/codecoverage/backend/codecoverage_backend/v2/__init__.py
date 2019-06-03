@@ -6,10 +6,18 @@
 from flask import abort
 
 from cli_common import log
+from codecoverage_backend.coverage import COVERAGE_EXTENSIONS
 from codecoverage_backend.services.gcp import load_cache
 
 DEFAULT_REPOSITORY = 'mozilla-central'
 logger = log.get_logger(__name__)
+
+
+def coverage_supported_extensions():
+    '''
+    List all the file extensions we currently support
+    '''
+    return COVERAGE_EXTENSIONS
 
 
 def coverage_latest(repository=DEFAULT_REPOSITORY):
