@@ -210,35 +210,6 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.testing.mozilla-releng.net',
-                        'dns': 'mapper.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.staging.mozilla-releng.net',
-                        'dns': 'mapper.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.mozilla-releng.net',
-                        'dns': 'mapper.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
         ],
     },
     'tokens/api': {
