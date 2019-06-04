@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import os
+from datetime import datetime
 
 import requests
 from taskcluster.utils import slugId
@@ -26,7 +27,7 @@ github = GitHubUtils(
 )
 
 
-def list_commits(maximum=None):
+def list_commits(maximum=None, unique_dates=False):
     '''
     List all the commits ingested on codecov
     '''
@@ -35,6 +36,7 @@ def list_commits(maximum=None):
         'page': 1,
     }
     nb = 0
+    days = set()
     while True:
         resp = requests.get(CODECOV_URL, params=params)
         resp.raise_for_status()
@@ -44,6 +46,13 @@ def list_commits(maximum=None):
             return
 
         for commit in data['commits']:
+
+            # Skip commit if that day has already been processed earlier
+            day = datetime.strptime(commit['timestamp'], '%Y-%m-%d %H:%M:%S').date()
+            if unique_dates and day in days:
+                continue
+            days.add(day)
+
             yield commit
             nb += 1
 
@@ -80,6 +89,7 @@ def main():
     # CLI args
     parser = argparse.ArgumentParser()
     parser.add_argument('--nb-tasks', type=int, default=5, help='NB of tasks to create')
+    parser.add_argument('--unique-dates', action='store_true', default=False, help='Trigger only one task per day')
     args = parser.parse_args()
 
     # Generate a slug for task group
@@ -87,7 +97,7 @@ def main():
     print('Group', task_group_id)
 
     # Trigger a task for each commit
-    for commit in list_commits(args.nb_tasks):
+    for commit in list_commits(args.nb_tasks, args.unique_dates):
         out = trigger_task(task_group_id, commit)
         print('>>>', out['status']['taskId'])
 
