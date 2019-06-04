@@ -13,7 +13,7 @@ from code_coverage_bot.secrets import secrets
 CODECOV_URL = 'https://codecov.io/api/gh/marco-c/gecko-dev/commit'
 MC_REPO = 'https://hg.mozilla.org/mozilla-central'
 HOOK_GROUP = 'project-releng'
-HOOK_ID = 'services-{app_channel}-codecoverage/bot'
+HOOK_ID = 'services-{app_channel}-codecoverage/bot-generation'
 
 secrets.load(
     os.environ['TASKCLUSTER_SECRET'],
