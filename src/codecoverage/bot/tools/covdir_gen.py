@@ -68,7 +68,7 @@ def list_commits(maximum=None, unique_dates=False, skip_commits=[]):
         params['page'] += 1
 
 
-def trigger_task(task_group_id, commit, skip_commits=[]):
+def trigger_task(task_group_id, commit):
     '''
     Trigger a code coverage task to build covdir at a specified revision
     '''
