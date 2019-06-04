@@ -27,7 +27,7 @@ github = GitHubUtils(
 )
 
 
-def list_commits(maximum=None, unique_dates=False):
+def list_commits(maximum=None, unique_dates=False, skip_commits=[]):
     '''
     List all the commits ingested on codecov
     '''
@@ -53,6 +53,12 @@ def list_commits(maximum=None, unique_dates=False):
                 continue
             days.add(day)
 
+            # Convert git to mercurial revision
+            commit['mercurial'] = github.git_to_mercurial(commit['commitid'])
+            if commit['mercurial'] in skip_commits:
+                print('Skipping already processed commit {}'.format(commit['mercurial']))
+                continue
+
             yield commit
             nb += 1
 
@@ -62,22 +68,16 @@ def list_commits(maximum=None, unique_dates=False):
         params['page'] += 1
 
 
-def trigger_task(task_group_id, git_commit):
+def trigger_task(task_group_id, commit, skip_commits=[]):
     '''
     Trigger a code coverage task to build covdir at a specified revision
-    From a github revision (needs to be converted to mercurial!)
     '''
-    name = 'covdir {} - {} - {}'.format(secrets[secrets.APP_CHANNEL], git_commit['commitid'], git_commit['timestamp'])
-    print(name)
-
-    # First convert to mercurial
-    hg_revision = github.git_to_mercurial(git_commit['commitid'])
-
-    # Then build task with mercurial revision
+    assert 'mercurial' in commit
+    name = 'covdir {} - {} - {}'.format(secrets[secrets.APP_CHANNEL], commit['mercurial'], commit['timestamp'])
     hooks = taskcluster.get_service('hooks')
     payload = {
         'REPOSITORY': MC_REPO,
-        'REVISION': hg_revision,
+        'REVISION': commit['mercurial'],
         'taskGroupId': task_group_id,
         'taskName': name,
     }
@@ -90,15 +90,28 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--nb-tasks', type=int, default=5, help='NB of tasks to create')
     parser.add_argument('--unique-dates', action='store_true', default=False, help='Trigger only one task per day')
+    parser.add_argument('--group', type=str, default=slugId(), help='Task group to create/update')
     args = parser.parse_args()
 
-    # Generate a slug for task group
-    task_group_id = slugId()
-    print('Group', task_group_id)
+    # List existing tags & commits
+    print('Group', args.group)
+    queue = taskcluster.get_service('queue')
+    try:
+        group = queue.listTaskGroup(args.group)
+        commits = [
+            task['task']['payload']['env']['REVISION']
+            for task in group['tasks']
+            if task['status']['state'] not in ('failed', 'exception')
+        ]
+        print('Found {} commits processed in task group {}'.format(len(commits), args.group))
+    except Exception as e:
+        print('Invalid task group : {}'.format(e))
+        commits = []
 
     # Trigger a task for each commit
-    for commit in list_commits(args.nb_tasks, args.unique_dates):
-        out = trigger_task(task_group_id, commit)
+    for commit in list_commits(args.nb_tasks, args.unique_dates, commits):
+        print('Triggering commit {mercurial} from {timestamp}'.format(**commit))
+        out = trigger_task(args.group, commit)
         print('>>>', out['status']['taskId'])
 
 
