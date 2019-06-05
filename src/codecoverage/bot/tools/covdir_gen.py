@@ -27,16 +27,17 @@ github = GitHubUtils(
 )
 
 
-def list_commits(maximum=None, unique_dates=False, skip_commits=[]):
+def list_commits(maximum=None, unique=None, skip_commits=[]):
     '''
     List all the commits ingested on codecov
     '''
+    assert unique in (None, 'week', 'day')
     params = {
         'access_token': secrets[secrets.CODECOV_ACCESS_TOKEN],
         'page': 1,
     }
     nb = 0
-    days = set()
+    dates = set()
     while True:
         resp = requests.get(CODECOV_URL, params=params)
         resp.raise_for_status()
@@ -47,11 +48,15 @@ def list_commits(maximum=None, unique_dates=False, skip_commits=[]):
 
         for commit in data['commits']:
 
-            # Skip commit if that day has already been processed earlier
+            # Skip commit if that day or week has already been processed earlier
             day = datetime.strptime(commit['timestamp'], '%Y-%m-%d %H:%M:%S').date()
-            if unique_dates and day in days:
+            week = day.isocalendar()[:2]
+            if unique == 'day' and day in dates:
                 continue
-            days.add(day)
+            if unique == 'week' and week in dates:
+                continue
+            dates.add(day)
+            dates.add(week)
 
             # Convert git to mercurial revision
             commit['mercurial'] = github.git_to_mercurial(commit['commitid'])
@@ -73,7 +78,7 @@ def trigger_task(task_group_id, commit):
     Trigger a code coverage task to build covdir at a specified revision
     '''
     assert 'mercurial' in commit
-    name = 'covdir {} - {} - {}'.format(secrets[secrets.APP_CHANNEL], commit['mercurial'], commit['timestamp'])
+    name = 'covdir {} - {} - {}'.format(secrets[secrets.APP_CHANNEL], commit['timestamp'], commit['mercurial'])
     hooks = taskcluster.get_service('hooks')
     payload = {
         'REPOSITORY': MC_REPO,
@@ -89,8 +94,9 @@ def main():
     # CLI args
     parser = argparse.ArgumentParser()
     parser.add_argument('--nb-tasks', type=int, default=5, help='NB of tasks to create')
-    parser.add_argument('--unique-dates', action='store_true', default=False, help='Trigger only one task per day')
+    parser.add_argument('--unique', choices=('day', 'week'), help='Trigger only one task per day or week')
     parser.add_argument('--group', type=str, default=slugId(), help='Task group to create/update')
+    parser.add_argument('--dry-run', action='store_true', default=False, help='List actions without triggering any new task')
     args = parser.parse_args()
 
     # List existing tags & commits
@@ -109,10 +115,13 @@ def main():
         commits = []
 
     # Trigger a task for each commit
-    for commit in list_commits(args.nb_tasks, args.unique_dates, commits):
+    for commit in list_commits(args.nb_tasks, args.unique, commits):
         print('Triggering commit {mercurial} from {timestamp}'.format(**commit))
-        out = trigger_task(args.group, commit)
-        print('>>>', out['status']['taskId'])
+        if args.dry_run:
+            print('>>> No trigger on dry run')
+        else:
+            out = trigger_task(args.group, commit)
+            print('>>>', out['status']['taskId'])
 
 
 if __name__ == '__main__':
