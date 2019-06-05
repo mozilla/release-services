@@ -9,7 +9,9 @@ def test_get_path_coverage(mock_covdir_report):
     from codecoverage_backend import covdir
 
     # Full coverage
-    out = covdir.get_path_coverage(mock_covdir_report, '')
+    report = covdir.open_report(mock_covdir_report)
+    assert report is not None
+    out = covdir.get_path_coverage(report, '')
     assert isinstance(out, dict)
     assert out['coveragePercent'] == 85.11
     assert out['linesCovered'] == 267432
@@ -35,7 +37,9 @@ def test_get_path_coverage(mock_covdir_report):
     ]
 
     # Subfolder
-    out = covdir.get_path_coverage(mock_covdir_report, 'perf')
+    report = covdir.open_report(mock_covdir_report)
+    assert report is not None
+    out = covdir.get_path_coverage(report, 'perf')
     assert isinstance(out, dict)
     assert out['coveragePercent'] == 65.45
     assert out['linesCovered'] == 125
@@ -51,7 +55,9 @@ def test_get_path_coverage(mock_covdir_report):
     ]
 
     # File
-    out = covdir.get_path_coverage(mock_covdir_report, 'perf/pm_linux.cpp')
+    report = covdir.open_report(mock_covdir_report)
+    assert report is not None
+    out = covdir.get_path_coverage(report, 'perf/pm_linux.cpp')
     assert isinstance(out, dict)
     assert out == {
         'children': None,
@@ -67,7 +73,9 @@ def test_get_path_coverage(mock_covdir_report):
 
     # Missing file
     with pytest.raises(Exception) as e:
-        covdir.get_path_coverage(mock_covdir_report, 'nope.py')
+        report = covdir.open_report(mock_covdir_report)
+        assert report is not None
+        covdir.get_path_coverage(report, 'nope.py')
     assert str(e.value) == 'Path nope.py not found in report'
 
 
@@ -77,7 +85,9 @@ def test_get_overall_coverage(mock_covdir_report):
     '''
     from codecoverage_backend import covdir
 
-    out = covdir.get_overall_coverage(mock_covdir_report, max_depth=1)
+    report = covdir.open_report(mock_covdir_report)
+    assert report is not None
+    out = covdir.get_overall_coverage(report, max_depth=1)
     assert out == {
         '': 85.11,
         'builtin': 84.4,
@@ -89,7 +99,9 @@ def test_get_overall_coverage(mock_covdir_report):
         'util': 73.29,
     }
 
-    out = covdir.get_overall_coverage(mock_covdir_report, max_depth=2)
+    report = covdir.open_report(mock_covdir_report)
+    assert report is not None
+    out = covdir.get_overall_coverage(report, max_depth=2)
     assert out == {
         '': 85.11,
         'builtin': 84.4,
