@@ -177,7 +177,6 @@ def PhabricatorMock():
 
     def _send_message(request):
         params = _phab_params(request)
-        print(params)
         assert 'buildTargetPHID' in params
         name = 'message-{}-{}'.format(params['buildTargetPHID'], params['type'])
         if params['unit']:
@@ -225,6 +224,13 @@ def PhabricatorMock():
             callback=_send_message,
         )
 
+        resp.add(
+            responses.POST,
+            'http://phabricator.test/api/diffusion.repository.search',
+            body=_response('repositories'),
+            content_type='application/json',
+        )
+
         api = PhabricatorAPI(
             url='http://phabricator.test/api/',
             api_key='deadbeef',
@@ -239,18 +245,18 @@ def RepoMock(tmpdir):
     Mock a local mercurial repo
     '''
     # Init empty repo
-    repo_dir = str(tmpdir.realpath())
+    repo_dir = str(tmpdir.mkdir('mozilla-central').realpath())
     hglib.init(repo_dir)
 
     # Add default pull in Mercurial config
-    hgrc = tmpdir.join('.hg').join('hgrc')
+    hgrc = tmpdir.join('mozilla-central', '.hg', 'hgrc')
     hgrc.write('[paths]\ndefault = {}'.format(repo_dir))
 
     # Open repo with config
     repo = hglib.open(repo_dir)
 
     # Commit a file on central
-    readme = tmpdir.join('README.md')
+    readme = tmpdir.join('mozilla-central', 'README.md')
     readme.write('Hello World')
     repo.add(str(readme.realpath()).encode('utf-8'))
     repo.branch(name=b'central', force=True)

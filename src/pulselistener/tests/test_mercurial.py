@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import collections
 import json
 import os.path
 import urllib
@@ -14,6 +15,8 @@ MERCURIAL_FAILURE = '''WARNING: The code review bot failed to apply your patch.
 1 out of 1 hunks FAILED -- saving rejects to file crash.txt.rej
 abort: patch failed to apply
 ```'''
+
+MockBuild = collections.namedtuple('MockBuild', 'diff_id, repo_phid, revision_id, target_phid, diff')
 
 
 @pytest.mark.asyncio
@@ -35,14 +38,23 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
     with PhabricatorMock as api:
         worker = MercurialWorker(
             api,
-            ssh_user='john@doe.com',
-            ssh_key='privateSSHkey',
-            repo_url='http://mozilla-central',
-            repo_dir=repo_dir,
-            batch_size=100,
+            repositories=[
+                {
+                    'name': 'mozilla-central',
+                    'ssh_user': 'john@doe.com',
+                    'ssh_key': 'privateSSHkey',
+                    'url': 'http://mozilla-central',
+                    'try_url': 'http://mozilla-central/try',
+                    'batch_size': 100,
+                }
+            ],
             publish_phabricator=False,
+            cache_root=os.path.dirname(repo_dir),
         )
-        worker.repo = RepoMock
+        assert len(worker.repositories) == 1
+        repo = worker.repositories.get('PHID-REPO-mc')
+        assert repo is not None
+        repo.repo = RepoMock
 
         diff = {
             'phid': 'PHID-DIFF-test123',
@@ -52,7 +64,8 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
             # Revision does not exist, will apply on tip
             'baseRevision': 'abcdef12345',
         }
-        await worker.push_to_try('PHID-HMBT-deadbeef', diff)
+        build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-deadbeef', diff)
+        await worker.handle_build(repo, build)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
@@ -87,9 +100,9 @@ async def test_push_to_try(PhabricatorMock, RepoMock):
 
     # Check the push to try has been called
     # with tip commit
-    ssh_conf = 'ssh -o StrictHostKeyChecking="no" -o User="john@doe.com" -o IdentityFile="{}"'.format(worker.ssh_key_path)
+    ssh_conf = 'ssh -o StrictHostKeyChecking="no" -o User="john@doe.com" -o IdentityFile="{}"'.format(repo.ssh_key_path)
     RepoMock.push.assert_called_with(
-        dest=b'ssh://hg.mozilla.org/try',
+        dest=b'http://mozilla-central/try',
         force=True,
         rev=tip.node,
         ssh=ssh_conf.encode('utf-8'),
@@ -126,14 +139,23 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
     with PhabricatorMock as api:
         worker = MercurialWorker(
             api,
-            ssh_user='john@doe.com',
-            ssh_key='privateSSHkey',
-            repo_url='http://mozilla-central',
-            repo_dir=repo_dir,
-            batch_size=100,
+            repositories=[
+                {
+                    'name': 'mozilla-central',
+                    'ssh_user': 'john@doe.com',
+                    'ssh_key': 'privateSSHkey',
+                    'url': 'http://mozilla-central',
+                    'try_url': 'http://mozilla-central/try',
+                    'batch_size': 100,
+                }
+            ],
             publish_phabricator=False,
+            cache_root=os.path.dirname(repo_dir),
         )
-        worker.repo = RepoMock
+        assert len(worker.repositories) == 1
+        repo = worker.repositories.get('PHID-REPO-mc')
+        assert repo is not None
+        repo.repo = RepoMock
 
         diff = {
             'phid': 'PHID-DIFF-solo',
@@ -143,7 +165,8 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
             # Revision does not exist, will apply on tip
             'baseRevision': base,
         }
-        await worker.push_to_try('PHID-HMBT-deadbeef', diff)
+        build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-deadbeef', diff)
+        await worker.handle_build(repo, build)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
@@ -171,9 +194,9 @@ async def test_push_to_try_existing_rev(PhabricatorMock, RepoMock):
 
     # Check the push to try has been called
     # with tip commit
-    ssh_conf = 'ssh -o StrictHostKeyChecking="no" -o User="john@doe.com" -o IdentityFile="{}"'.format(worker.ssh_key_path)
+    ssh_conf = 'ssh -o StrictHostKeyChecking="no" -o User="john@doe.com" -o IdentityFile="{}"'.format(repo.ssh_key_path)
     RepoMock.push.assert_called_with(
-        dest=b'ssh://hg.mozilla.org/try',
+        dest=b'http://mozilla-central/try',
         force=True,
         rev=tip.node,
         ssh=ssh_conf.encode('utf-8'),
@@ -216,14 +239,23 @@ async def test_treeherder_link(PhabricatorMock, RepoMock):
     with PhabricatorMock as api:
         worker = MercurialWorker(
             api,
-            ssh_user='john@doe.com',
-            ssh_key='privateSSHkey',
-            repo_url='http://mozilla-central',
-            repo_dir=repo_dir,
-            batch_size=100,
+            repositories=[
+                {
+                    'name': 'mozilla-central',
+                    'ssh_user': 'john@doe.com',
+                    'ssh_key': 'privateSSHkey',
+                    'url': 'http://mozilla-central',
+                    'try_url': 'http://mozilla-central/try',
+                    'batch_size': 100,
+                }
+            ],
             publish_phabricator=True,
+            cache_root=os.path.dirname(repo_dir),
         )
-        worker.repo = RepoMock
+        assert len(worker.repositories) == 1
+        repo = worker.repositories.get('PHID-REPO-mc')
+        assert repo is not None
+        repo.repo = RepoMock
 
         diff = {
             'phid': 'PHID-DIFF-test123',
@@ -231,7 +263,8 @@ async def test_treeherder_link(PhabricatorMock, RepoMock):
             'id': 1234,
             'baseRevision': 'abcdef12345',
         }
-        await worker.push_to_try('PHID-HMBT-somehash', diff)
+        build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-somehash', diff)
+        await worker.handle_build(repo, build)
 
         # Check the treeherder link was published
         assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.createartifact'
@@ -262,21 +295,31 @@ async def test_failure_general(PhabricatorMock, RepoMock):
     with PhabricatorMock as api:
         worker = MercurialWorker(
             api,
-            ssh_user='john@doe.com',
-            ssh_key='privateSSHkey',
-            repo_url='http://mozilla-central',
-            repo_dir=repo_dir,
-            batch_size=100,
+            repositories=[
+                {
+                    'name': 'mozilla-central',
+                    'ssh_user': 'john@doe.com',
+                    'ssh_key': 'privateSSHkey',
+                    'url': 'http://mozilla-central',
+                    'try_url': 'http://mozilla-central/try',
+                    'batch_size': 100,
+                }
+            ],
             publish_phabricator=True,
+            cache_root=os.path.dirname(repo_dir),
         )
-        worker.repo = RepoMock
+        assert len(worker.repositories) == 1
+        repo = worker.repositories.get('PHID-REPO-mc')
+        assert repo is not None
+        repo.repo = RepoMock
 
         diff = {
             # Missing revisionPHID will give an assertion error
             'phid': 'PHID-DIFF-test123',
             'id': 1234,
         }
-        out = await worker.handle_build('PHID-somehash', diff)
+        build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-somehash', diff)
+        out = await worker.handle_build(repo, build)
         assert out is False
 
         # Check the unit result was published
@@ -326,14 +369,23 @@ async def test_failure_mercurial(PhabricatorMock, RepoMock):
     with PhabricatorMock as api:
         worker = MercurialWorker(
             api,
-            ssh_user='john@doe.com',
-            ssh_key='privateSSHkey',
-            repo_url='http://mozilla-central',
-            repo_dir=repo_dir,
-            batch_size=100,
+            repositories=[
+                {
+                    'name': 'mozilla-central',
+                    'ssh_user': 'john@doe.com',
+                    'ssh_key': 'privateSSHkey',
+                    'url': 'http://mozilla-central',
+                    'try_url': 'http://mozilla-central/try',
+                    'batch_size': 100,
+                }
+            ],
             publish_phabricator=True,
+            cache_root=os.path.dirname(repo_dir),
         )
-        worker.repo = RepoMock
+        assert len(worker.repositories) == 1
+        repo = worker.repositories.get('PHID-REPO-mc')
+        assert repo is not None
+        repo.repo = RepoMock
 
         diff = {
             'revisionPHID': 'PHID-DREV-666',
@@ -341,7 +393,8 @@ async def test_failure_mercurial(PhabricatorMock, RepoMock):
             'phid': 'PHID-DIFF-666',
             'id': 666,
         }
-        out = await worker.handle_build('PHID-build-666', diff)
+        build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-build-666', diff)
+        out = await worker.handle_build(repo, build)
         assert out is False
 
         # Check the unit result was published
