@@ -2,6 +2,30 @@
 import pytest
 
 
+def test_open_report(tmpdir, mock_covdir_report):
+    '''
+    Test opening reports
+    '''
+    from codecoverage_backend import covdir
+
+    empty = tmpdir.join('empty.json')
+    assert covdir.open_report(empty.realpath()) is None
+
+    bad = tmpdir.join('bad.json')
+    bad.write('not json')
+    assert covdir.open_report(bad.realpath()) is None
+
+    invalid = tmpdir.join('invalid.json')
+    invalid.write('"string"')
+    assert covdir.open_report(invalid.realpath()) is None
+
+    report = covdir.open_report(mock_covdir_report)
+    assert report is not None
+    assert isinstance(report, dict)
+
+    assert list(report.keys()) == ['children', 'coveragePercent', 'linesCovered', 'linesMissed', 'linesTotal', 'name']
+
+
 def test_get_path_coverage(mock_covdir_report):
     '''
     Test covdir report parsing to obtain coverage for a specific path
