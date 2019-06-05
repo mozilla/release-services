@@ -2,16 +2,34 @@
 import json
 import os
 
+from cli_common import log
 
-def get_path_coverage(report_path, object_path, max_depth=1):
+logger = log.get_logger(__name__)
+
+
+def open_report(report_path):
     '''
-    Load a covdir report and
+    Helper to load and validate a report
+    '''
+    try:
+        assert os.path.exists(report_path), 'Missing file'
+
+        # TODO: move to ijson to reduce loading time
+        report = json.load(open(report_path))
+        assert isinstance(report, dict), 'Invalid data structure'
+    except Exception as e:
+        logger.warn('Failed to load report', path=report_path, error=str(e))
+        return None
+
+    return report
+
+
+def get_path_coverage(report, object_path, max_depth=1):
+    '''
     Recursively format the paths encountered, adding informations relative
     to file type (file|directory)
     '''
-    assert os.path.exists(report_path)
-    # TODO: move to ijson to reduce loading time
-    report = json.load(open(report_path))
+    assert isinstance(report, dict)
 
     # Find the section from the path
     parts = object_path.split('/')
@@ -46,14 +64,12 @@ def get_path_coverage(report_path, object_path, max_depth=1):
     return _clean_object(report, object_path)
 
 
-def get_overall_coverage(report_path, max_depth=2):
+def get_overall_coverage(report, max_depth=2):
     '''
     Load a covdir report and recursively extract the overall coverage
     of folders until the max depth is reached
     '''
-    assert os.path.exists(report_path)
-    # TODO: move to ijson to reduce loading time
-    report = json.load(open(report_path))
+    assert isinstance(report, dict)
 
     def _extract(obj, base_path='', depth=0):
         if 'children' not in obj or depth > max_depth:
