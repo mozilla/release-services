@@ -159,3 +159,55 @@ def test_closest_report(mock_cache, mock_hgmo):
     assert mock_cache.list_reports('myrepo') == [
         (report_rev, 994)
     ]
+
+
+def test_get_coverage(mock_cache):
+    '''
+    Test coverage access with re-download
+    '''
+    # No report at first
+    with pytest.raises(AssertionError) as e:
+        mock_cache.get_coverage('myrepo', 'myhash', '')
+    assert str(e.value) == 'Missing report for myrepo at myhash'
+
+    # Report available online
+    mock_cache.bucket.add_mock_blob('myrepo/myhash.json.zstd')
+
+    # Coverage available
+    coverage = mock_cache.get_coverage('myrepo', 'myhash', '')
+    assert coverage == {
+        'children': [],
+        'coveragePercent': 0.0,
+        'path': '',
+        'type': 'directory',
+    }
+
+    # Remove local file
+    path = os.path.join(mock_cache.reports_dir, 'myrepo', 'myhash.json')
+    assert os.path.exists(path)
+    os.unlink(path)
+
+    # Coverage still available
+    coverage = mock_cache.get_coverage('myrepo', 'myhash', '')
+    assert coverage == {
+        'children': [],
+        'coveragePercent': 0.0,
+        'path': '',
+        'type': 'directory',
+    }
+
+    # Make invalid json
+    assert os.path.exists(path)
+    with open(path, 'a') as f:
+        f.write('break')
+
+    # Coverage still available
+    coverage = mock_cache.get_coverage('myrepo', 'myhash', '')
+    assert coverage == {
+        'children': [],
+        'coveragePercent': 0.0,
+        'path': '',
+        'type': 'directory',
+    }
+    assert os.path.exists(path)
+    assert isinstance(json.load(open(path)), dict)
