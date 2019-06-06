@@ -146,7 +146,7 @@ class GCPCache(object):
         logger.info('Ingested report', changeset=changeset)
         return True
 
-    def download_report(self, repository, changeset, force=False):
+    def download_report(self, repository, changeset):
         '''
         Download and extract a json+zstd covdir report
         '''
@@ -161,11 +161,7 @@ class GCPCache(object):
         json_path = os.path.join(self.reports_dir, blob.name.rstrip('.zstd'))
         if os.path.exists(json_path):
             logger.info('Report already available', path=json_path)
-            if force:
-                os.unlink(json_path)
-                logger.info('Removed existing report')
-            else:
-                return json_path
+            return json_path
 
         os.makedirs(os.path.dirname(archive_path), exist_ok=True)
         blob.download_to_filename(archive_path)
@@ -279,7 +275,7 @@ class GCPCache(object):
         report = covdir.open_report(report_path)
         if report is None:
             # Try to download the report if it's missing locally
-            report_path = self.download_report(repository, changeset, force=True)
+            report_path = self.download_report(repository, changeset)
             assert report_path is not False, \
                 'Missing report for {} at {}'.format(repository, changeset)
 

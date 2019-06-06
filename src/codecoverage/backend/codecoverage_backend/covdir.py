@@ -19,6 +19,9 @@ def open_report(report_path):
         assert isinstance(report, dict), 'Invalid data structure'
     except Exception as e:
         logger.warn('Failed to load report', path=report_path, error=str(e))
+        if os.path.exists(report_path):
+            # Remove invalid files
+            os.unlink(report_path)
         return None
 
     return report
