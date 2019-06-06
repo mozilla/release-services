@@ -98,11 +98,7 @@ class Repository(object):
         for diff_phid, patch in patches:
             commit = commits.get(diff_phid)
 
-            if self.try_mode == TryMode.syntax:
-                message = self.try_syntax
-            else:
-                message = ''
-
+            message = ''
             if commit:
                 message += '{}\n'.format(commit[0]['message'])
             message += 'Differential Diff: {}'.format(diff_phid)
@@ -115,24 +111,39 @@ class Repository(object):
             )
             await asyncio.sleep(1)
 
-    def setup_try_task_config(self, build):
+    def add_try_commit(self, build):
         '''
-        Build and commit try_task_config.json
+        Build and commit the file configuring try
+        * try_task_config.json in json mode
+        * .try in syntax mode
         '''
-        config_path = os.path.join(self.dir, 'try_task_config.json')
-        config = {
-            'version': 2,
-            'parameters': {
-                'target_tasks_method': 'codereview',
-                'optimize_target_tasks': True,
-                'phabricator_diff': build.target_phid,
+        if self.try_mode == TryMode.json:
+            path = os.path.join(self.dir, 'try_task_config.json')
+            config = {
+                'version': 2,
+                'parameters': {
+                    'target_tasks_method': 'codereview',
+                    'optimize_target_tasks': True,
+                    'phabricator_diff': build.target_phid,
+                }
             }
-        }
-        with open(config_path, 'w') as f:
-            json.dump(config, f, sort_keys=True, indent=4)
-        self.repo.add(config_path.encode('utf-8'))
+            content = json.dumps(config, sort_keys=True, indent=4)
+            message = 'try_task_config for code-review\nDifferential Diff: {}'.format(build.diff['phid'])
+
+        elif self.try_mode == TryMode.syntax:
+            path = os.path.join(self.dir, '.try')
+            content = 'try: {}'.format(self.try_syntax)
+            message = content
+
+        else:
+            raise Exception('Unsupported try mode')
+
+        # Write content and commit it
+        with open(path, 'w') as f:
+            f.write(content)
+        self.repo.add(path.encode('utf-8'))
         self.repo.commit(
-            message='try_task_config for code-review\nDifferential Diff: {}'.format(build.diff['phid']),
+            message=message,
             user='pulselistener',
         )
 
@@ -248,9 +259,8 @@ class MercurialWorker(object):
             # First apply patches on local repo
             await repository.apply_patches(patches, commits)
 
-            # Add a try_task_config.json when supported
-            if repository.try_mode == TryMode.json:
-                repository.setup_try_task_config(build)
+            # Configure the try task
+            repository.add_try_commit(build)
 
             # Then push that stack on try
             tip = await repository.push_to_try()
