@@ -129,7 +129,9 @@ class GCPCache(object):
             repository=repository,
             changeset=changeset,
         )
-        overall_coverage = covdir.get_overall_coverage(report_path)
+        report = covdir.open_report(report_path)
+        assert report is not None, 'No report to ingest'
+        overall_coverage = covdir.get_overall_coverage(report)
         assert len(overall_coverage) > 0, 'No overall coverage'
         self.redis.hmset(key, overall_coverage)
 
@@ -269,9 +271,18 @@ class GCPCache(object):
         and build a serializable representation
         '''
         report_path = os.path.join(self.reports_dir, '{}/{}.json'.format(repository, changeset))
-        assert os.path.exists(report_path), 'Missing report {}'.format(report_path)
 
-        return covdir.get_path_coverage(report_path, path)
+        report = covdir.open_report(report_path)
+        if report is None:
+            # Try to download the report if it's missing locally
+            report_path = self.download_report(repository, changeset)
+            assert report_path is not False, \
+                'Missing report for {} at {}'.format(repository, changeset)
+
+            report = covdir.open_report(report_path)
+            assert report
+
+        return covdir.get_path_coverage(report, path)
 
     def get_history(self, repository, path='', start=None, end=None):
         '''
