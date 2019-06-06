@@ -145,3 +145,13 @@ paths:
           description: Overall coverage of specified path over a period of time
       tags:
         - v2
+
+  /v2/extensions:
+    get:
+      operationId: "codecoverage_backend.v2.coverage_supported_extensions"
+      responses:
+        200:
+          description: File extensions supported for code coverage
+      tags:
+        - v2
+

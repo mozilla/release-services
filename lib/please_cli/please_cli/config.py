@@ -68,7 +68,7 @@ PROJECTS += DEV_PROJECTS
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
     'common/naming': {
-        'update': True,
+        'update': False,
     },
     'postgresql': {
         'update': False,
@@ -86,90 +86,8 @@ PROJECTS_CONFIG = {
             'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
-    'notification/policy': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8006,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.testing.mozilla-releng.net',
-                        'dns': 'policy.notification.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.staging.mozilla-releng.net',
-                        'dns': 'policy.notification.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.mozilla-releng.net',
-                        'dns': 'policy.notification.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-        ],
-    },
-    'notification/identity': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8007,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-notif-identity',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.testing.mozilla-releng.net',
-                        'dns': 'identity.notification.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-notif-identity',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.staging.mozilla-releng.net',
-                        'dns': 'identity.notification.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-notif-ident',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.mozilla-releng.net',
-                        'dns': 'identity.notification.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-        ],
-    },
     'docs': {
-        'update': True,
+        'update': False,
         'run': 'SPHINX',
         'run_options': {
             'schema': 'http',
@@ -213,8 +131,6 @@ PROJECTS_CONFIG = {
             'tokens/api',
             'treestatus/api',
             'mapper/api',
-            'notification/policy',
-            'notification/identity',
         ],
         'deploys': [
             {
@@ -256,7 +172,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'mapper/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8004,
@@ -294,39 +210,10 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.testing.mozilla-releng.net',
-                        'dns': 'mapper.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.staging.mozilla-releng.net',
-                        'dns': 'mapper.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.mozilla-releng.net',
-                        'dns': 'mapper.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
         ],
     },
     'tokens/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8003,
@@ -396,10 +283,10 @@ PROJECTS_CONFIG = {
         ],
     },
     'tooltool/client': {
-        'update': True,
+        'update': False,
     },
     'tooltool/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8002,
@@ -547,7 +434,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'treestatus/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8000,
@@ -620,7 +507,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/bot': {
-        'update': True,
+        'update': False,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -648,7 +535,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/bot': {
-        'update': True,
+        'update': False,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -676,7 +563,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/backend': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -717,7 +604,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/crawler': {
-        'update': True,
+        'update': False,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -745,7 +632,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'pulselistener': {
-        'update': True,
+        'update': False,
         'requires': [],
         'deploys': [
             {
@@ -806,7 +693,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'staticanalysis/bot': {
-        'update': True,
+        'update': False,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -899,7 +786,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/backend': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -940,7 +827,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'shipit/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8015,
