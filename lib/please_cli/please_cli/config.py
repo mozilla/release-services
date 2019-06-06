@@ -68,7 +68,7 @@ PROJECTS += DEV_PROJECTS
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
     'common/naming': {
-        'update': True,
+        'update': False,
     },
     'postgresql': {
         'update': False,
@@ -87,7 +87,7 @@ PROJECTS_CONFIG = {
         },
     },
     'docs': {
-        'update': True,
+        'update': False,
         'run': 'SPHINX',
         'run_options': {
             'schema': 'http',
@@ -172,7 +172,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'mapper/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8004,
@@ -213,7 +213,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'tokens/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8003,
@@ -283,10 +283,10 @@ PROJECTS_CONFIG = {
         ],
     },
     'tooltool/client': {
-        'update': True,
+        'update': False,
     },
     'tooltool/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8002,
@@ -434,7 +434,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'treestatus/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8000,
@@ -507,7 +507,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/bot': {
-        'update': True,
+        'update': False,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -535,7 +535,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/bot': {
-        'update': True,
+        'update': False,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -563,7 +563,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/backend': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -604,7 +604,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'codecoverage/crawler': {
-        'update': True,
+        'update': False,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -632,7 +632,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'pulselistener': {
-        'update': True,
+        'update': False,
         'requires': [],
         'deploys': [
             {
@@ -693,7 +693,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'staticanalysis/bot': {
-        'update': True,
+        'update': False,
         'deploys': [
             {
                 'target': 'TASKCLUSTER_HOOK',
@@ -786,7 +786,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'uplift/backend': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8011,
@@ -827,7 +827,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'shipit/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8015,
