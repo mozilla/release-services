@@ -239,24 +239,23 @@ def PhabricatorMock():
         yield api
 
 
-@pytest.fixture
-def RepoMock(tmpdir):
+def build_repository(tmpdir, name):
     '''
     Mock a local mercurial repo
     '''
     # Init empty repo
-    repo_dir = str(tmpdir.mkdir('mozilla-central').realpath())
+    repo_dir = str(tmpdir.mkdir(name).realpath())
     hglib.init(repo_dir)
 
     # Add default pull in Mercurial config
-    hgrc = tmpdir.join('mozilla-central', '.hg', 'hgrc')
+    hgrc = tmpdir.join(name, '.hg', 'hgrc')
     hgrc.write('[paths]\ndefault = {}'.format(repo_dir))
 
     # Open repo with config
     repo = hglib.open(repo_dir)
 
     # Commit a file on central
-    readme = tmpdir.join('mozilla-central', 'README.md')
+    readme = tmpdir.join(name, 'README.md')
     readme.write('Hello World')
     repo.add(str(readme.realpath()).encode('utf-8'))
     repo.branch(name=b'central', force=True)
@@ -266,3 +265,19 @@ def RepoMock(tmpdir):
     repo.push = MagicMock(return_value=True)
 
     return repo
+
+
+@pytest.fixture
+def mock_mc(tmpdir):
+    '''
+    Mock a Mozilla Central repository
+    '''
+    return build_repository(tmpdir, 'mozilla-central')
+
+
+@pytest.fixture
+def mock_nss(tmpdir):
+    '''
+    Mock an NSS repository
+    '''
+    return build_repository(tmpdir, 'nss')
