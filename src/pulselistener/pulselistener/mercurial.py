@@ -45,8 +45,8 @@ class Repository(object):
         self.try_url = config['try_url']
         self.try_mode = TryMode(config.get('try_mode', 'json'))
         self.try_syntax = config.get('try_syntax')
-        if self.try_mode == TryMode.syntax and not self.try_syntax:
-            raise Exception('Missing try syntax')
+        if self.try_mode == TryMode.syntax:
+            assert self.try_syntax, 'Missing try syntax'
 
         # Write ssh key from secret
         _, self.ssh_key_path = tempfile.mkstemp(suffix='.key')
@@ -227,7 +227,7 @@ class MercurialWorker(object):
     async def handle_build(self, repository, build):
         '''
         Try to load and apply a diff on local clone
-        If succesful, push to try and send a treeherder link
+        If successful, push to try and send a treeherder link
         If failure, send a unit result with a warning message
         '''
         assert isinstance(repository, Repository)
@@ -254,7 +254,7 @@ class MercurialWorker(object):
                 for diff in diffs
             }
 
-            await asyncio.sleep(2)  # allow other tasks to run
+            await asyncio.sleep(0)  # allow other tasks to run
 
             # First apply patches on local repo
             await repository.apply_patches(patches, commits)
