@@ -192,6 +192,10 @@ def cmd_S3(ctx,
                 '--quiet',
                 '--delete',
                 '--acl', 'public-read',
+                # cache for 5min only
+                '--cache-control', 'max-age=300',
+                # Only connect to this site and subdomains via HTTPS for the next two years
+                '--metadata', 'x-amz-meta-Strict-Transport-Security=max-age=63072000;includeSubDomains',
                 tmp_dir,
                 's3://' + s3_bucket + subfolder,
             ])
