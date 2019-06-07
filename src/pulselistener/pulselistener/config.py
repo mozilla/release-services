@@ -4,5 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PROJECT_NAME = 'pulselistener'
-REPO_UNIFIED = 'https://hg.mozilla.org/mozilla-unified'
-REPO_TRY = b'ssh://hg.mozilla.org/try'

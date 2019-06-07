@@ -177,7 +177,6 @@ def PhabricatorMock():
 
     def _send_message(request):
         params = _phab_params(request)
-        print(params)
         assert 'buildTargetPHID' in params
         name = 'message-{}-{}'.format(params['buildTargetPHID'], params['type'])
         if params['unit']:
@@ -225,6 +224,13 @@ def PhabricatorMock():
             callback=_send_message,
         )
 
+        resp.add(
+            responses.POST,
+            'http://phabricator.test/api/diffusion.repository.search',
+            body=_response('repositories'),
+            content_type='application/json',
+        )
+
         api = PhabricatorAPI(
             url='http://phabricator.test/api/',
             api_key='deadbeef',
@@ -233,24 +239,23 @@ def PhabricatorMock():
         yield api
 
 
-@pytest.fixture
-def RepoMock(tmpdir):
+def build_repository(tmpdir, name):
     '''
     Mock a local mercurial repo
     '''
     # Init empty repo
-    repo_dir = str(tmpdir.realpath())
+    repo_dir = str(tmpdir.mkdir(name).realpath())
     hglib.init(repo_dir)
 
     # Add default pull in Mercurial config
-    hgrc = tmpdir.join('.hg').join('hgrc')
+    hgrc = tmpdir.join(name, '.hg', 'hgrc')
     hgrc.write('[paths]\ndefault = {}'.format(repo_dir))
 
     # Open repo with config
     repo = hglib.open(repo_dir)
 
     # Commit a file on central
-    readme = tmpdir.join('README.md')
+    readme = tmpdir.join(name, 'README.md')
     readme.write('Hello World')
     repo.add(str(readme.realpath()).encode('utf-8'))
     repo.branch(name=b'central', force=True)
@@ -260,3 +265,19 @@ def RepoMock(tmpdir):
     repo.push = MagicMock(return_value=True)
 
     return repo
+
+
+@pytest.fixture
+def mock_mc(tmpdir):
+    '''
+    Mock a Mozilla Central repository
+    '''
+    return build_repository(tmpdir, 'mozilla-central')
+
+
+@pytest.fixture
+def mock_nss(tmpdir):
+    '''
+    Mock an NSS repository
+    '''
+    return build_repository(tmpdir, 'nss')
