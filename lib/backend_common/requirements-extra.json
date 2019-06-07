@@ -50,11 +50,6 @@
     "templates": [
         "Jinja2"
     ],
-    "notifications": [
-        "Flask",
-        "mohawk<0.4,>=0.3.4",
-        "requests"
-    ],
     "security": [
         "flask-talisman"
     ],
