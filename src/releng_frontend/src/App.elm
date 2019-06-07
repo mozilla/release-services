@@ -105,8 +105,6 @@ type alias Flags =
     , treestatusUrl : String
     , docsUrl : String
     , version : String
-    , identityUrl : String
-    , policyUrl : String
     }
 
 

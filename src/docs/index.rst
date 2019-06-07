@@ -31,7 +31,6 @@ Projects
     TreeStatus <projects/treestatus>
     Mapper <projects/mapper>
     releng-frontend <projects/releng-frontend>
-    notification <projects/notification>
     codecoverage/bot <projects/codecoverage-bot>
     codecoverage/backend <projects/codecoverage-backend>
     codecoverage/crawler <projects/codecoverage-crawler>
