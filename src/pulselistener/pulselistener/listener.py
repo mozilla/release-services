@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import os.path
 
 import requests
 from libmozdata.phabricator import BuildState
@@ -9,7 +8,6 @@ from cli_common.log import get_logger
 from cli_common.pulse import run_consumer
 from cli_common.utils import retry
 from pulselistener import task_monitoring
-from pulselistener.config import REPO_UNIFIED
 from pulselistener.hook import Hook
 from pulselistener.hook import PulseHook
 from pulselistener.mercurial import MercurialWorker
@@ -35,16 +33,6 @@ class HookPhabricator(Hook):
         # Connect to Phabricator API
         assert 'phabricator_api' in configuration
         self.api = configuration['phabricator_api']
-
-        # List enabled repositories
-        enabled = configuration.get('repositories', ['mozilla-central', ])
-        self.repos = {
-            r['phid']: r
-            for r in self.api.list_repositories()
-            if r['fields']['name'] in enabled
-        }
-        assert len(self.repos) > 0, 'No repositories enabled'
-        logger.info('Enabled Phabricator repositories', repos=[r['fields']['name'] for r in self.repos.values()])
 
         # Load secure projects
         projects = self.api.search_projects(slugs=['secure-revision'])
@@ -94,15 +82,10 @@ class HookPhabricator(Hook):
             try:
                 logger.info('Triggering task from webhook', build=build)
 
-                # Skip unsupported repos
-                if build.repo_phid not in self.repos:
-                    logger.info('Repository not enabled', repo=build.repo_phid)
-                    return
-
                 # Enqueue push to try
                 # TODO: better integration with mercurial queue
                 # to get the revisions produced
-                await self.mercurial_queue.put((build.target_phid, build.diff))
+                await self.mercurial_queue.put(build)
 
             except Exception as e:
                 logger.error('Failed to queue task from webhook', error=str(e))
@@ -209,9 +192,10 @@ class PulseListener(object):
                  pulse_user,
                  pulse_password,
                  hooks_configuration,
-                 mercurial_conf,
+                 repositories,
                  phabricator_api,
                  cache_root,
+                 publish_phabricator=False,
                  taskcluster_client_id=None,
                  taskcluster_access_token=None,
                  ):
@@ -228,20 +212,13 @@ class PulseListener(object):
             self.taskcluster_access_token,
         )
 
-        # Build mercurial worker & queue for mozilla unified
-        if mercurial_conf.get('enabled', False):
-            self.mercurial = MercurialWorker(
-                self.phabricator_api,
-                ssh_user=mercurial_conf['ssh_user'],
-                ssh_key=mercurial_conf['ssh_key'],
-                repo_url=REPO_UNIFIED,
-                repo_dir=os.path.join(cache_root, 'sa-unified'),
-                batch_size=mercurial_conf.get('batch_size', 100000),
-                publish_phabricator=mercurial_conf.get('publish_phabricator', False),
-            )
-        else:
-            self.mercurial = None
-            logger.info('Mercurial worker is disabled')
+        # Build mercurial worker & queue
+        self.mercurial = MercurialWorker(
+            self.phabricator_api,
+            publish_phabricator=publish_phabricator,
+            repositories=repositories,
+            cache_root=cache_root,
+        )
 
         # Create web server
         self.webserver = WebServer()
