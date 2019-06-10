@@ -128,9 +128,7 @@ PROJECTS_CONFIG = {
         'requires': [
             'docs',
             'tooltool/api',
-            'tokens/api',
             'treestatus/api',
-            'mapper/api',
         ],
         'deploys': [
             {
@@ -207,76 +205,6 @@ PROJECTS_CONFIG = {
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'mapper_api_dockerflow_production',
-                    },
-                },
-            },
-        ],
-    },
-    'tokens/api': {
-        'update': False,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8003,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'url': 'https://tokens.testing.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'tokens_api_dockerflow_testing',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'url': 'https://tokens.staging.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'tokens_api_dockerflow_staging',
-                    },
-                    'production': {
-                        'enable': True,
-                        'url': 'https://tokens.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'tokens_api_dockerflow_production',
-                    },
-                },
-            },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-tokens',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tokens.testing.mozilla-releng.net',
-                        'dns': 'tokens.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-tokens',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tokens.staging.mozilla-releng.net',
-                        'dns': 'tokens.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-tokens',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tokens.mozilla-releng.net',
-                        'dns': 'tokens.mozilla-releng.net.herokudns.com',
                     },
                 },
             },

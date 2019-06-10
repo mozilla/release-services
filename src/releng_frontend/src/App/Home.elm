@@ -30,10 +30,6 @@ view model =
             "Current status of Mozilla's version-control repositories."
             (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.ShowTreesRoute))
         , viewCard
-            "Tokens"
-            "Tokens are used to allow automated services to authenticate to Releng API without being tied to a user's identity."
-            (href "/tokens")
-        , viewCard
             "ToolTool"
             "Tooltool is tool for fetching binary artifacts for builds and tests. The web interface lets you browse the files currently available from the service."
             (href "/tooltool")
