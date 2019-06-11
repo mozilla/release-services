@@ -325,61 +325,6 @@ PROJECTS_CONFIG = {
                 },
             },
             {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-tooltool',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tooltool.testing.mozilla-releng.net',
-                        'dns': 'shizuoka-60622.herokussl.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-tooltool',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tooltool.staging.mozilla-releng.net',
-                        'dns': 'shizuoka-60622.herokussl.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-tooltool',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tooltool.mozilla-releng.net',
-                        'dns': 'kochi-11433.herokussl.com',
-                    },
-                },
-            },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-tooltool',
-                        'heroku_dyno_type': 'worker',
-                        'heroku_command': '/bin/flask worker',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-tooltool',
-                        'heroku_dyno_type': 'worker',
-                        'heroku_command': '/bin/flask worker',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-tooltool',
-                        'heroku_dyno_type': 'worker',
-                        'heroku_command': '/bin/flask worker',
-                    },
-                },
-            },
-            {
                 'target': 'TASKCLUSTER_HOOK',
                 'options': {
                     'testing': {
@@ -469,38 +414,6 @@ PROJECTS_CONFIG = {
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'treestatus_api_dockerflow_production',
-                    },
-                },
-            },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-treestatus',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://treestatus.testing.mozilla-releng.net',
-                        # TODO: we need to change this to SSL Endpoint
-                        'dns': 'treestatus.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-treestatus',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://treestatus.staging.mozilla-releng.net',
-                        # TODO: we need to change this to SSL Endpoint
-                        'dns': 'nagasaki-25852.herokussl.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-treestatus',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://treestatus.mozilla-releng.net',
-                        # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
-                        'dns': 'kochi-31413.herokussl.com',
                     },
                 },
             },
