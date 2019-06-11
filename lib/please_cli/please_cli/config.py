@@ -540,21 +540,21 @@ PROJECTS_CONFIG = {
                 'target': 'TASKCLUSTER_HOOK',
                 'options': {
                     'testing': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'deploy.testing',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozillareleng/services',
                         'docker_stable_tag': 'static-analysis-bot-testing',
                     },
                     'staging': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'deploy.staging',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozillareleng/services',
                         'docker_stable_tag': 'static-analysis-bot-staging',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'deploy.production',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozillareleng/services',
@@ -580,7 +580,7 @@ PROJECTS_CONFIG = {
                 'options': {
 
                     'testing': {
-                        'enable': True,
+                        'enable': False,
                         's3_bucket': 'release-services-staticanalysis-frontend-testing',
                         'url': 'https://static-analysis.testing.moz.tools',
                         'dns': 'd1blqs705aw8h9.cloudfront.net.',
@@ -595,7 +595,7 @@ PROJECTS_CONFIG = {
                         ],
                     },
                     'staging': {
-                        'enable': True,
+                        'enable': False,
                         's3_bucket': 'release-services-staticanalysis-frontend-staging',
                         'url': 'https://static-analysis.staging.moz.tools',
                         'dns': 'd21hzgxp28m0tc.cloudfront.net.',
@@ -609,7 +609,7 @@ PROJECTS_CONFIG = {
                         ],
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         's3_bucket': 'release-services-staticanalysis-frontend-production',
                         'url': 'https://static-analysis.moz.tools',
                         'dns': 'd2ezri92497z3m.cloudfront.net.',
