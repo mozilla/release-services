@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -C /tmp/release-services-gteedu3y/src/docs/../../../tmp/pypi2nix -V 3.7 -O ../../nix/requirements_override.nix -E pkgconfig -E zlib -E libjpeg -E openjpeg -E libtiff -E freetype -E lcms2 -E libwebp -E tcl -r requirements.txt
+#   pypi2nix -v -C /tmp/release-services-jgax257b/src/docs/../../../tmp/pypi2nix -V 3.7 -O ../../nix/requirements_override.nix -E pkgconfig -E zlib -E libjpeg -E openjpeg -E libtiff -E freetype -E lcms2 -E libwebp -E tcl -r requirements.txt
 #
 
 { pkgs ? import <nixpkgs> {},
@@ -89,14 +89,12 @@ let
 
   generated = self: {
     "Babel" = python.mkDerivation {
-      name = "Babel-2.6.0";
+      name = "Babel-2.7.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/be/cc/9c981b249a455fa0c76338966325fc70b7265521bad641bf2932f77712f4/Babel-2.6.0.tar.gz";
-        sha256 = "8cba50f48c529ca3fa18cf81fa9403be176d374ac4d60738b839122dfaaa3d23";
+        url = "https://files.pythonhosted.org/packages/bd/78/9fb975cbb3f4b136de2cd4b5e5ce4a3341169ebf4c6c03630996d05428f1/Babel-2.7.0.tar.gz";
+        sha256 = "e86135ae101e31e2c8ec20a4e0c5220f4eed12487d5cf3f78be7e98d3a57fc28";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."pytz"
@@ -109,14 +107,12 @@ let
     };
 
     "Jinja2" = python.mkDerivation {
-      name = "Jinja2-2.10";
+      name = "Jinja2-2.10.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/56/e6/332789f295cf22308386cf5bbd1f4e00ed11484299c5d7383378cf48ba47/Jinja2-2.10.tar.gz";
-        sha256 = "f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4";
+        url = "https://files.pythonhosted.org/packages/93/ea/d884a06f8c7f9b7afbc8138b762e80479fb17aedbbe2b06515a12de9378d/Jinja2-2.10.1.tar.gz";
+        sha256 = "065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."Babel"
@@ -136,8 +132,6 @@ let
         sha256 = "29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -148,32 +142,28 @@ let
     };
 
     "Pillow" = python.mkDerivation {
-      name = "Pillow-5.4.1";
+      name = "Pillow-6.0.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/3c/7e/443be24431324bd34d22dd9d11cc845d995bcd3b500676bcf23142756975/Pillow-5.4.1.tar.gz";
-        sha256 = "5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f";
+        url = "https://files.pythonhosted.org/packages/81/1a/6b2971adc1bca55b9a53ed1efa372acff7e8b9913982a396f3fa046efaf8/Pillow-6.0.0.tar.gz";
+        sha256 = "809c0a2ce9032cbcd7b5313f71af4bdc5c8c771cb86eb7559afd954cab82ebb5";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://python-pillow.org";
-        license = "Standard PIL License";
+        license = "UNKNOWN";
         description = "Python Imaging Library (Fork)";
       };
     };
 
     "Pygments" = python.mkDerivation {
-      name = "Pygments-2.3.1";
+      name = "Pygments-2.4.2";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/64/69/413708eaf3a64a6abb8972644e0f20891a55e621c6759e2c3f3891e05d63/Pygments-2.3.1.tar.gz";
-        sha256 = "5ffada19f6203563680669ee7f53b64dabbeb100eb51b61996085e99c03b284a";
+        url = "https://files.pythonhosted.org/packages/7e/ae/26808275fc76bf2832deb10d3a3ed3107bc4de01b85dcccbe525f2cd6d1e/Pygments-2.4.2.tar.gz";
+        sha256 = "881c4c157e45f30af185c1ffe8d549d48ac9127433f2c380c24b84572ad66297";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -184,14 +174,12 @@ let
     };
 
     "Sphinx" = python.mkDerivation {
-      name = "Sphinx-1.8.5";
+      name = "Sphinx-2.1.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/2a/86/8e1e8400bb6eca5ed960917952600fce90599e1cb0d20ddedd81ba163370/Sphinx-1.8.5.tar.gz";
-        sha256 = "c7658aab75c920288a8cf6f09f244c6cfdae30d82d803ac1634d9f223a80ca08";
+        url = "https://files.pythonhosted.org/packages/97/49/2eb0837b5e8a7232c43e1ccf87caf49e2573ef370366511dfe9686cc97ce/Sphinx-2.1.1.tar.gz";
+        sha256 = "15143166e786c7faa76fa990d3b6b38ebffe081ef81cffd1d656b07f3b28a1fa";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."Babel"
@@ -202,9 +190,13 @@ let
         self."imagesize"
         self."packaging"
         self."requests"
-        self."six"
         self."snowballstemmer"
-        self."sphinxcontrib-websupport"
+        self."sphinxcontrib-applehelp"
+        self."sphinxcontrib-devhelp"
+        self."sphinxcontrib-htmlhelp"
+        self."sphinxcontrib-jsmath"
+        self."sphinxcontrib-qthelp"
+        self."sphinxcontrib-serializinghtml"
       ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://sphinx-doc.org/";
@@ -220,8 +212,6 @@ let
         sha256 = "983071777d9941093aaef3be1f67c198a8ac8d2bba264cdd1f337ca415ab46af";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."blockdiag"
@@ -241,8 +231,6 @@ let
         sha256 = "a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -259,8 +247,6 @@ let
         sha256 = "929125db1cb59145e09dc561021389c7ca71108ef4e4c51a12728eea5b75fccc";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."Pillow"
@@ -282,8 +268,6 @@ let
         sha256 = "b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -300,8 +284,6 @@ let
         sha256 = "84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -318,8 +300,6 @@ let
         sha256 = "51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -336,8 +316,6 @@ let
         sha256 = "b7992eac1a3eb97b3d91faa342bfda0729e990bd8a43774c1592c091e563c91d";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -354,8 +332,6 @@ let
         sha256 = "c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -372,8 +348,6 @@ let
         sha256 = "f3832918bc3c66617f92e35f5d70729187676313caa60c187eb0f28b8fe5e3b5";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -384,14 +358,12 @@ let
     };
 
     "livereload" = python.mkDerivation {
-      name = "livereload-2.6.0";
+      name = "livereload-2.6.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/45/1b/8a8d59d6c20807cdb4c581a958a7ae7ceaee9e3b1714e64575382571bca5/livereload-2.6.0.tar.gz";
-        sha256 = "e632a6cd1d349155c1d7f13a65be873b38f43ef02961804a1bba8d817fa649a7";
+        url = "https://files.pythonhosted.org/packages/27/26/85ba3851d2e4905be7d2d41082adca833182bb1d7de9dfc7f623383d36e1/livereload-2.6.1.tar.gz";
+        sha256 = "89254f78d7529d7ea0a3417d224c34287ebfe266b05e67e51facaf82c27f0f66";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."six"
@@ -411,8 +383,6 @@ let
         sha256 = "002565875559789a2dfc5f578c07abdf44269c3f7cdf78d4809bdc4bdc2213fa";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."blockdiag"
@@ -432,8 +402,6 @@ let
         sha256 = "0c98a5d0be38ed775798ece1b9727178c4469d9c3b4ada66e8e6b7849f8732af";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."pyparsing"
@@ -447,14 +415,12 @@ let
     };
 
     "pyparsing" = python.mkDerivation {
-      name = "pyparsing-2.3.1";
+      name = "pyparsing-2.4.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/b9/b8/6b32b3e84014148dcd60dd05795e35c2e7f4b72f918616c61fdce83d27fc/pyparsing-2.3.1.tar.gz";
-        sha256 = "66c9268862641abcac4a96ba74506e594c884e3f57690a696d21ad8210ed667a";
+        url = "https://files.pythonhosted.org/packages/5d/3a/24d275393f493004aeb15a1beae2b4a3043526e8b692b65b4a9341450ebe/pyparsing-2.4.0.tar.gz";
+        sha256 = "1873c03321fc118f4e9746baf201ff990ceb915f433f23b395f5580d1840cb2a";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -465,14 +431,12 @@ let
     };
 
     "pytz" = python.mkDerivation {
-      name = "pytz-2018.9";
+      name = "pytz-2019.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/af/be/6c59e30e208a5f28da85751b93ec7b97e4612268bb054d0dff396e758a90/pytz-2018.9.tar.gz";
-        sha256 = "d5f05e487007e29e03409f9398d074e158d920d36eb82eaf66fb1136b0c5374c";
+        url = "https://files.pythonhosted.org/packages/df/d5/3e3ff673e8f3096921b3f1b79ce04b832e0100b4741573154b72b756a681/pytz-2019.1.tar.gz";
+        sha256 = "d747dd3d23d77ef44c6a3526e274af6efeb0a6f1afd5a69ba4d5be4098c8e141";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -483,14 +447,12 @@ let
     };
 
     "requests" = python.mkDerivation {
-      name = "requests-2.21.0";
+      name = "requests-2.22.0";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/52/2c/514e4ac25da2b08ca5a464c50463682126385c4272c18193876e91f4bc38/requests-2.21.0.tar.gz";
-        sha256 = "502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e";
+        url = "https://files.pythonhosted.org/packages/01/62/ddcf76d1d19885e8579acb1b1df26a852b03472c0e46d2b959a714c90608/requests-2.22.0.tar.gz";
+        sha256 = "11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."certifi"
@@ -512,8 +474,6 @@ let
         sha256 = "78104e7644c1a4d3a5cacb68de6a7f720793f08dd78561ef0e9e80bed63702bf";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."blockdiag"
@@ -533,8 +493,6 @@ let
         sha256 = "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -551,8 +509,6 @@ let
         sha256 = "919f26a68b2c17a7634da993d91339e288964f93c274f1343e3bbbe2096e1128";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -569,8 +525,6 @@ let
         sha256 = "da3ba0fdfaaa0b855860ee94e97045249ddc0d4040d127247210d46acf068786";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."Sphinx"
@@ -584,6 +538,22 @@ let
       };
     };
 
+    "sphinxcontrib-applehelp" = python.mkDerivation {
+      name = "sphinxcontrib-applehelp-1.0.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/1b/71/8bafa145e48131049dd4f731d6f6eeefe0c34c3017392adbec70171ad407/sphinxcontrib-applehelp-1.0.1.tar.gz";
+        sha256 = "edaa0ab2b2bc74403149cb0209d6775c96de797dfd5b5e2a71981309efab3897";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "";
+        description = "";
+      };
+    };
+
     "sphinxcontrib-blockdiag" = python.mkDerivation {
       name = "sphinxcontrib-blockdiag-1.5.5";
       src = pkgs.fetchurl {
@@ -591,8 +561,6 @@ let
         sha256 = "7cdff966d8f372b9536374954314a6cf4280e0e48bc2321a4f25cc7f2114f8f0";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."Sphinx"
@@ -605,6 +573,54 @@ let
       };
     };
 
+    "sphinxcontrib-devhelp" = python.mkDerivation {
+      name = "sphinxcontrib-devhelp-1.0.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/57/5f/bf9a0f7454df68a7a29033a5cf8d53d0797ae2e426b1b419e4622726ec7d/sphinxcontrib-devhelp-1.0.1.tar.gz";
+        sha256 = "6c64b077937330a9128a4da74586e8c2130262f014689b4b89e2d08ee7294a34";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "";
+        description = "";
+      };
+    };
+
+    "sphinxcontrib-htmlhelp" = python.mkDerivation {
+      name = "sphinxcontrib-htmlhelp-1.0.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/f1/f2/88e9d6dc4a17f1e95871f8b634adefcc5d691334f7a121e9f384d1dc06fd/sphinxcontrib-htmlhelp-1.0.2.tar.gz";
+        sha256 = "4670f99f8951bd78cd4ad2ab962f798f5618b17675c35c5ac3b2132a14ea8422";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "";
+        description = "";
+      };
+    };
+
+    "sphinxcontrib-jsmath" = python.mkDerivation {
+      name = "sphinxcontrib-jsmath-1.0.1";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/b2/e8/9ed3830aeed71f17c026a07a5097edcf44b692850ef215b161b8ad875729/sphinxcontrib-jsmath-1.0.1.tar.gz";
+        sha256 = "a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://sphinx-doc.org/";
+        license = licenses.bsdOriginal;
+        description = "A sphinx extension which renders display math in HTML via JavaScript";
+      };
+    };
+
     "sphinxcontrib-nwdiag" = python.mkDerivation {
       name = "sphinxcontrib-nwdiag-0.9.5";
       src = pkgs.fetchurl {
@@ -612,8 +628,6 @@ let
         sha256 = "5b0ce78c1f7ccbbf33ca624574b117fa5334c8c17f98306a1e1b30e79db93491";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."Sphinx"
@@ -627,6 +641,22 @@ let
       };
     };
 
+    "sphinxcontrib-qthelp" = python.mkDerivation {
+      name = "sphinxcontrib-qthelp-1.0.2";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/0c/f0/690cd10603e3ea8d184b2fffde1d965dd337b87a1d5f7625d0f6791094f4/sphinxcontrib-qthelp-1.0.2.tar.gz";
+        sha256 = "79465ce11ae5694ff165becda529a600c754f4bc459778778c7017374d4d406f";
+      };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "";
+        description = "";
+      };
+    };
+
     "sphinxcontrib-seqdiag" = python.mkDerivation {
       name = "sphinxcontrib-seqdiag-0.8.5";
       src = pkgs.fetchurl {
@@ -634,8 +664,6 @@ let
         sha256 = "83c3fdac7e083c5b217f65359c03b75af753209028db6b261b196aff19e7003f";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."Sphinx"
@@ -649,21 +677,19 @@ let
       };
     };
 
-    "sphinxcontrib-websupport" = python.mkDerivation {
-      name = "sphinxcontrib-websupport-1.1.0";
+    "sphinxcontrib-serializinghtml" = python.mkDerivation {
+      name = "sphinxcontrib-serializinghtml-1.1.3";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/07/7a/e74b06dce85555ffee33e1d6b7381314169ebf7e31b62c18fcb2815626b7/sphinxcontrib-websupport-1.1.0.tar.gz";
-        sha256 = "9de47f375baf1ea07cdb3436ff39d7a9c76042c10a769c52353ec46e4e8fc3b9";
+        url = "https://files.pythonhosted.org/packages/cd/cc/fd7d17cfae18e5a92564bb899bc05e13260d7a633f3cffdaad4e5f3ce46a/sphinxcontrib-serializinghtml-1.1.3.tar.gz";
+        sha256 = "c0efb33f8052c04fd7a26c0a07f1678e8512e0faec19f4aa8f2473a8b81d5227";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "http://sphinx-doc.org/";
-        license = licenses.bsdOriginal;
-        description = "Sphinx API for Web Apps";
+        homepage = "";
+        license = "";
+        description = "";
       };
     };
 
@@ -674,8 +700,6 @@ let
         sha256 = "457fcbee4df737d2defc181b9073758d73f54a6cfc1f280533ff48831b39f4a8";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
@@ -686,14 +710,12 @@ let
     };
 
     "urllib3" = python.mkDerivation {
-      name = "urllib3-1.24.1";
+      name = "urllib3-1.25.3";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/b1/53/37d82ab391393565f2f831b8eedbffd57db5a718216f82f1a8b4d381a1c1/urllib3-1.24.1.tar.gz";
-        sha256 = "de9529817c93f27c8ccbfead6985011db27bd0ddfcdb2d86f3f663385c6a9c22";
+        url = "https://files.pythonhosted.org/packages/4c/13/2386233f7ee40aa8444b47f7463338f3cbdf00c316627558784e3f542f07/urllib3-1.25.3.tar.gz";
+        sha256 = "dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."certifi"
@@ -707,16 +729,16 @@ let
     };
 
     "webcolors" = python.mkDerivation {
-      name = "webcolors-1.8.1";
+      name = "webcolors-1.9.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/f5/9c/da29a884572b675b7d3e96aa1a06c6b46138ca58235e834ef94f2660fdd3/webcolors-1.8.1.tar.gz";
-        sha256 = "030562f624467a9901f0b455fef05486a88cfb5daa1e356bd4aacea043850b59";
+        url = "https://files.pythonhosted.org/packages/70/8b/cf0ae06cf420718ef88080eca4ea971612831c99bfc43ebea826be6b52cb/webcolors-1.9.1.tar.gz";
+        sha256 = "18c091bd4bd75efd1e9f84f5eca4a54f6e6485eaa3967d2a55700835a1b1c418";
       };
       doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
       buildInputs = commonBuildInputs ++ [ ];
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+        self."six"
+      ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/ubernostrum/webcolors";
         license = "BSD 3-Clause";
