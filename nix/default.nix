@@ -38,7 +38,6 @@ let
     inherit pkgs;
     lib = import ./lib/default.nix { inherit releng_pkgs; };
     tools = import ./tools/default.nix { inherit releng_pkgs; };
-    gecko-env = import ./gecko_env.nix { inherit releng_pkgs; };
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
 
     "postgresql" =
