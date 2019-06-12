@@ -101,6 +101,7 @@ def gcp(repository, revision, data):
     Upload a grcov raw report on Google Cloud Storage
     * Compress with zstandard
     * Upload on bucket using revision in name
+    * Trigger ingestion on channel's backend
     '''
     assert isinstance(data, bytes)
     bucket = get_bucket(secrets[secrets.GOOGLE_CLOUD_STORAGE])
@@ -121,6 +122,9 @@ def gcp(repository, revision, data):
 
     logger.info('Uploaded {} on {}'.format(path, bucket))
 
+    # Trigger ingestion on backend
+    utils.retry(lambda: gcp_ingest(repository, revision), retries=5)
+
     return blob
 
 
@@ -132,3 +136,21 @@ def gcp_covdir_exists(repository, revision):
     path = GCP_COVDIR_PATH.format(repository=repository, revision=revision)
     blob = bucket.blob(path)
     return blob.exists()
+
+
+def gcp_ingest(repository, revision):
+    '''
+    The GCP report ingestion is triggered remotely on a backend
+    by making a simple HTTP request on the /v2/path endpoint
+    By specifying the exact new revision processed, the backend
+    will download automatically the new report.
+    '''
+    params = {
+        'repository': repository,
+        'changeset': revision,
+    }
+    backend_host = secrets[secrets.BACKEND_HOST]
+    resp = requests.get('{}/v2/path'.format(backend_host), params=params)
+    resp.raise_for_status()
+    logger.info('Ingested report on backend', host=backend_host, repository=repository, revision=revision)
+    return resp
