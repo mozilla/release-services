@@ -114,11 +114,12 @@ class Repository(object):
     def add_try_commit(self, build):
         '''
         Build and commit the file configuring try
-        * try_task_config.json in json mode
-        * .try in syntax mode
+        * always try_task_config.json
+        * MC payload in json mode
+        * custom simpler payload on syntax mode
         '''
+        path = os.path.join(self.dir, 'try_task_config.json')
         if self.try_mode == TryMode.json:
-            path = os.path.join(self.dir, 'try_task_config.json')
             config = {
                 'version': 2,
                 'parameters': {
@@ -127,20 +128,25 @@ class Repository(object):
                     'phabricator_diff': build.target_phid,
                 }
             }
-            content = json.dumps(config, sort_keys=True, indent=4)
             message = 'try_task_config for code-review\nDifferential Diff: {}'.format(build.diff['phid'])
 
         elif self.try_mode == TryMode.syntax:
-            path = os.path.join(self.dir, '.try')
-            content = 'try: {}'.format(self.try_syntax)
-            message = content
+            config = {
+                'version': 2,
+                'parameters': {
+                    'code-review': {
+                        'phabricator-build-target': build.target_phid,
+                    }
+                }
+            }
+            message = 'try: {}'.format(self.try_syntax)
 
         else:
             raise Exception('Unsupported try mode')
 
-        # Write content and commit it
+        # Write content as json and commit it
         with open(path, 'w') as f:
-            f.write(content)
+            json.dump(config, f, sort_keys=True, indent=4)
         self.repo.add(path.encode('utf-8'))
         self.repo.commit(
             message=message,
