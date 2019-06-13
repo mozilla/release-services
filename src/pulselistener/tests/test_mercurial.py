@@ -435,7 +435,7 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
 
     # The patched and config files should not exist at first
     repo_dir = mock_nss.root().decode('utf-8')
-    config = os.path.join(repo_dir, '.try')
+    config = os.path.join(repo_dir, 'try_task_config.json')
     target = os.path.join(repo_dir, 'test.txt')
     assert not os.path.exists(target)
     assert not os.path.exists(config)
@@ -480,6 +480,17 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
     # The target should have content now
     assert os.path.exists(target)
     assert open(target).read() == 'First Line\nSecond Line\n'
+
+    # The config should have content now
+    assert os.path.exists(config)
+    assert json.load(open(config)) == {
+        'version': 2,
+        'parameters': {
+            'code-review': {
+                'phabricator-build-target': 'PHID-HMBT-deadbeef',
+            }
+        },
+    }
 
     # Get tip commit in repo
     # It should be different from the initial one (patches + config have applied)
