@@ -466,6 +466,11 @@ SUPPORTED_FLAVORS = {
         {'name': 'promote_fennec_release', 'in_previous_graph_ids': True},
         {'name': 'ship_fennec_release', 'in_previous_graph_ids': True},
     ],
+    'fennec_release_rc': [
+        {'name': 'promote_fennec_release', 'in_previous_graph_ids': True},
+        {'name': 'ship_fennec_release_rc', 'in_previous_graph_ids': True},
+        {'name': 'ship_fennec_release', 'in_previous_graph_ids': True},
+    ],
 }
 
 # TODO: add other branches
