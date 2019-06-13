@@ -1,7 +1,0 @@
-parsepatch
-datadog
-libmozdata>=0.1.55
-toml
-taskcluster
-Logbook
-structlog

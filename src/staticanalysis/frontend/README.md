@@ -1,2 +1,0 @@
-Static Analysis Frontend
-========================

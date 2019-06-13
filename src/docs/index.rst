@@ -34,7 +34,6 @@ Projects
     codecoverage/bot <projects/codecoverage-bot>
     codecoverage/backend <projects/codecoverage-backend>
     codecoverage/crawler <projects/codecoverage-crawler>
-    staticanalysis/bot <projects/staticanalysis-bot>
     pulselistener <projects/pulselistener>
     uplift/backend <projects/uplift-backend>
     uplift/bot <projects/uplift-bot>
