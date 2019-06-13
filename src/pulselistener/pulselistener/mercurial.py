@@ -45,6 +45,7 @@ class Repository(object):
         self.try_url = config['try_url']
         self.try_mode = TryMode(config.get('try_mode', 'json'))
         self.try_syntax = config.get('try_syntax')
+        self.default_revision = config.get('default_revision', 'tip')
         if self.try_mode == TryMode.syntax:
             assert self.try_syntax, 'Missing try syntax'
 
@@ -245,7 +246,11 @@ class MercurialWorker(object):
             repository.clean()
 
             # Get the stack of patches
-            base, patches = self.phabricator_api.load_patches_stack(repository.repo, build.diff, default_revision='central')
+            base, patches = self.phabricator_api.load_patches_stack(
+                repository.repo,
+                build.diff,
+                default_revision=repository.default_revision,
+            )
             assert len(patches) > 0, 'No patches to apply'
 
             # Load all the diffs details with commits messages
