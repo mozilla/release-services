@@ -16,6 +16,5 @@
 /src/shipit_pipeline                  @mozilla/Releng
 /src/pulselistener                    @mozilla/release-management
 /src/shipit_signoff                   @mozilla/Releng
-/src/staticanalysis                   @mozilla/release-management
 /src/shipit_taskcluster               @mozilla/Releng
 /src/shipit/api                       @mozilla/Releng
