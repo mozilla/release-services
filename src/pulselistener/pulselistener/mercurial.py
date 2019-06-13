@@ -24,7 +24,7 @@ from pulselistener.phabricator import PhabricatorBuild
 
 logger = get_logger(__name__)
 
-TREEHERDER_URL = 'https://treeherder.mozilla.org/#/jobs?repo=try&revision={}'
+TREEHERDER_URL = 'https://treeherder.mozilla.org/#/jobs?repo={}&revision={}'
 
 
 class TryMode(enum.Enum):
@@ -45,6 +45,7 @@ class Repository(object):
         self.try_url = config['try_url']
         self.try_mode = TryMode(config.get('try_mode', 'json'))
         self.try_syntax = config.get('try_syntax')
+        self.try_name = config.get('try_name', 'try')
         self.default_revision = config.get('default_revision', 'tip')
         if self.try_mode == TryMode.syntax:
             assert self.try_syntax, 'Missing try syntax'
@@ -279,7 +280,7 @@ class MercurialWorker(object):
 
             # Publish Treeherder link
             if build.target_phid and self.publish_phabricator:
-                uri = TREEHERDER_URL.format(tip.node.decode('utf-8'))
+                uri = TREEHERDER_URL.format(repository.try_name, tip.node.decode('utf-8'))
                 self.phabricator_api.create_harbormaster_uri(build.target_phid, 'treeherder', 'Treeherder Jobs', uri)
         except hglib.error.CommandError as e:
             # Format nicely the error log
