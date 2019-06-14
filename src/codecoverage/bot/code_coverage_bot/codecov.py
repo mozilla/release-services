@@ -180,9 +180,8 @@ class CodeCov(object):
             source_dir=self.repo_dir,
             service_number=push_id,
             commit_sha=commit_sha,
-            token=secrets[secrets.COVERALLS_TOKEN]
         )
-        logger.info('Codecov/coveralls report generated successfully')
+        logger.info('Codecov report generated successfully')
 
         output_covdir = self.generate_covdir()
 
@@ -197,7 +196,6 @@ class CodeCov(object):
         phabricatorUploader.upload(report)
 
         with ThreadPoolExecutorResult(max_workers=2) as executor:
-            executor.submit(uploader.coveralls, output)
             executor.submit(uploader.codecov, output, commit_sha)
             executor.submit(uploader.gcp, self.branch, self.revision, output_covdir)
 
