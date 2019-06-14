@@ -4,27 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common import log
-from codecoverage_backend import secrets
 from codecoverage_backend.services import codecov
-from codecoverage_backend.services import coveralls
 
 logger = log.get_logger(__name__)
 
 
-def build_coverage_service():
-    '''
-    Instanciate coverage service from TC secret
-    '''
-    services = {
-        'codecov': codecov.CodecovCoverage,
-        'coveralls': coveralls.CoverallsCoverage,
-    }
-    if secrets.COVERAGE_SERVICE not in services:
-        raise Exception(f'Unknown coverage service : {secrets.COVERAGE_SERVICE}')
-
-    service = services[secrets.COVERAGE_SERVICE]()
-    logger.info('Using coverage service', service=service)
-    return service
-
-
-coverage_service = build_coverage_service()
+# Only support codecov for legacy endpoints
+coverage_service = codecov.CodecovCoverage()

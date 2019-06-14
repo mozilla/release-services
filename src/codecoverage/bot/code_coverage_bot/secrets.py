@@ -8,7 +8,6 @@ from code_coverage_bot import config
 
 
 class Secrets(dict):
-    COVERALLS_TOKEN = 'COVERALLS_TOKEN'
     CODECOV_REPO = 'CODECOV_REPO'
     CODECOV_TOKEN = 'CODECOV_TOKEN'
     CODECOV_ACCESS_TOKEN = 'CODECOV_ACCESS_TOKEN'
@@ -31,7 +30,6 @@ class Secrets(dict):
             required=(
                 Secrets.APP_CHANNEL,
                 Secrets.BACKEND_HOST,
-                Secrets.COVERALLS_TOKEN,
                 Secrets.CODECOV_REPO,
                 Secrets.CODECOV_TOKEN,
                 Secrets.CODECOV_ACCESS_TOKEN,

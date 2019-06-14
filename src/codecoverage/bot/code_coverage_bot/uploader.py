@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import gzip
-
 import requests
 import zstandard as zstd
 
@@ -11,22 +9,6 @@ from code_coverage_bot.secrets import secrets
 
 logger = get_logger(__name__)
 GCP_COVDIR_PATH = '{repository}/{revision}.json.zstd'
-
-
-def coveralls(data):
-    logger.info('Upload report to Coveralls')
-
-    r = requests.post('https://coveralls.io/api/v1/jobs', files={
-        'json_file': ('json_file', gzip.compress(data), 'gzip/json')
-    })
-
-    try:
-        result = r.json()
-        logger.info('Uploaded report to Coveralls', report=r.text)
-    except ValueError:
-        raise Exception('Failure to submit data. Response [%s]: %s' % (r.status_code, r.text))
-
-    return result['url'] + '.json'
 
 
 def codecov(data, commit_sha, flags=None):
