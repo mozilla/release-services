@@ -6,7 +6,7 @@ from multiprocessing import Queue
 from aiohttp import web
 
 from cli_common.log import get_logger
-from pulselistener.phabricator import PhabricatorBuild
+from pulselistener.lib.phabricator import PhabricatorBuild
 
 logger = get_logger(__name__)
 
@@ -15,6 +15,7 @@ class WebServer(object):
     '''
     WebServer used to receive hook
     '''
+    QUEUE_OUT = 'web:out'
 
     def __init__(self):
         self.http_port = int(os.environ.get('PORT', 9000))
@@ -22,12 +23,18 @@ class WebServer(object):
 
         self.queue = Queue()
 
+        # Add a debug ping route
+
         # Configure the web application with routes
         self.app = web.Application()
         self.app.add_routes([
             web.get('/ping', self.ping),
             web.post('/codereview/new', self.create_code_review),
         ])
+
+    def register(self, bus):
+        self.bus = bus
+        self.bus.add_queue(WebServer.QUEUE_OUT, mp=True)
 
     def start(self):
         '''
@@ -61,10 +68,10 @@ class WebServer(object):
         '''
         try:
             build = PhabricatorBuild(request)
-            self.queue.put(build)
+            await self.bus.send(WebServer.QUEUE_OUT, build)
         except Exception as e:
             logger.error(str(e), path=request.path_qs)
             raise web.HTTPBadRequest(text=str(e))
 
-        logger.info('Queued new build', build=build)
+        logger.info('Queued new build', build=str(build))
         return web.Response(text='Build queued')
