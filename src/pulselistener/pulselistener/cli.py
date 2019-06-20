@@ -7,35 +7,33 @@ import os
 import tempfile
 
 import click
-from libmozdata.phabricator import PhabricatorAPI
 
 from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 from pulselistener import config
-from pulselistener import task_monitoring
-from pulselistener.listener import PulseListener
+from pulselistener.code_coverage import CodeCoverage
+from pulselistener.code_review import CodeReview
 
 
 @click.command()
+@click.argument(
+    'workflow',
+    type=click.Choice(['code-review', 'code-coverage']),
+    required=True,
+)
 @click.option(
     '--cache-root',
     required=False,
     help='Cache root, used to pull changesets',
     default=os.path.join(tempfile.gettempdir(), 'pulselistener'),
 )
-@click.option(
-    '--phab-build-target',
-    type=str,
-    required=False,
-    help='A Phabricator build target PHID to test'
-)
 @taskcluster_options
-def main(taskcluster_secret,
+def main(workflow,
+         cache_root,
+         taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
-         cache_root,
-         phab_build_target,
          ):
 
     secrets = get_secrets(taskcluster_secret,
@@ -64,29 +62,18 @@ def main(taskcluster_secret,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
-    task_monitoring.emails = secrets['ADMINS']
+    workflow_classes = {
+        'code-coverage': CodeCoverage,
+        'code-review': CodeReview,
+    }
 
-    phabricator = PhabricatorAPI(
-        api_key=secrets['PHABRICATOR']['token'],
-        url=secrets['PHABRICATOR']['url'],
+    workflow = workflow_classes[workflow](
+        secrets,
+        taskcluster_client_id=taskcluster_client_id,
+        taskcluster_access_token=taskcluster_access_token,
+        cache_root=cache_root,
     )
-
-    pl = PulseListener(secrets['PULSE_USER'],
-                       secrets['PULSE_PASSWORD'],
-                       secrets['HOOKS'],
-                       secrets['repositories'],
-                       phabricator,
-                       cache_root,
-                       secrets['PHABRICATOR'].get('publish', False),
-                       taskcluster_client_id,
-                       taskcluster_access_token,
-                       )
-    click.echo('Listening to pulse messages...')
-
-    if phab_build_target:
-        pl.add_build(phab_build_target)
-
-    pl.run()
+    workflow.run()
 
 
 if __name__ == '__main__':
