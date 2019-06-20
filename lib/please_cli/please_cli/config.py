@@ -543,35 +543,6 @@ PROJECTS_CONFIG = {
             'postgresql',
         ],
         'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-uplift',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://uplift.shipit.testing.mozilla-releng.net',
-                        'dns': 'uplift.shipit.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-uplift',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://uplift.shipit.staging.mozilla-releng.net',
-                        'dns': 'uplift.shipit.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-production-uplift',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://uplift.shipit.mozilla-releng.net',
-                        'dns': 'uplift.shipit.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
         ],
     },
     'shipit/api': {
