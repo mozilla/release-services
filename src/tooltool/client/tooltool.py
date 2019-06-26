@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
 # tooltool is a lookaside cache implemented in Python
 # Copyright (C) 2011 John H. Ford <john@johnford.info>
