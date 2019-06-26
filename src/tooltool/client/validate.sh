@@ -81,6 +81,8 @@ fi
 status "running tests (under coverage)"
 coverage erase || not_ok "coverage failed"
 coverage run --rcfile=coveragerc --source=tooltool `dirname \`which nosetests\``/.nosetests-wrapped test_tooltool.py || not_ok "tests failed"
+# XXX: to make coverage work in tox you should use the following command.
+#      this command will become the default once we are of nix
 #coverage run --rcfile=coveragerc --source=tooltool `which nosetests` test_tooltool.py || not_ok "tests failed"
 
 status "checking coverage"
