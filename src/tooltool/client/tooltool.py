@@ -44,7 +44,7 @@ import time
 import zipfile
 
 from io import open
-from io import BytesIO as StringIO
+from io import BytesIO
 from subprocess import PIPE
 from subprocess import Popen
 
@@ -797,7 +797,7 @@ def unpack_file(filename):
         stdout, stderr = process.communicate()
         if process.returncode != 0:
             return False
-        fileobj = StringIO()
+        fileobj = BytesIO()
         fileobj.write(stdout)
         fileobj.seek(0)
         tar = tarfile.open(fileobj=fileobj, mode='r|')
