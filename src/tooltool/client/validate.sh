@@ -5,9 +5,6 @@
 
 ## tweakable parameters
 
-# minimum acceptable coverage percentage
-COVERAGE_MIN=100
-
 # project name
 PROJECT=tooltool
 
@@ -84,9 +81,10 @@ fi
 status "running tests (under coverage)"
 coverage erase || not_ok "coverage failed"
 coverage run --rcfile=coveragerc --source=tooltool `dirname \`which nosetests\``/.nosetests-wrapped test_tooltool.py || not_ok "tests failed"
+#coverage run --rcfile=coveragerc --source=tooltool `which nosetests` test_tooltool.py || not_ok "tests failed"
 
 status "checking coverage"
-coverage report --rcfile=coveragerc --fail-under=${COVERAGE_MIN} >${tmpbase}/covreport || not_ok "less than ${COVERAGE_MIN}% coverage"
+coverage report --rcfile=coveragerc >${tmpbase}/covreport
 coverage html --rcfile=coveragerc -d .coverage-html
 head -n2 ${tmpbase}/covreport
 tail -n1 ${tmpbase}/covreport

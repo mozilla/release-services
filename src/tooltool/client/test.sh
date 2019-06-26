@@ -54,11 +54,23 @@ cd testdir
 
 mkdir serverdir
 python -c '
-import SimpleHTTPServer, SocketServer, os
-Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-httpd = SocketServer.TCPServer(("", 0), Handler)
+from __future__ import print_function
+
+import sys
+import os
+
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+  from http.server import SimpleHTTPRequestHandler
+  from socketserver import TCPServer
+else:
+  from SimpleHTTPServer import SimpleHTTPRequestHandler
+  from SocketServer import TCPServer
+
+httpd = TCPServer(("", 0), SimpleHTTPRequestHandler)
 with open("web_port", "w") as f:
-    print >>f, httpd.socket.getsockname()[1]
+    print(httpd.socket.getsockname()[1], file=f)
 os.chdir("serverdir")
 httpd.serve_forever()
 ' &

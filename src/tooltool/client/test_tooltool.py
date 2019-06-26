@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import BaseHTTPServer
-import cStringIO
 import contextlib
 import copy
 import hashlib
@@ -18,9 +16,22 @@ import tempfile
 import threading
 import tooltool
 import unittest
-import urllib2
 
+from io import StringIO, BytesIO
+from io import open
 from nose.tools import eq_
+
+PY3 = sys.version_info[0] == 3
+CWD_PATH = os.getcwd()
+
+from tooltool import to_binary, get_hexdigest, open_attrs, URLError, HTTPError
+
+if PY3:
+    urlopen_module_as_str = 'urllib.request.urlopen'
+    import http.server as BaseHTTPServer
+else:
+    urlopen_module_as_str = 'urllib2.urlopen'
+    import BaseHTTPServer
 
 
 class TestDirMixin(object):
@@ -63,7 +74,7 @@ class BufferHandler(logging.Handler):
 class DigestTests(unittest.TestCase):
 
     def setUp(self):
-        self.sample_data = open('test_file.ogg')
+        self.sample_data = open('test_file.ogg', 'rb')
         self.sample_algo = 'sha1'
         self.sample_digest = 'de3e3bbffd83c328ad7d9537ad2d03f68fc02e52'
 
@@ -78,9 +89,10 @@ class BaseFileRecordTest(unittest.TestCase):
 
     def setUp(self):
         self.sample_file = 'test_file.ogg'
+        self.sample_file_path = os.path.join(CWD_PATH, self.sample_file)
         self.sample_algo = 'sha512'
-        self.sample_size = os.path.getsize(self.sample_file)
-        with open(self.sample_file) as f:
+        self.sample_size = os.path.getsize(self.sample_file_path)
+        with open(self.sample_file_path, 'rb') as f:
             self.sample_hash = tooltool.digest_file(f, self.sample_algo)
         self.test_record = tooltool.FileRecord(
             filename=self.sample_file,
@@ -122,7 +134,7 @@ class BaseManifestTest(TestDirMixin, BaseFileRecordTest):
         self.setUpTestDir()
         self.sample_manifest = tooltool.Manifest([self.test_record])
         self.sample_manifest_file = 'manifest.tt'
-        with open(self.sample_manifest_file, 'w') as tmpfile:
+        with open(self.sample_manifest_file, **open_attrs) as tmpfile:
             self.sample_manifest.dump(tmpfile, fmt='json')
 
     def tearDown(self):
@@ -405,7 +417,10 @@ class TestManifest(BaseFileRecordTest):
         self.assertNotEqual(one, two)
 
     def test_json_dump(self):
-        tmp_manifest = tempfile.TemporaryFile()
+        if PY3:
+            tmp_manifest = tempfile.TemporaryFile('w+')
+        else:
+            tmp_manifest = tempfile.TemporaryFile('w+b')
         self.test_manifest.dump(tmp_manifest, fmt='json')
         tmp_manifest.seek(0)
         new_manifest = tooltool.Manifest()
@@ -442,21 +457,13 @@ class TestManifestOperations(BaseManifestTest):
                           tooltool.open_manifest('no-such-file'))
 
 
-def test_execute():
-    assert tooltool.execute('echo foo; echo bar')
-
-
-def test_execute_fails():
-    assert not tooltool.execute('false')
-
-
 def call_main(*args):
     try:
         old_stderr = sys.stderr
         sys.stderr = sys.stdout
         try:
             return tooltool.main(list(args), _skip_logging=True)
-        except SystemExit, e:
+        except SystemExit as e:
             return "exit %d" % e.code
     finally:
         sys.stderr = old_stderr
@@ -649,10 +656,10 @@ class UploadTests(TestDirMixin, unittest.TestCase):
             token = self.test_case.server_config.get('exp_auth_token')
             if token:
                 if self.headers.get('Authorization') != 'Bearer %s' % token:
-                    self.send_response(403, "Forbidden")
+                    self.send_response(403, b"Forbidden")
                     self.send_header('content-type', 'text/plain')
                     self.end_headers()
-                    self.wfile.write("go away")
+                    self.wfile.write(to_binary("go away"))
                     self.wfile.close()
                     return False
             return True
@@ -675,32 +682,35 @@ class UploadTests(TestDirMixin, unittest.TestCase):
                     file['put_url'] = self.test_case.s3url('/sha512/' + file['digest'])
 
             if cfg.get('post_fails'):
-                self.send_response(409, 'Exploded')
+                self.send_response(409, b'Exploded')
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                json.dump({'error': {'name': 'uhoh', 'description': 'failed'}}, self.wfile)
+                self.wfile.write(to_binary(json.dumps({'error': {'name': 'uhoh', 'description': 'failed'}})))
             else:
-                self.send_response(200, 'OK')
+                self.send_response(200, b'OK')
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                json.dump({'result': body}, self.wfile)
-            self.wfile.close()
+                self.wfile.write(to_binary(json.dumps({'result': body})))
+            if not PY3:
+                self.wfile.close()
 
         def do_PUT(self):  # S3 upload
             cfg = self.test_case.server_config
             assert self.path.startswith('/sha512/'), self.path
             eq_(self.headers['content-type'], 'application/octet-stream')
-            data = self.rfile.read(int(self.headers['content-length']))
-            digest = hashlib.sha512(data).hexdigest()
+            content_length = int(self.headers.get('content-length', -1))
+            data = self.rfile.read(content_length)
+            digest = get_hexdigest(data)
             self.test_case.server_requests.setdefault('PUT', []).append(digest)
             assert self.path.endswith(digest)
             if digest in cfg.get('upload_failures', []):
-                self.send_response(500, 'NOPE')
+                self.send_response(500, b'NOPE')
             else:
-                self.send_response(200, 'OK')
+                self.send_response(200, b'OK')
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
-            self.wfile.close()
+            if not PY3:
+                self.wfile.close()
 
         def do_GET(self):  # notify
             cfg = self.test_case.server_config
@@ -710,16 +720,17 @@ class UploadTests(TestDirMixin, unittest.TestCase):
             digest = self.path[-128:]
             self.test_case.server_requests.setdefault('GET', []).append(digest)
             if cfg.get('get_fails'):
-                self.send_response(500, 'NOPE')
+                self.send_response(500, b'NOPE')
             elif cfg.get('get_409s'):
-                self.send_response(409, 'Conflict')
+                self.send_response(409, b'Conflict')
                 self.send_header('X-Retry-After', '10')
                 del cfg['get_409s']  # succeed on retry
             else:
-                self.send_response(200, 'OK')
+                self.send_response(200, b'OK')
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
-            self.wfile.close()
+            if not PY3:
+                self.wfile.close()
 
     def setUp(self):
         self.setUpTestDir()
@@ -734,8 +745,10 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         self.server_thread.daemon = 1
         self.server_thread.start()
 
-        open("testfile.txt", 'w').write("FILE DATA")
-        self.digest = hashlib.sha512('FILE DATA').hexdigest()
+        self.content = "FILE DATA"
+        with open("testfile.txt", **open_attrs) as f:
+            f.write(self.content)
+        self.digest = get_hexdigest(self.content)
 
     def tearDown(self):
         if hasattr(self, 'httpd'):
@@ -746,8 +759,8 @@ class UploadTests(TestDirMixin, unittest.TestCase):
     def add_file(self, filename, on_server=False, upload_fails=False,
                  version=None, visibility='internal', unpack=False):
         data = os.urandom(1024)
-        open(filename, "w").write(data)
-        digest = hashlib.sha512(data).hexdigest()
+        open(filename, 'wb').write(data)
+        digest = get_hexdigest(data)
         tooltool.add_files('manifest.tt', 'sha512', [filename],
             version, visibility, unpack)
         if on_server:
@@ -798,7 +811,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         self.start_server()
         foo_digest = self.add_file("foo.txt", on_server=True)
         self.server_config['exp_auth_token'] = token = 'abcABC'
-        open("auth", "w").write(token)
+        open("auth", **open_attrs).write(token)
         assert tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], 'auth', None)
         eq_(self.server_requests, {
             'POST': [{
@@ -827,7 +840,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         self.start_server()
         self.add_file("foo.txt", on_server=True)
         self.server_config['exp_auth_token'] = 'abcABC'
-        open("auth", "w").write('not-the-token')
+        open("auth", **open_attrs).write('not-the-token')
         assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], 'auth', None)
 
     def test_upload_s3_fails(self):
@@ -883,7 +896,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
     def test_invalid_manifest(self):
         """When given a manifest that doesn't validate, upload fails"""
         self.add_file("foo.txt")
-        open("foo.txt", "w").write('bogus')
+        open("foo.txt", **open_attrs).write('bogus')
         assert not tooltool.upload('manifest.tt', 'hi mom', ['http://'], None, None)
 
     def test_send_batch_success(self):
@@ -951,7 +964,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         self.server_config['get_fails'] = True
         file = {'algorithm': 'sha512', 'digest': self.digest}
         with BufferHandler.capture('tooltool') as logged:
-            with mock.patch('urllib2.urlopen') as urlopen:
+            with mock.patch(urlopen_module_as_str) as urlopen:
                 urlopen.side_effect = RuntimeError('oh noes')
                 tooltool._notify_upload_complete(self.mkurl(''), None, file)
         eq_(self.server_requests, {})
@@ -967,11 +980,14 @@ def test_log_api_error_generic():
 
 def test_log_api_error_api_error():
     with BufferHandler.capture('tooltool') as logged:
-        fp = cStringIO.StringIO(json.dumps(
-            {'error': {'name': 'Bad Request', 'description': 'Nice try'}}))
-        exc = urllib2.HTTPError("http://a", 400, "Bad Request",
-                                {'content-type': 'application/json'},
-                                fp)
+        error = json.dumps({'error': {'name': 'Bad Request', 'description': 'Nice try'}})
+        if PY3:
+            fp = StringIO(error)
+        else:
+            fp = BytesIO(error)
+        exc = HTTPError("http://a", 400, "Bad Request",
+                        {'content-type': 'application/json'},
+                        fp)
         tooltool._log_api_error(exc)
     eq_(logged, [(logging.ERROR, 'Bad Request: Nice try')])
 
@@ -979,7 +995,7 @@ def test_log_api_error_api_error():
 class FetchTests(TestDirMixin, unittest.TestCase):
 
     _server_files = ['one', 'two', 'three']
-    server_files_by_hash = dict((hashlib.sha512(v).hexdigest(), v)
+    server_files_by_hash = dict((get_hexdigest(v), v)
                                 for v in _server_files)
     server_corrupt = False
     urls = ['http://a', 'http://2']
@@ -999,7 +1015,7 @@ class FetchTests(TestDirMixin, unittest.TestCase):
             else:
                 content = self.server_files_by_hash[file_record.digest]
             fd, temp_path = tempfile.mkstemp(dir=self.test_dir)
-            os.write(fd, content)
+            os.write(fd, to_binary(content))
             os.close(fd)
             return os.path.split(temp_path)[1]
         else:
@@ -1007,14 +1023,14 @@ class FetchTests(TestDirMixin, unittest.TestCase):
 
     def add_file_to_dir(self, file, corrupt=False):
         content = 'X' * len(file) if corrupt else file
-        open(os.path.join(self.test_dir, "file-" + file), "w").write(content)
+        open(os.path.join(self.test_dir, "file-" + file), **open_attrs).write(content)
 
     def add_file_to_cache(self, file, corrupt=False):
         if not os.path.exists(self.cache_dir):
             os.mkdir(self.cache_dir)
-        digest = hashlib.sha512(file).hexdigest()
+        digest = get_hexdigest(file)
         content = 'X' * len(file) if corrupt else file
-        open(os.path.join(self.cache_dir, digest), "w").write(content)
+        open(os.path.join(self.cache_dir, digest), **open_attrs).write(content)
 
     def make_manifest(self, filename, *files, **kwargs):
         unpack = kwargs.pop('unpack', False)
@@ -1024,25 +1040,26 @@ class FetchTests(TestDirMixin, unittest.TestCase):
                 'filename': 'file-' + file,
                 'size': len(file),
                 'algorithm': 'sha512',
-                'digest': hashlib.sha512(file).hexdigest(),
+                'digest': get_hexdigest(file),
                 'unpack': unpack,
             })
-        json.dump(manifest, open(filename, "w"))
+        with open(filename, **open_attrs) as f:
+            json.dump(manifest, f)
 
     def assert_files(self, *files):
         eq_(sorted([f for f in os.listdir(self.test_dir)
                     if f != 'cache' and not f.endswith('.tt')]),
             sorted(['file-' + f for f in files]))
         for f in files:
-            eq_(open('file-' + f).read(), f)
+            eq_(open('file-' + f, encoding='utf-8').read(), f)
 
     def assert_cached_files(self, *files):
         if not files and not os.path.exists(self.cache_dir):
             return
-        hashes = [hashlib.sha512(f).hexdigest() for f in files]
+        hashes = [get_hexdigest(f) for f in files]
         eq_(sorted(os.listdir(self.cache_dir)), sorted(hashes))
         for f, h in zip(files, hashes):
-            eq_(open(os.path.join(self.cache_dir, h)).read(), f)
+            eq_(open(os.path.join(self.cache_dir, h), encoding='utf-8').read(), f)
 
     # tests
 
@@ -1218,7 +1235,7 @@ class FetchTests(TestDirMixin, unittest.TestCase):
 
     def try_unpack_file(self, filename):
         os.mkdir('basename')
-        open("basename/LEFTOVER.txt", "w").write("rm me")
+        open("basename/LEFTOVER.txt", **open_attrs).write("rm me")
         self.failUnless(tooltool.unpack_file(filename))
         self.failUnless(os.path.exists('basename'))
         self.failUnless(os.path.exists('basename/README.txt'))
@@ -1226,7 +1243,7 @@ class FetchTests(TestDirMixin, unittest.TestCase):
 
     def setup_archive(self, cmd):
         os.mkdir('basename')
-        open("basename/README.txt", "w").write("in tarball")
+        open("basename/README.txt", **open_attrs).write("in tarball")
         os.system(cmd)
         shutil.rmtree('basename')
 
@@ -1259,7 +1276,7 @@ class FetchTests(TestDirMixin, unittest.TestCase):
         self.assertFalse(tooltool.unpack_file('basename.zip'))
 
     def test_unpack_file_not_tarfile(self):
-        open('basename.tar.shrink', 'w').write('not a tarfile')
+        open('basename.tar.shrink', **open_attrs).write('not a tarfile')
         self.assertFalse(tooltool.unpack_file('basename.tar.shrink'))
 
 
@@ -1275,7 +1292,7 @@ class FetchFileTests(BaseFileRecordTest, TestDirMixin):
 
     @contextlib.contextmanager
     def mocked_urllib2(self, data, exp_size=4096, exp_token=None):
-        with mock.patch('urllib2.urlopen') as urlopen:
+        with mock.patch(urlopen_module_as_str) as urlopen:
             def fake_read(url, size):
                 eq_(size, exp_size)
                 remaining = data[url]
@@ -1297,7 +1314,7 @@ class FetchFileTests(BaseFileRecordTest, TestDirMixin):
                     assert not exp_token, "got token auth when not expecting it"
                 url = req.get_full_url()
                 if url not in data:
-                    raise urllib2.URLError("bogus url")
+                    raise URLError("bogus url")
                 m = mock.Mock(name='Response')
                 m.read = lambda size: fake_read(url, size)
                 return m
@@ -1309,14 +1326,14 @@ class FetchFileTests(BaseFileRecordTest, TestDirMixin):
         with self.mocked_urllib2({'http://b/sha512/' + self.sample_hash: 'abcd'}):
             filename = tooltool.fetch_file(['http://a', 'http://b'], self.test_record)
             assert filename
-            eq_(open(filename).read(), 'abcd')
+            eq_(open(filename, encoding='utf-8').read(), 'abcd')
             os.unlink(filename)
 
     def test_fetch_file_region(self):
         with self.mocked_urllib2({'http://a/sha512/%s?region=us-west-1' % self.sample_hash: 'abcd'}):
             filename = tooltool.fetch_file(['http://a'], self.test_record, region='us-west-1')
             assert filename
-            eq_(open(filename).read(), 'abcd')
+            eq_(open(filename, encoding='utf-8').read(), 'abcd')
             os.unlink(filename)
 
     def test_fetch_file_size(self):
@@ -1324,28 +1341,28 @@ class FetchFileTests(BaseFileRecordTest, TestDirMixin):
             filename = tooltool.fetch_file(
                 ['http://a', 'http://b'], self.test_record, grabchunk=1024)
             assert filename
-            eq_(open(filename).read(), 'abcd')
+            eq_(open(filename, encoding='utf-8').read(), 'abcd')
             os.unlink(filename)
 
     def test_fetch_file_auth_file(self):
         with self.mocked_urllib2({'http://b/sha512/' + self.sample_hash: 'abcd'}, exp_token='TOKTOK'):
-            with open("auth", "w") as f:
+            with open("auth", **open_attrs) as f:
                 f.write('TOKTOK')
             filename = tooltool.fetch_file(
                 ['http://a', 'http://b'], self.test_record, auth_file='auth')
             assert filename
-            eq_(open(filename).read(), 'abcd')
+            eq_(open(filename, encoding='utf-8').read(), 'abcd')
             os.unlink(filename)
 
     def test_fetch_file_auth_file_taskcluster(self):
         credentials = json.dumps({'clientId': '123', 'accessToken': '456'})
         with self.mocked_urllib2({'http://b/sha512/' + self.sample_hash: 'abcd'}, exp_token=credentials):
-            with open("auth", "w") as f:
+            with open("auth", **open_attrs) as f:
                 f.write(credentials)
             filename = tooltool.fetch_file(
                 ['http://a', 'http://b'], self.test_record, auth_file='auth')
             assert filename
-            eq_(open(filename).read(), 'abcd')
+            eq_(open(filename, encoding='utf-8').read(), 'abcd')
             os.unlink(filename)
 
     def test_fetch_file_fails(self):
@@ -1355,7 +1372,7 @@ class FetchFileTests(BaseFileRecordTest, TestDirMixin):
 
 
 def test_touch():
-    open("testfile", "w")
+    open("testfile", 'wb')
     os.utime("testfile", (0, 0))
     tooltool.touch("testfile")
     assert os.stat("testfile").st_mtime > 0
@@ -1386,13 +1403,13 @@ class PurgeTests(TestDirMixin, unittest.TestCase):
         # add files, with ordered mtime
         for f in files:
             path = os.path.join(self.test_dir, f)
-            open(path, "w")
+            open(path, 'wb')
             os.utime(path, (now, now))
             now += 10
 
     def test_purge_fails(self):
         path = os.path.join(self.test_dir, 'sticky')
-        open(path, 'w')
+        open(path, 'wb')
         os.chmod(self.test_dir, 0o500)  # prevent delete
         try:
             tooltool.purge(self.test_dir, 0)
@@ -1437,18 +1454,18 @@ class PurgeTests(TestDirMixin, unittest.TestCase):
 class AddFiles(BaseManifestTest):
 
     def assert_manifest(self, exp_manifest, manifest=None):
-        got_manifest = json.load(open(manifest or self.sample_manifest_file))
+        got_manifest = json.load(open(manifest or self.sample_manifest_file, encoding='utf-8'))
         got_manifest.sort(key=lambda f: f['digest'])
         exp_manifest.sort(key=lambda f: f['digest'])
         eq_(got_manifest, exp_manifest)
 
     def make_file(self, filename="a_file"):
         data = os.urandom(100)
-        open(filename, "w").write(data)
+        open(filename, 'wb').write(data)
         return {
             'filename': filename,
             'algorithm': 'sha512',
-            'digest': hashlib.sha512(data).hexdigest(),
+            'digest': get_hexdigest(data),
             'size': len(data)
         }
 
@@ -1525,11 +1542,11 @@ class ValidateManifest(BaseManifestTest):
         assert not tooltool.validate_manifest('manifest.tt')
 
     def test_validate_invalid_files(self):
-        open(self.sample_file, "w").write("BOGUS")
+        open(self.sample_file, **open_attrs).write("BOGUS")
         assert not tooltool.validate_manifest('manifest.tt')
 
     def test_validate_invalid_manifest(self):
-        open('manifest.tt', "w").write("BOGUS")
+        open('manifest.tt', **open_attrs).write("BOGUS")
         assert not tooltool.validate_manifest('manifest.tt')
 
 
@@ -1537,13 +1554,17 @@ class ListManifest(BaseManifestTest):
 
     def test_list(self):
         # add two files
-        open("foo.txt", "w").write("FOO!")
-        open("bar.txt", "w").write("BAR!")
+        open("foo.txt", **open_attrs).write("FOO!")
+        open("bar.txt", **open_attrs).write("BAR!")
         tooltool.add_files('manifest.tt', 'sha512',
             ['foo.txt', 'bar.txt'], None, None, False)
-        open("bar.txt", "w").write("bar is invalid")
+        open("bar.txt", **open_attrs).write("bar is invalid")
         old_stdout = sys.stdout
-        sys.stdout = cStringIO.StringIO()
+        if PY3:
+            sys.stdout = StringIO()
+        else:
+            sys.stdout = BytesIO()
+
         try:
             assert tooltool.list_manifest('manifest.tt')
         finally:
@@ -1556,5 +1577,5 @@ class ListManifest(BaseManifestTest):
         ]))
 
     def test_list_invalid_manifest(self):
-        open("manifest.tt", "w").write("BOGUS")
+        open("manifest.tt", **open_attrs).write("BOGUS")
         assert not tooltool.list_manifest("manifest.tt")
