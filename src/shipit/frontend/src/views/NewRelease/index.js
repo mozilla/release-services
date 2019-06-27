@@ -100,11 +100,27 @@ export default class NewRelease extends React.Component {
 
   guessPartialVersions = async () => {
     const { product } = this.state.selectedProduct;
-    const { branch, rcBranch, numberOfPartials } = this.state.selectedBranch;
+    const {
+      branch, rcBranch, numberOfPartials, alternativeBranch,
+    } = this.state.selectedBranch;
+    const numberOfPartialsOrDefault = numberOfPartials || 3;
+
     const shippedReleases = await getShippedReleases(product, branch);
     const shippedBuilds = shippedReleases.map(r => `${r.version}build${r.build_number}`);
     // take first N releases
-    const suggestedBuilds = shippedBuilds.slice(0, numberOfPartials || 3);
+    const suggestedBuilds = shippedBuilds.slice(0, numberOfPartialsOrDefault);
+
+    // alternativeBranch is used for find partials from a different branch, and
+    // usually used for ESR releases
+    let suggestedAlternativeBuilds = [];
+    if (suggestedBuilds.length < numberOfPartialsOrDefault && alternativeBranch) {
+      const alternativeReleases = await getShippedReleases(product, alternativeBranch);
+      const shippedAlternativeBuilds = alternativeReleases.map(r => `${r.version}build${r.build_number}`);
+      suggestedAlternativeBuilds = shippedAlternativeBuilds.slice(
+        0,
+        numberOfPartialsOrDefault - suggestedBuilds.length,
+      );
+    }
     // if RC, also add last shipped beta
     let suggestedRcBuilds = [];
     if (rcBranch && this.isRc(this.state.version)) {
@@ -114,7 +130,7 @@ export default class NewRelease extends React.Component {
     }
 
     this.setState({
-      partialVersions: suggestedBuilds.concat(suggestedRcBuilds),
+      partialVersions: suggestedBuilds.concat(suggestedRcBuilds, suggestedAlternativeBuilds),
     });
   };
 
