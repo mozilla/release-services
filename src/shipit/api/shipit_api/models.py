@@ -22,9 +22,7 @@ from shipit_api.tasks import fetch_actions_json
 from shipit_api.tasks import find_action
 from shipit_api.tasks import find_decision_task_id
 from shipit_api.tasks import generate_action_hook
-from shipit_api.tasks import generate_action_task
 from shipit_api.tasks import render_action_hook
-from shipit_api.tasks import render_action_task
 
 
 class Signoff(db.Model):
@@ -88,12 +86,6 @@ class Phase(db.Model):
     @property
     def context_json(self):
         return json.loads(self.context)
-
-    def rendered(self, extra_context={}):
-        context = self.context_json
-        if extra_context:
-            context.update(extra_context)
-        return render_action_task(self.task_json, context)
 
     def rendered_hook_payload(self, extra_context={}):
         context = self.context_json
@@ -197,41 +189,31 @@ class Release(db.Model):
                 }
         target_action = find_action('release-promotion', self.actions)
         kind = target_action['kind']
+        if kind != 'hook':
+            raise ValueError(f'Unsupported kind: {kind}')
+
         for phase in self.release_promotion_flavors():
             input_ = copy.deepcopy(input_common)
             input_['release_promotion_flavor'] = phase['name']
             input_['previous_graph_ids'] = list(previous_graph_ids)
-            if kind == 'task':
-                action_task_id, action_task, context = generate_action_task(
-                    decision_task_id=self.decision_task_id,
-                    action_name='release-promotion',
-                    input_=input_,
-                    actions=self.actions,
-                )
-                if phase['in_previous_graph_ids']:
-                    previous_graph_ids.append(action_task_id)
-                phase_obj = Phase(
-                    phase['name'], action_task_id, json.dumps(action_task), json.dumps(context))
-            elif kind == 'hook':
-                hook = generate_action_hook(
-                    task_group_id=self.decision_task_id,
-                    action_name='release-promotion',
-                    actions=self.actions,
-                    input_=input_,
-                )
-                hook_no_context = {k: v for k, v in hook.items() if k != 'context'}
-                phase_obj = Phase(
-                    name=phase['name'],
-                    task_id='',
-                    task=json.dumps(hook_no_context),
-                    context=json.dumps(hook['context']),
-                )
-                # we need to update input_['previous_graph_ids'] later, because
-                # the task IDs cannot be set for hooks in advance
-                if phase['in_previous_graph_ids']:
-                    previous_graph_ids.append(phase['name'])
-            else:
-                raise ValueError(f'Unsupported kind: {kind}')
+
+            hook = generate_action_hook(
+                task_group_id=self.decision_task_id,
+                action_name='release-promotion',
+                actions=self.actions,
+                input_=input_,
+            )
+            hook_no_context = {k: v for k, v in hook.items() if k != 'context'}
+            phase_obj = Phase(
+                name=phase['name'],
+                task_id='',
+                task=json.dumps(hook_no_context),
+                context=json.dumps(hook['context']),
+            )
+            # we need to update input_['previous_graph_ids'] later, because
+            # the task IDs cannot be set for hooks in advance
+            if phase['in_previous_graph_ids']:
+                previous_graph_ids.append(phase['name'])
 
             phase_obj.signoffs = self.phase_signoffs(self.branch, self.product, phase['name'])
             phases.append(phase_obj)

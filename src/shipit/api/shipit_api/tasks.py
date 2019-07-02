@@ -75,27 +75,6 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates, produc
     return SUPPORTED_FLAVORS[product_key]
 
 
-def generate_action_task(decision_task_id, action_name, input_, actions):
-    target_action = find_action(action_name, actions)
-    context = copy.deepcopy(actions['variables'])  # parameters
-    action_task_id = slugid.nice()
-    context.update({
-        'input': input_,
-        'taskGroupId': decision_task_id,
-        'ownTaskId': action_task_id,
-        'taskId': None,
-        'task': None,
-    })
-    action_task = copy.deepcopy(target_action['task'])
-    log.info('TASK: %s', action_task)
-    return action_task_id, action_task, context
-
-
-def render_action_task(task, context):
-    action_task = jsone.render(task, context)
-    return action_task
-
-
 def generate_action_hook(task_group_id, action_name, actions, input_):
     target_action = find_action(action_name, actions)
     context = copy.deepcopy(actions['variables'])  # parameters

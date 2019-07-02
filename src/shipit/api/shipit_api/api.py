@@ -168,22 +168,20 @@ def schedule_phase(name, phase):
         if not signoff.signed:
             abort(400, 'Pending signoffs')
 
-    task_or_hook = phase.task_json
-    if 'hook_payload' in task_or_hook:
-        hooks = get_service('hooks')
-        client_id = hooks.options['credentials']['clientId'].decode('utf-8')
-        extra_context = {'clientId': client_id}
-        result = hooks.triggerHook(
-            task_or_hook['hook_group_id'],
-            task_or_hook['hook_id'],
-            phase.rendered_hook_payload(extra_context=extra_context),
-        )
-        phase.task_id = result['status']['taskId']
-    else:
-        queue = get_service('queue')
-        client_id = queue.options['credentials']['clientId'].decode('utf-8')
-        extra_context = {'clientId': client_id}
-        queue.createTask(phase.task_id, phase.rendered(extra_context=extra_context))
+    hook = phase.task_json
+
+    if 'hook_payload' not in hook:
+        raise ValueError('Action tasks are not supported')
+
+    hooks = get_service('hooks')
+    client_id = hooks.options['credentials']['clientId'].decode('utf-8')
+    extra_context = {'clientId': client_id}
+    result = hooks.triggerHook(
+        hook['hook_group_id'],
+        hook['hook_id'],
+        phase.rendered_hook_payload(extra_context=extra_context),
+    )
+    phase.task_id = result['status']['taskId']
 
     phase.submitted = True
     phase.completed_by = current_user.get_id()
