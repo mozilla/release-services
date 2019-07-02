@@ -17,6 +17,8 @@ import responses
 from libmozdata.phabricator import PhabricatorAPI
 from taskcluster.utils import stringDate
 
+from pulselistener.code_coverage import CodeCoverage
+
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
 
@@ -156,9 +158,18 @@ def PhabricatorMock():
             # Search from diffs
             diffs = '-'.join(params['constraints']['phids'])
             mock_name = 'search-{}'.format(diffs)
+        elif 'ids' in params['constraints']:
+            diffs = '-'.join(map(str, params['constraints']['ids']))
+            mock_name = 'search-{}'.format(diffs)
         else:
             raise Exception('Unsupported diff mock {}'.format(params))
         return (200, json_headers, _response(mock_name))
+
+    def _revision_search(request):
+        params = _phab_params(request)
+        assert 'constraints' in params
+        ids = '-'.join(map(str, params['constraints']['ids']))
+        return (200, json_headers, _response('search-rev-{}'.format(ids)))
 
     def _diff_raw(request):
         params = _phab_params(request)
@@ -202,6 +213,12 @@ def PhabricatorMock():
 
         resp.add_callback(
             responses.POST,
+            'http://phabricator.test/api/differential.revision.search',
+            callback=_revision_search,
+        )
+
+        resp.add_callback(
+            responses.POST,
             'http://phabricator.test/api/differential.diff.search',
             callback=_diff_search,
         )
@@ -228,6 +245,13 @@ def PhabricatorMock():
             responses.POST,
             'http://phabricator.test/api/diffusion.repository.search',
             body=_response('repositories'),
+            content_type='application/json',
+        )
+
+        resp.add(
+            responses.POST,
+            'http://phabricator.test/api/project.search',
+            body=_response('projects'),
             content_type='application/json',
         )
 
@@ -281,3 +305,16 @@ def mock_nss(tmpdir):
     Mock an NSS repository
     '''
     return build_repository(tmpdir, 'nss')
+
+
+@pytest.fixture
+def code_coverage():
+    '''
+    Helper to build a CodeCoverage instance
+    '''
+    return CodeCoverage({
+       'PULSE_USER': 'test',
+       'PULSE_PASSWORD': 'xxx',
+       'APP_CHANNEL': 'staging',
+       'ADMINS': ['test@allizom.org'],
+    }, 'user', 'token')

@@ -1,0 +1,52 @@
+{
+    "result": {
+        "data": [
+            {
+                "id": 5678,
+                "type": "DREV",
+                "phid": "PHID-DREV-deadbeef",
+                "fields": {
+                  "title": "Bug 123456 - Some bug",
+                  "authorPHID": "PHID-USER-aaa",
+                  "status": {
+                    "value": "needs-review",
+                    "name": "Needs Review",
+                    "closed": false,
+                    "color.ansi": "magenta"
+                  },
+                  "repositoryPHID": "PHID-REPO-mc",
+                  "diffPHID": "PHID-DIFF-test123",
+                  "summary": "This further improves the performance of code",
+                  "testPlan": "",
+                  "isDraft": false,
+                  "holdAsDraft": false,
+                  "dateCreated": 1562072540,
+                  "dateModified": 1562072547,
+                  "policy": {
+                    "view": "public",
+                    "edit": "PHID-PROJ-njo5uuqyyq3oijbkhy55"
+                  },
+                  "bugzilla.bug-id": "123456"
+                },
+                "attachments": {
+                  "projects": {
+                    "projectPHIDs": []
+                  }
+                }
+            }
+        ],
+        "maps": {},
+        "query": {
+            "queryKey": null
+        },
+        "cursor": {
+            "limit": 100,
+            "after": null,
+            "before": null,
+            "order": null
+        }
+    },
+    "error_code": null,
+    "error_info": null
+}
+
