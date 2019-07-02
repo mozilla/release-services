@@ -7,7 +7,6 @@ import copy
 
 import jsone
 import requests
-import slugid
 
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
