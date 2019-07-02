@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-import collections
 import json
 import os.path
-import urllib
 
 import pytest
 
-from pulselistener.mercurial import MercurialWorker
+from pulselistener.code_review import CodeReview
+from pulselistener.lib.phabricator import PhabricatorBuild
+from pulselistener.lib.phabricator import PhabricatorBuildState
 
 MERCURIAL_FAILURE = '''WARNING: The code review bot failed to apply your patch.
 
@@ -16,7 +16,18 @@ MERCURIAL_FAILURE = '''WARNING: The code review bot failed to apply your patch.
 abort: patch failed to apply
 ```'''
 
-MockBuild = collections.namedtuple('MockBuild', 'diff_id, repo_phid, revision_id, target_phid, diff')
+
+class MockBuild(PhabricatorBuild):
+    def __init__(self, diff_id, repo_phid, revision_id, target_phid, diff):
+        self.diff_id = diff_id
+        self.repo_phid = repo_phid
+        self.revision_id = revision_id
+        self.target_phid = target_phid
+        self.diff = diff
+        self.stack = []
+        self.retries_left = 1
+        self.last_try = None
+        self.state = PhabricatorBuildState.Queued
 
 
 @pytest.mark.asyncio
@@ -35,24 +46,28 @@ async def test_push_to_try(PhabricatorMock, mock_mc):
     assert not os.path.exists(target)
     assert not os.path.exists(config)
 
+    secrets = {
+        'PHABRICATOR': {
+            'url': 'http://phabricator.test/api/',
+            'token': 'xxx',
+        },
+        'repositories': [
+            {
+                'name': 'mozilla-central',
+                'ssh_user': 'john@doe.com',
+                'ssh_key': 'privateSSHkey',
+                'url': 'http://mozilla-central',
+                'try_url': 'http://mozilla-central/try',
+                'batch_size': 100,
+            }
+        ],
+        'publish_phabricator': False,
+    }
+
     with PhabricatorMock as api:
-        worker = MercurialWorker(
-            api,
-            repositories=[
-                {
-                    'name': 'mozilla-central',
-                    'ssh_user': 'john@doe.com',
-                    'ssh_key': 'privateSSHkey',
-                    'url': 'http://mozilla-central',
-                    'try_url': 'http://mozilla-central/try',
-                    'batch_size': 100,
-                }
-            ],
-            publish_phabricator=False,
-            cache_root=os.path.dirname(repo_dir),
-        )
-        assert len(worker.repositories) == 1
-        repo = worker.repositories.get('PHID-REPO-mc')
+        bot = CodeReview(secrets, cache_root=os.path.dirname(repo_dir))
+        assert len(bot.repositories) == 1
+        repo = bot.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
 
@@ -65,7 +80,8 @@ async def test_push_to_try(PhabricatorMock, mock_mc):
             'baseRevision': 'abcdef12345',
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-deadbeef', diff)
-        await worker.handle_build(repo, build)
+        bot.phabricator.check_visibility(build)
+        await bot.apply_build(build)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
@@ -136,24 +152,28 @@ async def test_push_to_try_existing_rev(PhabricatorMock, mock_mc):
     assert not os.path.exists(target)
     assert not os.path.exists(config)
 
+    secrets = {
+        'PHABRICATOR': {
+            'url': 'http://phabricator.test/api/',
+            'token': 'xxx',
+        },
+        'repositories': [
+            {
+                'name': 'mozilla-central',
+                'ssh_user': 'john@doe.com',
+                'ssh_key': 'privateSSHkey',
+                'url': 'http://mozilla-central',
+                'try_url': 'http://mozilla-central/try',
+                'batch_size': 100,
+            }
+        ],
+        'publish_phabricator': False,
+    }
+
     with PhabricatorMock as api:
-        worker = MercurialWorker(
-            api,
-            repositories=[
-                {
-                    'name': 'mozilla-central',
-                    'ssh_user': 'john@doe.com',
-                    'ssh_key': 'privateSSHkey',
-                    'url': 'http://mozilla-central',
-                    'try_url': 'http://mozilla-central/try',
-                    'batch_size': 100,
-                }
-            ],
-            publish_phabricator=False,
-            cache_root=os.path.dirname(repo_dir),
-        )
-        assert len(worker.repositories) == 1
-        repo = worker.repositories.get('PHID-REPO-mc')
+        bot = CodeReview(secrets, cache_root=os.path.dirname(repo_dir))
+        assert len(bot.repositories) == 1
+        repo = bot.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
 
@@ -165,8 +185,9 @@ async def test_push_to_try_existing_rev(PhabricatorMock, mock_mc):
             # Revision does not exist, will apply on tip
             'baseRevision': base,
         }
-        build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-deadbeef', diff)
-        await worker.handle_build(repo, build)
+        build = MockBuild(9876, 'PHID-REPO-mc', 5678, 'PHID-HMBT-deadbeef', diff)
+        bot.phabricator.check_visibility(build)
+        await bot.apply_build(build)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
@@ -236,24 +257,28 @@ async def test_treeherder_link(PhabricatorMock, mock_mc):
     assert not os.path.exists(target)
     assert not os.path.exists(config)
 
+    secrets = {
+        'PHABRICATOR': {
+            'url': 'http://phabricator.test/api/',
+            'token': 'xxx',
+        },
+        'repositories': [
+            {
+                'name': 'mozilla-central',
+                'ssh_user': 'john@doe.com',
+                'ssh_key': 'privateSSHkey',
+                'url': 'http://mozilla-central',
+                'try_url': 'http://mozilla-central/try',
+                'batch_size': 100,
+            }
+        ],
+        'publish_phabricator': False,
+    }
+
     with PhabricatorMock as api:
-        worker = MercurialWorker(
-            api,
-            repositories=[
-                {
-                    'name': 'mozilla-central',
-                    'ssh_user': 'john@doe.com',
-                    'ssh_key': 'privateSSHkey',
-                    'url': 'http://mozilla-central',
-                    'try_url': 'http://mozilla-central/try',
-                    'batch_size': 100,
-                }
-            ],
-            publish_phabricator=True,
-            cache_root=os.path.dirname(repo_dir),
-        )
-        assert len(worker.repositories) == 1
-        repo = worker.repositories.get('PHID-REPO-mc')
+        bot = CodeReview(secrets, cache_root=os.path.dirname(repo_dir))
+        assert len(bot.repositories) == 1
+        repo = bot.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
 
@@ -264,11 +289,13 @@ async def test_treeherder_link(PhabricatorMock, mock_mc):
             'baseRevision': 'abcdef12345',
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-somehash', diff)
-        await worker.handle_build(repo, build)
+        bot.phabricator.check_visibility(build)
+        out = await bot.apply_build(build)
+        assert len(api.mocks.calls) == 12
 
-        # Check the treeherder link was published
-        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.createartifact'
-        assert api.mocks.calls[-1].response.status_code == 200
+        # Check the treeherder link was queued
+        uri = 'https://treeherder.mozilla.org/#/jobs?repo=try&revision={}'.format(mock_mc.tip().node.decode('utf-8'))
+        assert out == ('treeherder_link', build, uri)
 
     # Tip should be updated
     tip = mock_mc.tip()
@@ -292,24 +319,28 @@ async def test_failure_general(PhabricatorMock, mock_mc):
     assert not os.path.exists(target)
     assert not os.path.exists(config)
 
+    secrets = {
+        'PHABRICATOR': {
+            'url': 'http://phabricator.test/api/',
+            'token': 'xxx',
+        },
+        'repositories': [
+            {
+                'name': 'mozilla-central',
+                'ssh_user': 'john@doe.com',
+                'ssh_key': 'privateSSHkey',
+                'url': 'http://mozilla-central',
+                'try_url': 'http://mozilla-central/try',
+                'batch_size': 100,
+            }
+        ],
+        'publish_phabricator': False,
+    }
+
     with PhabricatorMock as api:
-        worker = MercurialWorker(
-            api,
-            repositories=[
-                {
-                    'name': 'mozilla-central',
-                    'ssh_user': 'john@doe.com',
-                    'ssh_key': 'privateSSHkey',
-                    'url': 'http://mozilla-central',
-                    'try_url': 'http://mozilla-central/try',
-                    'batch_size': 100,
-                }
-            ],
-            publish_phabricator=True,
-            cache_root=os.path.dirname(repo_dir),
-        )
-        assert len(worker.repositories) == 1
-        repo = worker.repositories.get('PHID-REPO-mc')
+        bot = CodeReview(secrets, cache_root=os.path.dirname(repo_dir))
+        assert len(bot.repositories) == 1
+        repo = bot.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
 
@@ -319,30 +350,22 @@ async def test_failure_general(PhabricatorMock, mock_mc):
             'id': 1234,
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-somehash', diff)
-        out = await worker.handle_build(repo, build)
-        assert out is False
+        bot.phabricator.check_visibility(build)
+        mode, build_out, result = await bot.apply_build(build)
 
-        # Check the unit result was published
-        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
-        params = json.loads(urllib.parse.parse_qs(api.mocks.calls[-1].request.body)['params'][0])
-        assert params['unit'][0]['duration'] > 0
-        del params['unit'][0]['duration']
-        assert params == {
-            'buildTargetPHID': 'PHID-somehash',
-            'type': 'fail',
-            'unit': [
-                {
-                    'name': 'general',
-                    'result': 'broken',
-                    'namespace': 'code-review',
-                    'details': 'WARNING: An error occured in the code review bot.\n\n``````',
-                    'format': 'remarkup',
-                }
-            ],
-            'lint': [],
-            '__conduit__': {'token': 'deadbeef'}
+        # Check the unit result was queued
+        assert mode == 'failure'
+        assert build_out is build
+        assert result['duration'] > 0
+        del result['duration']
+        assert result == {
+            'name': 'general',
+            'result': 'broken',
+            'namespace': 'code-review',
+            'details': 'WARNING: An error occured in the code review bot.\n\n```No patches to apply```',
+            'format': 'remarkup',
         }
-        assert api.mocks.calls[-1].response.status_code == 200
+        assert len(api.mocks.calls) == 5
 
         # Clone should not be modified
         tip = mock_mc.tip()
@@ -366,24 +389,28 @@ async def test_failure_mercurial(PhabricatorMock, mock_mc):
     assert not os.path.exists(target)
     assert not os.path.exists(config)
 
+    secrets = {
+        'PHABRICATOR': {
+            'url': 'http://phabricator.test/api/',
+            'token': 'xxx',
+        },
+        'repositories': [
+            {
+                'name': 'mozilla-central',
+                'ssh_user': 'john@doe.com',
+                'ssh_key': 'privateSSHkey',
+                'url': 'http://mozilla-central',
+                'try_url': 'http://mozilla-central/try',
+                'batch_size': 100,
+            }
+        ],
+        'publish_phabricator': False,
+    }
+
     with PhabricatorMock as api:
-        worker = MercurialWorker(
-            api,
-            repositories=[
-                {
-                    'name': 'mozilla-central',
-                    'ssh_user': 'john@doe.com',
-                    'ssh_key': 'privateSSHkey',
-                    'url': 'http://mozilla-central',
-                    'try_url': 'http://mozilla-central/try',
-                    'batch_size': 100,
-                }
-            ],
-            publish_phabricator=True,
-            cache_root=os.path.dirname(repo_dir),
-        )
-        assert len(worker.repositories) == 1
-        repo = worker.repositories.get('PHID-REPO-mc')
+        bot = CodeReview(secrets, cache_root=os.path.dirname(repo_dir))
+        assert len(bot.repositories) == 1
+        repo = bot.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
 
@@ -394,30 +421,22 @@ async def test_failure_mercurial(PhabricatorMock, mock_mc):
             'id': 666,
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-build-666', diff)
-        out = await worker.handle_build(repo, build)
-        assert out is False
+        bot.phabricator.check_visibility(build)
+        mode, build_out, result = await bot.apply_build(build)
 
-        # Check the unit result was published
-        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
-        params = json.loads(urllib.parse.parse_qs(api.mocks.calls[-1].request.body)['params'][0])
-        assert params['unit'][0]['duration'] > 0
-        del params['unit'][0]['duration']
-        assert params == {
-            'buildTargetPHID': 'PHID-build-666',
-            'type': 'fail',
-            'unit': [
-                {
-                    'name': 'mercurial',
-                    'result': 'fail',
-                    'namespace': 'code-review',
-                    'details': MERCURIAL_FAILURE,
-                    'format': 'remarkup',
-                }
-            ],
-            'lint': [],
-            '__conduit__': {'token': 'deadbeef'}
+        # Check the unit result was queued
+        assert mode == 'failure'
+        assert build_out is build
+        assert result['duration'] > 0
+        del result['duration']
+        assert result == {
+            'name': 'mercurial',
+            'result': 'fail',
+            'namespace': 'code-review',
+            'details': MERCURIAL_FAILURE,
+            'format': 'remarkup',
         }
-        assert api.mocks.calls[-1].response.status_code == 200
+        assert len(api.mocks.calls) == 8
 
         # Clone should not be modified
         tip = mock_mc.tip()
@@ -440,26 +459,30 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
     assert not os.path.exists(target)
     assert not os.path.exists(config)
 
+    secrets = {
+        'PHABRICATOR': {
+            'url': 'http://phabricator.test/api/',
+            'token': 'xxx',
+        },
+        'repositories': [
+            {
+                'name': 'nss',
+                'ssh_user': 'john@doe.com',
+                'ssh_key': 'privateSSHkey',
+                'url': 'http://nss',
+                'try_url': 'http://nss/try',
+                'try_mode': 'syntax',
+                'try_syntax': '-a -b XXX -c YYY',
+                'batch_size': 100,
+            }
+        ],
+        'publish_phabricator': False,
+    }
+
     with PhabricatorMock as api:
-        worker = MercurialWorker(
-            api,
-            repositories=[
-                {
-                    'name': 'nss',
-                    'ssh_user': 'john@doe.com',
-                    'ssh_key': 'privateSSHkey',
-                    'url': 'http://nss',
-                    'try_url': 'http://nss/try',
-                    'try_mode': 'syntax',
-                    'try_syntax': '-a -b XXX -c YYY',
-                    'batch_size': 100,
-                }
-            ],
-            publish_phabricator=False,
-            cache_root=os.path.dirname(repo_dir),
-        )
-        assert len(worker.repositories) == 1
-        repo = worker.repositories.get('PHID-REPO-nss')
+        bot = CodeReview(secrets, cache_root=os.path.dirname(repo_dir))
+        assert len(bot.repositories) == 1
+        repo = bot.repositories.get('PHID-REPO-nss')
         assert repo is not None
         repo.repo = mock_nss
 
@@ -472,7 +495,8 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
             'baseRevision': 'abcdef12345',
         }
         build = MockBuild(1234, 'PHID-REPO-nss', 5678, 'PHID-HMBT-deadbeef', diff)
-        await worker.handle_build(repo, build)
+        bot.phabricator.check_visibility(build)
+        await bot.apply_build(build)
 
         # Check the treeherder link was NOT published
         assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'

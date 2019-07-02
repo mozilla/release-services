@@ -1,0 +1,50 @@
+{
+    "error_code": null,
+    "error_info": null,
+    "result": {
+        "cursor": {
+            "after": null,
+            "before": null,
+            "limit": 100,
+            "order": null
+        },
+        "data": [
+            {
+                "id": 1,
+                "type": "PROJ",
+                "phid": "PHID-PROJ-xxx",
+                "fields": {
+                  "name": "Autoland",
+                  "slug": "autoland",
+                  "subtype": "default",
+                  "milestone": null,
+                  "depth": 0,
+                  "parent": null,
+                  "icon": {
+                    "key": "project",
+                    "name": "Project",
+                    "icon": "fa-briefcase"
+                  },
+                  "color": {
+                    "key": "red",
+                    "name": "Red"
+                  },
+                  "spacePHID": null,
+                  "dateCreated": 1516915579,
+                  "dateModified": 1517439063,
+                  "policy": {
+                    "view": "users",
+                    "edit": "obj.project.members",
+                    "join": "users"
+                  },
+                  "description": "The job of the Autoland service is to land code into Mozilla repositories."
+                },
+                "attachments": {}
+            }
+        ],
+        "maps": {},
+        "query": {
+            "queryKey": null
+        }
+    }
+}

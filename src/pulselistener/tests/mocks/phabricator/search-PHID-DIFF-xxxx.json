@@ -2,11 +2,11 @@
     "result": {
         "data": [
             {
-                "id": 9876,
+                "id": 123,
                 "type": "DIFF",
-                "phid": "PHID-DIFF-solo",
+                "phid": "PHID-DIFF-xxxx",
                 "fields": {
-                    "revisionPHID": "PHID-DREV-solo",
+                    "revisionPHID": "PHID-DREV-zzzzz",
                     "authorPHID": "PHID-USER-xxxxx",
                     "repositoryPHID": "PHID-REPO-aaaaaa",
                     "refs": [
@@ -29,7 +29,7 @@
                   "commits": {
                     "commits": [
                       {
-                        "message": "A nice human readable commit message"
+                        "message": "Bug XXX - A first commit message"
                       }
                     ]
                   }
