@@ -18,7 +18,6 @@ from code_coverage_bot import suite_reports
 from code_coverage_bot import taskcluster
 from code_coverage_bot import uploader
 from code_coverage_bot.artifacts import ArtifactsHandler
-from code_coverage_bot.github import GitHubUtils
 from code_coverage_bot.notifier import notify_email
 from code_coverage_bot.phabricator import PhabricatorUploader
 from code_coverage_bot.phabricator import parse_revision_id
@@ -52,17 +51,13 @@ class CodeCov(object):
 
         self.index_service = taskcluster_config.get_service('index')
 
-        self.githubUtils = GitHubUtils(cache_root)
-
         if revision is None:
             # Retrieve revision of latest codecov build
-            # TODO: use HGMO
-            self.github_revision = None
+            # TODO: find latest revision
             self.repository = MOZILLA_CENTRAL_REPOSITORY
-            self.revision = self.githubUtils.git_to_mercurial(self.github_revision)
+            self.revision = None
             self.from_pulse = False
         else:
-            self.github_revision = None
             self.repository = repository
             self.revision = revision
             self.from_pulse = True
@@ -129,7 +124,6 @@ class CodeCov(object):
 
     # This function is executed when the bot is triggered at the end of a mozilla-central build.
     def go_from_trigger_mozilla_central(self):
-        commit_sha = self.githubUtils.mercurial_to_git(self.revision)
         try:
             # Check the covdir report does not already exists
             if uploader.gcp_covdir_exists(self.branch, self.revision):
@@ -146,12 +140,6 @@ class CodeCov(object):
             pass
 
         self.retrieve_source_and_artifacts()
-
-        self.githubUtils.update_geckodev_repo()
-
-        logger.info('GitHub revision', revision=commit_sha)
-
-        self.githubUtils.post_github_status(commit_sha)
 
         # Check that all JavaScript files present in the coverage artifacts actually exist.
         # If they don't, there might be a bug in the LCOV rewriter.
@@ -225,7 +213,7 @@ class CodeCov(object):
 
         logger.info('Generating zero coverage reports')
         zc = ZeroCov(self.repo_dir)
-        zc.generate(self.artifactsHandler.get(), self.revision, self.github_revision)
+        zc.generate(self.artifactsHandler.get(), self.revision)
 
         logger.info('Generating chunk mapping')
         chunk_mapping.generate(self.repo_dir, self.revision, self.artifactsHandler)
@@ -248,9 +236,6 @@ class CodeCov(object):
                     'expires': (datetime.utcnow() + timedelta(180)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                 }
             )
-
-        os.chdir(self.ccov_reports_dir)
-        self.githubUtils.update_codecoveragereports_repo()
 
     def go(self):
         if not self.from_pulse:

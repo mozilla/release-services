@@ -6,7 +6,6 @@ from datetime import datetime
 import requests
 from taskcluster.utils import slugId
 
-from code_coverage_bot.github import GitHubUtils
 from code_coverage_bot.secrets import secrets
 from code_coverage_tools.taskcluter import TaskclusterConfig
 
@@ -22,11 +21,6 @@ taskcluster.auth(
 )
 secrets.load(
     os.environ['TASKCLUSTER_SECRET'],
-)
-github = GitHubUtils(
-    '/tmp',
-    os.environ['TASKCLUSTER_CLIENT_ID'],
-    os.environ['TASKCLUSTER_ACCESS_TOKEN'],
 )
 
 
@@ -62,7 +56,8 @@ def list_commits(maximum=None, unique=None, skip_commits=[]):
             dates.add(week)
 
             # Convert git to mercurial revision
-            commit['mercurial'] = github.git_to_mercurial(commit['commitid'])
+            # TODO: use releng mapper here
+            commit['mercurial'] = None  # convert(commit['commitid'])
             if commit['mercurial'] in skip_commits:
                 print('Skipping already processed commit {}'.format(commit['mercurial']))
                 continue
