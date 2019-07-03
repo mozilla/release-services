@@ -1,1 +1,0 @@
-{"result":null,"error_code":"ERR-INVALID-AUTH","error_info":"API token \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" has the wrong format. API tokens should be 32 characters long and begin with one of these prefixes: api, cli, clr."}
