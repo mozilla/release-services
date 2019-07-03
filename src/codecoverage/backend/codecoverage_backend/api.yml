@@ -10,7 +10,7 @@ produces:
 paths:
   /v2/latest:
     get:
-      operationId: "codecoverage_backend.v2.coverage_latest"
+      operationId: "codecoverage_backend.api.coverage_latest"
       parameters:
       - name: repository
         in: query
@@ -25,7 +25,7 @@ paths:
 
   /v2/path:
     get:
-      operationId: "codecoverage_backend.v2.coverage_for_path"
+      operationId: "codecoverage_backend.api.coverage_for_path"
       parameters:
       - name: changeset
         in: query
@@ -50,7 +50,7 @@ paths:
 
   /v2/history:
     get:
-      operationId: "codecoverage_backend.v2.coverage_history"
+      operationId: "codecoverage_backend.api.coverage_history"
       parameters:
       - name: repository
         in: query
@@ -80,7 +80,7 @@ paths:
 
   /v2/extensions:
     get:
-      operationId: "codecoverage_backend.v2.coverage_supported_extensions"
+      operationId: "codecoverage_backend.api.coverage_supported_extensions"
       responses:
         200:
           description: File extensions supported for code coverage
