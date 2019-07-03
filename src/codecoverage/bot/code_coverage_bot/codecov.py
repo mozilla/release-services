@@ -8,7 +8,6 @@ from datetime import datetime
 from datetime import timedelta
 
 import hglib
-import requests
 import structlog
 
 from code_coverage_bot import chunk_mapping
@@ -124,20 +123,10 @@ class CodeCov(object):
 
     # This function is executed when the bot is triggered at the end of a mozilla-central build.
     def go_from_trigger_mozilla_central(self):
-        try:
-            # Check the covdir report does not already exists
-            if uploader.gcp_covdir_exists(self.branch, self.revision):
-                logger.warn('Covdir report already on GCP')
-                return
-
-            # The artifacts are still needed to build the covdir report
-            self.retrieve_source_and_artifacts()
-
-            # Update GCP covdir report anyway
-            uploader.gcp(self.branch, self.revision, self.generate_covdir())
+        # Check the covdir report does not already exists
+        if uploader.gcp_covdir_exists(self.branch, self.revision):
+            logger.warn('Covdir report already on GCP')
             return
-        except requests.exceptions.HTTPError:
-            pass
 
         self.retrieve_source_and_artifacts()
 
