@@ -51,10 +51,13 @@ class CodeCov(object):
         self.index_service = taskcluster_config.get_service('index')
 
         if revision is None:
-            # Retrieve revision of latest codecov build
-            # TODO: find latest revision
+            # Retrieve latest ingested revision
             self.repository = MOZILLA_CENTRAL_REPOSITORY
-            self.revision = None
+            try:
+                self.revision = uploader.gcp_latest('mozilla-central')[0]['revision']
+            except Exception as e:
+                logger.warn('Failed to retrieve the latest reports ingested: {}'.format(e))
+                raise
             self.from_pulse = False
         else:
             self.repository = repository

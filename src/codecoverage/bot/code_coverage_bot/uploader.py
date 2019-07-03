@@ -74,6 +74,19 @@ def gcp_ingest(repository, revision):
     return resp
 
 
+def gcp_latest(repository):
+    '''
+    List the latest reports ingested on the backend
+    '''
+    params = {
+        'repository': repository,
+    }
+    backend_host = secrets[secrets.BACKEND_HOST]
+    resp = requests.get('{}/v2/latest'.format(backend_host), params=params)
+    resp.raise_for_status()
+    return resp.json()
+
+
 def covdir_paths(report):
     '''
     Load a covdir report and recursively list all the paths
