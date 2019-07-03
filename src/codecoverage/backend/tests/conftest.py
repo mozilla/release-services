@@ -282,7 +282,7 @@ def mock_cache(mock_secrets, mock_bucket, tmpdir):
     '''
     Mock a GCPCache instance, using fakeredis and a mocked GCP bucket
     '''
-    from codecoverage_backend.services.gcp import GCPCache
+    from codecoverage_backend.gcp import GCPCache
 
     class MockCache(GCPCache):
 
