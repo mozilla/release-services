@@ -8,77 +8,9 @@ consumes:
 produces:
   - application/json
 paths:
-  /coverage/file:
-    get:
-      operationId: "codecoverage_backend.api.coverage_for_file"
-      parameters:
-      - name: changeset
-        in: query
-        description: Changeset
-        required: true
-        type: string
-      - name: path
-        in: query
-        description: File
-        required: true
-        type: string
-      responses:
-        200:
-          description: Code coverage information for a given file at a given changeset
-      tags:
-        - legacy
-
-  /coverage/changeset/{changeset}:
-    get:
-      operationId: "codecoverage_backend.api.coverage_by_changeset"
-      parameters:
-      - name: changeset
-        in: path
-        description: Changeset
-        required: true
-        type: string
-      responses:
-        200:
-          description: Code coverage information by changeset
-      tags:
-        - legacy
-
-  /coverage/changeset_summary/{changeset}:
-    get:
-      operationId: "codecoverage_backend.api.coverage_summary_by_changeset"
-      parameters:
-      - name: changeset
-        in: path
-        description: Changeset
-        required: true
-        type: string
-      responses:
-        200:
-          description: Code coverage summary by changeset
-      tags:
-        - legacy
-
-  /coverage/supported_extensions:
-    get:
-      operationId: "codecoverage_backend.api.coverage_supported_extensions"
-      responses:
-        200:
-          description: File extensions supported for code coverage
-      tags:
-        - legacy
-
-  /coverage/latest:
-    get:
-      operationId: "codecoverage_backend.api.coverage_latest"
-      responses:
-        200:
-          description: Latest coverage builds
-      tags:
-        - legacy
-
   /v2/latest:
     get:
-      operationId: "codecoverage_backend.v2.coverage_latest"
+      operationId: "codecoverage_backend.api.coverage_latest"
       parameters:
       - name: repository
         in: query
@@ -93,7 +25,7 @@ paths:
 
   /v2/path:
     get:
-      operationId: "codecoverage_backend.v2.coverage_for_path"
+      operationId: "codecoverage_backend.api.coverage_for_path"
       parameters:
       - name: changeset
         in: query
@@ -118,7 +50,7 @@ paths:
 
   /v2/history:
     get:
-      operationId: "codecoverage_backend.v2.coverage_history"
+      operationId: "codecoverage_backend.api.coverage_history"
       parameters:
       - name: repository
         in: query
@@ -148,10 +80,9 @@ paths:
 
   /v2/extensions:
     get:
-      operationId: "codecoverage_backend.v2.coverage_supported_extensions"
+      operationId: "codecoverage_backend.api.coverage_supported_extensions"
       responses:
         200:
           description: File extensions supported for code coverage
       tags:
         - v2
-
