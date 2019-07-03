@@ -6,7 +6,7 @@
 from flask import abort
 
 from cli_common import log
-from codecoverage_backend.coverage import COVERAGE_EXTENSIONS
+from codecoverage_backend.config import COVERAGE_EXTENSIONS
 from codecoverage_backend.services.gcp import load_cache
 
 DEFAULT_REPOSITORY = 'mozilla-central'
