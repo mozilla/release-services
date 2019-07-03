@@ -169,12 +169,12 @@ class CodeCov(object):
 
         output = self.generate_covdir()
 
-        # TODO: update that check to support recursive format
         report = json.loads(output)
+        paths = uploader.covdir_paths(output)
         expected_extensions = ['.js', '.cpp']
         for extension in expected_extensions:
-            assert any(f['name'].endswith(extension) for f in
-                       report['source_files']), 'No {} file in the generated report'.format(extension)
+            assert any(path.endswith(extension) for path in paths), \
+                'No {} file in the generated report'.format(extension)
 
         # Get pushlog and ask the backend to generate the coverage by changeset
         # data, which will be cached.

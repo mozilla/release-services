@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import itertools
+import os.path
+
 import requests
 import structlog
 import zstandard as zstd
@@ -69,3 +72,28 @@ def gcp_ingest(repository, revision):
     resp.raise_for_status()
     logger.info('Ingested report on backend', host=backend_host, repository=repository, revision=revision)
     return resp
+
+
+def covdir_paths(report):
+    '''
+    Load a covdir report and recursively list all the paths
+    '''
+    assert isinstance(report, dict)
+
+    def _extract(obj, base_path=''):
+        out = []
+        children = obj.get('children', {})
+        if children:
+            # Recursive on folder files
+            out += itertools.chain(*[
+                _extract(child, os.path.join(base_path, obj['name']))
+                for child in children.values()
+            ])
+
+        else:
+            # Add full filename
+            out.append(os.path.join(base_path, obj['name']))
+
+        return out
+
+    return _extract(report)
