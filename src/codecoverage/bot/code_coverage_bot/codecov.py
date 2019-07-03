@@ -56,7 +56,8 @@ class CodeCov(object):
 
         if revision is None:
             # Retrieve revision of latest codecov build
-            self.github_revision = uploader.get_latest_codecov()
+            # TODO: use HGMO
+            self.github_revision = None
             self.repository = MOZILLA_CENTRAL_REPOSITORY
             self.revision = self.githubUtils.git_to_mercurial(self.github_revision)
             self.from_pulse = False
@@ -130,9 +131,6 @@ class CodeCov(object):
     def go_from_trigger_mozilla_central(self):
         commit_sha = self.githubUtils.mercurial_to_git(self.revision)
         try:
-            uploader.get_codecov(commit_sha)
-            logger.warn('Build was already injested')
-
             # Check the covdir report does not already exists
             if uploader.gcp_covdir_exists(self.branch, self.revision):
                 logger.warn('Covdir report already on GCP')
@@ -155,10 +153,6 @@ class CodeCov(object):
 
         self.githubUtils.post_github_status(commit_sha)
 
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
-        r.raise_for_status()
-        push_id = r.json()['pushid']
-
         # Check that all JavaScript files present in the coverage artifacts actually exist.
         # If they don't, there might be a bug in the LCOV rewriter.
         for artifact in self.artifactsHandler.get():
@@ -173,16 +167,9 @@ class CodeCov(object):
                         if len(missing_files) != 0:
                             logger.warn(f'{missing_files} are present in coverage reports, but missing from the repository')
 
-        output = grcov.report(
-            self.artifactsHandler.get(),
-            source_dir=self.repo_dir,
-            service_number=push_id,
-            commit_sha=commit_sha,
-        )
-        logger.info('Codecov report generated successfully')
+        output = self.generate_covdir()
 
-        output_covdir = self.generate_covdir()
-
+        # TODO: update that check to support recursive format
         report = json.loads(output)
         expected_extensions = ['.js', '.cpp']
         for extension in expected_extensions:
@@ -198,17 +185,10 @@ class CodeCov(object):
         phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
         changesets_coverage = phabricatorUploader.upload(report, changesets)
 
-        with ThreadPoolExecutorResult(max_workers=2) as executor:
-            executor.submit(uploader.codecov, output, commit_sha)
-            executor.submit(uploader.gcp, self.branch, self.revision, output_covdir)
+        uploader.gcp(self.branch, self.revision, output)
 
-        logger.info('Waiting for build to be ingested by Codecov...')
-        # Wait until the build has been ingested by Codecov.
-        if uploader.codecov_wait(commit_sha):
-            logger.info('Build ingested by codecov.io')
-            notify_email(self.revision, changesets, changesets_coverage, self.client_id, self.access_token)
-        else:
-            logger.error('codecov.io took too much time to ingest data.')
+        logger.info('Build uploaded on GCP')
+        notify_email(self.revision, changesets, changesets_coverage, self.client_id, self.access_token)
 
     # This function is executed when the bot is triggered at the end of a try build.
     def go_from_trigger_try(self):
