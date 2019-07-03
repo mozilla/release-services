@@ -3,69 +3,87 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import asyncio
+from flask import abort
 
-from rq import Queue
+from cli_common import log
+from codecoverage_backend.config import COVERAGE_EXTENSIONS
+from codecoverage_backend.gcp import load_cache
 
-from codecoverage_backend import coverage
-from codecoverage_backend import coverage_by_changeset_impl
-from codecoverage_backend import coverage_for_file_impl
-from codecoverage_backend import coverage_summary_by_changeset_impl
-from codecoverage_backend.worker import conn
-
-q = Queue(connection=conn)
-
-
-def coverage_for_file(changeset, path):
-    changeset = changeset[:12]
-    try:
-        return asyncio.get_event_loop().run_until_complete(coverage_for_file_impl.generate(changeset, path))
-    except Exception as e:
-        return {
-            'error': str(e)
-        }, 500
-
-
-def coverage_by_changeset_job(changeset):
-    return asyncio.get_event_loop().run_until_complete(coverage_by_changeset_impl.generate(changeset))
-
-
-def coverage_by_changeset(changeset):
-    changeset = changeset[:12]
-
-    job = q.fetch_job(changeset)
-
-    if job is None:
-        RESULT_TTL = 2 * 24 * 60 * 60
-        job = q.enqueue(
-            coverage_by_changeset_job,
-            changeset,
-            job_id=changeset,
-            result_ttl=RESULT_TTL
-        )
-
-    if job.result is not None:
-        return job.result, 200
-
-    if job.exc_info is not None:
-        return {
-            'error': str(job.exc_info)
-        }, 500
-
-    return '', 202
-
-
-def coverage_summary_by_changeset(changeset):
-    result, code = coverage_by_changeset(changeset)
-    if code != 200:
-        return result, code
-    else:
-        return coverage_summary_by_changeset_impl.generate(result), 200
+DEFAULT_REPOSITORY = 'mozilla-central'
+logger = log.get_logger(__name__)
 
 
 def coverage_supported_extensions():
-    return coverage.COVERAGE_EXTENSIONS
+    '''
+    List all the file extensions we currently support
+    '''
+    return COVERAGE_EXTENSIONS
 
 
-def coverage_latest():
-    return asyncio.get_event_loop().run_until_complete(coverage.get_latest_build_info())
+def coverage_latest(repository=DEFAULT_REPOSITORY):
+    '''
+    List the last 10 reports available on the server
+    '''
+    gcp = load_cache()
+    if gcp is None:
+        logger.error('No GCP cache available')
+        abort(500)
+
+    try:
+        return [
+            {
+                'revision': revision,
+                'push': push_id,
+            }
+            for revision, push_id in gcp.list_reports(repository, 10)
+        ]
+    except Exception as e:
+        logger.warn('Failed to retrieve latest reports: {}'.format(e))
+        abort(404)
+
+
+def coverage_for_path(path='', changeset=None, repository=DEFAULT_REPOSITORY):
+    '''
+    Aggregate coverage for a path, regardless of its type:
+    * file, gives its coverage percent
+    * directory, gives coverage percent for its direct sub elements
+      files and folders (recursive average)
+    '''
+    gcp = load_cache()
+    if gcp is None:
+        logger.error('No GCP cache available')
+        abort(500)
+
+    try:
+        if changeset:
+            # Find closest report matching this changeset
+            changeset, _ = gcp.find_closest_report(repository, changeset)
+        else:
+            # Fallback to latest report
+            changeset, _ = gcp.find_report(repository)
+    except Exception as e:
+        logger.warn('Failed to retrieve report: {}'.format(e))
+        abort(404)
+
+    # Load tests data from GCP
+    try:
+        return gcp.get_coverage(repository, changeset, path)
+    except Exception as e:
+        logger.warn('Failed to load coverage', repo=repository, changeset=changeset, path=path, error=str(e))
+        abort(400)
+
+
+def coverage_history(repository=DEFAULT_REPOSITORY, path='', start=None, end=None):
+    '''
+    List overall coverage from ingested reports over a period of time
+    '''
+    gcp = load_cache()
+    if gcp is None:
+        logger.error('No GCP cache available')
+        abort(500)
+
+    try:
+        return gcp.get_history(repository, path=path, start=start, end=end)
+    except Exception as e:
+        logger.warn('Failed to load history', repo=repository, path=path, start=start, end=end, error=str(e))
+        abort(400)

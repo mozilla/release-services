@@ -17,7 +17,6 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 required = [
     'SECRET_KEY_BASE64',
     'REDIS_URL',
-    'CODECOV_ACCESS_TOKEN',
 ]
 
 secrets = cli_common.taskcluster.get_secrets(
