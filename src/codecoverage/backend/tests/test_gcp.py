@@ -102,7 +102,7 @@ def test_ingestion(mock_cache):
         ('rev1', 1),
     ]
     assert mock_cache.find_report('myrepo') == ('rev10', 10)
-    assert mock_cache.find_report('myrepo', max_push_id=7) == ('rev5', 5)
+    assert mock_cache.find_report('myrepo', push_range=(7, 0)) == ('rev5', 5)
     assert mock_cache.get_history('myrepo', start=200, end=20000) == [
         {'changeset': 'rev10', 'coverage': 1.0, 'date': 9000},
         {'changeset': 'rev5', 'coverage': 0.5, 'date': 5000},
@@ -153,12 +153,40 @@ def test_closest_report(mock_cache, mock_hgmo):
     report_rev = hashlib.md5(b'994').hexdigest()
     mock_cache.bucket.add_mock_blob('myrepo/{}.json.zstd'.format(report_rev), coverage=0.5)
 
+    # Add a report on 990, 2 pushes before our revision
+    base_rev = hashlib.md5(b'990').hexdigest()
+    mock_cache.bucket.add_mock_blob('myrepo/{}.json.zstd'.format(base_rev), coverage=0.4)
+
     # Now we have a report !
     assert mock_cache.list_reports('myrepo') == []
     assert mock_cache.find_closest_report('myrepo', revision) == (report_rev, 994)
     assert mock_cache.list_reports('myrepo') == [
         (report_rev, 994)
     ]
+
+    # This should also work for revisions before
+    revision = '991{}'.format(uuid.uuid4().hex[3:])
+    assert mock_cache.find_closest_report('myrepo', revision) == (report_rev, 994)
+
+    # ... and the revision on the push itself
+    revision = '994{}'.format(uuid.uuid4().hex[3:])
+    assert mock_cache.find_closest_report('myrepo', revision) == (report_rev, 994)
+
+    # We can also retrieve the base revision
+    revision = '990{}'.format(uuid.uuid4().hex[3:])
+    assert mock_cache.find_closest_report('myrepo', revision) == (base_rev, 990)
+    revision = '989{}'.format(uuid.uuid4().hex[3:])
+    assert mock_cache.find_closest_report('myrepo', revision) == (base_rev, 990)
+    assert mock_cache.list_reports('myrepo') == [
+        (report_rev, 994),
+        (base_rev, 990),
+    ]
+
+    # But not for revisions after the push
+    revision = '995{}'.format(uuid.uuid4().hex[3:])
+    with pytest.raises(Exception) as e:
+        mock_cache.find_closest_report('myrepo', revision)
+    assert str(e.value) == 'No report found'
 
 
 def test_get_coverage(mock_cache):
@@ -180,6 +208,7 @@ def test_get_coverage(mock_cache):
         'coveragePercent': 0.0,
         'path': '',
         'type': 'directory',
+        'changeset': 'myhash',
     }
 
     # Remove local file
@@ -194,6 +223,7 @@ def test_get_coverage(mock_cache):
         'coveragePercent': 0.0,
         'path': '',
         'type': 'directory',
+        'changeset': 'myhash',
     }
 
     # Make invalid json
@@ -208,6 +238,7 @@ def test_get_coverage(mock_cache):
         'coveragePercent': 0.0,
         'path': '',
         'type': 'directory',
+        'changeset': 'myhash',
     }
     assert os.path.exists(path)
     assert isinstance(json.load(open(path)), dict)
