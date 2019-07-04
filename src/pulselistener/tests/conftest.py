@@ -185,6 +185,31 @@ def PhabricatorMock():
             name += '-lint'
         return (200, json_headers, _response(name))
 
+    def _project_search(request):
+        params = _phab_params(request)
+        assert 'constraints' in params
+        assert 'slugs' in params['constraints']
+        return(200, json_headers, _response('projects'))
+
+    def _revision_search(request):
+        params = _phab_params(request)
+        assert 'constraints' in params
+        assert 'ids' in params['constraints']
+        assert 'attachments' in params
+        assert 'projects' in params['attachments']
+        assert 'reviewers' in params['attachments']
+        assert params['attachments']['projects']
+        assert params['attachments']['reviewers']
+        mock_name = 'revision-search-{}'.format(params['constraints']['ids'][0])
+        return (200, json_headers, _response(mock_name))
+
+    def _user_search(request):
+        params = _phab_params(request)
+        assert 'constraints' in params
+        assert 'phids' in params['constraints']
+        mock_name = 'user-search-{}'.format(params['constraints']['phids'][0])
+        return (200, json_headers, _response(mock_name))
+
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resp:
 
         resp.add(
@@ -229,6 +254,24 @@ def PhabricatorMock():
             'http://phabricator.test/api/diffusion.repository.search',
             body=_response('repositories'),
             content_type='application/json',
+        )
+
+        resp.add_callback(
+            responses.POST,
+            'http://phabricator.test/api/project.search',
+            callback=_project_search,
+        )
+
+        resp.add_callback(
+            responses.POST,
+            'http://phabricator.test/api/differential.revision.search',
+            callback=_revision_search,
+        )
+
+        resp.add_callback(
+            responses.POST,
+            'http://phabricator.test/api/user.search',
+            callback=_user_search,
         )
 
         api = PhabricatorAPI(

@@ -68,6 +68,20 @@ class HookPhabricator(Hook):
             # Process next build in queue
             await self.run_build(build)
 
+    def should_run_risk_analysis(self, build):
+        '''
+        Check if we should trigger a risk analysis for this revision.
+        '''
+        # Run risk analysis when the revision is being reviewed by one
+        # of some specific reviewers.
+        reviewers = build.rev['attachments']['reviewers']['reviewers']
+        for reviewer in reviewers:
+            user_data = self.api.load_user(user_phid=reviewer['reviewerPHID'])
+            if any(reviewer == user_data['fields']['username'] for reviewer in self.risk_analysis_reviewers):
+                return True
+
+        return False
+
     async def run_build(self, build):
         '''
         Start asynchronously new builds when their revision become public
@@ -93,17 +107,7 @@ class HookPhabricator(Hook):
                 logger.error('Failed to queue task from webhook', error=str(e))
 
             try:
-                # Run risk analysis when the revision is being reviewed by one
-                # of some specific reviewers.
-                run_risk_analysis = False
-                reviewers = build.rev['attachments']['reviewers']['reviewers']
-                for reviewer in reviewers:
-                    user_data = self.api.load_user(user_phid=reviewer['reviewerPHID'])
-                    if any(reviewer == user_data['fields']['username'] for reviewer in self.risk_analysis_reviewers):
-                        run_risk_analysis = True
-                        break
-
-                if run_risk_analysis:
+                if self.should_run_risk_analysis(build):
                     task = self.hooks.triggerHook('project-relman', 'bugbug-classify-patch', {'DIFF_ID': build.diff_id})
                     task_id = task['status']['taskId']
                     logger.info('Triggered a new risk analysis task', id=task_id)
