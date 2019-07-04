@@ -67,12 +67,12 @@ class PhabricatorBuild(object):
         try:
 
             # Load revision with projects
-            rev = api.load_revision(rev_id=self.revision_id, attachments={'projects': True})
-            if not rev:
+            self.rev = api.load_revision(rev_id=self.revision_id, attachments={'projects': True, 'reviewers': True})
+            if not self.rev:
                 raise Exception('Not found')
 
             # Check against secure projects
-            projects = set(rev['attachments']['projects']['projectPHIDs'])
+            projects = set(self.rev['attachments']['projects']['projectPHIDs'])
             if projects.intersection(secure_projects):
                 raise Exception('Secure revision')
 
