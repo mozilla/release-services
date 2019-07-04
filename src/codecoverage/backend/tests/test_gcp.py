@@ -102,7 +102,7 @@ def test_ingestion(mock_cache):
         ('rev1', 1),
     ]
     assert mock_cache.find_report('myrepo') == ('rev10', 10)
-    assert mock_cache.find_report('myrepo', max_push_id=7) == ('rev5', 5)
+    assert mock_cache.find_report('myrepo', push_range=(7, 0)) == ('rev5', 5)
     assert mock_cache.get_history('myrepo', start=200, end=20000) == [
         {'changeset': 'rev10', 'coverage': 1.0, 'date': 9000},
         {'changeset': 'rev5', 'coverage': 0.5, 'date': 5000},
