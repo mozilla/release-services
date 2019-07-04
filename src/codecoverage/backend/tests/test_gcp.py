@@ -172,6 +172,16 @@ def test_closest_report(mock_cache, mock_hgmo):
     revision = '994{}'.format(uuid.uuid4().hex[3:])
     assert mock_cache.find_closest_report('myrepo', revision) == (report_rev, 994)
 
+    # We can also retrieve the base revision
+    revision = '990{}'.format(uuid.uuid4().hex[3:])
+    assert mock_cache.find_closest_report('myrepo', revision) == (base_rev, 990)
+    revision = '989{}'.format(uuid.uuid4().hex[3:])
+    assert mock_cache.find_closest_report('myrepo', revision) == (base_rev, 990)
+    assert mock_cache.list_reports('myrepo') == [
+        (report_rev, 994),
+        (base_rev, 990),
+    ]
+
     # But not for revisions after the push
     revision = '995{}'.format(uuid.uuid4().hex[3:])
     with pytest.raises(Exception) as e:
