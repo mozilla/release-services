@@ -201,11 +201,17 @@ class GCPCache(object):
 
         logger.info('Stored new push data', push_id=push_id)
 
-    def find_report(self, repository, **kwargs):
+    def find_report(self, repository, min_push_id=None, max_push_id=None, reverse=True):
         '''
         Find the first report available before that push
         '''
-        results = self.list_reports(repository, nb=1, **kwargs)
+        results = self.list_reports(
+            repository,
+            nb=1,
+            min_push_id=min_push_id,
+            max_push_id=max_push_id,
+            reverse=reverse,
+        )
         if not results:
             raise Exception('No report found')
         return results[0]
