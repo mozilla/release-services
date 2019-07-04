@@ -47,6 +47,7 @@ module.exports = {
           enableReleaseEta: true,
           numberOfPartials: 5,
           alternativeBranch: 'releases/mozilla-esr60',
+          alternativeRepo: 'https://hg.mozilla.org/releases/mozilla-esr60',
         },
       ],
       enablePartials: true,
