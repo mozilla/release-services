@@ -208,6 +208,7 @@ export default class NewRelease extends React.Component {
     const { product } = this.state.selectedProduct;
     const {
       branch, repo, rcBranch, rcBranchVersionPattern, rcRepo, productKey,
+      alternativeBranch, alternativeRepo,
     } = this.state.selectedBranch;
     const releaseObj = {
       product,
@@ -232,6 +233,14 @@ export default class NewRelease extends React.Component {
           product, partialBranch, version,
           buildNumber,
         );
+	if (!shippedReleases && alternativeBranch) {
+          partialBranch = alternativeBranch;
+          partialRepo = alternativeRepo;
+          const shippedReleases = await getShippedReleases(
+            product, partialBranch, version,
+            buildNumber,
+          );
+	}
         if (shippedReleases.length !== 1) {
           this.setState({
             inProgress: false,
