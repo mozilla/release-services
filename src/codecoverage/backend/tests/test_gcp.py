@@ -198,6 +198,7 @@ def test_get_coverage(mock_cache):
         'coveragePercent': 0.0,
         'path': '',
         'type': 'directory',
+        'changeset': 'myhash',
     }
 
     # Remove local file
@@ -212,6 +213,7 @@ def test_get_coverage(mock_cache):
         'coveragePercent': 0.0,
         'path': '',
         'type': 'directory',
+        'changeset': 'myhash',
     }
 
     # Make invalid json
@@ -226,6 +228,7 @@ def test_get_coverage(mock_cache):
         'coveragePercent': 0.0,
         'path': '',
         'type': 'directory',
+        'changeset': 'myhash',
     }
     assert os.path.exists(path)
     assert isinstance(json.load(open(path)), dict)

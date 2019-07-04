@@ -282,7 +282,9 @@ class GCPCache(object):
             report = covdir.open_report(report_path)
             assert report
 
-        return covdir.get_path_coverage(report, path)
+        out = covdir.get_path_coverage(report, path)
+        out['changeset'] = changeset
+        return out
 
     def get_history(self, repository, path='', start=None, end=None):
         '''
