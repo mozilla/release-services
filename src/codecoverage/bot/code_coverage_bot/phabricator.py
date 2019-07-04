@@ -12,6 +12,15 @@ from code_coverage_bot.secrets import secrets
 
 logger = get_logger(__name__)
 
+PHABRICATOR_REVISION_REGEX = re.compile('Differential Revision: https://phabricator.services.mozilla.com/D([0-9]+)')
+
+
+def parse_revision_id(desc):
+    match = PHABRICATOR_REVISION_REGEX.search(desc)
+    if not match:
+        return None
+    return int(match.group(1))
+
 
 class PhabricatorUploader(object):
     def __init__(self, repo_dir, revision):
@@ -20,13 +29,6 @@ class PhabricatorUploader(object):
 
     def _find_coverage(self, report, path):
         return next((sf['coverage'] for sf in report['source_files'] if sf['name'] == path), None)
-
-    def parse_revision_id(self, desc):
-        PHABRICATOR_REVISION_REGEX = 'Differential Revision: https://phabricator.services.mozilla.com/D([0-9]+)'
-        match = re.search(PHABRICATOR_REVISION_REGEX, desc)
-        if not match:
-            return None
-        return int(match.group(1))
 
     def _build_coverage_map(self, annotate, coverage_record):
         # We can't use plain line numbers to map coverage data from the build changeset to the
@@ -79,16 +81,13 @@ class PhabricatorUploader(object):
 
         return phab_coverage_data
 
-    def generate(self, report, changesets=None):
+    def generate(self, report, changesets):
         results = {}
 
         with hgmo.HGMO(self.repo_dir) as hgmo_server:
-            if changesets is None:
-                changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
-
             for changeset in changesets:
                 # Retrieve the revision ID for this changeset.
-                revision_id = self.parse_revision_id(changeset['desc'])
+                revision_id = parse_revision_id(changeset['desc'])
                 if revision_id is None:
                     continue
 
@@ -118,12 +117,23 @@ class PhabricatorUploader(object):
                         # This means the file has been removed by this changeset, and maybe was brought back by a following changeset.
                         continue
 
+                    # Calc lines added by this patch
+                    lines_added = sum([
+                        parse_revision_id(line['desc']) == revision_id
+                        for line in build_annotate
+                    ])
+
                     # Apply the coverage map on the annotate data of the changeset of interest.
-                    results[revision_id][path] = self._apply_coverage_map(annotate, coverage_map)
+                    coverage = self._apply_coverage_map(annotate, coverage_map)
+                    results[revision_id][path] = {
+                        'lines_added': lines_added,
+                        'lines_covered': sum(c == 'C' for c in coverage),
+                        'coverage': coverage,
+                    }
 
         return results
 
-    def upload(self, report, changesets=None):
+    def upload(self, report, changesets):
         results = self.generate(report, changesets)
 
         if secrets[secrets.PHABRICATOR_ENABLED]:
@@ -132,6 +142,11 @@ class PhabricatorUploader(object):
             phabricator = None
 
         for rev_id, coverage in results.items():
+            # Only upload raw coverage data to Phabricator, not stats
+            coverage = {
+                path: cov['coverage']
+                for path, cov in coverage.items()
+            }
             logger.info('{} coverage: {}'.format(rev_id, coverage))
 
             if not phabricator or not coverage:
@@ -144,3 +159,5 @@ class PhabricatorUploader(object):
                 phabricator.upload_lint_results(rev_data['fields']['diffPHID'], BuildState.Pass, [])
             except PhabricatorRevisionNotFoundException:
                 logger.warn('Phabricator revision not found', rev_id=rev_id)
+
+        return results
