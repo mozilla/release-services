@@ -153,12 +153,30 @@ def test_closest_report(mock_cache, mock_hgmo):
     report_rev = hashlib.md5(b'994').hexdigest()
     mock_cache.bucket.add_mock_blob('myrepo/{}.json.zstd'.format(report_rev), coverage=0.5)
 
+    # Add a report on 990, 2 pushes before our revision
+    base_rev = hashlib.md5(b'990').hexdigest()
+    mock_cache.bucket.add_mock_blob('myrepo/{}.json.zstd'.format(base_rev), coverage=0.4)
+
     # Now we have a report !
     assert mock_cache.list_reports('myrepo') == []
     assert mock_cache.find_closest_report('myrepo', revision) == (report_rev, 994)
     assert mock_cache.list_reports('myrepo') == [
         (report_rev, 994)
     ]
+
+    # This should also work for revisions before
+    revision = '991{}'.format(uuid.uuid4().hex[3:])
+    assert mock_cache.find_closest_report('myrepo', revision) == (report_rev, 994)
+
+    # ... and the revision on the push itself
+    revision = '994{}'.format(uuid.uuid4().hex[3:])
+    assert mock_cache.find_closest_report('myrepo', revision) == (report_rev, 994)
+
+    # But not for revisions after the push
+    revision = '995{}'.format(uuid.uuid4().hex[3:])
+    with pytest.raises(Exception) as e:
+        mock_cache.find_closest_report('myrepo', revision)
+    assert str(e.value) == 'No report found'
 
 
 def test_get_coverage(mock_cache):

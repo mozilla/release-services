@@ -201,11 +201,11 @@ class GCPCache(object):
 
         logger.info('Stored new push data', push_id=push_id)
 
-    def find_report(self, repository, min_push_id=None, max_push_id=None):
+    def find_report(self, repository, **kwargs):
         '''
         Find the first report available before that push
         '''
-        results = self.list_reports(repository, nb=1, min_push_id=min_push_id, max_push_id=max_push_id)
+        results = self.list_reports(repository, nb=1, **kwargs)
         if not results:
             raise Exception('No report found')
         return results[0]
@@ -241,18 +241,18 @@ class GCPCache(object):
             self.ingest_pushes(repository, min_push_id=push_id-1, nb_pages=1)
 
         # Load report from that push
-        return self.find_report(repository, min_push_id=push_id)
+        return self.find_report(repository, max_push_id=push_id, min_push_id='+inf', reverse=False)
 
-    def list_reports(self, repository, nb=5, min_push_id=None, max_push_id=None):
+    def list_reports(self, repository, nb=5, min_push_id=None, max_push_id=None, reverse=True):
         '''
-        List the last reports available on the server
-        When max_push_id is not set, we use the whole range
+        List the last reports available on the server, ordered by push (newer to older)
         '''
         assert isinstance(nb, int)
         assert nb > 0
         start = max_push_id or '+inf'
         end = min_push_id or '-inf'
-        reports = self.redis.zrevrangebyscore(
+        op = self.redis.zrevrangebyscore if reverse else self.redis.zrangebyscore
+        reports = op(
             KEY_REPORTS.format(repository=repository),
             start, end,
             start=0,
