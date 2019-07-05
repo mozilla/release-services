@@ -233,7 +233,7 @@ export default class NewRelease extends React.Component {
           product, partialBranch, version,
           buildNumber,
         );
-        if (!shippedReleases && alternativeBranch) {
+        if (shippedReleases.length === 0 && alternativeBranch) {
           partialBranch = alternativeBranch;
           partialRepo = alternativeRepo;
           shippedReleases = await getShippedReleases(product, partialBranch, version, buildNumber);
