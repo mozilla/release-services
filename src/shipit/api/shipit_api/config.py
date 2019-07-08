@@ -38,17 +38,17 @@ ESR_BRANCH_PREFIX = 'releases/mozilla-esr'
 # day).
 # We could have used the in-tree version, but there can be race conditions,
 # e.g. version bumped, but still no builds available.
-FIREFOX_NIGHTLY = '69.0a1'
-FENNEC_NIGHTLY = '68.0a1'
+FIREFOX_NIGHTLY = '70.0a1'
+FENNEC_NIGHTLY = '68.1a1'
 # The next 6 dates are information about the current and next release
 # They must be updated at the same time as FIREFOX_NIGHTLY
 # They can be found: https://wiki.mozilla.org/Release_Management/Calendar
-LAST_SOFTFREEZE_DATE = '2019-05-13'
-LAST_MERGE_DATE = '2019-05-20'
-LAST_RELEASE_DATE = '2019-05-21'
-NEXT_SOFTFREEZE_DATE = '2019-07-01'
-NEXT_MERGE_DATE = '2019-07-08'
-NEXT_RELEASE_DATE = '2019-07-09'
+LAST_SOFTFREEZE_DATE = '2019-07-01'
+LAST_MERGE_DATE = '2019-07-08'
+LAST_RELEASE_DATE = '2019-07-09'
+NEXT_SOFTFREEZE_DATE = '2019-08-26'
+NEXT_MERGE_DATE = '2019-09-02'
+NEXT_RELEASE_DATE = '2019-09-03'
 
 # Aurora has been replaced by Dev Edition, but some 3rd party applications may
 # still rely on this value.
