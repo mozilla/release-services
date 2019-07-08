@@ -1495,10 +1495,10 @@ let
     };
 
     "mozilla-version" = python.mkDerivation {
-      name = "mozilla-version-0.3.1";
+      name = "mozilla-version-0.3.3";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/b5/28/40a84747e1ffb992fe44174bedd6b7fbfee49acef2d69fa4c9b7fd503f5e/mozilla-version-0.3.1.tar.gz";
-        sha256 = "f800c484efee3c52ada9f36ea0a6ca068810e7ee05b8f3a8e0ab6953f272ad86";
+        url = "https://files.pythonhosted.org/packages/35/26/c425e104b3e077569788dcc79b456f73ac4ffc8f05c7515f89643a64d4ed/mozilla-version-0.3.3.tar.gz";
+        sha256 = "d7db096a637629ff29c1979dbd29d0afb3779c394f58b4f8f8731c984c2cc374";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
