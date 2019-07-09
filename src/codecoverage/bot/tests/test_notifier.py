@@ -41,7 +41,7 @@ def test_notification(mock_secrets, mock_phabricator, mock_notify, fake_hg_repo)
         1: {
             'file': {
                 'lines_added': 4,
-                'lines_covered': 1,
+                'lines_covered': 2,
                 'coverage': 'NUCU'
             },
         },
