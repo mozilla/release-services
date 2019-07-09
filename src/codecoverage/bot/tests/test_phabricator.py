@@ -174,7 +174,7 @@ def test_two_commits_two_files(mock_secrets, fake_hg_repo):
             'file3_commit2': {
                 'coverage': 'CCUCN',
                 'lines_added': 5,
-                'lines_covered': 3
+                'lines_covered': 4
             }
         }
 
