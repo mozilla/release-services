@@ -14,6 +14,7 @@ import aiohttp
 import backoff
 import click
 import flask
+import flask.cli
 import mohawk
 import requests
 import sqlalchemy
