@@ -49,6 +49,8 @@ class HookPhabricator(Hook):
         assert isinstance(self.phabricator_sleep, int)
         logger.info('Will retry Phabricator secure revision queries', retries=self.phabricator_retries, sleep=self.phabricator_sleep)  # noqa
 
+        self.risk_analysis_reviewers = configuration.get('risk_analysis_reviewers', [])
+
     async def build_consumer(self, *args, **kwargs):
         '''
         Main consumer, running queued builds from the web server
@@ -65,6 +67,20 @@ class HookPhabricator(Hook):
 
             # Process next build in queue
             await self.run_build(build)
+
+    def should_run_risk_analysis(self, build):
+        '''
+        Check if we should trigger a risk analysis for this revision.
+        '''
+        # Run risk analysis when the revision is being reviewed by one
+        # of some specific reviewers.
+        reviewers = build.rev['attachments']['reviewers']['reviewers']
+        for reviewer in reviewers:
+            user_data = self.api.load_user(user_phid=reviewer['reviewerPHID'])
+            if any(reviewer == user_data['fields']['username'] for reviewer in self.risk_analysis_reviewers):
+                return True
+
+        return False
 
     async def run_build(self, build):
         '''
@@ -89,6 +105,18 @@ class HookPhabricator(Hook):
 
             except Exception as e:
                 logger.error('Failed to queue task from webhook', error=str(e))
+
+            try:
+                if self.should_run_risk_analysis(build):
+                    task = self.hooks.triggerHook('project-relman', 'bugbug-classify-patch', {'DIFF_ID': build.diff_id})
+                    task_id = task['status']['taskId']
+                    logger.info('Triggered a new risk analysis task', id=task_id)
+
+                    # Send task to monitoring
+                    await task_monitoring.add_task('project-relman', 'bugbug-classify-patch', task_id)
+
+            except Exception as e:
+                logger.error('Failed to trigger risk analysis task', error=str(e))
 
             # Report public bug as working
             self.api.update_build_target(build.target_phid, BuildState.Work)
