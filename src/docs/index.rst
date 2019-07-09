@@ -33,7 +33,6 @@ Projects
     releng-frontend <projects/releng-frontend>
     codecoverage/bot <projects/codecoverage-bot>
     codecoverage/backend <projects/codecoverage-backend>
-    codecoverage/crawler <projects/codecoverage-crawler>
     pulselistener <projects/pulselistener>
     uplift/backend <projects/uplift-backend>
     uplift/bot <projects/uplift-bot>
