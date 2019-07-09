@@ -31,7 +31,7 @@ def test_notification(mock_secrets, mock_phabricator, mock_notify, fake_hg_repo)
     report = {
         'source_files': [{
             'name': 'file',
-            'coverage': [None, 0, 1, 0, 0, 0, 0],
+            'coverage': [None, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
         }]
     }
     phab = PhabricatorUploader(local, revision)
@@ -49,7 +49,7 @@ def test_notification(mock_secrets, mock_phabricator, mock_notify, fake_hg_repo)
             'file': {
                 'lines_added': 6,
                 'lines_covered': 0,
-                'coverage': 'NUCUUUUXXX',
+                'coverage': 'NUCUUUUUUU',
             },
         },
     }
