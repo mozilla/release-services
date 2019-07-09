@@ -2,9 +2,9 @@
 import json
 import os
 
-from cli_common import log
+import structlog
 
-logger = log.get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def open_report(report_path):

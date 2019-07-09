@@ -7,15 +7,15 @@ from datetime import datetime
 
 import redis
 import requests
+import structlog
 import zstandard as zstd
+from code_coverage_tools.gcp import get_bucket
 from dateutil.relativedelta import relativedelta
 
-from cli_common import log
-from cli_common.gcp import get_bucket
 from codecoverage_backend import covdir
 from codecoverage_backend import secrets
 
-logger = log.get_logger(__name__)
+logger = structlog.get_logger(__name__)
 __cache = None
 
 KEY_REPORTS = 'reports:{repository}'
