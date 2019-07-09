@@ -32,9 +32,15 @@ def test_simple(mock_secrets, mock_phabricator, fake_hg_repo):
         }]
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1])
-    assert set(results[1].keys()) == set(['file'])
-    assert results[1]['file']['coverage'] == 'NUCCCCU'
+    assert results == {
+        1: {
+            'file': {
+                'coverage': 'NUCCCCU',
+                'lines_added': 7,
+                'lines_covered': 4
+            }
+        }
+    }
 
     phabricator.upload({
         'source_files': [{
@@ -95,8 +101,9 @@ def test_file_with_no_coverage(mock_secrets, fake_hg_repo):
         'source_files': []
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1])
-    assert set(results[1].keys()) == set()
+    assert results == {
+        1: {}
+    }
 
 
 @responses.activate
@@ -118,7 +125,7 @@ def test_one_commit_without_differential(mock_secrets, fake_hg_repo):
         }]
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set()
+    assert results == {}
 
 
 @responses.activate
@@ -150,13 +157,28 @@ def test_two_commits_two_files(mock_secrets, fake_hg_repo):
         }]
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1, 2])
-    assert set(results[1].keys()) == set(['file1_commit1', 'file2_commit1'])
-    assert set(results[2].keys()) == set(['file3_commit2'])
-    assert results[1]['file1_commit1']['coverage'] == 'NUCCCCU'
-    assert results[1]['file2_commit1']['coverage'] == 'CCU'
-    assert results[2]['file3_commit2']['coverage'] == 'CCUCN'
+    assert results == {
+        1: {
+            'file1_commit1': {
+                'coverage': 'NUCCCCU',
+                'lines_added': 7,
+                'lines_covered': 4
+            },
+            'file2_commit1': {
+                'coverage': 'CCU',
+                'lines_added': 3,
+                'lines_covered': 1
+            }
+        },
+        2: {
+            'file3_commit2': {
+                'coverage': 'CCUCN',
+                'lines_added': 5,
+                'lines_covered': 3
+            }
+        }
 
+    }
 
 @responses.activate
 def test_changesets_overwriting(mock_secrets, fake_hg_repo):
@@ -180,11 +202,22 @@ def test_changesets_overwriting(mock_secrets, fake_hg_repo):
         }]
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1, 2])
-    assert set(results[1].keys()) == set(['file'])
-    assert set(results[2].keys()) == set(['file'])
-    assert results[1]['file']['coverage'] == 'NUCXCCU'
-    assert results[2]['file']['coverage'] == 'NUCCCCU'
+    assert results == {
+        1: {
+            'file': {
+                'coverage': 'NUCXCCU',
+                'lines_added': 6,
+                'lines_covered': 3
+            }
+        },
+        2: {
+            'file': {
+                'coverage': 'NUCCCCU',
+                'lines_added': 1,
+                'lines_covered': 1
+            }
+        }
+    }
 
 
 @responses.activate
@@ -209,11 +242,22 @@ def test_changesets_displacing(mock_secrets, fake_hg_repo):
         }]
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1, 2])
-    assert set(results[1].keys()) == set(['file'])
-    assert set(results[2].keys()) == set(['file'])
-    assert results[1]['file']['coverage'] == 'NUCCCCU'
-    assert results[2]['file']['coverage'] == 'UCNUCCCCUCU'
+    assert results == {
+        1: {
+            'file': {
+                'coverage': 'NUCCCCU',
+                'lines_added': 7,
+                'lines_covered': 3
+            }
+        },
+        2: {
+            'file': {
+                'coverage': 'UCNUCCCCUCU',
+                'lines_added': 4,
+                'lines_covered': 2,
+            }
+        }
+    }
 
 
 @responses.activate
@@ -238,12 +282,22 @@ def test_changesets_reducing_size(mock_secrets, fake_hg_repo):
         }]
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1, 2])
-    assert set(results[1].keys()) == set(['file'])
-    assert set(results[2].keys()) == set(['file'])
-    assert results[1]['file']['coverage'] == 'NUCCCXX'
-    assert results[2]['file']['coverage'] == 'NUCCC'
-
+    assert results == {
+        1: {
+            'file': {
+                'coverage': 'NUCCCXX',
+                'lines_added': 5,
+                'lines_covered': 4
+            }
+        },
+        2: {
+            'file': {
+                'coverage': 'NUCCC',
+                'lines_added': 0,
+                'lines_covered': 0
+            }
+        }
+    }
 
 @responses.activate
 def test_changesets_overwriting_one_commit_without_differential(mock_secrets, fake_hg_repo):
@@ -267,9 +321,15 @@ def test_changesets_overwriting_one_commit_without_differential(mock_secrets, fa
         }]
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1])
-    assert set(results[1].keys()) == set(['file'])
-    assert results[1]['file']['coverage'] == 'NUCXCCU'
+    assert results == {
+        1: {
+            'file': {
+                'coverage': 'NUCXCCU',
+                'lines_added': 6,
+                'lines_covered': 3
+            }
+        }
+    }
 
 
 @responses.activate
@@ -291,8 +351,9 @@ def test_removed_file(mock_secrets, fake_hg_repo):
         'source_files': []
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1])
-    assert set(results[1].keys()) == set()
+    assert results == {
+        1: {}
+    }
 
 
 @responses.activate
@@ -320,7 +381,13 @@ def test_backout_removed_file(mock_secrets, fake_hg_repo):
         }]
     }, changesets(local, revision))
 
-    assert set(results.keys()) == set([1, 2])
-    assert set(results[1].keys()) == set(['file'])
-    assert set(results[2].keys()) == set([])
-    assert results[1]['file']['coverage'] == 'NUCCCCU'
+    assert results == {
+        1: {
+            'file': {
+                'coverage': 'NUCCCCU',
+                'lines_added': 7,
+                'lines_covered': 4
+            }
+        },
+        2: {}
+    }
