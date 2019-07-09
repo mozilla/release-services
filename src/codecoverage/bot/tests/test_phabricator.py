@@ -180,6 +180,7 @@ def test_two_commits_two_files(mock_secrets, fake_hg_repo):
 
     }
 
+
 @responses.activate
 def test_changesets_overwriting(mock_secrets, fake_hg_repo):
     hg, local, remote = fake_hg_repo
@@ -298,6 +299,7 @@ def test_changesets_reducing_size(mock_secrets, fake_hg_repo):
             }
         }
     }
+
 
 @responses.activate
 def test_changesets_overwriting_one_commit_without_differential(mock_secrets, fake_hg_repo):
