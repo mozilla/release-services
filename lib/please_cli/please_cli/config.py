@@ -444,34 +444,6 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'codecoverage/crawler': {
-        'update': False,
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
     'pulselistener': {
         'update': False,
         'requires': [],
