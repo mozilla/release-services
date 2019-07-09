@@ -13,11 +13,13 @@ import typing
 import aiohttp
 import backoff
 import click
+import flask
 import mohawk
 import requests
 import sqlalchemy
 import sqlalchemy.orm
 
+from shipit_api.models import Release
 import shipit_api.product_details
 
 
@@ -178,94 +180,34 @@ def get_taskcluster_headers(request_url,
     }
 
 
-@click.command(name='shipit-v1-sync')
-@click.option(
-    '--ldap-username',
-    help='LDAP username',
-    required=True,
-    prompt=True,
-)
-@click.option(
-    '--ldap-password',
-    help='LDAP password',
-    required=True,
-    prompt=True,
-    hide_input=True,
-)
-@click.option(
-    '--taskcluster-client-id',
-    help='Taskcluster Client ID',
-    required=True,
-    prompt=True,
-)
-@click.option(
-    '--taskcluster-access-token',
-    help='Taskcluster Access token',
-    required=True,
-    prompt=True,
-    hide_input=True,
-)
+@click.command(name='shipit-import')
 @click.option(
     '--api-from',
-    default='https://ship-it.mozilla.org',
+    default='https://shipit-api.mozilla-releng.net',
 )
-@click.option(
-    '--api-to',
-    required=True,
-)
-@click.option(
-    '--product-prefix',
-    default='Thunbderbird',
-    help='Product name prefix',
-)
-@click.option(
-    '--timestamps-only',
-    is_flag=True,
-)
-def v1_sync(ldap_username,
-            ldap_password,
-            taskcluster_client_id,
-            taskcluster_access_token,
-            api_from,
-            api_to,
-            product_prefix,
-            timestamps_only,
-            ):
-    s = requests.Session()
-    s.auth = (ldap_username, ldap_password)
+@flask.cli.with_appcontext
+def shipit_import(api_from):
+    session = flask.current_app.db.session
 
     click.echo('Fetching release list...', nl=False)
-    req = s.get(f'{api_from}/releases')
-    releases = [r for r in req.json()['releases'] if r.startswith(product_prefix)]
-    click.echo(f'Syncing release with prefix {product_prefix}...', nl=False)
-    click.echo(click.style('OK', fg='green'))
+    req = requests.get(f'{api_from}/releases?status=shipped,aborted,scheduled')
+    releases = req.json()
 
-    releases_json = []
-
-    with click.progressbar(releases, label='Fetching release data') as releases:
-        for release in releases:
-            r = s.get(f'{api_from}/releases/{release}')
-            releases_json.append(r.json())
-
-    api_url = f'{api_to}/sync'
-    if timestamps_only:
-        api_url = f'{api_to}/sync_datetime'
-    click.echo(f'Syncing release list to {api_url}...', nl=False)
-    headers = get_taskcluster_headers(
-        api_url,
-        'post',
-        json.dumps(releases_json),
-        taskcluster_client_id,
-        taskcluster_access_token,
-    )
-    r = requests.post(
-        api_url,
-        headers=headers,
-        verify=False,
-        json=releases_json,
-    )
-    r.raise_for_status()
-    click.echo(click.style('OK', fg='green'))
+    for release in releases:
+        r = Release(
+            product=release['product'],
+            version=release['version'],
+            branch=release['branch'],
+            revision=release['revision'],
+            build_number=release['build_number'],
+            release_eta=release.get('release_eta'),
+            partial_updates=release.get('partials'),
+            status=release['status'],
+        )
+        r.created = release['created']
+        r.completed = release['completed'] or release['created']
+        session.add(r)
+        session.commit()
 
 
 @click.command(name='trigger-product-details')
