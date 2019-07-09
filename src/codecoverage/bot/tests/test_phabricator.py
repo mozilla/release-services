@@ -37,7 +37,7 @@ def test_simple(mock_secrets, mock_phabricator, fake_hg_repo):
             'file': {
                 'coverage': 'NUCCCCU',
                 'lines_added': 7,
-                'lines_covered': 4
+                'lines_covered': 5
             }
         }
     }
@@ -162,12 +162,12 @@ def test_two_commits_two_files(mock_secrets, fake_hg_repo):
             'file1_commit1': {
                 'coverage': 'NUCCCCU',
                 'lines_added': 7,
-                'lines_covered': 4
+                'lines_covered': 5
             },
             'file2_commit1': {
                 'coverage': 'CCU',
                 'lines_added': 3,
-                'lines_covered': 1
+                'lines_covered': 2
             }
         },
         2: {
@@ -207,7 +207,7 @@ def test_changesets_overwriting(mock_secrets, fake_hg_repo):
             'file': {
                 'coverage': 'NUCXCCU',
                 'lines_added': 6,
-                'lines_covered': 3
+                'lines_covered': 4
             }
         },
         2: {
@@ -247,7 +247,7 @@ def test_changesets_displacing(mock_secrets, fake_hg_repo):
             'file': {
                 'coverage': 'NUCCCCU',
                 'lines_added': 7,
-                'lines_covered': 3
+                'lines_covered': 4
             }
         },
         2: {
@@ -326,7 +326,7 @@ def test_changesets_overwriting_one_commit_without_differential(mock_secrets, fa
             'file': {
                 'coverage': 'NUCXCCU',
                 'lines_added': 6,
-                'lines_covered': 3
+                'lines_covered': 4
             }
         }
     }
@@ -386,7 +386,7 @@ def test_backout_removed_file(mock_secrets, fake_hg_repo):
             'file': {
                 'coverage': 'NUCCCCU',
                 'lines_added': 7,
-                'lines_covered': 4
+                'lines_covered': 5
             }
         },
         2: {}

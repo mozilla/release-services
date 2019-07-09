@@ -129,7 +129,7 @@ class PhabricatorUploader(object):
                     results[revision_id][path] = {
                         'lines_added': len(lines_added),
                         'lines_covered': sum(
-                            coverage[line] in ('C', 'X', 'N')
+                            coverage[line-1] in ('C', 'X', 'N')
                             for line in lines_added
                             if line < len(coverage)
                         ),
