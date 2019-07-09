@@ -192,6 +192,7 @@ def shipit_import(api_from):
 
     click.echo('Fetching release list...', nl=False)
     req = requests.get(f'{api_from}/releases?status=shipped,aborted,scheduled')
+    req.raise_for_status()
     releases = req.json()
 
     for release in releases:
