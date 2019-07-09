@@ -145,9 +145,7 @@ AUTH0_AUTH_SCOPES.update(scopes)
 
 # other scopes
 AUTH0_AUTH_SCOPES.update({
-    'sync_releases': [],
     'rebuild_product_details': [],
-    'sync_release_datetimes': [],
     'update_release_status': [],
 })
 

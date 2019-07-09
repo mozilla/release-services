@@ -267,34 +267,6 @@ def abandon_release(name):
     return release_json
 
 
-@auth.require_permissions([SCOPE_PREFIX + '/sync_releases'])
-def sync_releases(releases):
-    session = current_app.db.session
-    for release in releases:
-        try:
-            session.query(Release).filter(Release.name == release['name']).one()
-            # nothing todo
-        except NoResultFound:
-            status = 'shipped'
-            if not release['shippedAt']:
-                status = 'aborted'
-            r = Release(
-                product=release['product'],
-                version=release['version'],
-                branch=release['branch'],
-                revision=release['mozillaRevision'],
-                build_number=release['buildNumber'],
-                release_eta=release.get('release_eta'),
-                partial_updates=release.get('partials'),
-                status=status,
-            )
-            r.created = release['submittedAt']
-            r.completed = release['shippedAt']
-            session.add(r)
-            session.commit()
-    return jsonify({'ok': 'ok'})
-
-
 @auth.require_permissions([SCOPE_PREFIX + '/rebuild_product_details'])
 def rebuild_product_details(options):
     pulse_user = current_app.config['PULSE_USER']
@@ -310,21 +282,6 @@ def rebuild_product_details(options):
         msg = 'Can\'t send notification to pulse.'
         trace = traceback.format_exc()
         logger.error(f'{msg}\nException:{e}\nTraceback: {trace}')
-    return jsonify({'ok': 'ok'})
-
-
-@auth.require_permissions([SCOPE_PREFIX + '/sync_release_datetimes'])
-def sync_release_datetimes(releases):
-    session = current_app.db.session
-    for release in releases:
-        try:
-            r = session.query(Release).filter(Release.name == release['name']).one()
-            r.created = release['submittedAt']
-            r.completed = release['shippedAt']
-            session.commit()
-        except NoResultFound:
-            # nothing todo
-            pass
     return jsonify({'ok': 'ok'})
 
 
