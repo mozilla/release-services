@@ -1,72 +1,56 @@
 # -*- coding: utf-8 -*-
 
-import requests
-
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
-from cli_common.utils import retry
-from code_coverage_bot import hgmo
+from code_coverage_bot.phabricator import parse_revision_id
 from code_coverage_bot.secrets import secrets
 
 logger = get_logger(__name__)
 
 
-class ResultNotReadyException(Exception):
-    pass
+def notify_email(revision, changesets, changesets_coverage, client_id, access_token):
+    '''
+    Send an email to admins when low coverage for new commits is detected
+    '''
+    notify_service = get_service('notify', client_id, access_token)
 
+    content = ''
+    for changeset in changesets:
+        desc = changeset['desc'].split('\n')[0]
 
-class Notifier(object):
-    def __init__(self, repo_dir, revision, client_id, access_token):
-        self.repo_dir = repo_dir
-        self.revision = revision
-        self.notify_service = get_service('notify', client_id, access_token)
+        if any(text in desc for text in ['r=merge', 'a=merge']):
+            continue
 
-    def get_coverage_summary(self, changeset):
-        backend_host = secrets[secrets.BACKEND_HOST]
+        rev = changeset['node']
 
-        r = requests.get('{}/coverage/changeset_summary/{}'.format(backend_host, changeset))
-        r.raise_for_status()
+        # Lookup changeset coverage from phabricator uploader
+        rev_id = parse_revision_id(changeset['desc'])
+        if rev_id is None:
+            continue
+        coverage = changesets_coverage.get(rev_id)
+        if coverage is None:
+            logger.warn('No coverage found', changeset=changeset)
+            continue
 
-        if r.status_code == 202:
-            raise ResultNotReadyException()
+        # Calc totals for all files
+        covered = sum(c['lines_covered'] for c in coverage.values())
+        added = sum(c['lines_added'] for c in coverage.values())
 
-        return r.json()
+        if covered < 0.2 * added:
+            content += '* [{}](https://firefox-code-coverage.herokuapp.com/#/changeset/{}): {} covered out of {} added.\n'.format(desc, rev, covered, added)  # noqa
 
-    def notify(self):
-        content = ''
+    if content == '':
+        return
+    elif len(content) > 102400:
+        # Content is 102400 chars max
+        content = content[:102000] + '\n\n... Content max limit reached!'
 
-        # Get pushlog and ask the backend to generate the coverage by changeset
-        # data, which will be cached.
-        with hgmo.HGMO(self.repo_dir) as hgmo_server:
-            changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
+    for email in secrets[secrets.EMAIL_ADDRESSES]:
+        notify_service.email({
+            'address': email,
+            'subject': 'Coverage patches for {}'.format(revision),
+            'content': content,
+            'template': 'fullscreen',
+        })
 
-        for changeset in changesets:
-            desc = changeset['desc'].split('\n')[0]
-
-            if any(text in desc for text in ['r=merge', 'a=merge']):
-                continue
-
-            rev = changeset['node']
-
-            try:
-                coverage = retry(lambda: self.get_coverage_summary(rev))
-            except (requests.exceptions.HTTPError, ResultNotReadyException):
-                logger.warn('Failure to retrieve coverage summary')
-                continue
-
-            if coverage['commit_covered'] < 0.2 * coverage['commit_added']:
-                content += '* [{}](https://firefox-code-coverage.herokuapp.com/#/changeset/{}): {} covered out of {} added.\n'.format(desc, rev, coverage['commit_covered'], coverage['commit_added'])  # noqa
-
-        if content == '':
-            return
-        elif len(content) > 102400:
-            # Content is 102400 chars max
-            content = content[:102000] + '\n\n... Content max limit reached!'
-
-        for email in secrets[secrets.EMAIL_ADDRESSES]:
-            self.notify_service.email({
-                'address': email,
-                'subject': 'Coverage patches for {}'.format(self.revision),
-                'content': content,
-                'template': 'fullscreen',
-            })
+    return content

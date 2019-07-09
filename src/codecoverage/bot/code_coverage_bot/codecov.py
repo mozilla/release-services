@@ -21,8 +21,9 @@ from code_coverage_bot import taskcluster
 from code_coverage_bot import uploader
 from code_coverage_bot.artifacts import ArtifactsHandler
 from code_coverage_bot.github import GitHubUtils
-from code_coverage_bot.notifier import Notifier
+from code_coverage_bot.notifier import notify_email
 from code_coverage_bot.phabricator import PhabricatorUploader
+from code_coverage_bot.phabricator import parse_revision_id
 from code_coverage_bot.secrets import secrets
 from code_coverage_bot.zero_coverage import ZeroCov
 
@@ -191,9 +192,14 @@ class CodeCov(object):
             assert any(f['name'].endswith(extension) for f in
                        report['source_files']), 'No {} file in the generated report'.format(extension)
 
+        # Get pushlog and ask the backend to generate the coverage by changeset
+        # data, which will be cached.
+        with hgmo.HGMO(self.repo_dir) as hgmo_server:
+            changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
+
         logger.info('Upload changeset coverage data to Phabricator')
         phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
-        phabricatorUploader.upload(report)
+        changesets_coverage = phabricatorUploader.upload(report, changesets)
 
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             executor.submit(uploader.codecov, output, commit_sha)
@@ -203,8 +209,7 @@ class CodeCov(object):
         # Wait until the build has been ingested by Codecov.
         if uploader.codecov_wait(commit_sha):
             logger.info('Build ingested by codecov.io')
-            notifier = Notifier(self.repo_dir, self.revision, self.client_id, self.access_token)
-            notifier.notify()
+            notify_email(self.revision, changesets, changesets_coverage, self.client_id, self.access_token)
         else:
             logger.error('codecov.io took too much time to ingest data.')
 
@@ -215,7 +220,7 @@ class CodeCov(object):
         with hgmo.HGMO(server_address=TRY_REPOSITORY) as hgmo_server:
             changesets = hgmo_server.get_automation_relevance_changesets(self.revision)
 
-        if not any(phabricatorUploader.parse_revision_id(changeset['desc']) is not None for changeset in changesets):
+        if not any(parse_revision_id(changeset['desc']) is not None for changeset in changesets):
             logger.info('None of the commits in the try push are linked to a Phabricator revision')
             return
 

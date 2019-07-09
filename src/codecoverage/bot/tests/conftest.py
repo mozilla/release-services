@@ -173,6 +173,7 @@ def mock_secrets():
         'PHABRICATOR_ENABLED': True,
         'PHABRICATOR_URL': 'http://phabricator.test/api/',
         'PHABRICATOR_TOKEN': 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+        'EMAIL_ADDRESSES': ['admin@allizom.org']
     })
 
 
@@ -313,3 +314,16 @@ def fake_source_dir(tmpdir):
         f.write('1\n2\n')
 
     return tmpdir_path
+
+
+@pytest.fixture
+def mock_notify():
+    '''
+    Mock the Taskcluster notify service
+    '''
+    responses.add(
+        responses.POST,
+        'https://notify.taskcluster.net/v1/email',
+        body='{}',
+        content_type='application/json',
+    )
