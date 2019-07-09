@@ -19,8 +19,8 @@ import requests
 import sqlalchemy
 import sqlalchemy.orm
 
-from shipit_api.models import Release
 import shipit_api.product_details
+from shipit_api.models import Release
 
 
 def coroutine(f):
