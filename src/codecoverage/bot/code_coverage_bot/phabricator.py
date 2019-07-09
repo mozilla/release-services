@@ -131,7 +131,7 @@ class PhabricatorUploader(object):
                         'lines_covered': sum(
                             coverage[line-1] in ('C', 'X', 'N')
                             for line in lines_added
-                            if line < len(coverage)
+                            if line-1 < len(coverage)
                         ),
                         'coverage': coverage,
                     }
