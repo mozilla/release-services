@@ -649,7 +649,8 @@ def get_primary_builds(breakpoint_version: int,
 
 def get_latest_version(releases: typing.List[shipit_api.models.Release],
                        branch: str,
-                       product: Product
+                       product: Product,
+                       filter_closure: typing.Optional[typing.Callable] = None
                        ) -> str:
     '''Get latest version
 
@@ -661,6 +662,8 @@ def get_latest_version(releases: typing.List[shipit_api.models.Release],
     filtered_releases = [r for r in releases if
                          r.product == product.value and
                          r.branch == branch]
+    if filter_closure:
+        filtered_releases = list(filter(filter_closure, filtered_releases))
     releases_ = sorted(
         filtered_releases,
         reverse=True,
@@ -985,12 +988,14 @@ def get_mobile_versions(releases: typing.List[shipit_api.models.Release]) -> Mob
         nightly_version=shipit_api.config.FENNEC_NIGHTLY,
         alpha_version=shipit_api.config.FENNEC_NIGHTLY,
         beta_version=get_latest_version(releases,
-                                        shipit_api.config.BETA_BRANCH,
+                                        shipit_api.config.FENNEC_BETA_BRANCH,
                                         Product.FENNEC,
+                                        lambda r: mozilla_version.gecko.FennecVersion.parse(r.version).is_beta
                                         ),
         version=get_latest_version(releases,
-                                   shipit_api.config.RELEASE_BRANCH,
+                                   shipit_api.config.FENNEC_RELEASE_BRANCH,
                                    Product.FENNEC,
+                                   lambda r: mozilla_version.gecko.FennecVersion.parse(r.version).is_release
                                    ),
     )
 
