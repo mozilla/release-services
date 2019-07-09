@@ -48,11 +48,11 @@ def test_notification(mock_secrets, mock_phabricator, mock_notify, fake_hg_repo)
         2: {
             'file': {
                 'lines_added': 6,
-                'lines_covered': 1,
+                'lines_covered': 0,
                 'coverage': 'NUCUUUUXXX',
             },
         },
     }
 
     mail = notify_email(revision, stack, changesets_coverage, 'testuser', 'testtoken')
-    assert mail == "* [Commit [(b'M', b'file')]Differential Revision: https://phabricator.services.mozilla.com/D2](https://firefox-code-coverage.herokuapp.com/#/changeset/{}): 1 covered out of 6 added.\n".format(revision)  # noqa
+    assert mail == "* [Commit [(b'M', b'file')]Differential Revision: https://phabricator.services.mozilla.com/D2](https://firefox-code-coverage.herokuapp.com/#/changeset/{}): 0 covered out of 6 added.\n".format(revision)  # noqa

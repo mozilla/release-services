@@ -117,17 +117,22 @@ class PhabricatorUploader(object):
                         # This means the file has been removed by this changeset, and maybe was brought back by a following changeset.
                         continue
 
-                    # Calc lines added by this patch
-                    lines_added = sum([
-                        parse_revision_id(line['desc']) == revision_id
+                    # List lines added by this patch
+                    lines_added = [
+                        line['lineno']
                         for line in build_annotate
-                    ])
+                        if line['node'] == changeset['node']
+                    ]
 
                     # Apply the coverage map on the annotate data of the changeset of interest.
                     coverage = self._apply_coverage_map(annotate, coverage_map)
                     results[revision_id][path] = {
-                        'lines_added': lines_added,
-                        'lines_covered': sum(c == 'C' for c in coverage),
+                        'lines_added': len(lines_added),
+                        'lines_covered': sum(
+                            coverage[line] == 'C'
+                            for line in lines_added
+                            if line < len(coverage)
+                        ),
                         'coverage': coverage,
                     }
 
