@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import enum
 import re
 
 # If version has two parts with no trailing specifiers like "rc", we
@@ -20,6 +21,22 @@ VERSION_REGEX = re.compile(
     r'(?P<esr>(?:esr)?)'  # ESR indicator
     r'$'
 )
+
+
+@enum.unique
+class Product(enum.Enum):
+    DEVEDITION = 'devedition'
+    FIREFOX = 'firefox'
+    FENNEC = 'fennec'
+    THUNDERBIRD = 'thunderbird'
+
+
+@enum.unique
+class ProductCategory(enum.Enum):
+    MAJOR = 'major'
+    DEVELOPMENT = 'dev'
+    STABILITY = 'stability'
+    ESR = 'esr'
 
 
 def parse_version(version):
