@@ -6,7 +6,6 @@
 import asyncio
 import collections
 import datetime
-import enum
 import functools
 import hashlib
 import io
@@ -31,25 +30,10 @@ import cli_common.log
 import cli_common.utils
 import shipit_api.config
 import shipit_api.models
+from shipit_api.release import Product
+from shipit_api.release import ProductCategory
 
 logger = cli_common.log.get_logger(__name__)
-
-
-@enum.unique
-class Product(enum.Enum):
-    DEVEDITION = 'devedition'
-    FIREFOX = 'firefox'
-    FENNEC = 'fennec'
-    THUNDERBIRD = 'thunderbird'
-
-
-@enum.unique
-class ProductCategory(enum.Enum):
-    MAJOR = 'major'
-    DEVELOPMENT = 'dev'
-    STABILITY = 'stability'
-    ESR = 'esr'
-
 
 File = str
 ReleaseDetails = mypy_extensions.TypedDict('ReleaseDetails', {
