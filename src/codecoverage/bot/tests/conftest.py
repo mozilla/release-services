@@ -317,13 +317,19 @@ def fake_source_dir(tmpdir):
 
 
 @pytest.fixture
-def mock_notify():
+def mock_taskcluster():
     '''
-    Mock the Taskcluster notify service
+    Mock a taskcluster proxy usage
     '''
+    from code_coverage_bot.taskcluster import taskcluster_config
+
     responses.add(
         responses.POST,
-        'https://notify.taskcluster.net/v1/email',
+        'http://taskcluster.test/notify/v1/email',
         body='{}',
         content_type='application/json',
     )
+
+    taskcluster_config.options = {
+        'rootUrl': 'http://taskcluster.test',
+    }

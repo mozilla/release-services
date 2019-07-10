@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import json
 
-import click
 import pytest
 
+import code_coverage_bot.utils
 from code_coverage_bot import grcov
 
 
 def test_report_invalid_output_format(grcov_artifact):
-    with pytest.raises(click.exceptions.ClickException, message='`grcov` failed with code: 1.'):
+    with pytest.raises(code_coverage_bot.utils.RunException, message='`grcov` failed with code: 1.'):
         grcov.report([grcov_artifact], out_format='UNSUPPORTED')
 
 
