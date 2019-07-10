@@ -2,15 +2,15 @@
 
 import re
 
+import structlog
 from libmozdata.phabricator import BuildState
 from libmozdata.phabricator import PhabricatorAPI
 from libmozdata.phabricator import PhabricatorRevisionNotFoundException
 
-from cli_common.log import get_logger
 from code_coverage_bot import hgmo
 from code_coverage_bot.secrets import secrets
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 PHABRICATOR_REVISION_REGEX = re.compile('Differential Revision: https://phabricator.services.mozilla.com/D([0-9]+)')
 

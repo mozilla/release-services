@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import requests
+import structlog
 import zstandard as zstd
 
 from cli_common import utils
 from cli_common.gcp import get_bucket
-from cli_common.log import get_logger
 from code_coverage_bot.secrets import secrets
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 GCP_COVDIR_PATH = '{repository}/{revision}.json.zstd'
 
 

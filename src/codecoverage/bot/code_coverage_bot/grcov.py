@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from cli_common.command import run_check
-from cli_common.log import get_logger
+import structlog
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def report(artifacts, source_dir=None, service_number=None, commit_sha='unused', token='unused', out_format='coveralls', options=[]):

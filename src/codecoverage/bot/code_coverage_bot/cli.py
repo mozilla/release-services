@@ -6,7 +6,8 @@
 import argparse
 import os
 
-from cli_common.log import init_logger
+from code_coverage_tools.log import init_logger
+
 from code_coverage_bot import config
 from code_coverage_bot.codecov import CodeCov
 from code_coverage_bot.secrets import secrets
@@ -65,7 +66,6 @@ def main():
                 PAPERTRAIL_HOST=secrets.get('PAPERTRAIL_HOST'),
                 PAPERTRAIL_PORT=secrets.get('PAPERTRAIL_PORT'),
                 SENTRY_DSN=secrets.get('SENTRY_DSN'),
-                MOZDEF=secrets.get('MOZDEF'),
                 )
 
     c = CodeCov(args.repository, args.revision, args.task_name_filter, args.cache_root)

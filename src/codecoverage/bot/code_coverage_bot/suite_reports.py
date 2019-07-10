@@ -4,10 +4,11 @@ import shutil
 import tarfile
 
 from cli_common.command import run_check
-from cli_common.log import get_logger
+import structlog
+
 from code_coverage_bot import grcov
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def generate(suites, artifactsHandler, ccov_reports_dir, repo_dir):

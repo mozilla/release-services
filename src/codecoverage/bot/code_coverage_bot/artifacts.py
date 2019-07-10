@@ -3,11 +3,12 @@ import fnmatch
 import os
 import time
 
-from cli_common.log import get_logger
 from cli_common.utils import ThreadPoolExecutorResult
+import structlog
+
 from code_coverage_bot import taskcluster
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 SUITES_TO_IGNORE = ['awsy', 'talos']  # Ignore awsy and talos as they aren't actually suites of tests.

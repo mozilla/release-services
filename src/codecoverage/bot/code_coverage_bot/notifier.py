@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+import structlog
 
-from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from code_coverage_bot.phabricator import parse_revision_id
 from code_coverage_bot.secrets import secrets
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def notify_email(revision, changesets, changesets_coverage, client_id, access_token):

@@ -9,8 +9,8 @@ from datetime import timedelta
 
 import hglib
 import requests
+import structlog
 
-from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from cli_common.utils import ThreadPoolExecutorResult
 from code_coverage_bot import chunk_mapping
@@ -27,7 +27,7 @@ from code_coverage_bot.phabricator import parse_revision_id
 from code_coverage_bot.secrets import secrets
 from code_coverage_bot.zero_coverage import ZeroCov
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 HG_BASE = 'https://hg.mozilla.org/'
