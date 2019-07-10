@@ -6,12 +6,11 @@
 import argparse
 import os
 
-from code_coverage_tools.log import init_logger
-
 from code_coverage_bot import config
 from code_coverage_bot.codecov import CodeCov
 from code_coverage_bot.secrets import secrets
 from code_coverage_bot.taskcluster import taskcluster_config
+from code_coverage_tools.log import init_logger
 
 
 def parse_cli():

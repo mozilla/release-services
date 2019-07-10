@@ -6,10 +6,10 @@
 import os.path
 
 import structlog
-from code_coverage_tools.log import init_logger
 
 import codecoverage_backend.datadog
 import codecoverage_backend.gcp
+from code_coverage_tools.log import init_logger
 from codecoverage_backend import taskcluster
 
 from .build import build_flask_app

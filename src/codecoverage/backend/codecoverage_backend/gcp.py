@@ -9,9 +9,9 @@ import redis
 import requests
 import structlog
 import zstandard as zstd
-from code_coverage_tools.gcp import get_bucket
 from dateutil.relativedelta import relativedelta
 
+from code_coverage_tools.gcp import get_bucket
 from codecoverage_backend import covdir
 from codecoverage_backend import taskcluster
 

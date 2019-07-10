@@ -2,10 +2,10 @@
 import requests
 import structlog
 import zstandard as zstd
-from code_coverage_tools.gcp import get_bucket
 
 from code_coverage_bot.secrets import secrets
 from code_coverage_bot.utils import retry
+from code_coverage_tools.gcp import get_bucket
 
 logger = structlog.get_logger(__name__)
 GCP_COVDIR_PATH = '{repository}/{revision}.json.zstd'

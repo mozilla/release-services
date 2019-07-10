@@ -5,9 +5,9 @@ from zipfile import BadZipFile
 from zipfile import is_zipfile
 
 import requests
-from code_coverage_tools.taskcluster import TaskclusterConfig
 
 from code_coverage_bot.utils import retry
+from code_coverage_tools.taskcluster import TaskclusterConfig
 
 taskcluster_config = TaskclusterConfig()
 

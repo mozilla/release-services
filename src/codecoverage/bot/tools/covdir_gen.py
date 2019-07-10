@@ -4,11 +4,11 @@ import os
 from datetime import datetime
 
 import requests
-from code_coverage_tools.taskcluter import TaskclusterConfig
 from taskcluster.utils import slugId
 
 from code_coverage_bot.github import GitHubUtils
 from code_coverage_bot.secrets import secrets
+from code_coverage_tools.taskcluter import TaskclusterConfig
 
 CODECOV_URL = 'https://codecov.io/api/gh/marco-c/gecko-dev/commit'
 MC_REPO = 'https://hg.mozilla.org/mozilla-central'
