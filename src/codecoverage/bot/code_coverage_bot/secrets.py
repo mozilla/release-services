@@ -3,8 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from cli_common.taskcluster import get_secrets
 from code_coverage_bot import config
+from code_coverage_bot.taskcluster import taskcluster_config
 
 
 class Secrets(dict):
@@ -23,11 +23,11 @@ class Secrets(dict):
     PHABRICATOR_TOKEN = 'PHABRICATOR_TOKEN'
     GOOGLE_CLOUD_STORAGE = 'GOOGLE_CLOUD_STORAGE'
 
-    def load(self, taskcluster_secret, taskcluster_client_id, taskcluster_access_token):
-        secrets = get_secrets(
+    def load(self, taskcluster_secret):
+        taskcluster_config.load_secrets(
             taskcluster_secret,
             config.PROJECT_NAME,
-            required=(
+            required=[
                 Secrets.APP_CHANNEL,
                 Secrets.BACKEND_HOST,
                 Secrets.CODECOV_REPO,
@@ -37,15 +37,12 @@ class Secrets(dict):
                 Secrets.PHABRICATOR_ENABLED,
                 Secrets.PHABRICATOR_URL,
                 Secrets.PHABRICATOR_TOKEN,
-            ),
+            ],
             existing={
                 Secrets.REPO_MAPPER_EMAIL_ADDRESSES: []
             },
-            taskcluster_client_id=taskcluster_client_id,
-            taskcluster_access_token=taskcluster_access_token,
         )
-
-        self.update(secrets)
+        self.update(taskcluster_config.secrets)
 
 
 secrets = Secrets()

@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 import structlog
 
-from cli_common.taskcluster import get_service
 from code_coverage_bot.phabricator import parse_revision_id
 from code_coverage_bot.secrets import secrets
+from code_coverage_bot.taskcluster import taskcluster_config
 
 logger = structlog.get_logger(__name__)
 
 
-def notify_email(revision, changesets, changesets_coverage, client_id, access_token):
+def notify_email(revision, changesets, changesets_coverage):
     '''
     Send an email to admins when low coverage for new commits is detected
     '''
-    notify_service = get_service('notify', client_id, access_token)
+    notify_service = taskcluster_config.get_service('notify')
 
     content = ''
     for changeset in changesets:
