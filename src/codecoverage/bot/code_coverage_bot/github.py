@@ -3,10 +3,10 @@ import os
 
 import requests
 
-from cli_common.command import run_check
 from cli_common.taskcluster import get_service
-from cli_common.utils import retry
 from code_coverage_bot.secrets import secrets
+from code_coverage_bot.utils import retry
+from code_coverage_bot.utils import run_check
 
 
 class GitHubUtils(object):

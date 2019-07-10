@@ -2,10 +2,10 @@
 import requests
 import structlog
 import zstandard as zstd
+from code_coverage_tools.gcp import get_bucket
 
-from cli_common import utils
-from cli_common.gcp import get_bucket
 from code_coverage_bot.secrets import secrets
+from code_coverage_bot.utils import retry
 
 logger = structlog.get_logger(__name__)
 GCP_COVDIR_PATH = '{repository}/{revision}.json.zstd'
@@ -52,7 +52,7 @@ def get_latest_codecov():
         r.raise_for_status()
         return r.json()['commit']['commitid']
 
-    return utils.retry(get_latest_codecov_int)
+    return retry(get_latest_codecov_int)
 
 
 def get_codecov(commit):
@@ -73,7 +73,7 @@ def codecov_wait(commit):
         return True
 
     try:
-        return utils.retry(check_codecov_job, retries=30)
+        return retry(check_codecov_job, retries=30)
     except TotalsNoneError:
         return False
 
@@ -105,7 +105,7 @@ def gcp(repository, revision, data):
     logger.info('Uploaded {} on {}'.format(path, bucket))
 
     # Trigger ingestion on backend
-    utils.retry(lambda: gcp_ingest(repository, revision), retries=5)
+    retry(lambda: gcp_ingest(repository, revision), retries=5)
 
     return blob
 

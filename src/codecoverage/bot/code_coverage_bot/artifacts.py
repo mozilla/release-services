@@ -3,10 +3,10 @@ import fnmatch
 import os
 import time
 
-from cli_common.utils import ThreadPoolExecutorResult
 import structlog
 
 from code_coverage_bot import taskcluster
+from code_coverage_bot.utils import ThreadPoolExecutorResult
 
 logger = structlog.get_logger(__name__)
 

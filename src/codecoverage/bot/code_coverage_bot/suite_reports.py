@@ -3,10 +3,10 @@ import os
 import shutil
 import tarfile
 
-from cli_common.command import run_check
 import structlog
 
 from code_coverage_bot import grcov
+from code_coverage_bot.utils import run_check
 
 logger = structlog.get_logger(__name__)
 

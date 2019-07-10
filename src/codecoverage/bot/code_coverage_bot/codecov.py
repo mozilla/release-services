@@ -12,7 +12,6 @@ import requests
 import structlog
 
 from cli_common.taskcluster import get_service
-from cli_common.utils import ThreadPoolExecutorResult
 from code_coverage_bot import chunk_mapping
 from code_coverage_bot import grcov
 from code_coverage_bot import hgmo
@@ -25,6 +24,7 @@ from code_coverage_bot.notifier import notify_email
 from code_coverage_bot.phabricator import PhabricatorUploader
 from code_coverage_bot.phabricator import parse_revision_id
 from code_coverage_bot.secrets import secrets
+from code_coverage_bot.utils import ThreadPoolExecutorResult
 from code_coverage_bot.zero_coverage import ZeroCov
 
 logger = structlog.get_logger(__name__)
