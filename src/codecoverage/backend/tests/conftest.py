@@ -9,7 +9,6 @@ import os
 import random
 import re
 import time
-import unittest
 import urllib.parse
 import uuid
 
@@ -18,7 +17,7 @@ import pytest
 import responses
 import zstandard as zstd
 
-import backend_common.testing
+import codecoverage_backend.backend
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
@@ -28,8 +27,12 @@ def mock_secrets():
     '''
     Provide configuration through mock Taskcluster secrets
     '''
-    import cli_common.taskcluster
-    cli_common.taskcluster.get_secrets = unittest.mock.Mock(return_value={
+    from codecoverage_backend import taskcluster
+
+    taskcluster.options = {
+        'rootUrl': 'http://taskcluster.test',
+    }
+    taskcluster.secrets = {
         'REDIS_URL': 'redis://unitest:1234',
         'APP_CHANNEL': 'test',
         'GOOGLE_CLOUD_STORAGE': {
@@ -38,23 +41,28 @@ def mock_secrets():
             'private_key': 'somethingHere',
             'bucket': 'unittest',
         }
-    })
+    }
 
 
-@pytest.fixture()
+@pytest.fixture
 def app(mock_secrets):
     '''
     Load codecoverage_backend app in test mode
     '''
-    import codecoverage_backend
 
-    config = backend_common.testing.get_app_config({
-    })
-    app = codecoverage_backend.create_app(config)
+    app = codecoverage_backend.backend.build_flask_app(
+        project_name='Test',
+        app_name='test',
+        openapi=os.path.join(os.path.dirname(__file__), '../codecoverage_backend/api.yml')
+    )
 
-    with app.app_context():
-        backend_common.testing.configure_app(app)
-        yield app
+    with app.app.app_context():
+        yield app.app
+
+
+@pytest.fixture
+def client(app):
+    yield app.test_client()
 
 
 @pytest.fixture
