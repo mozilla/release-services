@@ -10,15 +10,29 @@ from code_coverage_tools.log import init_logger
 
 import codecoverage_backend.datadog
 import codecoverage_backend.gcp
+from codecoverage_backend import taskcluster
 
 from .build import build_flask_app
 
 
 def create_app():
-    # TODO: load secrets !
+    # Load secrets from Taskcluster
+    taskcluster.auth()
+    taskcluster.load_secrets(
+        os.environ.get('TASKCLUSTER_SECRET'),
+        codecoverage_backend.config.PROJECT_NAME,
+        required=['GOOGLE_CLOUD_STORAGE', 'APP_CHANNEL'],
+        existing={
+            'REDIS_URL': os.environ.get('REDIS_URL', 'redis://localhost:6379')
+        }
+    )
 
+    # Configure logger
     init_logger(
         codecoverage_backend.config.PROJECT_NAME,
+        PAPERTRAIL_HOST=taskcluster.secrets.get('PAPERTRAIL_HOST'),
+        PAPERTRAIL_PORT=taskcluster.secrets.get('PAPERTRAIL_PORT'),
+        SENTRY_DSN=taskcluster.secrets.get('SENTRY_DSN'),
     )
     logger = structlog.get_logger(__name__)
 

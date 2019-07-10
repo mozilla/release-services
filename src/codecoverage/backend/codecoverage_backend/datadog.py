@@ -7,7 +7,7 @@ import logging
 import datadog
 
 from codecoverage_backend import config
-from codecoverage_backend import secrets
+from codecoverage_backend import taskcluster
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +23,12 @@ def get_stats():
     if __stats is not None:
         return __stats
 
-    if secrets.DATADOG_API_KEY:
+    app_channel = taskcluster.secrets['APP_CHANNEL']
+
+    if taskcluster.secrets['DATADOG_API_KEY']:
         datadog.initialize(
-            api_key=secrets.DATADOG_API_KEY,
-            host_name=f'coverage.{secrets.APP_CHANNEL}.moz.tools',
+            api_key=taskcluster.secrets['DATADOG_API_KEY'],
+            host_name=f'coverage.{app_channel}.moz.tools',
         )
     else:
         logger.info('No datadog credentials')
@@ -36,7 +38,7 @@ def get_stats():
     __stats = datadog.ThreadStats(
         constant_tags=[
             config.PROJECT_NAME,
-            f'channel:{secrets.APP_CHANNEL}',
+            f'channel:{app_channel}',
         ],
     )
     __stats.start(flush_in_thread=True)
