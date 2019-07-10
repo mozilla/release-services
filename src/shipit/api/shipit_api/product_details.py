@@ -595,6 +595,8 @@ def get_primary_builds(breakpoint_version: int,
             firefox_versions['LATEST_FIREFOX_VERSION'],
             firefox_versions['FIREFOX_ESR'],
         ])
+        if firefox_versions['FIREFOX_ESR_NEXT']:
+            versions.add(firefox_versions['FIREFOX_ESR_NEXT'])
     elif product is Product.THUNDERBIRD:
         thunderbird_versions = get_thunderbird_versions(releases)
         products = [Product.THUNDERBIRD]
