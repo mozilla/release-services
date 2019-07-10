@@ -378,14 +378,12 @@ class RelengapiToken(backend_common.db.db.Model):
 
 
 def parse_header_taskcluster(request):
-
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         auth_header = request.headers.get('Authentication')
         if not auth_header:
             return NO_AUTH
-        header = auth_header.split()
-        if len(header) != 2:
+        if not auth_header.startswith('Hawk'):
             return NO_AUTH
 
     # Get Endpoint configuration
