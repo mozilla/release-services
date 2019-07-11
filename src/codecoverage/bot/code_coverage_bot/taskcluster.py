@@ -6,7 +6,10 @@ from zipfile import is_zipfile
 
 import requests
 
-from cli_common.utils import retry
+from code_coverage_bot.utils import retry
+from code_coverage_tools.taskcluster import TaskclusterConfig
+
+taskcluster_config = TaskclusterConfig()
 
 index_base = 'https://index.taskcluster.net/v1/'
 queue_base = 'https://queue.taskcluster.net/v1/'

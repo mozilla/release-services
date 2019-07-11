@@ -3,22 +3,20 @@ import os
 
 import requests
 
-from cli_common.command import run_check
-from cli_common.taskcluster import get_service
-from cli_common.utils import retry
 from code_coverage_bot.secrets import secrets
+from code_coverage_bot.taskcluster import taskcluster_config
+from code_coverage_bot.utils import retry
+from code_coverage_bot.utils import run_check
 
 
 class GitHubUtils(object):
 
-    def __init__(self, cache_root, client_id, access_token):
+    def __init__(self, cache_root):
         self.cache_root = cache_root
         self.gecko_dev_user = secrets.get(secrets.GECKO_DEV_USER)
         self.gecko_dev_pwd = secrets.get(secrets.GECKO_DEV_PWD)
         self.hg_git_mapper = secrets[secrets.HG_GIT_MAPPER] if secrets.HG_GIT_MAPPER in secrets else 'https://mapper.mozilla-releng.net'
-        self.client_id = client_id
-        self.access_token = access_token
-        self.notify_service = get_service('notify', client_id, access_token)
+        self.notify_service = taskcluster_config.get_service('notify')
 
     def update_geckodev_repo(self):
         if self.gecko_dev_user is None or self.gecko_dev_pwd is None:
@@ -37,7 +35,7 @@ class GitHubUtils(object):
         if self.gecko_dev_user is None or self.gecko_dev_pwd is None:
             return
 
-        tcGithub = get_service('github', self.client_id, self.access_token)
+        tcGithub = taskcluster_config.get_service('github')
         tcGithub.createStatus('marco-c', 'gecko-dev', commit_sha, {
             'state': 'success',
         })

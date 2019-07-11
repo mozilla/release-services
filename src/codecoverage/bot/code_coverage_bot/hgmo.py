@@ -4,10 +4,9 @@ import signal
 import subprocess
 
 import requests
+import structlog
 
-from cli_common.log import get_logger
-
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class HGMO(object):

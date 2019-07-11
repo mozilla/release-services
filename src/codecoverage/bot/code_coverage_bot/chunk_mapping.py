@@ -7,12 +7,12 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
+import structlog
 
-from cli_common.log import get_logger
 from code_coverage_bot import grcov
 from code_coverage_bot import taskcluster
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 ACTIVEDATA_QUERY_URL = 'http://activedata.allizom.org/query'
 

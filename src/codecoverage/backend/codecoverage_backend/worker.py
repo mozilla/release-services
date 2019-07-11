@@ -8,9 +8,9 @@ from rq import Connection
 from rq import Queue
 from rq import SimpleWorker
 
-from codecoverage_backend import secrets
+from codecoverage_backend import taskcluster
 
-conn = redis.from_url(secrets.REDIS_URL)
+conn = redis.from_url(taskcluster.secrets['REDIS_URL'])
 
 
 def exc_handler(job, *exc_info):

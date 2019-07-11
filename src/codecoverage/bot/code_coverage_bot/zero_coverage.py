@@ -4,12 +4,12 @@ import os
 from datetime import datetime
 
 import pytz
+import structlog
 
-from cli_common.log import get_logger
 from code_coverage_bot import grcov
 from code_coverage_bot import hgmo
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class ZeroCov(object):

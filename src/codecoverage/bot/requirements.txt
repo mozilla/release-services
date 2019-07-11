@@ -4,3 +4,4 @@ libmozdata>=0.1.55
 pytz
 google-cloud-storage
 zstandard
+pytoml

@@ -9,10 +9,8 @@ from datetime import timedelta
 
 import hglib
 import requests
+import structlog
 
-from cli_common.log import get_logger
-from cli_common.taskcluster import get_service
-from cli_common.utils import ThreadPoolExecutorResult
 from code_coverage_bot import chunk_mapping
 from code_coverage_bot import grcov
 from code_coverage_bot import hgmo
@@ -25,9 +23,11 @@ from code_coverage_bot.notifier import notify_email
 from code_coverage_bot.phabricator import PhabricatorUploader
 from code_coverage_bot.phabricator import parse_revision_id
 from code_coverage_bot.secrets import secrets
+from code_coverage_bot.taskcluster import taskcluster_config
+from code_coverage_bot.utils import ThreadPoolExecutorResult
 from code_coverage_bot.zero_coverage import ZeroCov
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 HG_BASE = 'https://hg.mozilla.org/'
@@ -37,7 +37,7 @@ TRY_REPOSITORY = '{}try'.format(HG_BASE)
 
 class CodeCov(object):
 
-    def __init__(self, repository, revision, task_name_filter, cache_root, client_id, access_token):
+    def __init__(self, repository, revision, task_name_filter, cache_root):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
@@ -50,12 +50,9 @@ class CodeCov(object):
         self.artifacts_dir = os.path.join(temp_dir, 'ccov-artifacts')
         self.ccov_reports_dir = os.path.join(temp_dir, 'code-coverage-reports')
 
-        self.client_id = client_id
-        self.access_token = access_token
+        self.index_service = taskcluster_config.get_service('index')
 
-        self.index_service = get_service('index', client_id, access_token)
-
-        self.githubUtils = GitHubUtils(cache_root, client_id, access_token)
+        self.githubUtils = GitHubUtils(cache_root)
 
         if revision is None:
             # Retrieve revision of latest codecov build

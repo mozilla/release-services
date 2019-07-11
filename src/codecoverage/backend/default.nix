@@ -10,6 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   project_name = "codecoverage/backend";
+  code_coverage_tools = import ../tools/lib.nix { inherit (releng_pkgs) pkgs; };
 
   self = mkBackend rec {
     inherit python project_name;
@@ -22,7 +23,8 @@ let
       (fromRequirementsFile ./requirements-dev.txt python.packages) ++
       [ redis ];
     propagatedBuildInputs =
-      (fromRequirementsFile ./requirements.txt python.packages);
+      (fromRequirementsFile ./requirements.txt python.packages) ++
+      [ code_coverage_tools ];
     postInstall = ''
       mkdir -p $out/bin
       cp ${src}/launch.sh $out/bin

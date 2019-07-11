@@ -6,19 +6,22 @@ from datetime import datetime
 import requests
 from taskcluster.utils import slugId
 
-from cli_common import taskcluster
 from code_coverage_bot.github import GitHubUtils
 from code_coverage_bot.secrets import secrets
+from code_coverage_tools.taskcluter import TaskclusterConfig
 
 CODECOV_URL = 'https://codecov.io/api/gh/marco-c/gecko-dev/commit'
 MC_REPO = 'https://hg.mozilla.org/mozilla-central'
 HOOK_GROUP = 'project-releng'
 HOOK_ID = 'services-{app_channel}-codecoverage/bot-generation'
 
-secrets.load(
-    os.environ['TASKCLUSTER_SECRET'],
+taskcluster = TaskclusterConfig()
+taskcluster.auth(
     os.environ['TASKCLUSTER_CLIENT_ID'],
     os.environ['TASKCLUSTER_ACCESS_TOKEN'],
+)
+secrets.load(
+    os.environ['TASKCLUSTER_SECRET'],
 )
 github = GitHubUtils(
     '/tmp',

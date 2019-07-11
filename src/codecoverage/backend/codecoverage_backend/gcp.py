@@ -7,15 +7,15 @@ from datetime import datetime
 
 import redis
 import requests
+import structlog
 import zstandard as zstd
 from dateutil.relativedelta import relativedelta
 
-from cli_common import log
-from cli_common.gcp import get_bucket
+from code_coverage_tools.gcp import get_bucket
 from codecoverage_backend import covdir
-from codecoverage_backend import secrets
+from codecoverage_backend import taskcluster
 
-logger = log.get_logger(__name__)
+logger = structlog.get_logger(__name__)
 __cache = None
 
 KEY_REPORTS = 'reports:{repository}'
@@ -38,7 +38,7 @@ def load_cache():
     '''
     global __cache
 
-    if secrets.GOOGLE_CLOUD_STORAGE is None:
+    if taskcluster.secrets['GOOGLE_CLOUD_STORAGE'] is None:
         return
 
     if __cache is None:
@@ -53,13 +53,13 @@ class GCPCache(object):
     '''
     def __init__(self, reports_dir=None):
         # Open redis connection
-        self.redis = redis.from_url(secrets.REDIS_URL)
+        self.redis = redis.from_url(taskcluster.secrets['REDIS_URL'])
         assert self.redis.ping(), 'Redis server does not ping back'
 
         # Open gcp connection to bucket
-        assert secrets.GOOGLE_CLOUD_STORAGE is not None, \
+        assert taskcluster.secrets['GOOGLE_CLOUD_STORAGE'] is not None, \
             'Missing GOOGLE_CLOUD_STORAGE secret'
-        self.bucket = get_bucket(secrets.GOOGLE_CLOUD_STORAGE)
+        self.bucket = get_bucket(taskcluster.secrets['GOOGLE_CLOUD_STORAGE'])
 
         # Local storage for reports
         self.reports_dir = reports_dir or os.path.join(tempfile.gettempdir(), 'ccov-reports')

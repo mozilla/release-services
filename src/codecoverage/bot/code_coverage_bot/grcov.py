@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from cli_common.command import run_check
-from cli_common.log import get_logger
+import structlog
 
-logger = get_logger(__name__)
+from code_coverage_bot.utils import run_check
+
+logger = structlog.get_logger(__name__)
 
 
 def report(artifacts, source_dir=None, service_number=None, commit_sha='unused', token='unused', out_format='coveralls', options=[]):

@@ -3,14 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import structlog
 from flask import abort
 
-from cli_common import log
 from codecoverage_backend.config import COVERAGE_EXTENSIONS
 from codecoverage_backend.gcp import load_cache
 
 DEFAULT_REPOSITORY = 'mozilla-central'
-logger = log.get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def coverage_supported_extensions():
