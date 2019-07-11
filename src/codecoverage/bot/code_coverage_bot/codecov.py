@@ -8,7 +8,6 @@ from datetime import datetime
 from datetime import timedelta
 
 import hglib
-import requests
 import structlog
 
 from code_coverage_bot import chunk_mapping
@@ -18,7 +17,6 @@ from code_coverage_bot import suite_reports
 from code_coverage_bot import taskcluster
 from code_coverage_bot import uploader
 from code_coverage_bot.artifacts import ArtifactsHandler
-from code_coverage_bot.github import GitHubUtils
 from code_coverage_bot.notifier import notify_email
 from code_coverage_bot.phabricator import PhabricatorUploader
 from code_coverage_bot.phabricator import parse_revision_id
@@ -52,16 +50,16 @@ class CodeCov(object):
 
         self.index_service = taskcluster_config.get_service('index')
 
-        self.githubUtils = GitHubUtils(cache_root)
-
         if revision is None:
-            # Retrieve revision of latest codecov build
-            self.github_revision = uploader.get_latest_codecov()
+            # Retrieve latest ingested revision
             self.repository = MOZILLA_CENTRAL_REPOSITORY
-            self.revision = self.githubUtils.git_to_mercurial(self.github_revision)
+            try:
+                self.revision = uploader.gcp_latest('mozilla-central')[0]['revision']
+            except Exception as e:
+                logger.warn('Failed to retrieve the latest reports ingested: {}'.format(e))
+                raise
             self.from_pulse = False
         else:
-            self.github_revision = None
             self.repository = repository
             self.revision = revision
             self.from_pulse = True
@@ -128,36 +126,12 @@ class CodeCov(object):
 
     # This function is executed when the bot is triggered at the end of a mozilla-central build.
     def go_from_trigger_mozilla_central(self):
-        commit_sha = self.githubUtils.mercurial_to_git(self.revision)
-        try:
-            uploader.get_codecov(commit_sha)
-            logger.warn('Build was already injested')
-
-            # Check the covdir report does not already exists
-            if uploader.gcp_covdir_exists(self.branch, self.revision):
-                logger.warn('Covdir report already on GCP')
-                return
-
-            # The artifacts are still needed to build the covdir report
-            self.retrieve_source_and_artifacts()
-
-            # Update GCP covdir report anyway
-            uploader.gcp(self.branch, self.revision, self.generate_covdir())
+        # Check the covdir report does not already exists
+        if uploader.gcp_covdir_exists(self.branch, self.revision):
+            logger.warn('Covdir report already on GCP')
             return
-        except requests.exceptions.HTTPError:
-            pass
 
         self.retrieve_source_and_artifacts()
-
-        self.githubUtils.update_geckodev_repo()
-
-        logger.info('GitHub revision', revision=commit_sha)
-
-        self.githubUtils.post_github_status(commit_sha)
-
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
-        r.raise_for_status()
-        push_id = r.json()['pushid']
 
         # Check that all JavaScript files present in the coverage artifacts actually exist.
         # If they don't, there might be a bug in the LCOV rewriter.
@@ -173,21 +147,14 @@ class CodeCov(object):
                         if len(missing_files) != 0:
                             logger.warn(f'{missing_files} are present in coverage reports, but missing from the repository')
 
-        output = grcov.report(
-            self.artifactsHandler.get(),
-            source_dir=self.repo_dir,
-            service_number=push_id,
-            commit_sha=commit_sha,
-        )
-        logger.info('Codecov report generated successfully')
-
-        output_covdir = self.generate_covdir()
+        output = self.generate_covdir()
 
         report = json.loads(output)
+        paths = uploader.covdir_paths(output)
         expected_extensions = ['.js', '.cpp']
         for extension in expected_extensions:
-            assert any(f['name'].endswith(extension) for f in
-                       report['source_files']), 'No {} file in the generated report'.format(extension)
+            assert any(path.endswith(extension) for path in paths), \
+                'No {} file in the generated report'.format(extension)
 
         # Get pushlog and ask the backend to generate the coverage by changeset
         # data, which will be cached.
@@ -198,17 +165,10 @@ class CodeCov(object):
         phabricatorUploader = PhabricatorUploader(self.repo_dir, self.revision)
         changesets_coverage = phabricatorUploader.upload(report, changesets)
 
-        with ThreadPoolExecutorResult(max_workers=2) as executor:
-            executor.submit(uploader.codecov, output, commit_sha)
-            executor.submit(uploader.gcp, self.branch, self.revision, output_covdir)
+        uploader.gcp(self.branch, self.revision, output)
 
-        logger.info('Waiting for build to be ingested by Codecov...')
-        # Wait until the build has been ingested by Codecov.
-        if uploader.codecov_wait(commit_sha):
-            logger.info('Build ingested by codecov.io')
-            notify_email(self.revision, changesets, changesets_coverage, self.client_id, self.access_token)
-        else:
-            logger.error('codecov.io took too much time to ingest data.')
+        logger.info('Build uploaded on GCP')
+        notify_email(self.revision, changesets, changesets_coverage, self.client_id, self.access_token)
 
     # This function is executed when the bot is triggered at the end of a try build.
     def go_from_trigger_try(self):
@@ -245,7 +205,7 @@ class CodeCov(object):
 
         logger.info('Generating zero coverage reports')
         zc = ZeroCov(self.repo_dir)
-        zc.generate(self.artifactsHandler.get(), self.revision, self.github_revision)
+        zc.generate(self.artifactsHandler.get(), self.revision)
 
         logger.info('Generating chunk mapping')
         chunk_mapping.generate(self.repo_dir, self.revision, self.artifactsHandler)
@@ -268,9 +228,6 @@ class CodeCov(object):
                     'expires': (datetime.utcnow() + timedelta(180)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                 }
             )
-
-        os.chdir(self.ccov_reports_dir)
-        self.githubUtils.update_codecoveragereports_repo()
 
     def go(self):
         if not self.from_pulse:
