@@ -4,36 +4,35 @@ import os
 from datetime import datetime
 
 import requests
+from libmozdata.vcs_map import download_mapfile
+from libmozdata.vcs_map import git_to_mercurial
 from taskcluster.utils import slugId
 
-from cli_common import taskcluster
-from code_coverage_bot.github import GitHubUtils
 from code_coverage_bot.secrets import secrets
+from code_coverage_tools.taskcluter import TaskclusterConfig
 
 CODECOV_URL = 'https://codecov.io/api/gh/marco-c/gecko-dev/commit'
 MC_REPO = 'https://hg.mozilla.org/mozilla-central'
 HOOK_GROUP = 'project-releng'
 HOOK_ID = 'services-{app_channel}-codecoverage/bot-generation'
 
+taskcluster = TaskclusterConfig()
+taskcluster.auth(
+    os.environ['TASKCLUSTER_CLIENT_ID'],
+    os.environ['TASKCLUSTER_ACCESS_TOKEN'],
+)
 secrets.load(
     os.environ['TASKCLUSTER_SECRET'],
-    os.environ['TASKCLUSTER_CLIENT_ID'],
-    os.environ['TASKCLUSTER_ACCESS_TOKEN'],
-)
-github = GitHubUtils(
-    '/tmp',
-    os.environ['TASKCLUSTER_CLIENT_ID'],
-    os.environ['TASKCLUSTER_ACCESS_TOKEN'],
 )
 
 
-def list_commits(maximum=None, unique=None, skip_commits=[]):
+def list_commits(codecov_token, maximum=None, unique=None, skip_commits=[]):
     '''
     List all the commits ingested on codecov
     '''
     assert unique in (None, 'week', 'day')
     params = {
-        'access_token': secrets[secrets.CODECOV_ACCESS_TOKEN],
+        'access_token': codecov_token,
         'page': 1,
     }
     nb = 0
@@ -59,7 +58,7 @@ def list_commits(maximum=None, unique=None, skip_commits=[]):
             dates.add(week)
 
             # Convert git to mercurial revision
-            commit['mercurial'] = github.git_to_mercurial(commit['commitid'])
+            commit['mercurial'] = git_to_mercurial(commit['commitid'])
             if commit['mercurial'] in skip_commits:
                 print('Skipping already processed commit {}'.format(commit['mercurial']))
                 continue
@@ -97,7 +96,12 @@ def main():
     parser.add_argument('--unique', choices=('day', 'week'), help='Trigger only one task per day or week')
     parser.add_argument('--group', type=str, default=slugId(), help='Task group to create/update')
     parser.add_argument('--dry-run', action='store_true', default=False, help='List actions without triggering any new task')
+    parser.add_argument('--codecov-token', type=str, default=os.environ.get('CODECOV_TOKEN'), help='Codecov access token')
     args = parser.parse_args()
+
+    # Download revision mapper database
+    print('Downloading revision database...')
+    download_mapfile()
 
     # List existing tags & commits
     print('Group', args.group)
@@ -115,7 +119,7 @@ def main():
         commits = []
 
     # Trigger a task for each commit
-    for commit in list_commits(args.nb_tasks, args.unique, commits):
+    for commit in list_commits(args.codecov_token, args.nb_tasks, args.unique, commits):
         print('Triggering commit {mercurial} from {timestamp}'.format(**commit))
         if args.dry_run:
             print('>>> No trigger on dry run')

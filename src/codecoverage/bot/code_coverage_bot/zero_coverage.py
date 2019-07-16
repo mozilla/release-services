@@ -4,12 +4,12 @@ import os
 from datetime import datetime
 
 import pytz
+import structlog
 
-from cli_common.log import get_logger
 from code_coverage_bot import grcov
 from code_coverage_bot import hgmo
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class ZeroCov(object):
@@ -85,7 +85,7 @@ class ZeroCov(object):
 
         return res
 
-    def generate(self, artifacts, hgrev, gitrev, out_dir='.'):
+    def generate(self, artifacts, hgrev, out_dir='.'):
         report = grcov.report(artifacts, out_format='coveralls+', source_dir=self.repo_dir)
         report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
 
@@ -129,8 +129,7 @@ class ZeroCov(object):
                          'uncovered': fname in zero_coverage_files})
             zero_coverage_info.append(info)
 
-        zero_coverage_report = {'github_revision': gitrev,
-                                'hg_revision': hgrev,
+        zero_coverage_report = {'hg_revision': hgrev,
                                 'files': zero_coverage_info}
 
         with open(os.path.join(out_dir, 'zero_coverage_report.json'), 'w') as f:

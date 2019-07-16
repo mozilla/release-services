@@ -9,6 +9,7 @@ let
   inherit (releng_pkgs.tools) pypi2nix mercurial ;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  code_coverage_tools = import ../tools/lib.nix { inherit (releng_pkgs) pkgs; };
   rustPlatform = mkRustPlatform {};
   project_name = "codecoverage/bot";
 
@@ -115,6 +116,7 @@ let
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages) ++
       [
+        code_coverage_tools
         releng_pkgs.pkgs.gcc
         releng_pkgs.pkgs.lcov
         rustPlatform.rust.rustc

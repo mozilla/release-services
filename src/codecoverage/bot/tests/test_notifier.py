@@ -10,7 +10,7 @@ from mercurial import copy_pushlog_database
 
 
 @responses.activate
-def test_notification(mock_secrets, mock_phabricator, mock_notify, fake_hg_repo):
+def test_notification(mock_secrets, mock_taskcluster, mock_phabricator, fake_hg_repo):
     hg, local, remote = fake_hg_repo
 
     add_file(hg, local, 'file', '1\n2\n3\n4\n')
@@ -54,5 +54,5 @@ def test_notification(mock_secrets, mock_phabricator, mock_notify, fake_hg_repo)
         },
     }
 
-    mail = notify_email(revision, stack, changesets_coverage, 'testuser', 'testtoken')
+    mail = notify_email(revision, stack, changesets_coverage)
     assert mail == "* [Commit [(b'M', b'file')]Differential Revision: https://phabricator.services.mozilla.com/D2](https://firefox-code-coverage.herokuapp.com/#/changeset/{}): 0 covered out of 6 added.\n".format(revision)  # noqa
