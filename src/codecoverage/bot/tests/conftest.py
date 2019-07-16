@@ -168,8 +168,6 @@ def jsvm_uncovered_function_artifact():
 def mock_secrets():
     from code_coverage_bot.secrets import secrets
     secrets.update({
-        'CODECOV_REPO': 'marco-c/gecko-dev',
-        'CODECOV_ACCESS_TOKEN': 'XXX',
         'PHABRICATOR_ENABLED': True,
         'PHABRICATOR_URL': 'http://phabricator.test/api/',
         'PHABRICATOR_TOKEN': 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
