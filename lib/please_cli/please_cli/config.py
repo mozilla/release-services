@@ -382,19 +382,19 @@ PROJECTS_CONFIG = {
                 'target': 'TASKCLUSTER_HOOK',
                 'options': {
                     'testing': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'deploy.testing',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozillareleng/services',
                     },
                     'staging': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'deploy.staging',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozillareleng/services',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'deploy.production',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozillareleng/services',
@@ -417,7 +417,7 @@ PROJECTS_CONFIG = {
                 'target': 'HEROKU',
                 'options': {
                     'testing': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-testing-codecoverage',
                         'heroku_dyno_type': 'web',
@@ -425,7 +425,7 @@ PROJECTS_CONFIG = {
                         'dns': 'coverage.testing.moz.tools.herokudns.com',
                     },
                     'staging': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-staging-codecoverage',
                         'heroku_dyno_type': 'web',
@@ -433,7 +433,7 @@ PROJECTS_CONFIG = {
                         'dns': 'coverage.staging.moz.tools.herokudns.com',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-production-codecoverage',
                         'heroku_dyno_type': 'web',
