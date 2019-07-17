@@ -26,7 +26,7 @@ class HookPhabricator(Hook):
     def __init__(self, configuration):
         assert 'hookId' in configuration
         super().__init__(
-            'project-releng',
+            configuration.get('hookGroupId', 'project-releng'),
             configuration['hookId'],
         )
 
@@ -140,7 +140,7 @@ class HookCodeCoverage(PulseHook):
         assert 'hookId' in configuration
         self.triggered_groups = set()
         super().__init__(
-            'project-releng',
+            configuration.get('hookGroupId', 'project-releng'),
             configuration['hookId'],
             'exchange/taskcluster-queue/v1/task-group-resolved',
             '#'
