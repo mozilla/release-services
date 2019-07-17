@@ -1,9 +1,0 @@
-{
-    "result": {
-      "targetMap": {
-        "arcanist.lint": "PHID-HMBT-test-lint"
-      }
-    },
-    "error_code": null,
-    "error_info": null
-}

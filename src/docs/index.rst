@@ -31,8 +31,6 @@ Projects
     TreeStatus <projects/treestatus>
     Mapper <projects/mapper>
     releng-frontend <projects/releng-frontend>
-    codecoverage/bot <projects/codecoverage-bot>
-    codecoverage/backend <projects/codecoverage-backend>
     pulselistener <projects/pulselistener>
     uplift/backend <projects/uplift-backend>
     uplift/bot <projects/uplift-bot>
