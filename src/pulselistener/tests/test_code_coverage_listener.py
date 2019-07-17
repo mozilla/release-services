@@ -136,3 +136,18 @@ def test_success_try():
     assert hook.parse({
         'taskGroupId': 'FG3goVnCQfif8ZEOaM_4IA'
     }) == [{'REPOSITORY': 'https://hg.mozilla.org/try', 'REVISION': '066cb18ba95a7efe144e729713c429e422d9f95b'}]
+
+
+def test_hook_group():
+    hook = HookCodeCoverage({
+      'hookId': 'services-staging-codecoverage/bot'
+    })
+    assert hook.group_id == 'project-releng'
+    assert hook.hook_id == 'services-staging-codecoverage/bot'
+
+    hook = HookCodeCoverage({
+      'hookGroupId': 'anotherProject',
+      'hookId': 'anotherHook',
+    })
+    assert hook.group_id == 'anotherProject'
+    assert hook.hook_id == 'anotherHook'
