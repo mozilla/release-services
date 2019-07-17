@@ -9,8 +9,6 @@
 /src/releng_tooltool                  @mozilla/Releng
 /src/releng_treestatus                @mozilla/Releng
 /src/uplift                           @mozilla/release-management
-/src/codecoverage/bot                 @mozilla/release-management
-/src/codecoverage/backend             @mozilla/release-management
 /src/shipit/frontend                  @mozilla/Releng
 /src/shipit_pipeline                  @mozilla/Releng
 /src/pulselistener                    @mozilla/release-management
