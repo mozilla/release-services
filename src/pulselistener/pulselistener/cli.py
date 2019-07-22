@@ -11,7 +11,6 @@ import structlog
 from libmozdata.phabricator import PhabricatorAPI
 
 from pulselistener import config
-from pulselistener import task_monitoring
 from pulselistener import taskcluster
 from pulselistener.lib.log import init_logger
 from pulselistener.listener import PulseListener
@@ -79,8 +78,6 @@ def main():
                 PAPERTRAIL_PORT=taskcluster.secrets.get('PAPERTRAIL_PORT'),
                 SENTRY_DSN=taskcluster.secrets.get('SENTRY_DSN'),
                 )
-
-    task_monitoring.emails = taskcluster.secrets['ADMINS']
 
     phabricator = PhabricatorAPI(
         api_key=taskcluster.secrets['PHABRICATOR']['token'],

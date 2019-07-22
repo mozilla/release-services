@@ -4,8 +4,8 @@ import json
 import structlog
 
 from cli_common.pulse import create_consumer
-from cli_common.taskcluster import get_service
-from pulselistener import task_monitoring
+from pulselistener import taskcluster
+from pulselistener.monitoring import task as task_monitoring
 
 logger = structlog.get_logger(__name__)
 
@@ -17,19 +17,10 @@ class Hook(object):
     def __init__(self, group_id, hook_id):
         self.group_id = group_id
         self.hook_id = hook_id
-        self.hooks = None  # TC hooks
+        self.hooks = taskcluster.get_service('hooks')
         self.mercurial_queue = None
         self.web_queue = None
         self.routes = []
-
-    def connect_taskcluster(self, client_id=None, access_token=None):
-        '''
-        Save hooks and queue services for later use
-        '''
-        # Get taskcluster hooks
-        self.hooks = get_service('hooks', client_id, access_token)
-
-        return True
 
     def connect_queues(self, mercurial_queue, web_queue):
         '''

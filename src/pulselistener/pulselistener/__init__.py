@@ -4,10 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from pulselistener.lib.taskcluster import TaskclusterConfig
-from pulselistener.monitoring import Monitoring
-
-# Shared monitoring manager
-task_monitoring = Monitoring(7 * 3600)
 
 # Shared taskcluster config
 taskcluster = TaskclusterConfig()
