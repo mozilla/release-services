@@ -3,13 +3,13 @@ import asyncio
 from datetime import datetime
 from datetime import timedelta
 
+import structlog
 from taskcluster.utils import slugId
 from taskcluster.utils import stringDate
 
-from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 GROUP_MD = '''
 

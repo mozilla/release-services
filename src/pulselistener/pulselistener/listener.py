@@ -2,9 +2,9 @@
 import asyncio
 
 import requests
+import structlog
 from libmozdata.phabricator import BuildState
 
-from cli_common.log import get_logger
 from cli_common.pulse import run_consumer
 from cli_common.utils import retry
 from pulselistener import task_monitoring
@@ -15,7 +15,7 @@ from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
 from pulselistener.web import WebServer
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class HookPhabricator(Hook):

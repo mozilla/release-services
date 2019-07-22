@@ -10,10 +10,10 @@ import click
 from libmozdata.phabricator import PhabricatorAPI
 
 from cli_common.cli import taskcluster_options
-from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 from pulselistener import config
 from pulselistener import task_monitoring
+from pulselistener.lib.log import init_logger
 from pulselistener.listener import PulseListener
 
 
@@ -61,7 +61,6 @@ def main(taskcluster_secret,
                 PAPERTRAIL_HOST=secrets.get('PAPERTRAIL_HOST'),
                 PAPERTRAIL_PORT=secrets.get('PAPERTRAIL_PORT'),
                 SENTRY_DSN=secrets.get('SENTRY_DSN'),
-                MOZDEF=secrets.get('MOZDEF'),
                 )
 
     task_monitoring.emails = secrets['ADMINS']

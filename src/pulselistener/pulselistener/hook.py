@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
 
-from cli_common.log import get_logger
+import structlog
+
 from cli_common.pulse import create_consumer
 from cli_common.taskcluster import get_service
 from pulselistener import task_monitoring
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class Hook(object):
