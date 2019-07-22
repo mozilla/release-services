@@ -3,42 +3,56 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import os
 import tempfile
 
-import click
+import structlog
 from libmozdata.phabricator import PhabricatorAPI
 
-from cli_common.cli import taskcluster_options
 from cli_common.taskcluster import get_secrets
 from pulselistener import config
 from pulselistener import task_monitoring
 from pulselistener.lib.log import init_logger
 from pulselistener.listener import PulseListener
 
+logger = structlog.get_logger(__name__)
 
-@click.command()
-@click.option(
-    '--cache-root',
-    required=False,
-    help='Cache root, used to pull changesets',
-    default=os.path.join(tempfile.gettempdir(), 'pulselistener'),
-)
-@click.option(
-    '--phab-build-target',
-    type=str,
-    required=False,
-    help='A Phabricator build target PHID to test'
-)
-@taskcluster_options
-def main(taskcluster_secret,
-         taskcluster_client_id,
-         taskcluster_access_token,
-         cache_root,
-         phab_build_target,
-         ):
 
-    secrets = get_secrets(taskcluster_secret,
+def parse_cli():
+    '''
+    Setup CLI options parser
+    '''
+    parser = argparse.ArgumentParser(description='Mozilla Code Review Bot')
+    parser.add_argument(
+        '--cache-root',
+        help='Cache root, used to pull changesets',
+        default=os.path.join(tempfile.gettempdir(), 'pulselistener'),
+    )
+    parser.add_argument(
+        '--phab-build-target',
+        type=str,
+        help='A Phabricator build target PHID to test'
+    )
+    parser.add_argument(
+        '--taskcluster-secret',
+        help='Taskcluster Secret path',
+        default=os.environ.get('TASKCLUSTER_SECRET')
+    )
+    parser.add_argument(
+        '--taskcluster-client-id',
+        help='Taskcluster Client ID',
+    )
+    parser.add_argument(
+        '--taskcluster-access-token',
+        help='Taskcluster Access token',
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_cli()
+    secrets = get_secrets(args.taskcluster_secret,
                           config.PROJECT_NAME,
                           required=(
                               'PULSE_USER',
@@ -53,8 +67,8 @@ def main(taskcluster_secret,
                               ADMINS=['babadie@mozilla.com', 'mcastelluccio@mozilla.com'],
                               repositories=[]
                           ),
-                          taskcluster_client_id=taskcluster_client_id,
-                          taskcluster_access_token=taskcluster_access_token,
+                          taskcluster_client_id=args.taskcluster_client_id,
+                          taskcluster_access_token=args.taskcluster_access_token,
                           )
 
     init_logger(config.PROJECT_NAME,
@@ -75,15 +89,15 @@ def main(taskcluster_secret,
                        secrets['HOOKS'],
                        secrets['repositories'],
                        phabricator,
-                       cache_root,
+                       args.cache_root,
                        secrets['PHABRICATOR'].get('publish', False),
-                       taskcluster_client_id,
-                       taskcluster_access_token,
+                       args.taskcluster_client_id,
+                       args.taskcluster_access_token,
                        )
-    click.echo('Listening to pulse messages...')
+    logger.info('Listening to pulse messages...')
 
-    if phab_build_target:
-        pl.add_build(phab_build_target)
+    if args.phab_build_target:
+        pl.add_build(args.phab_build_target)
 
     pl.run()
 
