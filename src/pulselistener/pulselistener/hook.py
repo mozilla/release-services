@@ -3,8 +3,8 @@ import json
 
 import structlog
 
-from cli_common.pulse import create_consumer
 from pulselistener import taskcluster
+from pulselistener.lib.pulse import create_consumer
 from pulselistener.monitoring import task as task_monitoring
 
 logger = structlog.get_logger(__name__)

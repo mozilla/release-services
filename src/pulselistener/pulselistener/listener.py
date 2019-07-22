@@ -5,9 +5,9 @@ import requests
 import structlog
 from libmozdata.phabricator import BuildState
 
-from cli_common.pulse import run_consumer
 from pulselistener.hook import Hook
 from pulselistener.hook import PulseHook
+from pulselistener.lib.pulse import run_consumer
 from pulselistener.lib.utils import retry
 from pulselistener.mercurial import MercurialWorker
 from pulselistener.monitoring import task as task_monitoring
