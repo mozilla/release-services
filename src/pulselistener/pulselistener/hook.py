@@ -5,7 +5,7 @@ import structlog
 
 from pulselistener import taskcluster
 from pulselistener.lib.pulse import create_consumer
-from pulselistener.monitoring import task as task_monitoring
+from pulselistener.monitoring import task_monitoring
 
 logger = structlog.get_logger(__name__)
 

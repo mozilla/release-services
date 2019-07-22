@@ -225,4 +225,4 @@ class Monitoring(object):
 
 
 # Shared monitoring manager
-task = Monitoring(7 * 3600)
+task_monitoring = Monitoring(7 * 3600)

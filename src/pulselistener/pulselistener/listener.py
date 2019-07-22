@@ -10,7 +10,7 @@ from pulselistener.hook import PulseHook
 from pulselistener.lib.pulse import run_consumer
 from pulselistener.lib.utils import retry
 from pulselistener.mercurial import MercurialWorker
-from pulselistener.monitoring import task as task_monitoring
+from pulselistener.monitoring import task_monitoring
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
 from pulselistener.web import WebServer

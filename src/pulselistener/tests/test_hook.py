@@ -2,7 +2,7 @@
 import pytest
 
 from pulselistener.hook import Hook
-from pulselistener.monitoring import task as task_monitoring
+from pulselistener.monitoring import task_monitoring
 
 
 @pytest.mark.asyncio
