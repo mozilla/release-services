@@ -19,7 +19,7 @@ from libmozdata.phabricator import BuildState
 from libmozdata.phabricator import UnitResult
 from libmozdata.phabricator import UnitResultState
 
-from cli_common.mercurial import batch_checkout
+from pulselistener.lib.utils import batch_checkout
 from pulselistener.phabricator import PhabricatorBuild
 
 logger = structlog.get_logger(__name__)
