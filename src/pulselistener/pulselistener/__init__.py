@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from pulselistener.monitoring import Monitoring
+from pulselistener.lib.taskcluster import TaskclusterConfig
 
-# Shared monitoring manager
-task_monitoring = Monitoring(7 * 3600)
+# Shared taskcluster config
+taskcluster = TaskclusterConfig()

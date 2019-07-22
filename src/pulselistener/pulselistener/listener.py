@@ -2,20 +2,20 @@
 import asyncio
 
 import requests
+import structlog
 from libmozdata.phabricator import BuildState
 
-from cli_common.log import get_logger
-from cli_common.pulse import run_consumer
-from cli_common.utils import retry
-from pulselistener import task_monitoring
 from pulselistener.hook import Hook
 from pulselistener.hook import PulseHook
+from pulselistener.lib.pulse import run_consumer
+from pulselistener.lib.utils import retry
 from pulselistener.mercurial import MercurialWorker
+from pulselistener.monitoring import task_monitoring
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
 from pulselistener.web import WebServer
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class HookPhabricator(Hook):
@@ -235,10 +235,7 @@ class PulseListener(object):
         self.taskcluster_access_token = taskcluster_access_token
         self.phabricator_api = phabricator_api
 
-        task_monitoring.connect_taskcluster(
-            self.taskcluster_client_id,
-            self.taskcluster_access_token,
-        )
+        task_monitoring.setup()
 
         # Build mercurial worker & queue
         self.mercurial = MercurialWorker(
@@ -264,15 +261,10 @@ class PulseListener(object):
         # Run hooks pulse listeners together
         # but only use hooks with active definitions
         def _connect(hook):
-            out = hook.connect_taskcluster(
-                self.taskcluster_client_id,
-                self.taskcluster_access_token,
-            )
-            out &= hook.connect_queues(
+            return hook.connect_queues(
                 mercurial_queue=self.mercurial.queue if self.mercurial else None,
                 web_queue=self.webserver.queue,
             )
-            return out
         consumers = [
             hook.build_consumer(self.pulse_user, self.pulse_password)
             for hook in hooks

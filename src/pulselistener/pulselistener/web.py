@@ -3,12 +3,12 @@ import os
 from multiprocessing import Process
 from multiprocessing import Queue
 
+import structlog
 from aiohttp import web
 
-from cli_common.log import get_logger
 from pulselistener.phabricator import PhabricatorBuild
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class WebServer(object):

@@ -3,13 +3,13 @@ import asyncio
 from datetime import datetime
 from datetime import timedelta
 
+import structlog
 from taskcluster.utils import slugId
 from taskcluster.utils import stringDate
 
-from cli_common.log import get_logger
-from cli_common.taskcluster import get_service
+from pulselistener import taskcluster
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 GROUP_MD = '''
 
@@ -34,21 +34,21 @@ class Monitoring(object):
         self.stats = {}
         self.emails = []
 
-        # TC services
-        self.notify = None
-        self.queue = None
-        self.index = None
-
         # Setup monitoring queue
         self.tasks = asyncio.Queue()
 
-    def connect_taskcluster(self, client_id=None, access_token=None):
+    def setup(self):
         '''
-        Load notification service
+        Setup using taskcluster configuration
         '''
-        self.notify = get_service('notify', client_id, access_token)
-        self.queue = get_service('queue', client_id, access_token)
-        self.index = get_service('index', client_id, access_token)
+        # TC services
+        assert taskcluster.options is not None, 'Not authenticated'
+        self.notify = taskcluster.get_service('notify')
+        self.queue = taskcluster.get_service('queue')
+        self.index = taskcluster.get_service('index')
+
+        # Load emails from secret
+        self.emails = taskcluster.secrets['ADMINS']
 
     async def add_task(self, group_id, hook_id, task_id):
         '''
@@ -222,3 +222,7 @@ class Monitoring(object):
 
         # Reset stats
         self.stats = {}
+
+
+# Shared monitoring manager
+task_monitoring = Monitoring(7 * 3600)

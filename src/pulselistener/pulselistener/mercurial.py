@@ -14,15 +14,15 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 
 import hglib
+import structlog
 from libmozdata.phabricator import BuildState
 from libmozdata.phabricator import UnitResult
 from libmozdata.phabricator import UnitResultState
 
-from cli_common.log import get_logger
-from cli_common.mercurial import batch_checkout
+from pulselistener.lib.utils import batch_checkout
 from pulselistener.phabricator import PhabricatorBuild
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 TREEHERDER_URL = 'https://treeherder.mozilla.org/#/jobs?repo={}&revision={}'
 

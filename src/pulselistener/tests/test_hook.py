@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from pulselistener import task_monitoring
 from pulselistener.hook import Hook
+from pulselistener.monitoring import task_monitoring
 
 
 @pytest.mark.asyncio

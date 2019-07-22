@@ -2,3 +2,4 @@
 
 aiohttp
 libmozdata>=0.1.57
+pytoml

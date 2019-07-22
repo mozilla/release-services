@@ -17,6 +17,8 @@ import responses
 from libmozdata.phabricator import PhabricatorAPI
 from taskcluster.utils import stringDate
 
+from pulselistener import taskcluster
+
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
 
@@ -324,3 +326,13 @@ def mock_nss(tmpdir):
     Mock an NSS repository
     '''
     return build_repository(tmpdir, 'nss')
+
+
+@pytest.fixture
+def mock_taskcluster():
+    '''
+    Mock Tasklcuster authentication
+    '''
+    taskcluster.options = {
+        'rootUrl': 'http://taskcluster.test'
+    }

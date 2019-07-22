@@ -9,7 +9,7 @@ from pulselistener.listener import HookCodeCoverage
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
-def test_is_coverage_task():
+def test_is_coverage_task(mock_taskcluster):
     hook = HookCodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     })
@@ -60,7 +60,7 @@ def test_is_coverage_task():
     assert not hook.is_coverage_task(nocov_task)
 
 
-def test_get_build_task_in_group():
+def test_get_build_task_in_group(mock_taskcluster):
     hook = HookCodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     })
@@ -70,7 +70,7 @@ def test_get_build_task_in_group():
     assert hook.get_build_task_in_group('already-triggered-group') is None
 
 
-def test_parse():
+def test_parse(mock_taskcluster):
     hook = HookCodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     })
@@ -83,7 +83,7 @@ def test_parse():
 
 
 @responses.activate
-def test_wrong_branch():
+def test_wrong_branch(mock_taskcluster):
     with open(os.path.join(FIXTURES_DIR, 'bNq-VIT-Q12o6nXcaUmYNQ.json')) as f:
         responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/bNq-VIT-Q12o6nXcaUmYNQ/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
 
@@ -97,7 +97,7 @@ def test_wrong_branch():
 
 
 @responses.activate
-def test_success():
+def test_success(mock_taskcluster):
     with open(os.path.join(FIXTURES_DIR, 'RS0UwZahQ_qAcdZzEb_Y9g.json')) as f:
         responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/RS0UwZahQ_qAcdZzEb_Y9g/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
 
@@ -111,7 +111,7 @@ def test_success():
 
 
 @responses.activate
-def test_success_windows():
+def test_success_windows(mock_taskcluster):
     with open(os.path.join(FIXTURES_DIR, 'MibGDsa4Q7uFNzDf7EV6nw.json')) as f:
         responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/MibGDsa4Q7uFNzDf7EV6nw/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
 
@@ -125,7 +125,7 @@ def test_success_windows():
 
 
 @responses.activate
-def test_success_try():
+def test_success_try(mock_taskcluster):
     with open(os.path.join(FIXTURES_DIR, 'FG3goVnCQfif8ZEOaM_4IA.json')) as f:
         responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/FG3goVnCQfif8ZEOaM_4IA/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
 
@@ -138,7 +138,7 @@ def test_success_try():
     }) == [{'REPOSITORY': 'https://hg.mozilla.org/try', 'REVISION': '066cb18ba95a7efe144e729713c429e422d9f95b'}]
 
 
-def test_hook_group():
+def test_hook_group(mock_taskcluster):
     hook = HookCodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     })
