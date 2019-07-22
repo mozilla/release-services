@@ -10,9 +10,9 @@ import tempfile
 import structlog
 from libmozdata.phabricator import PhabricatorAPI
 
-from cli_common.taskcluster import get_secrets
 from pulselistener import config
 from pulselistener import task_monitoring
+from pulselistener import taskcluster
 from pulselistener.lib.log import init_logger
 from pulselistener.listener import PulseListener
 
@@ -52,45 +52,48 @@ def parse_cli():
 
 def main():
     args = parse_cli()
-    secrets = get_secrets(args.taskcluster_secret,
-                          config.PROJECT_NAME,
-                          required=(
-                              'PULSE_USER',
-                              'PULSE_PASSWORD',
-                              'HOOKS',
-                              'ADMINS',
-                              'PHABRICATOR',
-                              'repositories',
-                          ),
-                          existing=dict(
-                              HOOKS=[],
-                              ADMINS=['babadie@mozilla.com', 'mcastelluccio@mozilla.com'],
-                              repositories=[]
-                          ),
-                          taskcluster_client_id=args.taskcluster_client_id,
-                          taskcluster_access_token=args.taskcluster_access_token,
-                          )
-
-    init_logger(config.PROJECT_NAME,
-                PAPERTRAIL_HOST=secrets.get('PAPERTRAIL_HOST'),
-                PAPERTRAIL_PORT=secrets.get('PAPERTRAIL_PORT'),
-                SENTRY_DSN=secrets.get('SENTRY_DSN'),
-                )
-
-    task_monitoring.emails = secrets['ADMINS']
-
-    phabricator = PhabricatorAPI(
-        api_key=secrets['PHABRICATOR']['token'],
-        url=secrets['PHABRICATOR']['url'],
+    taskcluster.auth(
+        args.taskcluster_client_id,
+        args.taskcluster_access_token,
+    )
+    taskcluster.load_secrets(
+        args.taskcluster_secret,
+        config.PROJECT_NAME,
+        required=(
+            'PULSE_USER',
+            'PULSE_PASSWORD',
+            'HOOKS',
+            'ADMINS',
+            'PHABRICATOR',
+            'repositories',
+        ),
+        existing=dict(
+            HOOKS=[],
+            ADMINS=['babadie@mozilla.com', 'mcastelluccio@mozilla.com'],
+            repositories=[]
+        ),
     )
 
-    pl = PulseListener(secrets['PULSE_USER'],
-                       secrets['PULSE_PASSWORD'],
-                       secrets['HOOKS'],
-                       secrets['repositories'],
+    init_logger(config.PROJECT_NAME,
+                PAPERTRAIL_HOST=taskcluster.secrets.get('PAPERTRAIL_HOST'),
+                PAPERTRAIL_PORT=taskcluster.secrets.get('PAPERTRAIL_PORT'),
+                SENTRY_DSN=taskcluster.secrets.get('SENTRY_DSN'),
+                )
+
+    task_monitoring.emails = taskcluster.secrets['ADMINS']
+
+    phabricator = PhabricatorAPI(
+        api_key=taskcluster.secrets['PHABRICATOR']['token'],
+        url=taskcluster.secrets['PHABRICATOR']['url'],
+    )
+
+    pl = PulseListener(taskcluster.secrets['PULSE_USER'],
+                       taskcluster.secrets['PULSE_PASSWORD'],
+                       taskcluster.secrets['HOOKS'],
+                       taskcluster.secrets['repositories'],
                        phabricator,
                        args.cache_root,
-                       secrets['PHABRICATOR'].get('publish', False),
+                       taskcluster.secrets['PHABRICATOR'].get('publish', False),
                        args.taskcluster_client_id,
                        args.taskcluster_access_token,
                        )
