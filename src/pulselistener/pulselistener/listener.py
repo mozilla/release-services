@@ -7,13 +7,14 @@ from libmozdata.phabricator import BuildState
 
 from pulselistener.hook import Hook
 from pulselistener.hook import PulseHook
+from pulselistener.lib.bus import MessageBus
 from pulselistener.lib.pulse import run_consumer
 from pulselistener.lib.utils import retry
+from pulselistener.lib.web import WebServer
 from pulselistener.mercurial import MercurialWorker
 from pulselistener.monitoring import task_monitoring
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
-from pulselistener.web import WebServer
 
 logger = structlog.get_logger(__name__)
 
@@ -23,11 +24,12 @@ class HookPhabricator(Hook):
     Taskcluster hook handling the static analysis
     for Phabricator differentials
     '''
-    def __init__(self, configuration):
+    def __init__(self, configuration, bus):
         assert 'hookId' in configuration
         super().__init__(
             configuration.get('hookGroupId', 'project-releng'),
             configuration['hookId'],
+            bus,
         )
 
         # Connect to Phabricator API
@@ -55,15 +57,10 @@ class HookPhabricator(Hook):
         '''
         Main consumer, running queued builds from the web server
         '''
-        assert self.web_queue is not None, 'Missing web server queue'
-
-        def wait_build():
-            return self.web_queue.get()
-
-        loop = asyncio.get_event_loop()
-
-        while True:
-            build = await loop.run_in_executor(None, wait_build)
+        while self.bus.is_alive():
+            # Get next build from Webserver code review queue
+            build = await self.bus.receive(WebServer.QUEUE_CODE_REVIEW)
+            assert isinstance(build, PhabricatorBuild)
 
             # Process next build in queue
             await self.run_build(build)
@@ -129,21 +126,22 @@ class HookPhabricator(Hook):
 
         else:
             # By default requeue build until it's marked secured or public
-            self.web_queue.put(build)
+            await self.bus.send(WebServer.QUEUE_CODE_REVIEW, build)
 
 
 class HookCodeCoverage(PulseHook):
     '''
     Taskcluster hook handling the code coverage
     '''
-    def __init__(self, configuration):
+    def __init__(self, configuration, bus):
         assert 'hookId' in configuration
         self.triggered_groups = set()
         super().__init__(
             configuration.get('hookGroupId', 'project-releng'),
             configuration['hookId'],
             'exchange/taskcluster-queue/v1/task-group-resolved',
-            '#'
+            '#',
+            bus,
         )
 
     def is_coverage_task(self, task):
@@ -245,8 +243,12 @@ class PulseListener(object):
             cache_root=cache_root,
         )
 
+        # Create message bus shared amongst process
+        self.bus = MessageBus()
+
         # Create web server
         self.webserver = WebServer()
+        self.webserver.register(self.bus)
 
     def run(self):
 
@@ -263,7 +265,6 @@ class PulseListener(object):
         def _connect(hook):
             return hook.connect_queues(
                 mercurial_queue=self.mercurial.queue if self.mercurial else None,
-                web_queue=self.webserver.queue,
             )
         consumers = [
             hook.build_consumer(self.pulse_user, self.pulse_password)
@@ -301,7 +302,7 @@ class PulseListener(object):
         if hook_class is None:
             raise Exception('Unsupported hook {}'.format(conf['type']))
 
-        return hook_class(conf)
+        return hook_class(conf, self.bus)
 
     def add_build(self, build_target_phid):
         '''
