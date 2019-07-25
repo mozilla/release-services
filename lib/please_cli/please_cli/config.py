@@ -391,7 +391,7 @@ PROJECTS_CONFIG = {
                         'dns': 'adjacent-shelf-2mxct7inb0tl5tg1rwt73ev4.herokudns.com',
                     },
                     'staging': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'shipit-staging-pulse-listener',
                         'heroku_dyno_type': 'web',
@@ -419,7 +419,7 @@ PROJECTS_CONFIG = {
                         'docker_stable_tag': 'eventlistener-testing',
                     },
                     'staging': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
