@@ -47,7 +47,6 @@ class MessageBus(object):
             await queue.put(payload)
         else:
             queue.put(payload)
-            await asyncio.sleep(0)
         self.nb_messages += 1
 
     async def receive(self, name):
@@ -82,7 +81,7 @@ class MessageBus(object):
                 new_message = method(message)
 
             if not new_message:
-                logger.info('Skipping new message conversion, no result', message=message)
+                logger.info('Skipping new message creation: no result', message=message)
                 continue
 
             await self.send(output_name, new_message)
