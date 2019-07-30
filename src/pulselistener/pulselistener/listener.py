@@ -16,6 +16,8 @@ from pulselistener.monitoring import task_monitoring
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
 
+QUEUE_CODE_REVIEW = 'codereview:in'
+
 logger = structlog.get_logger(__name__)
 
 
@@ -59,7 +61,7 @@ class HookPhabricator(Hook):
         '''
         while not self.bus.is_full():
             # Get next build from Webserver code review queue
-            build = await self.bus.receive(WebServer.QUEUE_CODE_REVIEW)
+            build = await self.bus.receive(QUEUE_CODE_REVIEW)
             assert isinstance(build, PhabricatorBuild)
 
             # Process next build in queue
@@ -126,7 +128,7 @@ class HookPhabricator(Hook):
 
         else:
             # By default requeue build until it's marked secured or public
-            await self.bus.send(WebServer.QUEUE_CODE_REVIEW, build)
+            await self.bus.send(QUEUE_CODE_REVIEW, build)
 
 
 class HookCodeCoverage(PulseHook):
@@ -247,7 +249,7 @@ class PulseListener(object):
         self.bus = MessageBus()
 
         # Create web server
-        self.webserver = WebServer()
+        self.webserver = WebServer(QUEUE_CODE_REVIEW)
         self.webserver.register(self.bus)
 
     def run(self):

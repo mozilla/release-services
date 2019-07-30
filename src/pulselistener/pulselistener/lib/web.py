@@ -14,10 +14,9 @@ class WebServer(object):
     '''
     WebServer used to receive hook
     '''
-    QUEUE_CODE_REVIEW = 'codereview:out'
-
-    def __init__(self):
+    def __init__(self, queue_name):
         self.http_port = int(os.environ.get('PORT', 9000))
+        self.queue_name = queue_name
         logger.info('HTTP webhook server will listen', port=self.http_port)
 
         # Configure the web application with code review routes
@@ -29,7 +28,7 @@ class WebServer(object):
 
     def register(self, bus):
         self.bus = bus
-        self.bus.add_queue(WebServer.QUEUE_CODE_REVIEW, mp=True)
+        self.bus.add_queue(self.queue_name, mp=True)
 
     def start(self):
         '''
@@ -63,7 +62,7 @@ class WebServer(object):
         '''
         try:
             build = PhabricatorBuild(request)
-            await self.bus.send(WebServer.QUEUE_CODE_REVIEW, build)
+            await self.bus.send(self.queue_name, build)
         except Exception as e:
             logger.error(str(e), path=request.path_qs)
             raise web.HTTPBadRequest(text=str(e))
