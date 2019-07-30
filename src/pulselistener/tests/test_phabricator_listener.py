@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+from pulselistener.lib.bus import MessageBus
 from pulselistener.listener import HookPhabricator
 from pulselistener.phabricator import PhabricatorBuild
 
@@ -16,7 +17,8 @@ class MockRequest():
 
 
 @pytest.mark.asyncio
-async def test_risk_analysis_should_trigger(PhabricatorMock):
+async def test_risk_analysis_should_trigger(PhabricatorMock, mock_taskcluster):
+    bus = MessageBus()
     with PhabricatorMock as api:
         phabricator = HookPhabricator({
           'hookId': 'services-staging-staticanalysis/bot',
@@ -26,7 +28,7 @@ async def test_risk_analysis_should_trigger(PhabricatorMock):
           'phabricator_sleep': 4,
           'risk_analysis_reviewers': ['ehsan', 'heycam'],
           'phabricator_api': api,
-        })
+        }, bus)
 
         build = PhabricatorBuild(MockRequest(
             diff='125397',
@@ -40,7 +42,8 @@ async def test_risk_analysis_should_trigger(PhabricatorMock):
 
 
 @pytest.mark.asyncio
-async def test_risk_analysis_shouldnt_trigger(PhabricatorMock):
+async def test_risk_analysis_shouldnt_trigger(PhabricatorMock, mock_taskcluster):
+    bus = MessageBus()
     with PhabricatorMock as api:
         phabricator = HookPhabricator({
           'hookId': 'services-staging-staticanalysis/bot',
@@ -50,7 +53,7 @@ async def test_risk_analysis_shouldnt_trigger(PhabricatorMock):
           'phabricator_sleep': 4,
           'risk_analysis_reviewers': ['ehsan'],
           'phabricator_api': api,
-        })
+        }, bus)
 
         build = PhabricatorBuild(MockRequest(
             diff='125397',

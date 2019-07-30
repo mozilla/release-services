@@ -4,6 +4,7 @@ import json
 import structlog
 
 from pulselistener import taskcluster
+from pulselistener.lib.bus import MessageBus
 from pulselistener.lib.pulse import create_consumer
 from pulselistener.monitoring import task_monitoring
 
@@ -14,20 +15,20 @@ class Hook(object):
     '''
     A taskcluster hook, used to build a task
     '''
-    def __init__(self, group_id, hook_id):
+    def __init__(self, group_id, hook_id, bus):
         self.group_id = group_id
         self.hook_id = hook_id
         self.hooks = taskcluster.get_service('hooks')
         self.mercurial_queue = None
-        self.web_queue = None
         self.routes = []
+        assert isinstance(bus, MessageBus)
+        self.bus = bus
 
-    def connect_queues(self, mercurial_queue, web_queue):
+    def connect_queues(self, mercurial_queue):
         '''
         Save queues to communicate across processes
         '''
         self.mercurial_queue = mercurial_queue
-        self.web_queue = web_queue
 
         return True
 
@@ -57,8 +58,8 @@ class PulseHook(Hook):
     '''
     A hook triggered by a Pulse message
     '''
-    def __init__(self, group_id, hook_id, pulse_queue, pulse_route):
-        super().__init__(group_id, hook_id)
+    def __init__(self, group_id, hook_id, pulse_queue, pulse_route, bus):
+        super().__init__(group_id, hook_id, bus)
         self.pulse_queue = pulse_queue
         self.pulse_route = pulse_route
 

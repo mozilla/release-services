@@ -2,12 +2,14 @@
 import pytest
 
 from pulselistener.hook import Hook
+from pulselistener.lib.bus import MessageBus
 from pulselistener.monitoring import task_monitoring
 
 
 @pytest.mark.asyncio
 async def test_create_task_no_hooks_service(HooksMock):
-    hook = Hook('aGroup', 'aHook')
+    bus = MessageBus()
+    hook = Hook('aGroup', 'aHook', bus)
 
     with pytest.raises(Exception):
         await hook.create_task()
@@ -15,7 +17,8 @@ async def test_create_task_no_hooks_service(HooksMock):
 
 @pytest.mark.asyncio
 async def test_create_task(HooksMock):
-    hook = Hook('aGroup', 'aHook')
+    bus = MessageBus()
+    hook = Hook('aGroup', 'aHook', bus)
 
     hook.hooks = HooksMock
 
@@ -34,7 +37,8 @@ async def test_create_task(HooksMock):
 
 @pytest.mark.asyncio
 async def test_create_task_extra_env(HooksMock):
-    hook = Hook('aGroup', 'aHook')
+    bus = MessageBus()
+    hook = Hook('aGroup', 'aHook', bus)
 
     hook.hooks = HooksMock
 
