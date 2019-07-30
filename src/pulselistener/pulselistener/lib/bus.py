@@ -29,13 +29,13 @@ class MessageBus(object):
         else:
             self.queues[name] = asyncio.Queue()
 
-    def is_alive(self):
+    def is_full(self):
         '''
         Helper for unit tests runtimes
         '''
         if self.max_messages is None:
-            return True
-        return self.nb_messages <= self.max_messages
+            return False
+        return self.nb_messages > self.max_messages
 
     async def send(self, name, payload):
         '''
@@ -70,7 +70,7 @@ class MessageBus(object):
         assert input_name in self.queues, 'Missing queue {}'.format(input_name)
         assert output_name in self.queues, 'Missing queue {}'.format(output_name)
 
-        while self.is_alive():
+        while not self.is_full():
 
             message = await self.receive(input_name)
 

@@ -42,14 +42,14 @@ async def test_message_passing_async():
     bus.add_queue('test')
     assert isinstance(bus.queues['test'], asyncio.Queue)
 
-    assert bus.is_alive()
+    assert not bus.is_full()
 
     await bus.send('test', {'payload': 1234})
     await bus.send('test', {'another': 'deadbeef'})
     await bus.send('test', 'covfefe')
     assert bus.nb_messages == 3
 
-    assert bus.is_alive()
+    assert not bus.is_full()
     msg = await bus.receive('test')
     assert msg == {'payload': 1234}
     msg = await bus.receive('test')
@@ -67,14 +67,14 @@ async def test_message_passing_mp():
     bus.add_queue('test', mp=True)
     assert isinstance(bus.queues['test'], multiprocessing.queues.Queue)
 
-    assert bus.is_alive()
+    assert not bus.is_full()
 
     await bus.send('test', {'payload': 1234})
     await bus.send('test', {'another': 'deadbeef'})
     await bus.send('test', 'covfefe')
     assert bus.nb_messages == 3
 
-    assert bus.is_alive()
+    assert not bus.is_full()
     msg = await bus.receive('test')
     assert msg == {'payload': 1234}
     msg = await bus.receive('test')

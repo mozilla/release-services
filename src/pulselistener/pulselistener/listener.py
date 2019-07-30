@@ -57,7 +57,7 @@ class HookPhabricator(Hook):
         '''
         Main consumer, running queued builds from the web server
         '''
-        while self.bus.is_alive():
+        while not self.bus.is_full():
             # Get next build from Webserver code review queue
             build = await self.bus.receive(WebServer.QUEUE_CODE_REVIEW)
             assert isinstance(build, PhabricatorBuild)
