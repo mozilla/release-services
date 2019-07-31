@@ -46,7 +46,8 @@ class MessageBus(object):
         if isinstance(queue, asyncio.Queue):
             await queue.put(payload)
         else:
-            queue.put(payload)
+            # Run the synchronous mp queue.put in the asynchronous loop
+            await asyncio.get_running_loop().run_in_executor(None, lambda: queue.put(payload))
         self.nb_messages += 1
 
     async def receive(self, name):
@@ -59,7 +60,8 @@ class MessageBus(object):
         if isinstance(queue, asyncio.Queue):
             return await queue.get()
         else:
-            return queue.get()
+            # Run the synchronous mp queue.get in the asynchronous loop
+            return await asyncio.get_running_loop().run_in_executor(None, queue.get)
 
     async def run(self, input_name, output_name, method):
         '''
