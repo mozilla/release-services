@@ -5,18 +5,19 @@ import requests
 import structlog
 from libmozdata.phabricator import BuildState
 
+from pulselistener import taskcluster
+from pulselistener.config import QUEUE_CODE_REVIEW
+from pulselistener.config import QUEUE_MONITORING
 from pulselistener.hook import Hook
 from pulselistener.hook import PulseHook
 from pulselistener.lib.bus import MessageBus
+from pulselistener.lib.monitoring import Monitoring
 from pulselistener.lib.pulse import run_consumer
 from pulselistener.lib.utils import retry
 from pulselistener.lib.web import WebServer
 from pulselistener.mercurial import MercurialWorker
-from pulselistener.monitoring import task_monitoring
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
-
-QUEUE_CODE_REVIEW = 'codereview:in'
 
 logger = structlog.get_logger(__name__)
 
@@ -112,7 +113,7 @@ class HookPhabricator(Hook):
                     logger.info('Triggered a new risk analysis task', id=task_id)
 
                     # Send task to monitoring
-                    await task_monitoring.add_task('project-relman', 'bugbug-classify-patch', task_id)
+                    await self.bus.send(QUEUE_MONITORING, ('project-relman', 'bugbug-classify-patch', task_id))
 
             except Exception as e:
                 logger.error('Failed to trigger risk analysis task', error=str(e))
@@ -235,8 +236,6 @@ class PulseListener(object):
         self.taskcluster_access_token = taskcluster_access_token
         self.phabricator_api = phabricator_api
 
-        task_monitoring.setup()
-
         # Build mercurial worker & queue
         self.mercurial = MercurialWorker(
             self.phabricator_api,
@@ -251,6 +250,10 @@ class PulseListener(object):
         # Create web server
         self.webserver = WebServer(QUEUE_CODE_REVIEW)
         self.webserver.register(self.bus)
+
+        # Setup monitoring for newly created tasks
+        self.monitoring = Monitoring(QUEUE_MONITORING, taskcluster.secrets['ADMINS'], 7 * 3600)
+        self.monitoring.register(self.bus)
 
     def run(self):
 
@@ -275,7 +278,7 @@ class PulseListener(object):
         ]
 
         # Add monitoring task
-        consumers.append(task_monitoring.run())
+        consumers.append(self.monitoring.run())
 
         # Add mercurial task
         if self.mercurial is not None:

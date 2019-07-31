@@ -4,9 +4,9 @@ import json
 import structlog
 
 from pulselistener import taskcluster
+from pulselistener.config import QUEUE_MONITORING
 from pulselistener.lib.bus import MessageBus
 from pulselistener.lib.pulse import create_consumer
-from pulselistener.monitoring import task_monitoring
 
 logger = structlog.get_logger(__name__)
 
@@ -49,7 +49,7 @@ class Hook(object):
         logger.info('Triggered a new task', id=task_id)
 
         # Send task to monitoring
-        await task_monitoring.add_task(self.group_id, self.hook_id, task_id)
+        await self.bus.send(QUEUE_MONITORING, (self.group_id, self.hook_id, task_id))
 
         return task_id
 

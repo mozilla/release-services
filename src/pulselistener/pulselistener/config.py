@@ -4,3 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PROJECT_NAME = 'pulselistener'
+
+QUEUE_CODE_REVIEW = 'codereview:in'
+QUEUE_MONITORING = 'monitoring:in'
