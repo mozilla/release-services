@@ -46,7 +46,8 @@ class MessageBus(object):
         if isinstance(queue, asyncio.Queue):
             await queue.put(payload)
         else:
-            queue.put(payload)
+            # Run the synchronous mp queue.put in the asynchronous loop
+            await asyncio.get_running_loop().run_in_executor(None, lambda: queue.put(payload))
         self.nb_messages += 1
 
     async def receive(self, name):
@@ -59,13 +60,8 @@ class MessageBus(object):
         if isinstance(queue, asyncio.Queue):
             return await queue.get()
         else:
-
-            # This sleep call is needed to avoid fully blocking
-            # async process waiting on a multiprocessing queue
-            # Exemple: code review workflow waiting for new builds from webserver
-            await asyncio.sleep(0)
-
-            return queue.get()
+            # Run the synchronous mp queue.get in the asynchronous loop
+            return await asyncio.get_running_loop().run_in_executor(None, queue.get)
 
     async def run(self, input_name, output_name, method):
         '''
