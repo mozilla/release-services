@@ -42,20 +42,18 @@ async def test_message_passing_async():
     bus.add_queue('test')
     assert isinstance(bus.queues['test'], asyncio.Queue)
 
-    assert not bus.is_full()
-
     await bus.send('test', {'payload': 1234})
     await bus.send('test', {'another': 'deadbeef'})
     await bus.send('test', 'covfefe')
-    assert bus.nb_messages == 3
+    assert bus.queues['test'].qsize() == 3
 
-    assert not bus.is_full()
     msg = await bus.receive('test')
     assert msg == {'payload': 1234}
     msg = await bus.receive('test')
     assert msg == {'another': 'deadbeef'}
     msg = await bus.receive('test')
     assert msg == 'covfefe'
+    assert bus.queues['test'].qsize() == 0
 
 
 @pytest.mark.asyncio
@@ -67,20 +65,18 @@ async def test_message_passing_mp():
     bus.add_queue('test', mp=True)
     assert isinstance(bus.queues['test'], multiprocessing.queues.Queue)
 
-    assert not bus.is_full()
-
     await bus.send('test', {'payload': 1234})
     await bus.send('test', {'another': 'deadbeef'})
     await bus.send('test', 'covfefe')
-    assert bus.nb_messages == 3
+    assert bus.queues['test'].qsize() == 3
 
-    assert not bus.is_full()
     msg = await bus.receive('test')
     assert msg == {'payload': 1234}
     msg = await bus.receive('test')
     assert msg == {'another': 'deadbeef'}
     msg = await bus.receive('test')
     assert msg == 'covfefe'
+    assert bus.queues['test'].qsize() == 0
 
 
 @pytest.mark.asyncio
@@ -88,9 +84,9 @@ async def test_conversion():
     '''
     Test message conversion between 2 queues
     '''
-    bus = MessageBus(max_messages=4)
+    bus = MessageBus()
     bus.add_queue('input')
-    bus.add_queue('output')
+    bus.add_queue('output', maxsize=3)  # limit size to immediately stop execution for unit test
     assert isinstance(bus.queues['input'], asyncio.Queue)
     assert isinstance(bus.queues['output'], asyncio.Queue)
     assert bus.queues['input'].qsize() == 0

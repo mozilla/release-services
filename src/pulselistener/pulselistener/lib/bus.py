@@ -12,30 +12,22 @@ class MessageBus(object):
     '''
     Communication bus between processes
     '''
-    def __init__(self, max_messages=None):
+    def __init__(self):
         self.queues = {}
-        self.max_messages = max_messages
-        self.nb_messages = 0
 
-    def add_queue(self, name, mp=False):
+    def add_queue(self, name, mp=False, maxsize=-1):
         '''
         Create a new queue on the message bus
         * asyncio by default
         * multiprocessing when mp=True
+        By default, there are no size limit enforced (maxsize=-1)
         '''
         assert name not in self.queues, 'Queue {} already setup'.format(name)
+        assert isinstance(maxsize, int)
         if mp:
-            self.queues[name] = multiprocessing.Queue()
+            self.queues[name] = multiprocessing.Queue(maxsize=maxsize)
         else:
-            self.queues[name] = asyncio.Queue()
-
-    def is_full(self):
-        '''
-        Helper for unit tests runtimes
-        '''
-        if self.max_messages is None:
-            return False
-        return self.nb_messages > self.max_messages
+            self.queues[name] = asyncio.Queue(maxsize=maxsize)
 
     async def send(self, name, payload):
         '''
@@ -48,7 +40,6 @@ class MessageBus(object):
         else:
             # Run the synchronous mp queue.put in the asynchronous loop
             await asyncio.get_running_loop().run_in_executor(None, lambda: queue.put(payload))
-        self.nb_messages += 1
 
     async def receive(self, name):
         '''
@@ -72,7 +63,7 @@ class MessageBus(object):
         assert input_name in self.queues, 'Missing queue {}'.format(input_name)
         assert output_name in self.queues, 'Missing queue {}'.format(output_name)
 
-        while not self.is_full():
+        while not self.queues[output_name].full():
 
             message = await self.receive(input_name)
 
