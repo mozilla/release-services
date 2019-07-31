@@ -151,9 +151,9 @@ class HookCodeCoverage(object):
         '''
         Main consumer, running queued payloads from the pulse listener
         '''
-        while True:
+        while not self.bus.queues[QUEUE_MONITORING].full():
             # Get next payload from pulse messages
-            payload = await self.bus.receive(PulseListener.QUEUE_IN)
+            payload = await self.bus.receive(PulseListener.QUEUE_OUT)
 
             # Parse the payload to extract a new task's environment
             envs = self.parse(payload)
