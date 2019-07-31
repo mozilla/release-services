@@ -163,7 +163,7 @@ class HookCodeCoverage(object):
                 logger.info('Triggered a new code coverage task', id=task_id)
 
                 # Send task to monitoring
-                await task_monitoring.add_task((self.group_id, self.hook_id, task_id))
+                await self.bus.send(QUEUE_MONITORING, (self.group_id, self.hook_id, task_id))
 
     def is_coverage_task(self, task):
         return any(task['task']['metadata']['name'].startswith(s) for s in ['build-linux64-ccov', 'build-win64-ccov'])
