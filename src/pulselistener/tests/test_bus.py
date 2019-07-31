@@ -42,20 +42,18 @@ async def test_message_passing_async():
     bus.add_queue('test')
     assert isinstance(bus.queues['test'], asyncio.Queue)
 
-    assert not bus.is_full()
-
     await bus.send('test', {'payload': 1234})
     await bus.send('test', {'another': 'deadbeef'})
     await bus.send('test', 'covfefe')
-    assert bus.nb_messages == 3
+    assert bus.queues['test'].qsize() == 3
 
-    assert not bus.is_full()
     msg = await bus.receive('test')
     assert msg == {'payload': 1234}
     msg = await bus.receive('test')
     assert msg == {'another': 'deadbeef'}
     msg = await bus.receive('test')
     assert msg == 'covfefe'
+    assert bus.queues['test'].qsize() == 0
 
 
 @pytest.mark.asyncio
@@ -67,20 +65,18 @@ async def test_message_passing_mp():
     bus.add_queue('test', mp=True)
     assert isinstance(bus.queues['test'], multiprocessing.queues.Queue)
 
-    assert not bus.is_full()
-
     await bus.send('test', {'payload': 1234})
     await bus.send('test', {'another': 'deadbeef'})
     await bus.send('test', 'covfefe')
-    assert bus.nb_messages == 3
+    assert bus.queues['test'].qsize() == 3
 
-    assert not bus.is_full()
     msg = await bus.receive('test')
     assert msg == {'payload': 1234}
     msg = await bus.receive('test')
     assert msg == {'another': 'deadbeef'}
     msg = await bus.receive('test')
     assert msg == 'covfefe'
+    assert bus.queues['test'].qsize() == 0
 
 
 @pytest.mark.asyncio
@@ -88,9 +84,9 @@ async def test_conversion():
     '''
     Test message conversion between 2 queues
     '''
-    bus = MessageBus(max_messages=4)
+    bus = MessageBus()
     bus.add_queue('input')
-    bus.add_queue('output')
+    bus.add_queue('output', maxsize=3)  # limit size to immediately stop execution for unit test
     assert isinstance(bus.queues['input'], asyncio.Queue)
     assert isinstance(bus.queues['output'], asyncio.Queue)
     assert bus.queues['input'].qsize() == 0
@@ -108,3 +104,26 @@ async def test_conversion():
     await bus.receive('output') == 'lowercase'
     await bus.receive('output') == 'TEST X'
     await bus.receive('output') == 'HELLO WORLD.'
+
+
+@pytest.mark.asyncio
+async def test_maxsize():
+    '''
+    Test a queue maxsize behaves as expected
+    Maxsize=-1 is enabled by default
+    '''
+    bus = MessageBus()
+    bus.add_queue('async')
+    bus.add_queue('mp', mp=True)
+    assert bus.queues['async'].maxsize == -1
+    # No maxsize getter on mp queues
+
+    assert bus.queues['async'].empty()
+    assert bus.queues['mp'].empty()
+
+    for i in range(1000):
+        await bus.send('async', i)
+        await bus.send('mp', i)
+
+    assert not bus.queues['async'].full()
+    assert not bus.queues['mp'].full()
