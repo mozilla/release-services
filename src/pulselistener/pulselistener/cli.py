@@ -13,7 +13,7 @@ from libmozdata.phabricator import PhabricatorAPI
 from pulselistener import config
 from pulselistener import taskcluster
 from pulselistener.lib.log import init_logger
-from pulselistener.listener import PulseListener
+from pulselistener.listener import EventListener
 
 logger = structlog.get_logger(__name__)
 
@@ -84,7 +84,7 @@ def main():
         url=taskcluster.secrets['PHABRICATOR']['url'],
     )
 
-    pl = PulseListener(taskcluster.secrets['PULSE_USER'],
+    pl = EventListener(taskcluster.secrets['PULSE_USER'],
                        taskcluster.secrets['PULSE_PASSWORD'],
                        taskcluster.secrets['HOOKS'],
                        taskcluster.secrets['repositories'],
