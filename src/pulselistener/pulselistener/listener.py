@@ -6,6 +6,8 @@ import structlog
 from libmozdata.phabricator import BuildState
 
 from pulselistener import taskcluster
+from pulselistener.config import QUEUE_CODE_REVIEW
+from pulselistener.config import QUEUE_MONITORING
 from pulselistener.hook import Hook
 from pulselistener.hook import PulseHook
 from pulselistener.lib.bus import MessageBus
@@ -16,8 +18,6 @@ from pulselistener.lib.web import WebServer
 from pulselistener.mercurial import MercurialWorker
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
-
-QUEUE_CODE_REVIEW = 'codereview:in'
 
 logger = structlog.get_logger(__name__)
 
@@ -113,7 +113,7 @@ class HookPhabricator(Hook):
                     logger.info('Triggered a new risk analysis task', id=task_id)
 
                     # Send task to monitoring
-                    await self.bus.send(Monitoring.QUEUE_IN, ('project-relman', 'bugbug-classify-patch', task_id))
+                    await self.bus.send(QUEUE_MONITORING, ('project-relman', 'bugbug-classify-patch', task_id))
 
             except Exception as e:
                 logger.error('Failed to trigger risk analysis task', error=str(e))
@@ -252,7 +252,7 @@ class PulseListener(object):
         self.webserver.register(self.bus)
 
         # Setup monitoring for newly created tasks
-        self.monitoring = Monitoring(taskcluster.secrets['ADMINS'], 7 * 3600)
+        self.monitoring = Monitoring(QUEUE_MONITORING, taskcluster.secrets['ADMINS'], 7 * 3600)
         self.monitoring.register(self.bus)
 
     def run(self):

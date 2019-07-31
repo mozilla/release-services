@@ -27,13 +27,13 @@ class Monitoring(object):
     A simple monitoring tool sending emails through TC
     every X seconds
     '''
-    QUEUE_IN = 'monitoring:in'
-
-    def __init__(self, emails, period):
+    def __init__(self, queue_name, emails, period):
+        assert isinstance(queue_name, str)
         assert isinstance(period, int)
         assert period > 0
         assert isinstance(emails, list)
         assert len(emails) > 0
+        self.queue_name = queue_name
         self.period = period
         self.stats = {}
         self.emails = emails
@@ -45,7 +45,7 @@ class Monitoring(object):
 
     def register(self, bus):
         self.bus = bus
-        self.bus.add_queue(Monitoring.QUEUE_IN)
+        self.bus.add_queue(self.queue_name)
 
     def next_report(self):
         '''
@@ -64,7 +64,6 @@ class Monitoring(object):
         '''
         for report_date in self.next_report():
             while datetime.utcnow() < report_date:
-
                 # Monitor next task in queue
                 await self.check_task()
 
@@ -79,7 +78,7 @@ class Monitoring(object):
         Check next task status in queue
         '''
         # Get next task from queue
-        group_id, hook_id, task_id = await self.bus.receive(Monitoring.QUEUE_IN)
+        group_id, hook_id, task_id = await self.bus.receive(self.queue_name)
 
         # Get its status
         try:
@@ -108,7 +107,7 @@ class Monitoring(object):
             logger.info('Got a task status', id=task_id, status=task_status)
         else:
             # Push back into queue so it get checked later on
-            await self.bus.send(Monitoring.QUEUE_IN, (group_id, hook_id, task_id))
+            await self.bus.send(self.queue_name, (group_id, hook_id, task_id))
 
     def is_restartable(self, task_id):
         '''
@@ -160,7 +159,7 @@ class Monitoring(object):
         self.queue.createTask(new_task_id, definition)
 
         # Enqueue task to check later
-        await self.bus.send(Monitoring.QUEUE_IN, (group_id, hook_id, new_task_id))
+        await self.bus.send(self.queue_name, (group_id, hook_id, new_task_id))
 
         return new_task_id
 
