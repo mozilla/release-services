@@ -90,7 +90,7 @@ def test_parse(mock_taskcluster):
 def test_wrong_branch(mock_taskcluster):
     bus = MessageBus()
     with open(os.path.join(FIXTURES_DIR, 'bNq-VIT-Q12o6nXcaUmYNQ.json')) as f:
-        responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/bNq-VIT-Q12o6nXcaUmYNQ/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
+        responses.add(responses.GET, 'http://taskcluster.test/queue/v1/task-group/bNq-VIT-Q12o6nXcaUmYNQ/list', json=json.load(f), status=200, match_querystring=True)  # noqa
 
     hook = HookCodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
@@ -105,7 +105,7 @@ def test_wrong_branch(mock_taskcluster):
 def test_success(mock_taskcluster):
     bus = MessageBus()
     with open(os.path.join(FIXTURES_DIR, 'RS0UwZahQ_qAcdZzEb_Y9g.json')) as f:
-        responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/RS0UwZahQ_qAcdZzEb_Y9g/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
+        responses.add(responses.GET, 'http://taskcluster.test/queue/v1/task-group/RS0UwZahQ_qAcdZzEb_Y9g/list', json=json.load(f), status=200, match_querystring=True)  # noqa
 
     hook = HookCodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
@@ -120,7 +120,7 @@ def test_success(mock_taskcluster):
 def test_success_windows(mock_taskcluster):
     bus = MessageBus()
     with open(os.path.join(FIXTURES_DIR, 'MibGDsa4Q7uFNzDf7EV6nw.json')) as f:
-        responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/MibGDsa4Q7uFNzDf7EV6nw/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
+        responses.add(responses.GET, 'http://taskcluster.test/queue/v1/task-group/MibGDsa4Q7uFNzDf7EV6nw/list', json=json.load(f), status=200, match_querystring=True)  # noqa
 
     hook = HookCodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
@@ -135,7 +135,7 @@ def test_success_windows(mock_taskcluster):
 def test_success_try(mock_taskcluster):
     bus = MessageBus()
     with open(os.path.join(FIXTURES_DIR, 'FG3goVnCQfif8ZEOaM_4IA.json')) as f:
-        responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/FG3goVnCQfif8ZEOaM_4IA/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
+        responses.add(responses.GET, 'http://taskcluster.test/queue/v1/task-group/FG3goVnCQfif8ZEOaM_4IA/list', json=json.load(f), status=200, match_querystring=True)  # noqa
 
     hook = HookCodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'

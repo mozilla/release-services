@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import asyncio
+
 import pytest
 
 from pulselistener.lib.bus import MessageBus
@@ -28,6 +30,7 @@ async def test_risk_analysis_should_trigger(PhabricatorMock, mock_taskcluster):
           'phabricator_sleep': 4,
           'risk_analysis_reviewers': ['ehsan', 'heycam'],
           'phabricator_api': api,
+          'mercurial_queue': asyncio.Queue(),
         }, bus)
 
         build = PhabricatorBuild(MockRequest(
@@ -53,6 +56,7 @@ async def test_risk_analysis_shouldnt_trigger(PhabricatorMock, mock_taskcluster)
           'phabricator_sleep': 4,
           'risk_analysis_reviewers': ['ehsan'],
           'phabricator_api': api,
+          'mercurial_queue': asyncio.Queue(),
         }, bus)
 
         build = PhabricatorBuild(MockRequest(
