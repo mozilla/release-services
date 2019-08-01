@@ -143,6 +143,10 @@ class HookCodeCoverage(object):
         self.hook_id = configuration['hookId']
         self.bus = bus
 
+        # Setup TC services
+        self.queue = taskcluster.get_service('queue')
+        self.hooks = taskcluster.get_service('hooks')
+
     async def run(self):
         '''
         Main consumer, running queued payloads from the pulse listener
@@ -181,23 +185,19 @@ class HookCodeCoverage(object):
 
             return None
 
-        list_url = 'https://queue.taskcluster.net/v1/task-group/{}/list'.format(group_id)
-
-        def retrieve_coverage_task():
-            r = requests.get(list_url, params={
-                'limit': 200
-            })
-            r.raise_for_status()
-            reply = r.json()
+        def retrieve_coverage_task(limit=200):
+            reply = self.queue.listTaskGroup(
+                group_id,
+                limit=limit,
+            )
             task = maybe_trigger(reply['tasks'])
 
-            while task is None and 'continuationToken' in reply:
-                r = requests.get(list_url, params={
-                    'limit': 200,
-                    'continuationToken': reply['continuationToken']
-                })
-                r.raise_for_status()
-                reply = r.json()
+            while task is None and reply.get('continuationToken') is not None:
+                reply = self.queue.listTaskGroup(
+                    group_id,
+                    limit=limit,
+                    continuationToken=reply['continuationToken'],
+                )
                 task = maybe_trigger(reply['tasks'])
 
             return task
