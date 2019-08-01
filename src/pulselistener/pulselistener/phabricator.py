@@ -3,6 +3,9 @@ import enum
 import time
 
 import structlog
+from libmozdata.phabricator import BuildState
+from libmozdata.phabricator import UnitResult
+from libmozdata.phabricator import UnitResultState
 
 logger = structlog.get_logger(__name__)
 
@@ -93,4 +96,54 @@ class PhabricatorBuild(object):
 
         self.state = PhabricatorBuildState.Public
         logger.info('Revision is public', build=str(self))
+        return True
+
+
+class PhabricatorCodeReview(object):
+    '''
+    Actions related to Phabricator for the code review events
+    '''
+    def __init__(self, api, publish=False):
+        # TODO: this should be the only place with Phabricator API calls
+        self.api = api
+        self.publish = publish
+        logger.info('Phabricator publication is {}'.format(self.publish and 'enabled' or 'disabled'))
+
+    def publish_results(self, payload):
+        assert self.publish is True, 'Publication disabled'
+        mode, build, extras = payload
+        logger.debug('Publishing a Phabricator build update', mode=mode, build=build)
+
+        if mode == 'fail:general':
+            failure = UnitResult(
+                namespace='code-review',
+                name='general',
+                result=UnitResultState.Broken,
+                details='WARNING: An error occured in the code review bot.\n\n```{}```'.format(extras['message']),
+                format='remarkup',
+                duration=extras.get('duration', 0)
+            )
+            self.api.update_build_target(build.target_phid, BuildState.Fail, unit=[failure])
+
+        elif mode == 'fail:mercurial':
+            failure = UnitResult(
+                namespace='code-review',
+                name='mercurial',
+                result=UnitResultState.Fail,
+                details='WARNING: The code review bot failed to apply your patch.\n\n```{}```'.format(extras['message']),
+                format='remarkup',
+                duration=extras.get('duration', 0)
+            )
+            self.api.update_build_target(build.target_phid, BuildState.Fail, unit=[failure])
+
+        elif mode == 'success':
+            self.api.create_harbormaster_uri(build.target_phid, 'treeherder', 'Treeherder Jobs', extras['treeherder_url'])
+
+        elif mode == 'work':
+            self.api.update_build_target(build.target_phid, BuildState.Work)
+            logger.info('Published public build as working', build=str(build))
+
+        else:
+            logger.warning('Unsupported publication', mode=mode, build=build)
+
         return True

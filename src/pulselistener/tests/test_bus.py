@@ -98,12 +98,14 @@ async def test_conversion():
 
     # Convert all strings from input in uppercase
     assert bus.queues['input'].qsize() == 2
-    await bus.run('input', 'output', lambda x: x.upper())
-    assert bus.queues['input'].qsize() == 0
+    task = asyncio.create_task(bus.run(lambda x: x.upper(), 'input', 'output'))
 
     await bus.receive('output') == 'lowercase'
     await bus.receive('output') == 'TEST X'
     await bus.receive('output') == 'HELLO WORLD.'
+    task.cancel()
+    assert bus.queues['input'].qsize() == 0
+    assert bus.queues['output'].qsize() == 0
 
 
 @pytest.mark.asyncio
