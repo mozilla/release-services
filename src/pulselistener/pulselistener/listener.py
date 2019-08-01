@@ -8,6 +8,7 @@ from libmozdata.phabricator import BuildState
 from pulselistener import taskcluster
 from pulselistener.config import QUEUE_CODE_REVIEW
 from pulselistener.config import QUEUE_MONITORING
+from pulselistener.config import QUEUE_PULSE_CODECOV
 from pulselistener.lib.bus import MessageBus
 from pulselistener.lib.monitoring import Monitoring
 from pulselistener.lib.pulse import PulseListener
@@ -153,7 +154,7 @@ class HookCodeCoverage(object):
         '''
         while not self.bus.queues[QUEUE_MONITORING].full():
             # Get next payload from pulse messages
-            payload = await self.bus.receive(PulseListener.QUEUE_OUT)
+            payload = await self.bus.receive(QUEUE_PULSE_CODECOV)
 
             # Parse the payload to extract a new task's environment
             envs = self.parse(payload)
@@ -273,6 +274,7 @@ class EventListener(object):
 
         # Create pulse listener for code coverage
         self.pulse = PulseListener(
+            QUEUE_PULSE_CODECOV,
             'exchange/taskcluster-queue/v1/task-group-resolved',
             '#',
             pulse_user,

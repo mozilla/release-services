@@ -2,8 +2,8 @@
 import pytest
 
 from pulselistener.config import QUEUE_MONITORING
+from pulselistener.config import QUEUE_PULSE_CODECOV
 from pulselistener.lib.bus import MessageBus
-from pulselistener.lib.pulse import PulseListener
 from pulselistener.listener import HookCodeCoverage
 
 
@@ -11,7 +11,7 @@ from pulselistener.listener import HookCodeCoverage
 async def test_create_task(HooksMock, QueueMock, mock_taskcluster):
     bus = MessageBus()
     bus.add_queue(QUEUE_MONITORING, maxsize=1)
-    bus.add_queue(PulseListener.QUEUE_OUT)
+    bus.add_queue(QUEUE_PULSE_CODECOV)
 
     conf = {
         'hookGroupId': 'aGroup',
@@ -35,7 +35,7 @@ async def test_create_task(HooksMock, QueueMock, mock_taskcluster):
     pulse_payload = {
         'taskGroupId': 'aGroup',
     }
-    await bus.send(PulseListener.QUEUE_OUT, pulse_payload)
+    await bus.send(QUEUE_PULSE_CODECOV, pulse_payload)
 
     # Run the code coverage event listener
     await hook.run()

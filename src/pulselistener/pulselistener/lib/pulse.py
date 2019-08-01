@@ -107,9 +107,8 @@ class PulseListener(object):
     '''
     Pulse queues connector to receive external messages and react to them
     '''
-    QUEUE_OUT = 'pulse:out'
-
-    def __init__(self, queue, route, user, password):
+    def __init__(self, output_queue_name, queue, route, user, password):
+        self.queue_name = output_queue_name
         self.queue = queue
         self.route = route
         self.user = user
@@ -118,7 +117,7 @@ class PulseListener(object):
 
     def register(self, bus):
         self.bus = bus
-        self.bus.add_queue(PulseListener.QUEUE_OUT)
+        self.bus.add_queue(self.queue_name)
 
     async def run(self):
         while True:
@@ -144,7 +143,7 @@ class PulseListener(object):
         body = json.loads(body.decode('utf-8'))
 
         # Push the message in the message bus
-        await self.bus.send(PulseListener.QUEUE_OUT, body)
+        await self.bus.send(self.queue_name, body)
 
         # Ack the message so it is removed from the broker's queue
         await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
