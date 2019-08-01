@@ -152,7 +152,7 @@ class HookCodeCoverage(object):
         '''
         Main consumer, running queued payloads from the pulse listener
         '''
-        while not self.bus.queues[QUEUE_MONITORING].full():
+        while True:
             # Get next payload from pulse messages
             payload = await self.bus.receive(QUEUE_PULSE_CODECOV)
 

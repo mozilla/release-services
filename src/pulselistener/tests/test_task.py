@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import asyncio
+
 import pytest
 
 from pulselistener.config import QUEUE_MONITORING
@@ -37,17 +39,20 @@ async def test_create_task(HooksMock, QueueMock, mock_taskcluster):
     }
     await bus.send(QUEUE_PULSE_CODECOV, pulse_payload)
 
-    # Run the code coverage event listener
-    await hook.run()
+    # Run the code coverage event listener as a task
+    task = asyncio.create_task(hook.run())
+
+    # Stop as soon as a message is sent to monitoring
+    group_id, hook_id, task_id = await bus.queues[QUEUE_MONITORING].get()
+    task.cancel()
+
+    assert group_id == 'aGroup'
+    assert hook_id == 'aHook'
+    assert task_id == 'fake_task_id'
+
     assert HooksMock.obj['group_id'] == 'aGroup'
     assert HooksMock.obj['hook_id'] == 'aHook'
     assert HooksMock.obj['payload'] == {
         'REPOSITORY': 'https://hg.mozilla.org/mozilla-central',
         'REVISION': 'deadbeef',
     }
-
-    assert bus.queues[QUEUE_MONITORING].qsize() == 1
-    group_id, hook_id, task_id = await bus.queues[QUEUE_MONITORING].get()
-    assert group_id == 'aGroup'
-    assert hook_id == 'aHook'
-    assert task_id == 'fake_task_id'
