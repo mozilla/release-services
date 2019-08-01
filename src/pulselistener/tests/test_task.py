@@ -45,6 +45,7 @@ async def test_create_task(HooksMock, QueueMock, mock_taskcluster):
     # Stop as soon as a message is sent to monitoring
     group_id, hook_id, task_id = await bus.queues[QUEUE_MONITORING].get()
     task.cancel()
+    assert bus.queues[QUEUE_MONITORING].qsize() == 0
 
     assert group_id == 'aGroup'
     assert hook_id == 'aHook'
