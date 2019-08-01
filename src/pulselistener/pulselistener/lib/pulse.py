@@ -13,7 +13,7 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
-async def pulse_listener(user, password, exchange, topic, callback):
+async def create_pulse_listener(user, password, exchange, topic, callback):
     '''
     Create an async consumer for Mozilla pulse queues
     Inspired by : https://github.com/mozilla-releng/fennec-aurora-task-creator/blob/master/fennec_aurora_task_creator/worker.py  # noqa
@@ -123,7 +123,7 @@ class PulseListener(object):
     async def run(self):
         while True:
             try:
-                await pulse_listener(
+                await create_pulse_listener(
                     self.user,
                     self.password,
                     self.queue,
@@ -144,7 +144,7 @@ class PulseListener(object):
         body = json.loads(body.decode('utf-8'))
 
         # Push the message in the message bus
-        self.bus.send(PulseListener.QUEUE_OUT, body)
+        await self.bus.send(PulseListener.QUEUE_OUT, body)
 
         # Ack the message so it is removed from the broker's queue
         await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
