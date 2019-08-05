@@ -4,8 +4,8 @@ import asyncio
 import pytest
 
 from pulselistener.lib.bus import MessageBus
+from pulselistener.lib.phabricator import PhabricatorBuild
 from pulselistener.listener import HookPhabricator
-from pulselistener.phabricator import PhabricatorBuild
 
 
 class MockURL():

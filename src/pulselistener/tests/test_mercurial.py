@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from pulselistener.lib.bus import MessageBus
-from pulselistener.mercurial import MercurialWorker
-from pulselistener.phabricator import PhabricatorBuild
+from pulselistener.lib.mercurial import MercurialWorker
+from pulselistener.lib.phabricator import PhabricatorBuild
 
 MERCURIAL_FAILURE = '''unable to find 'crash.txt' for patching
 (use '--prefix' to apply patch relative to the current directory)

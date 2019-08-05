@@ -5,21 +5,22 @@ import requests
 import structlog
 
 from pulselistener import taskcluster
+from pulselistener.code_review import PhabricatorCodeReview
 from pulselistener.config import QUEUE_CODE_REVIEW
 from pulselistener.config import QUEUE_MERCURIAL
 from pulselistener.config import QUEUE_MONITORING
 from pulselistener.config import QUEUE_PHABRICATOR_RESULTS
 from pulselistener.config import QUEUE_PULSE_CODECOV
+from pulselistener.config import QUEUE_WEB_BUILDS
 from pulselistener.lib.bus import MessageBus
+from pulselistener.lib.mercurial import MercurialWorker
 from pulselistener.lib.monitoring import Monitoring
+from pulselistener.lib.phabricator import PhabricatorBuild
+from pulselistener.lib.phabricator import PhabricatorBuildState
 from pulselistener.lib.pulse import PulseListener
 from pulselistener.lib.pulse import run_consumer
 from pulselistener.lib.utils import retry
 from pulselistener.lib.web import WebServer
-from pulselistener.mercurial import MercurialWorker
-from pulselistener.phabricator import PhabricatorBuild
-from pulselistener.phabricator import PhabricatorBuildState
-from pulselistener.phabricator import PhabricatorCodeReview
 
 logger = structlog.get_logger(__name__)
 
@@ -33,26 +34,6 @@ class HookPhabricator(object):
         assert 'hookId' in configuration
         self.hooks = taskcluster.get_service('hooks')
         self.bus = bus
-
-        # Connect to Phabricator API
-        assert 'phabricator_api' in configuration
-        self.api = configuration['phabricator_api']
-
-        # Load secure projects
-        projects = self.api.search_projects(slugs=['secure-revision'])
-        self.secure_projects = {
-            p['phid']: p['fields']['name']
-            for p in projects
-        }
-        logger.info('Loaded secure projects', projects=self.secure_projects.values())
-
-        # Phabricator secure revision retries configuration
-        self.phabricator_retries = configuration.get('phabricator_retries', 5)
-        self.phabricator_sleep = configuration.get('phabricator_sleep', 10)
-        assert isinstance(self.phabricator_retries, int)
-        assert isinstance(self.phabricator_sleep, int)
-        logger.info('Will retry Phabricator secure revision queries', retries=self.phabricator_retries, sleep=self.phabricator_sleep)  # noqa
-
         self.risk_analysis_reviewers = configuration.get('risk_analysis_reviewers', [])
 
     async def run(self):
@@ -69,65 +50,44 @@ class HookPhabricator(object):
 
     def should_run_risk_analysis(self, build):
         '''
-        Check if we should trigger a risk analysis for this revision.
+        Check if we should trigger a risk analysis for this revision:
+        * when the revision is being reviewed by one of some specific reviewers
         '''
-        # Run risk analysis when the revision is being reviewed by one
-        # of some specific reviewers.
-        reviewers = build.rev['attachments']['reviewers']['reviewers']
-        for reviewer in reviewers:
-            user_data = self.api.load_user(user_phid=reviewer['reviewerPHID'])
-            if any(reviewer == user_data['fields']['username'] for reviewer in self.risk_analysis_reviewers):
-                return True
-
-        return False
+        usernames = set([
+            reviewer['fields']['username']
+            for reviewer in build.reviewers
+        ])
+        return len(usernames.intersection(self.risk_analysis_reviewers)) > 0
 
     async def run_build(self, build):
         '''
         Start asynchronously new builds when their revision become public
         '''
         assert isinstance(build, PhabricatorBuild)
+        assert build.state == PhabricatorBuildState.Public
 
-        # Check visibility of builds in queue
-        # The build state is updated to public/secured there
-        if build.state == PhabricatorBuildState.Queued:
-            build.check_visibility(self.api, self.secure_projects, self.phabricator_retries, self.phabricator_sleep)
+        # Push to try public builds
+        try:
+            logger.info('Send build to Mercurial', build=str(build))
+            await self.bus.send(QUEUE_MERCURIAL, build)
 
-        if build.state == PhabricatorBuildState.Public:
-            # Push to try public builds
-            try:
-                logger.info('Triggering task from webhook', build=build)
+        except Exception as e:
+            logger.error('Failed to queue task from webhook', error=str(e))
 
-                # Enqueue push to try
-                # TODO: better integration with mercurial queue
-                # to get the revisions produced
-                await self.bus.send(QUEUE_MERCURIAL, build)
+        try:
+            if self.should_run_risk_analysis(build):
+                task = self.hooks.triggerHook('project-relman', 'bugbug-classify-patch', {'DIFF_ID': build.diff_id})
+                task_id = task['status']['taskId']
+                logger.info('Triggered a new risk analysis task', id=task_id)
 
-            except Exception as e:
-                logger.error('Failed to queue task from webhook', error=str(e))
+                # Send task to monitoring
+                await self.bus.send(QUEUE_MONITORING, ('project-relman', 'bugbug-classify-patch', task_id))
 
-            try:
-                if self.should_run_risk_analysis(build):
-                    task = self.hooks.triggerHook('project-relman', 'bugbug-classify-patch', {'DIFF_ID': build.diff_id})
-                    task_id = task['status']['taskId']
-                    logger.info('Triggered a new risk analysis task', id=task_id)
+        except Exception as e:
+            logger.error('Failed to trigger risk analysis task', error=str(e))
 
-                    # Send task to monitoring
-                    await self.bus.send(QUEUE_MONITORING, ('project-relman', 'bugbug-classify-patch', task_id))
-
-            except Exception as e:
-                logger.error('Failed to trigger risk analysis task', error=str(e))
-
-            # Report public bug as working
-            await self.bus.send(QUEUE_PHABRICATOR_RESULTS, ('work', build, {}))
-
-        elif build.state == PhabricatorBuildState.Secured:
-            # We cannot send any update on a Secured build
-            # as the bot has no edit access on it
-            logger.info('Secured revision, skipping.', build=build.target_phid)
-
-        else:
-            # By default requeue build until it's marked secured or public
-            await self.bus.send(QUEUE_CODE_REVIEW, build)
+        # Report public bug as working
+        await self.bus.send(QUEUE_PHABRICATOR_RESULTS, ('work', build, {}))
 
 
 class HookCodeCoverage(object):
@@ -237,33 +197,40 @@ class EventListener(object):
                  pulse_user,
                  pulse_password,
                  hooks_configuration,
-                 repositories,
-                 phabricator_api,
                  cache_root,
-                 taskcluster_client_id=None,
-                 taskcluster_access_token=None,
                  ):
-
-        self.hooks_configuration = hooks_configuration
-        self.taskcluster_client_id = taskcluster_client_id
-        self.taskcluster_access_token = taskcluster_access_token
-        self.phabricator_api = phabricator_api
-
         # Create message bus shared amongst process
         self.bus = MessageBus()
+
+        # Build client applications
+        # TODO: split in 2 workflows
+        self.clients = [
+            self.build_hook(conf)
+            for conf in hooks_configuration
+        ]
+        if not self.clients:
+            raise Exception('No clientscreated')
+
+        # Phabricator publication
+        self.phabricator = PhabricatorCodeReview(
+            api_key=taskcluster.secrets['PHABRICATOR']['token'],
+            url=taskcluster.secrets['PHABRICATOR']['url'],
+            publish=taskcluster.secrets['PHABRICATOR'].get('publish', False),
+        )
+        self.phabricator.register(self.bus)
+        self.bus.add_queue(QUEUE_CODE_REVIEW)
+        self.bus.add_queue(QUEUE_PHABRICATOR_RESULTS)
 
         # Build mercurial worker & queue
         self.mercurial = MercurialWorker(
             QUEUE_MERCURIAL,
             QUEUE_PHABRICATOR_RESULTS,
-            self.phabricator_api,
-            repositories=repositories,
-            cache_root=cache_root,
+            repositories=self.phabricator.build_repositories(taskcluster.secrets['repositories'], cache_root),
         )
         self.mercurial.register(self.bus)
 
         # Create web server
-        self.webserver = WebServer(QUEUE_CODE_REVIEW)
+        self.webserver = WebServer(QUEUE_WEB_BUILDS)
         self.webserver.register(self.bus)
 
         # Setup monitoring for newly created tasks
@@ -280,27 +247,16 @@ class EventListener(object):
         )
         self.pulse.register(self.bus)
 
-        # Phabricator publication
-        self.phabricator = PhabricatorCodeReview(
-            api=phabricator_api,
-            publish=taskcluster.secrets['PHABRICATOR'].get('publish', False),
-        )
-        self.bus.add_queue(QUEUE_PHABRICATOR_RESULTS)
-
     def run(self):
 
-        # Build hooks for each conf
-        hooks = [
-            self.build_hook(conf)
-            for conf in self.hooks_configuration
-        ]
-        if not hooks:
-            raise Exception('No hooks created')
-
+        # Run client applications
         consumers = [
-            hook.run()
-            for hook in hooks
+            client.run()
+            for client in self.clients
         ]
+
+        # Add build details loading step
+        consumers.append(self.phabricator.load_builds(QUEUE_WEB_BUILDS, QUEUE_CODE_REVIEW))
 
         # Add monitoring task
         consumers.append(self.monitoring.run())
@@ -331,7 +287,6 @@ class EventListener(object):
         '''
         assert isinstance(conf, dict)
         assert 'type' in conf
-        conf['phabricator_api'] = self.phabricator_api
         classes = {
             'static-analysis-phabricator': HookPhabricator,
             'code-coverage': HookCodeCoverage,
