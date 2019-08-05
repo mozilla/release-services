@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import collections
 import json
 import os.path
 import urllib.parse
@@ -27,6 +28,10 @@ def QueueMock():
     class Mock():
         def __init__(self):
             self.created_tasks = []
+            self.groups = collections.defaultdict(list)
+
+        def add_task_in_group(self, group_id, **task):
+            self.groups[group_id].append(task)
 
         def status(self, task_id):
             for status in ['failed', 'completed', 'exception', 'pending']:
@@ -71,6 +76,25 @@ def QueueMock():
 
         def createTask(self, task_id, payload):
             self.created_tasks.append((task_id, payload))
+
+        def listTaskGroup(self, group_id, **kwargs):
+            return {
+                'taskGroupId': group_id,
+                'tasks': [
+                    {
+                        'task': {
+                            'metadata': {
+                                'name': task.get('name', 'unknown'),
+                            },
+                            'payload': {
+                                'env': task.get('env', {}),
+                            }
+                        }
+                    }
+                    for task in self.groups.get(group_id, [])
+                ],
+                'continuationToken': None,
+            }
 
     return Mock()
 
@@ -336,3 +360,12 @@ def mock_taskcluster():
     taskcluster.options = {
         'rootUrl': 'http://taskcluster.test'
     }
+
+    responses.add(
+        responses.GET,
+        'https://queue.taskcluster.net/v1/task-group/aGroup/list',
+        json={
+            'taskGroupId': 'aGroup',
+            'tasks': [],
+        },
+    )

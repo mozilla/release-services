@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 from multiprocessing import Process
-from multiprocessing import Queue
 
 import structlog
 from aiohttp import web
@@ -15,19 +14,21 @@ class WebServer(object):
     '''
     WebServer used to receive hook
     '''
-
-    def __init__(self):
+    def __init__(self, queue_name):
         self.http_port = int(os.environ.get('PORT', 9000))
+        self.queue_name = queue_name
         logger.info('HTTP webhook server will listen', port=self.http_port)
 
-        self.queue = Queue()
-
-        # Configure the web application with routes
+        # Configure the web application with code review routes
         self.app = web.Application()
         self.app.add_routes([
             web.get('/ping', self.ping),
             web.post('/codereview/new', self.create_code_review),
         ])
+
+    def register(self, bus):
+        self.bus = bus
+        self.bus.add_queue(self.queue_name, mp=True)
 
     def start(self):
         '''
@@ -61,10 +62,10 @@ class WebServer(object):
         '''
         try:
             build = PhabricatorBuild(request)
-            self.queue.put(build)
+            await self.bus.send(self.queue_name, build)
         except Exception as e:
             logger.error(str(e), path=request.path_qs)
             raise web.HTTPBadRequest(text=str(e))
 
-        logger.info('Queued new build', build=build)
+        logger.info('Queued new build', build=str(build))
         return web.Response(text='Build queued')

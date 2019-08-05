@@ -5,34 +5,40 @@ import requests
 import structlog
 from libmozdata.phabricator import BuildState
 
-from pulselistener.hook import Hook
-from pulselistener.hook import PulseHook
+from pulselistener import taskcluster
+from pulselistener.config import QUEUE_CODE_REVIEW
+from pulselistener.config import QUEUE_MONITORING
+from pulselistener.config import QUEUE_PULSE_CODECOV
+from pulselistener.lib.bus import MessageBus
+from pulselistener.lib.monitoring import Monitoring
+from pulselistener.lib.pulse import PulseListener
 from pulselistener.lib.pulse import run_consumer
 from pulselistener.lib.utils import retry
+from pulselistener.lib.web import WebServer
 from pulselistener.mercurial import MercurialWorker
-from pulselistener.monitoring import task_monitoring
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
-from pulselistener.web import WebServer
 
 logger = structlog.get_logger(__name__)
 
 
-class HookPhabricator(Hook):
+class HookPhabricator(object):
     '''
     Taskcluster hook handling the static analysis
     for Phabricator differentials
     '''
-    def __init__(self, configuration):
+    def __init__(self, configuration, bus):
         assert 'hookId' in configuration
-        super().__init__(
-            configuration.get('hookGroupId', 'project-releng'),
-            configuration['hookId'],
-        )
+        self.hooks = taskcluster.get_service('hooks')
+        self.bus = bus
 
         # Connect to Phabricator API
         assert 'phabricator_api' in configuration
         self.api = configuration['phabricator_api']
+
+        # Connect to Mercurial queue
+        assert 'mercurial_queue' in configuration
+        self.mercurial_queue = configuration['mercurial_queue']
 
         # Load secure projects
         projects = self.api.search_projects(slugs=['secure-revision'])
@@ -51,19 +57,14 @@ class HookPhabricator(Hook):
 
         self.risk_analysis_reviewers = configuration.get('risk_analysis_reviewers', [])
 
-    async def build_consumer(self, *args, **kwargs):
+    async def run(self):
         '''
         Main consumer, running queued builds from the web server
         '''
-        assert self.web_queue is not None, 'Missing web server queue'
-
-        def wait_build():
-            return self.web_queue.get()
-
-        loop = asyncio.get_event_loop()
-
         while True:
-            build = await loop.run_in_executor(None, wait_build)
+            # Get next build from Webserver code review queue
+            build = await self.bus.receive(QUEUE_CODE_REVIEW)
+            assert isinstance(build, PhabricatorBuild)
 
             # Process next build in queue
             await self.run_build(build)
@@ -113,7 +114,7 @@ class HookPhabricator(Hook):
                     logger.info('Triggered a new risk analysis task', id=task_id)
 
                     # Send task to monitoring
-                    await task_monitoring.add_task('project-relman', 'bugbug-classify-patch', task_id)
+                    await self.bus.send(QUEUE_MONITORING, ('project-relman', 'bugbug-classify-patch', task_id))
 
             except Exception as e:
                 logger.error('Failed to trigger risk analysis task', error=str(e))
@@ -129,22 +130,45 @@ class HookPhabricator(Hook):
 
         else:
             # By default requeue build until it's marked secured or public
-            self.web_queue.put(build)
+            await self.bus.send(QUEUE_CODE_REVIEW, build)
 
 
-class HookCodeCoverage(PulseHook):
+class HookCodeCoverage(object):
     '''
     Taskcluster hook handling the code coverage
     '''
-    def __init__(self, configuration):
+    def __init__(self, configuration, bus):
         assert 'hookId' in configuration
         self.triggered_groups = set()
-        super().__init__(
-            configuration.get('hookGroupId', 'project-releng'),
-            configuration['hookId'],
-            'exchange/taskcluster-queue/v1/task-group-resolved',
-            '#'
-        )
+        self.group_id = configuration.get('hookGroupId', 'project-releng')
+        self.hook_id = configuration['hookId']
+        self.bus = bus
+
+        # Setup TC services
+        self.queue = taskcluster.get_service('queue')
+        self.hooks = taskcluster.get_service('hooks')
+
+    async def run(self):
+        '''
+        Main consumer, running queued payloads from the pulse listener
+        '''
+        while True:
+            # Get next payload from pulse messages
+            payload = await self.bus.receive(QUEUE_PULSE_CODECOV)
+
+            # Parse the payload to extract a new task's environment
+            envs = self.parse(payload)
+            if envs is None:
+                continue
+
+            for env in envs:
+                # Trigger new tasks
+                task = self.hooks.triggerHook(self.group_id, self.hook_id, env)
+                task_id = task['status']['taskId']
+                logger.info('Triggered a new code coverage task', id=task_id)
+
+                # Send task to monitoring
+                await self.bus.send(QUEUE_MONITORING, (self.group_id, self.hook_id, task_id))
 
     def is_coverage_task(self, task):
         return any(task['task']['metadata']['name'].startswith(s) for s in ['build-linux64-ccov', 'build-win64-ccov'])
@@ -162,23 +186,19 @@ class HookCodeCoverage(PulseHook):
 
             return None
 
-        list_url = 'https://queue.taskcluster.net/v1/task-group/{}/list'.format(group_id)
-
-        def retrieve_coverage_task():
-            r = requests.get(list_url, params={
-                'limit': 200
-            })
-            r.raise_for_status()
-            reply = r.json()
+        def retrieve_coverage_task(limit=200):
+            reply = self.queue.listTaskGroup(
+                group_id,
+                limit=limit,
+            )
             task = maybe_trigger(reply['tasks'])
 
-            while task is None and 'continuationToken' in reply:
-                r = requests.get(list_url, params={
-                    'limit': 200,
-                    'continuationToken': reply['continuationToken']
-                })
-                r.raise_for_status()
-                reply = r.json()
+            while task is None and reply.get('continuationToken') is not None:
+                reply = self.queue.listTaskGroup(
+                    group_id,
+                    limit=limit,
+                    continuationToken=reply['continuationToken'],
+                )
                 task = maybe_trigger(reply['tasks'])
 
             return task
@@ -212,9 +232,9 @@ class HookCodeCoverage(PulseHook):
         }]
 
 
-class PulseListener(object):
+class EventListener(object):
     '''
-    Listen to pulse messages and trigger new tasks
+    Listen to external events and trigger new tasks
     '''
     def __init__(self,
                  pulse_user,
@@ -228,14 +248,10 @@ class PulseListener(object):
                  taskcluster_access_token=None,
                  ):
 
-        self.pulse_user = pulse_user
-        self.pulse_password = pulse_password
         self.hooks_configuration = hooks_configuration
         self.taskcluster_client_id = taskcluster_client_id
         self.taskcluster_access_token = taskcluster_access_token
         self.phabricator_api = phabricator_api
-
-        task_monitoring.setup()
 
         # Build mercurial worker & queue
         self.mercurial = MercurialWorker(
@@ -245,8 +261,26 @@ class PulseListener(object):
             cache_root=cache_root,
         )
 
+        # Create message bus shared amongst process
+        self.bus = MessageBus()
+
         # Create web server
-        self.webserver = WebServer()
+        self.webserver = WebServer(QUEUE_CODE_REVIEW)
+        self.webserver.register(self.bus)
+
+        # Setup monitoring for newly created tasks
+        self.monitoring = Monitoring(QUEUE_MONITORING, taskcluster.secrets['ADMINS'], 7 * 3600)
+        self.monitoring.register(self.bus)
+
+        # Create pulse listener for code coverage
+        self.pulse = PulseListener(
+            QUEUE_PULSE_CODECOV,
+            'exchange/taskcluster-queue/v1/task-group-resolved',
+            '#',
+            pulse_user,
+            pulse_password,
+        )
+        self.pulse.register(self.bus)
 
     def run(self):
 
@@ -258,21 +292,16 @@ class PulseListener(object):
         if not hooks:
             raise Exception('No hooks created')
 
-        # Run hooks pulse listeners together
-        # but only use hooks with active definitions
-        def _connect(hook):
-            return hook.connect_queues(
-                mercurial_queue=self.mercurial.queue if self.mercurial else None,
-                web_queue=self.webserver.queue,
-            )
         consumers = [
-            hook.build_consumer(self.pulse_user, self.pulse_password)
+            hook.run()
             for hook in hooks
-            if _connect(hook)
         ]
 
         # Add monitoring task
-        consumers.append(task_monitoring.run())
+        consumers.append(self.monitoring.run())
+
+        # Add pulse task
+        consumers.append(self.pulse.run())
 
         # Add mercurial task
         if self.mercurial is not None:
@@ -293,6 +322,7 @@ class PulseListener(object):
         assert isinstance(conf, dict)
         assert 'type' in conf
         conf['phabricator_api'] = self.phabricator_api
+        conf['mercurial_queue'] = self.mercurial.queue
         classes = {
             'static-analysis-phabricator': HookPhabricator,
             'code-coverage': HookCodeCoverage,
@@ -301,7 +331,7 @@ class PulseListener(object):
         if hook_class is None:
             raise Exception('Unsupported hook {}'.format(conf['type']))
 
-        return hook_class(conf)
+        return hook_class(conf, self.bus)
 
     def add_build(self, build_target_phid):
         '''

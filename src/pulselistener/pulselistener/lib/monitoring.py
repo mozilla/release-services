@@ -27,34 +27,25 @@ class Monitoring(object):
     A simple monitoring tool sending emails through TC
     every X seconds
     '''
-    def __init__(self, period):
+    def __init__(self, queue_name, emails, period):
+        assert isinstance(queue_name, str)
         assert isinstance(period, int)
         assert period > 0
+        assert isinstance(emails, list)
+        assert len(emails) > 0
+        self.queue_name = queue_name
         self.period = period
         self.stats = {}
-        self.emails = []
+        self.emails = emails
 
-        # Setup monitoring queue
-        self.tasks = asyncio.Queue()
-
-    def setup(self):
-        '''
-        Setup using taskcluster configuration
-        '''
-        # TC services
-        assert taskcluster.options is not None, 'Not authenticated'
+        # Setup Taskcluster services
         self.notify = taskcluster.get_service('notify')
         self.queue = taskcluster.get_service('queue')
         self.index = taskcluster.get_service('index')
 
-        # Load emails from secret
-        self.emails = taskcluster.secrets['ADMINS']
-
-    async def add_task(self, group_id, hook_id, task_id):
-        '''
-        Add a task to watch in async queue
-        '''
-        await self.tasks.put((group_id, hook_id, task_id))
+    def register(self, bus):
+        self.bus = bus
+        self.bus.add_queue(self.queue_name)
 
     def next_report(self):
         '''
@@ -86,10 +77,8 @@ class Monitoring(object):
         '''
         Check next task status in queue
         '''
-        assert self.queue is not None
-
-        # Read tasks in queue
-        group_id, hook_id, task_id = await self.tasks.get()
+        # Get next task from queue
+        group_id, hook_id, task_id = await self.bus.receive(self.queue_name)
 
         # Get its status
         try:
@@ -111,14 +100,14 @@ class Monitoring(object):
                 logger.info('Failed task is restartable', task_id=task_id)
                 await self.retry_task(group_id, hook_id, task_id)
 
-            # Add to report
+            # Add to report and stop processing that task
             if hook_id not in self.stats:
                 self.stats[hook_id] = {'failed': [], 'completed': [], 'exception': []}
             self.stats[hook_id][task_status].append(task_id)
             logger.info('Got a task status', id=task_id, status=task_status)
         else:
             # Push back into queue so it get checked later on
-            await self.tasks.put((group_id, hook_id, task_id))
+            await self.bus.send(self.queue_name, (group_id, hook_id, task_id))
 
     def is_restartable(self, task_id):
         '''
@@ -145,8 +134,6 @@ class Monitoring(object):
         Do NOT use rerunTask as it's deprecated AND not recommended
         https://docs.taskcluster.net/docs/reference/platform/taskcluster-queue/references/api#rerunTask
         '''
-        assert self.queue is not None
-
         # Fetch task definition
         definition = self.queue.task(task_id)
 
@@ -171,8 +158,8 @@ class Monitoring(object):
         logger.info('Retry task', old_task=task_id, new_task=new_task_id)
         self.queue.createTask(new_task_id, definition)
 
-        # Monitor new task
-        await self.add_task(group_id, hook_id, new_task_id)
+        # Enqueue task to check later
+        await self.bus.send(self.queue_name, (group_id, hook_id, new_task_id))
 
         return new_task_id
 
@@ -222,7 +209,3 @@ class Monitoring(object):
 
         # Reset stats
         self.stats = {}
-
-
-# Shared monitoring manager
-task_monitoring = Monitoring(7 * 3600)

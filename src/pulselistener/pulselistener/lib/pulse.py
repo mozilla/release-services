@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import asyncio
+import json
 import sys
 
 import aioamqp
@@ -12,7 +13,7 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
-async def _create_consumer(user, password, exchange, topic, callback):
+async def create_pulse_listener(user, password, exchange, topic, callback):
     '''
     Create an async consumer for Mozilla pulse queues
     Inspired by : https://github.com/mozilla-releng/fennec-aurora-task-creator/blob/master/fennec_aurora_task_creator/worker.py  # noqa
@@ -83,15 +84,6 @@ async def _create_consumer(user, password, exchange, topic, callback):
         await protocol.ensure_open()
 
 
-async def create_consumer(user, password, exchange, topic, callback):
-    while True:
-        try:
-            return await _create_consumer(user, password, exchange, topic, callback)
-        except (aioamqp.AmqpClosedConnection, OSError):
-            logger.exception('Reconnecting in 10 seconds')
-            await asyncio.sleep(10)
-
-
 def run_consumer(consumer):
     '''
     Helper to run indefinitely an asyncio consumer
@@ -109,3 +101,49 @@ def run_consumer(consumer):
             pass
         event_loop.close()
         sys.exit()
+
+
+class PulseListener(object):
+    '''
+    Pulse queues connector to receive external messages and react to them
+    '''
+    def __init__(self, output_queue_name, queue, route, user, password):
+        self.queue_name = output_queue_name
+        self.queue = queue
+        self.route = route
+        self.user = user
+        self.password = password
+        logger.info('Listening for new messages', queue=queue, route=route)
+
+    def register(self, bus):
+        self.bus = bus
+        self.bus.add_queue(self.queue_name)
+
+    async def run(self):
+        while True:
+            try:
+                await create_pulse_listener(
+                    self.user,
+                    self.password,
+                    self.queue,
+                    self.route,
+                    self.got_message,
+                )
+            except (aioamqp.AmqpClosedConnection, OSError):
+                logger.exception('Reconnecting in 10 seconds')
+                await asyncio.sleep(10)
+
+    async def got_message(self, channel, body, envelope, properties):
+        '''
+        Generic Pulse consumer callback
+        '''
+        assert isinstance(body, bytes), \
+            'Body is not in bytes'
+
+        body = json.loads(body.decode('utf-8'))
+
+        # Push the message in the message bus
+        await self.bus.send(self.queue_name, body)
+
+        # Ack the message so it is removed from the broker's queue
+        await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
