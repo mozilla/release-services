@@ -1,22 +1,29 @@
 # -*- coding: utf-8 -*-
-import collections
+import asyncio
 import json
 import os.path
-import urllib
+from unittest.mock import MagicMock
 
 import pytest
 
+from pulselistener.lib.bus import MessageBus
 from pulselistener.mercurial import MercurialWorker
+from pulselistener.phabricator import PhabricatorBuild
 
-MERCURIAL_FAILURE = '''WARNING: The code review bot failed to apply your patch.
-
-```unable to find 'crash.txt' for patching
+MERCURIAL_FAILURE = '''unable to find 'crash.txt' for patching
 (use '--prefix' to apply patch relative to the current directory)
 1 out of 1 hunks FAILED -- saving rejects to file crash.txt.rej
 abort: patch failed to apply
-```'''
+'''
 
-MockBuild = collections.namedtuple('MockBuild', 'diff_id, repo_phid, revision_id, target_phid, diff')
+
+class MockBuild(PhabricatorBuild):
+    def __init__(self, diff_id, repo_phid, revision_id, target_phid, diff):
+        self.diff_id = diff_id
+        self.repo_phid = repo_phid
+        self.revision_id = revision_id
+        self.target_phid = target_phid
+        self.diff = diff
 
 
 @pytest.mark.asyncio
@@ -25,6 +32,9 @@ async def test_push_to_try(PhabricatorMock, mock_mc):
     Run mercurial worker on a single diff
     with a push to try server
     '''
+    bus = MessageBus()
+    bus.add_queue('phabricator')
+
     # Get initial tip commit in repo
     initial = mock_mc.tip()
 
@@ -37,6 +47,8 @@ async def test_push_to_try(PhabricatorMock, mock_mc):
 
     with PhabricatorMock as api:
         worker = MercurialWorker(
+            'mercurial',
+            'phabricator',
             api,
             repositories=[
                 {
@@ -48,13 +60,14 @@ async def test_push_to_try(PhabricatorMock, mock_mc):
                     'batch_size': 100,
                 }
             ],
-            publish_phabricator=False,
             cache_root=os.path.dirname(repo_dir),
         )
+        worker.register(bus)
         assert len(worker.repositories) == 1
         repo = worker.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
+        repo.clone = MagicMock(side_effect=asyncio.coroutine(lambda: True))
 
         diff = {
             'phid': 'PHID-DIFF-test123',
@@ -65,10 +78,17 @@ async def test_push_to_try(PhabricatorMock, mock_mc):
             'baseRevision': 'abcdef12345',
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-deadbeef', diff)
-        await worker.handle_build(repo, build)
+        await bus.send('mercurial', build)
+        assert bus.queues['mercurial'].qsize() == 1
+        task = asyncio.create_task(worker.run())
 
-        # Check the treeherder link was NOT published
-        assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
+        # Check the treeherder link was queued
+        mode, out_build, details = await bus.receive('phabricator')
+        tip = mock_mc.tip()
+        assert mode == 'success'
+        assert out_build == build
+        assert details['treeherder_url'] == 'https://treeherder.mozilla.org/#/jobs?repo=try&revision={}'.format(tip.node.decode('utf-8'))
+        task.cancel()
 
     # The target should have content now
     assert os.path.exists(target)
@@ -87,7 +107,6 @@ async def test_push_to_try(PhabricatorMock, mock_mc):
 
     # Get tip commit in repo
     # It should be different from the initial one (patches + config have applied)
-    tip = mock_mc.tip()
     assert tip.node != initial.node
 
     # Check all commits messages
@@ -116,6 +135,8 @@ async def test_push_to_try_existing_rev(PhabricatorMock, mock_mc):
     with a push to try server
     but applying on an existing revision
     '''
+    bus = MessageBus()
+    bus.add_queue('phabricator')
     repo_dir = mock_mc.root().decode('utf-8')
 
     def _readme(content):
@@ -138,6 +159,8 @@ async def test_push_to_try_existing_rev(PhabricatorMock, mock_mc):
 
     with PhabricatorMock as api:
         worker = MercurialWorker(
+            'mercurial',
+            'phabricator',
             api,
             repositories=[
                 {
@@ -149,13 +172,14 @@ async def test_push_to_try_existing_rev(PhabricatorMock, mock_mc):
                     'batch_size': 100,
                 }
             ],
-            publish_phabricator=False,
             cache_root=os.path.dirname(repo_dir),
         )
+        worker.register(bus)
         assert len(worker.repositories) == 1
         repo = worker.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
+        repo.clone = MagicMock(side_effect=asyncio.coroutine(lambda: True))
 
         diff = {
             'phid': 'PHID-DIFF-solo',
@@ -166,10 +190,17 @@ async def test_push_to_try_existing_rev(PhabricatorMock, mock_mc):
             'baseRevision': base,
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-deadbeef', diff)
-        await worker.handle_build(repo, build)
+        await bus.send('mercurial', build)
+        assert bus.queues['mercurial'].qsize() == 1
+        task = asyncio.create_task(worker.run())
 
-        # Check the treeherder link was NOT published
-        assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
+        # Check the treeherder link was queued
+        mode, out_build, details = await bus.receive('phabricator')
+        tip = mock_mc.tip()
+        assert mode == 'success'
+        assert out_build == build
+        assert details['treeherder_url'] == 'https://treeherder.mozilla.org/#/jobs?repo=try&revision={}'.format(tip.node.decode('utf-8'))
+        task.cancel()
 
     # The target should have content now
     assert os.path.exists(target)
@@ -188,7 +219,6 @@ async def test_push_to_try_existing_rev(PhabricatorMock, mock_mc):
 
     # Get tip commit in repo
     # It should be different from the initial one (patches and config have applied)
-    tip = mock_mc.tip()
     assert tip.node != base
     assert tip.desc == b'try_task_config for code-review\nDifferential Diff: PHID-DIFF-solo'
 
@@ -226,6 +256,9 @@ async def test_treeherder_link(PhabricatorMock, mock_mc):
     Run mercurial worker on a single diff
     and check the treeherder link publication as an artifact
     '''
+    bus = MessageBus()
+    bus.add_queue('phabricator')
+
     # Get initial tip commit in repo
     initial = mock_mc.tip()
 
@@ -238,6 +271,8 @@ async def test_treeherder_link(PhabricatorMock, mock_mc):
 
     with PhabricatorMock as api:
         worker = MercurialWorker(
+            'mercurial',
+            'phabricator',
             api,
             repositories=[
                 {
@@ -249,13 +284,14 @@ async def test_treeherder_link(PhabricatorMock, mock_mc):
                     'batch_size': 100,
                 }
             ],
-            publish_phabricator=True,
             cache_root=os.path.dirname(repo_dir),
         )
+        worker.register(bus)
         assert len(worker.repositories) == 1
         repo = worker.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
+        repo.clone = MagicMock(side_effect=asyncio.coroutine(lambda: True))
 
         diff = {
             'phid': 'PHID-DIFF-test123',
@@ -264,14 +300,19 @@ async def test_treeherder_link(PhabricatorMock, mock_mc):
             'baseRevision': 'abcdef12345',
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-HMBT-somehash', diff)
-        await worker.handle_build(repo, build)
+        await bus.send('mercurial', build)
+        assert bus.queues['mercurial'].qsize() == 1
+        task = asyncio.create_task(worker.run())
 
-        # Check the treeherder link was published
-        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.createartifact'
-        assert api.mocks.calls[-1].response.status_code == 200
+        # Check the treeherder link was queued
+        mode, out_build, details = await bus.receive('phabricator')
+        tip = mock_mc.tip()
+        assert mode == 'success'
+        assert out_build == build
+        assert details['treeherder_url'] == 'https://treeherder.mozilla.org/#/jobs?repo=try&revision={}'.format(tip.node.decode('utf-8'))
+        task.cancel()
 
     # Tip should be updated
-    tip = mock_mc.tip()
     assert tip.node != initial.node
 
 
@@ -282,6 +323,9 @@ async def test_failure_general(PhabricatorMock, mock_mc):
     and check the treeherder link publication as an artifact
     Use a Python common exception to trigger a broken build
     '''
+    bus = MessageBus()
+    bus.add_queue('phabricator')
+
     # Get initial tip commit in repo
     initial = mock_mc.tip()
 
@@ -294,6 +338,8 @@ async def test_failure_general(PhabricatorMock, mock_mc):
 
     with PhabricatorMock as api:
         worker = MercurialWorker(
+            'mercurial',
+            'phabricator',
             api,
             repositories=[
                 {
@@ -305,13 +351,14 @@ async def test_failure_general(PhabricatorMock, mock_mc):
                     'batch_size': 100,
                 }
             ],
-            publish_phabricator=True,
             cache_root=os.path.dirname(repo_dir),
         )
+        worker.register(bus)
         assert len(worker.repositories) == 1
         repo = worker.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
+        repo.clone = MagicMock(side_effect=asyncio.coroutine(lambda: True))
 
         diff = {
             # Missing revisionPHID will give an assertion error
@@ -319,30 +366,17 @@ async def test_failure_general(PhabricatorMock, mock_mc):
             'id': 1234,
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-somehash', diff)
-        out = await worker.handle_build(repo, build)
-        assert out is False
+        await bus.send('mercurial', build)
+        assert bus.queues['mercurial'].qsize() == 1
+        task = asyncio.create_task(worker.run())
 
         # Check the unit result was published
-        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
-        params = json.loads(urllib.parse.parse_qs(api.mocks.calls[-1].request.body)['params'][0])
-        assert params['unit'][0]['duration'] > 0
-        del params['unit'][0]['duration']
-        assert params == {
-            'buildTargetPHID': 'PHID-somehash',
-            'type': 'fail',
-            'unit': [
-                {
-                    'name': 'general',
-                    'result': 'broken',
-                    'namespace': 'code-review',
-                    'details': 'WARNING: An error occured in the code review bot.\n\n``````',
-                    'format': 'remarkup',
-                }
-            ],
-            'lint': [],
-            '__conduit__': {'token': 'deadbeef'}
-        }
-        assert api.mocks.calls[-1].response.status_code == 200
+        mode, out_build, details = await bus.receive('phabricator')
+        assert mode == 'fail:general'
+        assert out_build == build
+        assert details['duration'] > 0
+        assert details['message'] == ''
+        task.cancel()
 
         # Clone should not be modified
         tip = mock_mc.tip()
@@ -356,6 +390,9 @@ async def test_failure_mercurial(PhabricatorMock, mock_mc):
     and check the treeherder link publication as an artifact
     Apply a bad mercurial patch to trigger a mercurial fail
     '''
+    bus = MessageBus()
+    bus.add_queue('phabricator')
+
     # Get initial tip commit in repo
     initial = mock_mc.tip()
 
@@ -368,6 +405,8 @@ async def test_failure_mercurial(PhabricatorMock, mock_mc):
 
     with PhabricatorMock as api:
         worker = MercurialWorker(
+            'mercurial',
+            'phabricator',
             api,
             repositories=[
                 {
@@ -379,13 +418,14 @@ async def test_failure_mercurial(PhabricatorMock, mock_mc):
                     'batch_size': 100,
                 }
             ],
-            publish_phabricator=True,
             cache_root=os.path.dirname(repo_dir),
         )
+        worker.register(bus)
         assert len(worker.repositories) == 1
         repo = worker.repositories.get('PHID-REPO-mc')
         assert repo is not None
         repo.repo = mock_mc
+        repo.clone = MagicMock(side_effect=asyncio.coroutine(lambda: True))
 
         diff = {
             'revisionPHID': 'PHID-DREV-666',
@@ -394,30 +434,17 @@ async def test_failure_mercurial(PhabricatorMock, mock_mc):
             'id': 666,
         }
         build = MockBuild(1234, 'PHID-REPO-mc', 5678, 'PHID-build-666', diff)
-        out = await worker.handle_build(repo, build)
-        assert out is False
+        await bus.send('mercurial', build)
+        assert bus.queues['mercurial'].qsize() == 1
+        task = asyncio.create_task(worker.run())
 
-        # Check the unit result was published
-        assert api.mocks.calls[-1].request.url == 'http://phabricator.test/api/harbormaster.sendmessage'
-        params = json.loads(urllib.parse.parse_qs(api.mocks.calls[-1].request.body)['params'][0])
-        assert params['unit'][0]['duration'] > 0
-        del params['unit'][0]['duration']
-        assert params == {
-            'buildTargetPHID': 'PHID-build-666',
-            'type': 'fail',
-            'unit': [
-                {
-                    'name': 'mercurial',
-                    'result': 'fail',
-                    'namespace': 'code-review',
-                    'details': MERCURIAL_FAILURE,
-                    'format': 'remarkup',
-                }
-            ],
-            'lint': [],
-            '__conduit__': {'token': 'deadbeef'}
-        }
-        assert api.mocks.calls[-1].response.status_code == 200
+        # Check the treeherder link was queued
+        mode, out_build, details = await bus.receive('phabricator')
+        assert mode == 'fail:mercurial'
+        assert out_build == build
+        assert details['duration'] > 0
+        assert details['message'] == MERCURIAL_FAILURE
+        task.cancel()
 
         # Clone should not be modified
         tip = mock_mc.tip()
@@ -430,6 +457,9 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
     Run mercurial worker on a single diff
     with a push to try server, but with NSS support (try syntax)
     '''
+    bus = MessageBus()
+    bus.add_queue('phabricator')
+
     # Get initial tip commit in repo
     initial = mock_nss.tip()
 
@@ -442,6 +472,8 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
 
     with PhabricatorMock as api:
         worker = MercurialWorker(
+            'mercurial',
+            'phabricator',
             api,
             repositories=[
                 {
@@ -455,13 +487,14 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
                     'batch_size': 100,
                 }
             ],
-            publish_phabricator=False,
             cache_root=os.path.dirname(repo_dir),
         )
+        worker.register(bus)
         assert len(worker.repositories) == 1
         repo = worker.repositories.get('PHID-REPO-nss')
         assert repo is not None
         repo.repo = mock_nss
+        repo.clone = MagicMock(side_effect=asyncio.coroutine(lambda: True))
 
         diff = {
             'phid': 'PHID-DIFF-test123',
@@ -472,10 +505,17 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
             'baseRevision': 'abcdef12345',
         }
         build = MockBuild(1234, 'PHID-REPO-nss', 5678, 'PHID-HMBT-deadbeef', diff)
-        await worker.handle_build(repo, build)
+        await bus.send('mercurial', build)
+        assert bus.queues['mercurial'].qsize() == 1
+        task = asyncio.create_task(worker.run())
 
-        # Check the treeherder link was NOT published
-        assert api.mocks.calls[-1].request.url != 'http://phabricator.test/api/harbormaster.createartifact'
+        # Check the treeherder link was queued
+        mode, out_build, details = await bus.receive('phabricator')
+        tip = mock_nss.tip()
+        assert mode == 'success'
+        assert out_build == build
+        assert details['treeherder_url'] == 'https://treeherder.mozilla.org/#/jobs?repo=try&revision={}'.format(tip.node.decode('utf-8'))
+        task.cancel()
 
     # The target should have content now
     assert os.path.exists(target)
@@ -494,7 +534,6 @@ async def test_push_to_try_nss(PhabricatorMock, mock_nss):
 
     # Get tip commit in repo
     # It should be different from the initial one (patches + config have applied)
-    tip = mock_nss.tip()
     assert tip.node != initial.node
 
     # Check all commits messages

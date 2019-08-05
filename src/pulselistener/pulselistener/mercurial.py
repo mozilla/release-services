@@ -15,9 +15,6 @@ from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 import structlog
-from libmozdata.phabricator import BuildState
-from libmozdata.phabricator import UnitResult
-from libmozdata.phabricator import UnitResultState
 
 from pulselistener.lib.utils import batch_checkout
 from pulselistener.phabricator import PhabricatorBuild
@@ -192,13 +189,10 @@ class MercurialWorker(object):
     '''
     Mercurial worker maintaining a local clone of mozilla-unified
     '''
-    def __init__(self, phabricator_api, publish_phabricator, cache_root, repositories):
+    def __init__(self, queue_name, queue_phabricator, phabricator_api, cache_root, repositories):
+        self.queue_name = queue_name
+        self.queue_phabricator = queue_phabricator
         self.phabricator_api = phabricator_api
-        self.publish_phabricator = publish_phabricator
-        logger.info('Phabricator publication is {}'.format(self.publish_phabricator and 'enabled' or 'disabled'))  # noqa
-
-        # Build asyncio shared queue
-        self.queue = asyncio.Queue()
 
         # Configure repositories, and index them by phid
         self.repositories = {
@@ -210,6 +204,10 @@ class MercurialWorker(object):
         assert len(self.repositories) > 0, 'No repositories configured'
         logger.info('Configured repositories', names=[r.name for r in self.repositories.values()])
 
+    def register(self, bus):
+        self.bus = bus
+        self.bus.add_queue(self.queue_name)
+
     async def run(self):
         # First clone all repositories
         for repo in self.repositories.values():
@@ -218,19 +216,17 @@ class MercurialWorker(object):
 
         # Wait for phabricator diffs to apply
         while True:
-            build = await self.queue.get()
+            build = await self.bus.receive(self.queue_name)
             assert isinstance(build, PhabricatorBuild)
 
             # Find the repository from the diff and trigger the build on it
             repository = self.repositories.get(build.repo_phid)
             if repository is not None:
-                await self.handle_build(repository, build)
+                result = await self.handle_build(repository, build)
+                await self.bus.send(self.queue_phabricator, result)
 
             else:
                 logger.error('Unsupported repository', repo=build.repo_phid, build=build)
-
-            # Notify the queue that the message has been processed
-            self.queue.task_done()
 
     async def handle_build(self, repository, build):
         '''
@@ -239,7 +235,6 @@ class MercurialWorker(object):
         If failure, send a unit result with a warning message
         '''
         assert isinstance(repository, Repository)
-        failure = None
         start = time.time()
 
         try:
@@ -279,9 +274,7 @@ class MercurialWorker(object):
             logger.info('Diff has been pushed !')
 
             # Publish Treeherder link
-            if build.target_phid and self.publish_phabricator:
-                uri = TREEHERDER_URL.format(repository.try_name, tip.node.decode('utf-8'))
-                self.phabricator_api.create_harbormaster_uri(build.target_phid, 'treeherder', 'Treeherder Jobs', uri)
+            uri = TREEHERDER_URL.format(repository.try_name, tip.node.decode('utf-8'))
         except hglib.error.CommandError as e:
             # Format nicely the error log
             error_log = e.err
@@ -289,33 +282,10 @@ class MercurialWorker(object):
                 error_log = error_log.decode('utf-8')
 
             logger.warn('Mercurial error on diff', error=error_log, args=e.args, build=build)
-
-            # Report mercurial failure as a Unit Test issue
-            failure = UnitResult(
-                namespace='code-review',
-                name='mercurial',
-                result=UnitResultState.Fail,
-                details='WARNING: The code review bot failed to apply your patch.\n\n```{}```'.format(error_log),
-                format='remarkup',
-                duration=time.time() - start,
-            )
+            return ('fail:mercurial', build, {'message': error_log, 'duration': time.time() - start})
 
         except Exception as e:
             logger.warn('Failed to process diff', error=e, build=build)
+            return ('fail:general', build, {'message': str(e), 'duration': time.time() - start})
 
-            # Report generic failure as a Unit Test issue
-            failure = UnitResult(
-                namespace='code-review',
-                name='general',
-                result=UnitResultState.Broken,
-                details='WARNING: An error occured in the code review bot.\n\n```{}```'.format(e),
-                format='remarkup',
-                duration=time.time() - start,
-            )
-
-        # Publish failure
-        if failure is not None and self.publish_phabricator:
-            self.phabricator_api.update_build_target(build.target_phid, BuildState.Fail, unit=[failure])
-            return False
-
-        return True
+        return ('success', build, {'treeherder_url': uri})

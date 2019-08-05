@@ -3,11 +3,12 @@ import asyncio
 
 import requests
 import structlog
-from libmozdata.phabricator import BuildState
 
 from pulselistener import taskcluster
 from pulselistener.config import QUEUE_CODE_REVIEW
+from pulselistener.config import QUEUE_MERCURIAL
 from pulselistener.config import QUEUE_MONITORING
+from pulselistener.config import QUEUE_PHABRICATOR_RESULTS
 from pulselistener.config import QUEUE_PULSE_CODECOV
 from pulselistener.lib.bus import MessageBus
 from pulselistener.lib.monitoring import Monitoring
@@ -18,6 +19,7 @@ from pulselistener.lib.web import WebServer
 from pulselistener.mercurial import MercurialWorker
 from pulselistener.phabricator import PhabricatorBuild
 from pulselistener.phabricator import PhabricatorBuildState
+from pulselistener.phabricator import PhabricatorCodeReview
 
 logger = structlog.get_logger(__name__)
 
@@ -35,10 +37,6 @@ class HookPhabricator(object):
         # Connect to Phabricator API
         assert 'phabricator_api' in configuration
         self.api = configuration['phabricator_api']
-
-        # Connect to Mercurial queue
-        assert 'mercurial_queue' in configuration
-        self.mercurial_queue = configuration['mercurial_queue']
 
         # Load secure projects
         projects = self.api.search_projects(slugs=['secure-revision'])
@@ -102,7 +100,7 @@ class HookPhabricator(object):
                 # Enqueue push to try
                 # TODO: better integration with mercurial queue
                 # to get the revisions produced
-                await self.mercurial_queue.put(build)
+                await self.bus.send(QUEUE_MERCURIAL, build)
 
             except Exception as e:
                 logger.error('Failed to queue task from webhook', error=str(e))
@@ -120,8 +118,7 @@ class HookPhabricator(object):
                 logger.error('Failed to trigger risk analysis task', error=str(e))
 
             # Report public bug as working
-            self.api.update_build_target(build.target_phid, BuildState.Work)
-            logger.info('Published public build as working', build=str(build))
+            await self.bus.send(QUEUE_PHABRICATOR_RESULTS, ('work', build, {}))
 
         elif build.state == PhabricatorBuildState.Secured:
             # We cannot send any update on a Secured build
@@ -243,7 +240,6 @@ class EventListener(object):
                  repositories,
                  phabricator_api,
                  cache_root,
-                 publish_phabricator=False,
                  taskcluster_client_id=None,
                  taskcluster_access_token=None,
                  ):
@@ -253,16 +249,18 @@ class EventListener(object):
         self.taskcluster_access_token = taskcluster_access_token
         self.phabricator_api = phabricator_api
 
+        # Create message bus shared amongst process
+        self.bus = MessageBus()
+
         # Build mercurial worker & queue
         self.mercurial = MercurialWorker(
+            QUEUE_MERCURIAL,
+            QUEUE_PHABRICATOR_RESULTS,
             self.phabricator_api,
-            publish_phabricator=publish_phabricator,
             repositories=repositories,
             cache_root=cache_root,
         )
-
-        # Create message bus shared amongst process
-        self.bus = MessageBus()
+        self.mercurial.register(self.bus)
 
         # Create web server
         self.webserver = WebServer(QUEUE_CODE_REVIEW)
@@ -281,6 +279,13 @@ class EventListener(object):
             pulse_password,
         )
         self.pulse.register(self.bus)
+
+        # Phabricator publication
+        self.phabricator = PhabricatorCodeReview(
+            api=phabricator_api,
+            publish=taskcluster.secrets['PHABRICATOR'].get('publish', False),
+        )
+        self.bus.add_queue(QUEUE_PHABRICATOR_RESULTS)
 
     def run(self):
 
@@ -304,8 +309,13 @@ class EventListener(object):
         consumers.append(self.pulse.run())
 
         # Add mercurial task
-        if self.mercurial is not None:
-            consumers.append(self.mercurial.run())
+        consumers.append(self.mercurial.run())
+
+        # Publish results on Phabricator
+        if self.phabricator.publish:
+            consumers.append(
+                self.bus.run(self.phabricator.publish_results, QUEUE_PHABRICATOR_RESULTS)
+            )
 
         # Start the web server in its own process
         web_process = self.webserver.start()
@@ -322,7 +332,6 @@ class EventListener(object):
         assert isinstance(conf, dict)
         assert 'type' in conf
         conf['phabricator_api'] = self.phabricator_api
-        conf['mercurial_queue'] = self.mercurial.queue
         classes = {
             'static-analysis-phabricator': HookPhabricator,
             'code-coverage': HookCodeCoverage,
@@ -332,20 +341,3 @@ class EventListener(object):
             raise Exception('Unsupported hook {}'.format(conf['type']))
 
         return hook_class(conf, self.bus)
-
-    def add_build(self, build_target_phid):
-        '''
-        Fetch a phabricator build and push it in the mercurial queue
-        '''
-        assert build_target_phid.startswith('PHID-HMBT-')
-        if self.mercurial is None:
-            logger.warn('Skip adding build, mercurial worker is disabled', build=build_target_phid)
-            return
-
-        # Load the diff from the target
-        container = self.phabricator_api.find_target_buildable(build_target_phid)
-        diffs = self.phabricator_api.search_diffs(diff_phid=container['fields']['objectPHID'])
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.mercurial.queue.put((build_target_phid, diffs[0])))
-        logger.info('Pushed build in queue', build=build_target_phid)

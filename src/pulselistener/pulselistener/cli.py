@@ -29,11 +29,6 @@ def parse_cli():
         default=os.path.join(tempfile.gettempdir(), 'pulselistener'),
     )
     parser.add_argument(
-        '--phab-build-target',
-        type=str,
-        help='A Phabricator build target PHID to test'
-    )
-    parser.add_argument(
         '--taskcluster-secret',
         help='Taskcluster Secret path',
         default=os.environ.get('TASKCLUSTER_SECRET')
@@ -90,14 +85,10 @@ def main():
                        taskcluster.secrets['repositories'],
                        phabricator,
                        args.cache_root,
-                       taskcluster.secrets['PHABRICATOR'].get('publish', False),
                        args.taskcluster_client_id,
                        args.taskcluster_access_token,
                        )
     logger.info('Listening to pulse messages...')
-
-    if args.phab_build_target:
-        pl.add_build(args.phab_build_target)
 
     pl.run()
 
