@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import asyncio
 
 import pytest
 
@@ -21,50 +20,49 @@ class MockRequest():
 @pytest.mark.asyncio
 async def test_risk_analysis_should_trigger(PhabricatorMock, mock_taskcluster):
     bus = MessageBus()
-    with PhabricatorMock as api:
-        phabricator = HookPhabricator({
-          'hookId': 'services-staging-staticanalysis/bot',
-          'mode': 'webhook',
-          'actions': ['try'],
-          'phabricator_retries': 3,
-          'phabricator_sleep': 4,
-          'risk_analysis_reviewers': ['ehsan', 'heycam'],
-          'phabricator_api': api,
-          'mercurial_queue': asyncio.Queue(),
-        }, bus)
 
-        build = PhabricatorBuild(MockRequest(
-            diff='125397',
-            repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
-            revision='36474',
-            target='PHID-HMBT-icusvlfibcebizyd33op'
-        ))
-        build.check_visibility(api, phabricator.secure_projects, phabricator.phabricator_retries, phabricator.phabricator_sleep)
+    client = HookPhabricator({
+      'hookId': 'services-staging-staticanalysis/bot',
+      'mode': 'webhook',
+      'actions': ['try'],
+      'risk_analysis_reviewers': ['ehsan', 'heycam'],
+    }, bus)
 
-        assert phabricator.should_run_risk_analysis(build)
+    build = PhabricatorBuild(MockRequest(
+        diff='125397',
+        repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
+        revision='36474',
+        target='PHID-HMBT-icusvlfibcebizyd33op'
+    ))
+
+    # Load reviewers using mock
+    with PhabricatorMock as phab:
+        phab.update_state(build)
+        phab.load_reviewers(build)
+
+    assert client.should_run_risk_analysis(build)
 
 
 @pytest.mark.asyncio
 async def test_risk_analysis_shouldnt_trigger(PhabricatorMock, mock_taskcluster):
     bus = MessageBus()
-    with PhabricatorMock as api:
-        phabricator = HookPhabricator({
-          'hookId': 'services-staging-staticanalysis/bot',
-          'mode': 'webhook',
-          'actions': ['try'],
-          'phabricator_retries': 3,
-          'phabricator_sleep': 4,
-          'risk_analysis_reviewers': ['ehsan'],
-          'phabricator_api': api,
-          'mercurial_queue': asyncio.Queue(),
-        }, bus)
+    client = HookPhabricator({
+      'hookId': 'services-staging-staticanalysis/bot',
+      'mode': 'webhook',
+      'actions': ['try'],
+      'risk_analysis_reviewers': ['ehsan'],
+    }, bus)
 
-        build = PhabricatorBuild(MockRequest(
-            diff='125397',
-            repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
-            revision='36474',
-            target='PHID-HMBT-icusvlfibcebizyd33op'
-        ))
-        build.check_visibility(api, phabricator.secure_projects, phabricator.phabricator_retries, phabricator.phabricator_sleep)
+    build = PhabricatorBuild(MockRequest(
+        diff='125397',
+        repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
+        revision='36474',
+        target='PHID-HMBT-icusvlfibcebizyd33op'
+    ))
 
-        assert not phabricator.should_run_risk_analysis(build)
+    # Load reviewers using mock
+    with PhabricatorMock as phab:
+        phab.update_state(build)
+        phab.load_reviewers(build)
+
+    assert not client.should_run_risk_analysis(build)

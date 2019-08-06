@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import asyncio
 import collections
 import json
 import os.path
@@ -15,10 +16,11 @@ from unittest.mock import MagicMock
 import hglib
 import pytest
 import responses
-from libmozdata.phabricator import PhabricatorAPI
 from taskcluster.utils import stringDate
 
 from pulselistener import taskcluster
+from pulselistener.lib.mercurial import Repository
+from pulselistener.lib.phabricator import PhabricatorActions
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
@@ -300,12 +302,12 @@ def PhabricatorMock():
             callback=_user_search,
         )
 
-        api = PhabricatorAPI(
+        actions = PhabricatorActions(
             url='http://phabricator.test/api/',
             api_key='deadbeef',
         )
-        api.mocks = resp  # used to assert in tests on callbacks
-        yield api
+        actions.mocks = resp  # used to assert in tests on callbacks
+        yield actions
 
 
 def build_repository(tmpdir, name):
@@ -341,7 +343,18 @@ def mock_mc(tmpdir):
     '''
     Mock a Mozilla Central repository
     '''
-    return build_repository(tmpdir, 'mozilla-central')
+    config = {
+        'name': 'mozilla-central',
+        'ssh_user': 'john@doe.com',
+        'ssh_key': 'privateSSHkey',
+        'url': 'http://mozilla-central',
+        'try_url': 'http://mozilla-central/try',
+        'batch_size': 100,
+    }
+    repo = Repository(config, tmpdir.realpath())
+    repo.repo = build_repository(tmpdir, 'mozilla-central')
+    repo.clone = MagicMock(side_effect=asyncio.coroutine(lambda: True))
+    return repo
 
 
 @pytest.fixture
@@ -349,7 +362,20 @@ def mock_nss(tmpdir):
     '''
     Mock an NSS repository
     '''
-    return build_repository(tmpdir, 'nss')
+    config = {
+        'name': 'nss',
+        'ssh_user': 'john@doe.com',
+        'ssh_key': 'privateSSHkey',
+        'url': 'http://nss',
+        'try_url': 'http://nss/try',
+        'try_mode': 'syntax',
+        'try_syntax': '-a -b XXX -c YYY',
+        'batch_size': 100,
+    }
+    repo = Repository(config, tmpdir.realpath())
+    repo.repo = build_repository(tmpdir, 'nss')
+    repo.clone = MagicMock(side_effect=asyncio.coroutine(lambda: True))
+    return repo
 
 
 @pytest.fixture

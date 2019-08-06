@@ -158,10 +158,11 @@ class PhabricatorActions(object):
             return PhabricatorPatch(diff['id'], diff['phid'], patch, diff['baseRevision'], commits)
 
         # Load full diff
-        diffs = self.api.search_diffs(diff_id=build.diff_id)
-        if not diffs:
-            raise Exception('Diff not found')
-        build.diff = diffs[0]
+        if build.diff is None:
+            diffs = self.api.search_diffs(diff_id=build.diff_id)
+            if not diffs:
+                raise Exception('Diff not found')
+            build.diff = diffs[0]
 
         # Stack always has the top diff
         build.stack = [
@@ -194,7 +195,7 @@ class PhabricatorActions(object):
         assert build.revision is not None
 
         reviewers = build.revision['attachments']['reviewers']['reviewers']
-        build.revisioniewers = [
+        build.reviewers = [
             self.api.load_user(user_phid=reviewer['reviewerPHID'])
             for reviewer in reviewers
         ]
