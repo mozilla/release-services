@@ -6,7 +6,7 @@ import pytest
 from pulselistener.config import QUEUE_MONITORING
 from pulselistener.config import QUEUE_PULSE_CODECOV
 from pulselistener.lib.bus import MessageBus
-from pulselistener.listener import HookCodeCoverage
+from pulselistener.listener import CodeCoverage
 
 
 @pytest.mark.asyncio
@@ -19,7 +19,7 @@ async def test_create_task(HooksMock, QueueMock, mock_taskcluster):
         'hookGroupId': 'aGroup',
         'hookId': 'aHook',
     }
-    hook = HookCodeCoverage(conf, bus)
+    hook = CodeCoverage(conf, bus)
     hook.hooks = HooksMock
     hook.queue = QueueMock
 

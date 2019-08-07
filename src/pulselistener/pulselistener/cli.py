@@ -73,13 +73,7 @@ def main():
                 SENTRY_DSN=taskcluster.secrets.get('SENTRY_DSN'),
                 )
 
-    pl = EventListener(taskcluster.secrets['PULSE_USER'],
-                       taskcluster.secrets['PULSE_PASSWORD'],
-                       taskcluster.secrets['HOOKS'],
-                       args.cache_root,
-                       )
-    logger.info('Listening to pulse messages...')
-
+    pl = EventListener(args.cache_root)
     pl.run()
 
 

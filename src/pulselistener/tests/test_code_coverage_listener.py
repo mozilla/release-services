@@ -5,14 +5,14 @@ import os
 import responses
 
 from pulselistener.lib.bus import MessageBus
-from pulselistener.listener import HookCodeCoverage
+from pulselistener.listener import CodeCoverage
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
 def test_is_coverage_task(mock_taskcluster):
     bus = MessageBus()
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     }, bus)
 
@@ -64,7 +64,7 @@ def test_is_coverage_task(mock_taskcluster):
 
 def test_get_build_task_in_group(mock_taskcluster):
     bus = MessageBus()
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     }, bus)
 
@@ -75,7 +75,7 @@ def test_get_build_task_in_group(mock_taskcluster):
 
 def test_parse(mock_taskcluster):
     bus = MessageBus()
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     }, bus)
 
@@ -92,7 +92,7 @@ def test_wrong_branch(mock_taskcluster):
     with open(os.path.join(FIXTURES_DIR, 'bNq-VIT-Q12o6nXcaUmYNQ.json')) as f:
         responses.add(responses.GET, 'http://taskcluster.test/queue/v1/task-group/bNq-VIT-Q12o6nXcaUmYNQ/list', json=json.load(f), status=200, match_querystring=True)  # noqa
 
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     }, bus)
 
@@ -107,7 +107,7 @@ def test_success(mock_taskcluster):
     with open(os.path.join(FIXTURES_DIR, 'RS0UwZahQ_qAcdZzEb_Y9g.json')) as f:
         responses.add(responses.GET, 'http://taskcluster.test/queue/v1/task-group/RS0UwZahQ_qAcdZzEb_Y9g/list', json=json.load(f), status=200, match_querystring=True)  # noqa
 
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     }, bus)
 
@@ -122,7 +122,7 @@ def test_success_windows(mock_taskcluster):
     with open(os.path.join(FIXTURES_DIR, 'MibGDsa4Q7uFNzDf7EV6nw.json')) as f:
         responses.add(responses.GET, 'http://taskcluster.test/queue/v1/task-group/MibGDsa4Q7uFNzDf7EV6nw/list', json=json.load(f), status=200, match_querystring=True)  # noqa
 
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     }, bus)
 
@@ -137,7 +137,7 @@ def test_success_try(mock_taskcluster):
     with open(os.path.join(FIXTURES_DIR, 'FG3goVnCQfif8ZEOaM_4IA.json')) as f:
         responses.add(responses.GET, 'http://taskcluster.test/queue/v1/task-group/FG3goVnCQfif8ZEOaM_4IA/list', json=json.load(f), status=200, match_querystring=True)  # noqa
 
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     }, bus)
 
@@ -148,13 +148,13 @@ def test_success_try(mock_taskcluster):
 
 def test_hook_group(mock_taskcluster):
     bus = MessageBus()
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookId': 'services-staging-codecoverage/bot'
     }, bus)
     assert hook.group_id == 'project-releng'
     assert hook.hook_id == 'services-staging-codecoverage/bot'
 
-    hook = HookCodeCoverage({
+    hook = CodeCoverage({
       'hookGroupId': 'anotherProject',
       'hookId': 'anotherHook',
     }, bus)

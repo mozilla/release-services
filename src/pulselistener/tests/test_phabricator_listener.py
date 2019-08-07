@@ -2,9 +2,9 @@
 
 import pytest
 
+from pulselistener.code_review import CodeReview
 from pulselistener.lib.bus import MessageBus
 from pulselistener.lib.phabricator import PhabricatorBuild
-from pulselistener.listener import HookPhabricator
 
 
 class MockURL():
@@ -20,14 +20,6 @@ class MockRequest():
 @pytest.mark.asyncio
 async def test_risk_analysis_should_trigger(PhabricatorMock, mock_taskcluster):
     bus = MessageBus()
-
-    client = HookPhabricator({
-      'hookId': 'services-staging-staticanalysis/bot',
-      'mode': 'webhook',
-      'actions': ['try'],
-      'risk_analysis_reviewers': ['ehsan', 'heycam'],
-    }, bus)
-
     build = PhabricatorBuild(MockRequest(
         diff='125397',
         repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
@@ -35,8 +27,14 @@ async def test_risk_analysis_should_trigger(PhabricatorMock, mock_taskcluster):
         target='PHID-HMBT-icusvlfibcebizyd33op'
     ))
 
-    # Load reviewers using mock
     with PhabricatorMock as phab:
+        client = CodeReview(
+          risk_analysis_reviewers=['ehsan', 'heycam'],
+          url='http://phabricator.test/api/',
+          api_key='fakekey',
+        )
+        client.register(bus)
+
         phab.update_state(build)
         phab.load_reviewers(build)
 
@@ -46,13 +44,6 @@ async def test_risk_analysis_should_trigger(PhabricatorMock, mock_taskcluster):
 @pytest.mark.asyncio
 async def test_risk_analysis_shouldnt_trigger(PhabricatorMock, mock_taskcluster):
     bus = MessageBus()
-    client = HookPhabricator({
-      'hookId': 'services-staging-staticanalysis/bot',
-      'mode': 'webhook',
-      'actions': ['try'],
-      'risk_analysis_reviewers': ['ehsan'],
-    }, bus)
-
     build = PhabricatorBuild(MockRequest(
         diff='125397',
         repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
@@ -60,8 +51,14 @@ async def test_risk_analysis_shouldnt_trigger(PhabricatorMock, mock_taskcluster)
         target='PHID-HMBT-icusvlfibcebizyd33op'
     ))
 
-    # Load reviewers using mock
     with PhabricatorMock as phab:
+        client = CodeReview(
+            risk_analysis_reviewers=['ehsan'],
+            url='http://phabricator.test/api/',
+            api_key='fakekey',
+        )
+        client.register(bus)
+
         phab.update_state(build)
         phab.load_reviewers(build)
 
