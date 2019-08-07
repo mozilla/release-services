@@ -17,7 +17,7 @@ import hglib
 import structlog
 
 from pulselistener.lib.phabricator import PhabricatorBuild
-from pulselistener.lib.phabricator import PhabricatorPatch
+from libmozdata.phabricator import PhabricatorPatch
 from pulselistener.lib.utils import batch_checkout
 
 logger = structlog.get_logger(__name__)

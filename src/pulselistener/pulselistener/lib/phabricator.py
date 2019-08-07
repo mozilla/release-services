@@ -136,55 +136,11 @@ class PhabricatorActions(object):
         Load a stack of patches for a public Phabricator build
         without hitting a local mercurial repository
         '''
-        assert isinstance(build, PhabricatorBuild)
-        assert build.state == PhabricatorBuildState.Public
+        build.stack = self.api.load_patches_stack(build.diff_id, build.diff)
 
-        # Diff PHIDs from our patch to its base
-        def add_patch(diff):
-            # Build a nicer Diff instance with associated commit & patch
-            assert isinstance(diff, dict)
-            assert 'id' in diff
-            assert 'phid' in diff
-            assert 'baseRevision' in diff
-            patch = self.api.load_raw_diff(diff['id'])
-            diffs = self.api.search_diffs(
-                diff_phid=diff['phid'],
-                attachments={
-                    'commits': True,
-                }
-            )
-            commits = diffs[0]['attachments']['commits'].get('commits', [])
-            logger.info('Adding patch to stack', build=str(build), patch=diff['id'])
-            return PhabricatorPatch(diff['id'], diff['phid'], patch, diff['baseRevision'], commits)
-
-        # Load full diff
-        if build.diff is None:
-            diffs = self.api.search_diffs(diff_id=build.diff_id)
-            if not diffs:
-                raise Exception('Diff not found')
-            build.diff = diffs[0]
-
-        # Stack always has the top diff
-        build.stack = [
-            add_patch(build.diff)
-        ]
-
-        parents = self.api.load_parents(build.diff['revisionPHID'])
-        if parents:
-
-            # Load all parent diffs
-            for parent in parents:
-                logger.info('Loading parent diff {}'.format(parent))
-
-                # Sort parent diffs by their id to load the most recent patch
-                parent_diffs = sorted(
-                    self.api.search_diffs(revision_phid=parent),
-                    key=lambda x: x['id'],
-                )
-                last_diff = parent_diffs[-1]
-
-                # Add most recent patch to stack
-                build.stack.insert(0, add_patch(last_diff))
+        # Use top diff as the main one on the build
+        if build.diff is None and build.stack:
+            build.diff = build.stack[-1].diff
 
     def load_reviewers(self, build):
         '''
