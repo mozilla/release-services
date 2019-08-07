@@ -99,7 +99,7 @@ class Repository(object):
         except hglib.error.CommandError:
             return False
 
-    async def apply_build(self, build):
+    def apply_build(self, build):
         '''
         Apply a stack of patches to mercurial repo
         and commit them one by one
@@ -165,7 +165,8 @@ class Repository(object):
                     'phabricator_diff': build.target_phid,
                 }
             }
-            message = 'try_task_config for code-review\nDifferential Diff: {}'.format(build.diff['phid'])
+            diff_phid = build.stack[-1].phid
+            message = 'try_task_config for code-review\nDifferential Diff: {}'.format(diff_phid)
 
         elif self.try_mode == TryMode.syntax:
             config = {
@@ -190,7 +191,7 @@ class Repository(object):
             user='pulselistener',
         )
 
-    async def push_to_try(self):
+    def push_to_try(self):
         '''
         Push the current tip on remote try repository
         '''
@@ -251,13 +252,13 @@ class MercurialWorker(object):
             # Find the repository from the diff and trigger the build on it
             repository = self.repositories.get(build.repo_phid)
             if repository is not None:
-                result = await self.handle_build(repository, build)
+                result = self.handle_build(repository, build)
                 await self.bus.send(self.queue_phabricator, result)
 
             else:
                 logger.error('Unsupported repository', repo=build.repo_phid, build=build)
 
-    async def handle_build(self, repository, build):
+    def handle_build(self, repository, build):
         '''
         Try to load and apply a diff on local clone
         If successful, push to try and send a treeherder link
@@ -271,13 +272,13 @@ class MercurialWorker(object):
             repository.clean()
 
             # First apply patches on local repo
-            await repository.apply_build(build)
+            repository.apply_build(build)
 
             # Configure the try task
             repository.add_try_commit(build)
 
             # Then push that stack on try
-            tip = await repository.push_to_try()
+            tip = repository.push_to_try()
             logger.info('Diff has been pushed !')
 
             # Publish Treeherder link

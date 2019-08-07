@@ -138,10 +138,6 @@ class PhabricatorActions(object):
         '''
         build.stack = self.api.load_patches_stack(build.diff_id, build.diff)
 
-        # Use top diff as the main one on the build
-        if build.diff is None and build.stack:
-            build.diff = build.stack[-1].diff
-
     def load_reviewers(self, build):
         '''
         Load details for reviewers found on a build

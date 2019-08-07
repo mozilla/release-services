@@ -1428,8 +1428,8 @@ let
     "libmozdata" = python.mkDerivation {
       name = "libmozdata-0.1.57";
       src = pkgs.fetchurl {
-        url = "https://github.com/La0/libmozdata/archive/fd112ce979f96a2aef3eef5862fd167a0eaf1b6b.tar.gz";
-        sha256 = "0brilyrwzjf7rg4z0kykvc0224z8jqfa92cv5xdry6z53lkrzc22";
+        url = "https://github.com/mozilla/libmozdata/archive/cd1781faf398ef2858f82850b0f519382817a295.tar.gz";
+        sha256 = "0vbi1sg44w2z34bdc61v72c9n7smkc3scbpn79vc45fsa9snw71x";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
