@@ -15,9 +15,9 @@ from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 import structlog
+from libmozdata.phabricator import PhabricatorPatch
 
 from pulselistener.lib.phabricator import PhabricatorBuild
-from libmozdata.phabricator import PhabricatorPatch
 from pulselistener.lib.utils import batch_checkout
 
 logger = structlog.get_logger(__name__)
