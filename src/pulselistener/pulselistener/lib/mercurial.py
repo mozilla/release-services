@@ -15,7 +15,6 @@ from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 import structlog
-from libmozdata.phabricator import revision_available
 
 from pulselistener.lib.phabricator import PhabricatorBuild
 from pulselistener.lib.phabricator import PhabricatorPatch
@@ -90,6 +89,16 @@ class Repository(object):
         self.repo.setcbout(lambda msg: logger.info('Mercurial', stdout=msg))
         self.repo.setcberr(lambda msg: logger.info('Mercurial', stderr=msg))
 
+    def has_revision(self, revision):
+        '''
+        Check if a revision is available on this Mercurial repo
+        '''
+        try:
+            self.repo.identify(revision)
+            return True
+        except hglib.error.CommandError:
+            return False
+
     async def apply_build(self, build):
         '''
         Apply a stack of patches to mercurial repo
@@ -101,7 +110,7 @@ class Repository(object):
 
         # When base revision is missing, update to default revision
         hg_base = build.stack[0].base_revision
-        if hg_base is None or not revision_available(self.repo, hg_base):
+        if hg_base is None or not self.has_revision(hg_base):
             logger.warning('Missing base revision {} from Phabricator'.format(hg_base))
             hg_base = self.default_revision
 
@@ -135,7 +144,7 @@ class Repository(object):
 
             # Use parent until a base revision is available in the repository
             # This is needed to support stack of patches with already merged patches
-            if patch.base_revision and revision_available(self.repo, patch.base_revision):
+            if patch.base_revision and self.has_revision(patch.base_revision):
                 logger.info('Found available revision', revision=patch.base_revision, repo=self.name)
                 break
 
