@@ -24,7 +24,7 @@ class PhabricatorCodeReview(PhabricatorActions):
     def register(self, bus):
         self.bus = bus
 
-    def build_repositories(self, repositories, cache_root):
+    def get_repositories(self, repositories, cache_root):
         '''
         Configure repositories, and index them by phid
         '''

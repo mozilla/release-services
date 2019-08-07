@@ -225,7 +225,7 @@ class EventListener(object):
         self.mercurial = MercurialWorker(
             QUEUE_MERCURIAL,
             QUEUE_PHABRICATOR_RESULTS,
-            repositories=self.phabricator.build_repositories(taskcluster.secrets['repositories'], cache_root),
+            repositories=self.phabricator.get_repositories(taskcluster.secrets['repositories'], cache_root),
         )
         self.mercurial.register(self.bus)
 
