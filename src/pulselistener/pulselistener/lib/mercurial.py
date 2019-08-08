@@ -93,6 +93,8 @@ class Repository(object):
         '''
         Check if a revision is available on this Mercurial repo
         '''
+        if not revision:
+            return False
         try:
             self.repo.identify(revision)
             return True
@@ -108,9 +110,23 @@ class Repository(object):
         assert len(build.stack) > 0, 'No patches to apply'
         assert all(map(lambda p: isinstance(p, PhabricatorPatch), build.stack))
 
+        # Find the first unknown base revision
+        needed_stack = []
+        for patch in reversed(build.stack):
+            needed_stack.insert(0, patch)
+
+            # Stop as soon as a base revision is available
+            if self.has_revision(patch.base_revision):
+                logger.info('Stopping at revision {}'.format(patch.base_revision))
+                break
+
+        if not needed_stack:
+            logger.info('All the patches are already applied')
+            return
+
         # When base revision is missing, update to default revision
-        hg_base = build.stack[0].base_revision
-        if hg_base is None or not self.has_revision(hg_base):
+        hg_base = needed_stack[0].base_revision
+        if not self.has_revision(hg_base):
             logger.warning('Missing base revision {} from Phabricator'.format(hg_base))
             hg_base = self.default_revision
 
@@ -129,7 +145,7 @@ class Repository(object):
         revision = self.repo.log(revision, limit=1)[0]
         logger.info('Updated repo', revision=revision.node, repo=self.name)
 
-        for patch in build.stack:
+        for patch in needed_stack:
             message = ''
             if patch.commits:
                 message += '{}\n'.format(patch.commits[0]['message'])
@@ -141,12 +157,6 @@ class Repository(object):
                 message=message,
                 user='pulselistener',
             )
-
-            # Use parent until a base revision is available in the repository
-            # This is needed to support stack of patches with already merged patches
-            if patch.base_revision and self.has_revision(patch.base_revision):
-                logger.info('Found available revision', revision=patch.base_revision, repo=self.name)
-                break
 
     def add_try_commit(self, build):
         '''
