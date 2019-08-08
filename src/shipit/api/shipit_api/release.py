@@ -5,6 +5,7 @@
 
 import enum
 import re
+
 from shipit_api.config import SUPPORTED_FLAVORS
 
 # If version has two parts with no trailing specifiers like "rc", we
