@@ -2,6 +2,4 @@
 
 aiohttp
 pytoml
-
-# libmozdata>=0.1.57
-https://github.com/mozilla/libmozdata/archive/cd1781faf398ef2858f82850b0f519382817a295.tar.gz#egg=libmozdata
+libmozdata>=0.1.58
