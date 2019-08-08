@@ -1,5 +1,5 @@
 -e ./../../lib/cli_common[pulse,taskcluster,log] #egg=mozilla-cli-common
 
 aiohttp
-libmozdata>=0.1.57
 pytoml
+libmozdata>=0.1.58

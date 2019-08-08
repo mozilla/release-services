@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import asyncio
 
 import pytest
 
+from pulselistener.code_review import CodeReview
 from pulselistener.lib.bus import MessageBus
-from pulselistener.listener import HookPhabricator
-from pulselistener.phabricator import PhabricatorBuild
+from pulselistener.lib.phabricator import PhabricatorBuild
 
 
 class MockURL():
@@ -21,50 +20,46 @@ class MockRequest():
 @pytest.mark.asyncio
 async def test_risk_analysis_should_trigger(PhabricatorMock, mock_taskcluster):
     bus = MessageBus()
-    with PhabricatorMock as api:
-        phabricator = HookPhabricator({
-          'hookId': 'services-staging-staticanalysis/bot',
-          'mode': 'webhook',
-          'actions': ['try'],
-          'phabricator_retries': 3,
-          'phabricator_sleep': 4,
-          'risk_analysis_reviewers': ['ehsan', 'heycam'],
-          'phabricator_api': api,
-          'mercurial_queue': asyncio.Queue(),
-        }, bus)
+    build = PhabricatorBuild(MockRequest(
+        diff='125397',
+        repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
+        revision='36474',
+        target='PHID-HMBT-icusvlfibcebizyd33op'
+    ))
 
-        build = PhabricatorBuild(MockRequest(
-            diff='125397',
-            repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
-            revision='36474',
-            target='PHID-HMBT-icusvlfibcebizyd33op'
-        ))
-        build.check_visibility(api, phabricator.secure_projects, phabricator.phabricator_retries, phabricator.phabricator_sleep)
+    with PhabricatorMock as phab:
+        client = CodeReview(
+          risk_analysis_reviewers=['ehsan', 'heycam'],
+          url='http://phabricator.test/api/',
+          api_key='fakekey',
+        )
+        client.register(bus)
 
-        assert phabricator.should_run_risk_analysis(build)
+        phab.update_state(build)
+        phab.load_reviewers(build)
+
+    assert client.should_run_risk_analysis(build)
 
 
 @pytest.mark.asyncio
 async def test_risk_analysis_shouldnt_trigger(PhabricatorMock, mock_taskcluster):
     bus = MessageBus()
-    with PhabricatorMock as api:
-        phabricator = HookPhabricator({
-          'hookId': 'services-staging-staticanalysis/bot',
-          'mode': 'webhook',
-          'actions': ['try'],
-          'phabricator_retries': 3,
-          'phabricator_sleep': 4,
-          'risk_analysis_reviewers': ['ehsan'],
-          'phabricator_api': api,
-          'mercurial_queue': asyncio.Queue(),
-        }, bus)
+    build = PhabricatorBuild(MockRequest(
+        diff='125397',
+        repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
+        revision='36474',
+        target='PHID-HMBT-icusvlfibcebizyd33op'
+    ))
 
-        build = PhabricatorBuild(MockRequest(
-            diff='125397',
-            repo='PHID-REPO-saax4qdxlbbhahhp2kg5',
-            revision='36474',
-            target='PHID-HMBT-icusvlfibcebizyd33op'
-        ))
-        build.check_visibility(api, phabricator.secure_projects, phabricator.phabricator_retries, phabricator.phabricator_sleep)
+    with PhabricatorMock as phab:
+        client = CodeReview(
+            risk_analysis_reviewers=['ehsan'],
+            url='http://phabricator.test/api/',
+            api_key='fakekey',
+        )
+        client.register(bus)
 
-        assert not phabricator.should_run_risk_analysis(build)
+        phab.update_state(build)
+        phab.load_reviewers(build)
+
+    assert not client.should_run_risk_analysis(build)

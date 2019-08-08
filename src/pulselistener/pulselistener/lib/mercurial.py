@@ -15,9 +15,10 @@ from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 import structlog
+from libmozdata.phabricator import PhabricatorPatch
 
+from pulselistener.lib.phabricator import PhabricatorBuild
 from pulselistener.lib.utils import batch_checkout
-from pulselistener.phabricator import PhabricatorBuild
 
 logger = structlog.get_logger(__name__)
 
@@ -88,27 +89,64 @@ class Repository(object):
         self.repo.setcbout(lambda msg: logger.info('Mercurial', stdout=msg))
         self.repo.setcberr(lambda msg: logger.info('Mercurial', stderr=msg))
 
-    async def apply_patches(self, patches, commits):
+    def has_revision(self, revision):
+        '''
+        Check if a revision is available on this Mercurial repo
+        '''
+        try:
+            self.repo.identify(revision)
+            return True
+        except hglib.error.CommandError:
+            return False
+
+    def apply_build(self, build):
         '''
         Apply a stack of patches to mercurial repo
         and commit them one by one
         '''
-        assert len(patches) > 0, 'No patches to apply'
-        for diff_phid, patch in patches:
-            commit = commits.get(diff_phid)
+        assert isinstance(build, PhabricatorBuild)
+        assert len(build.stack) > 0, 'No patches to apply'
+        assert all(map(lambda p: isinstance(p, PhabricatorPatch), build.stack))
 
+        # When base revision is missing, update to default revision
+        hg_base = build.stack[0].base_revision
+        if hg_base is None or not self.has_revision(hg_base):
+            logger.warning('Missing base revision {} from Phabricator'.format(hg_base))
+            hg_base = self.default_revision
+
+        # Update the repo to base revision
+        try:
+            logger.info('Updating repo to revision {}'.format(hg_base))
+            self.repo.update(
+                rev=hg_base,
+                clean=True,
+            )
+        except hglib.error.CommandError:
+            raise Exception('Failed to update to revision {}'.format(hg_base))
+
+        # Get current revision using full informations tuple from hglib
+        revision = self.repo.identify(id=True).strip()
+        revision = self.repo.log(revision, limit=1)[0]
+        logger.info('Updated repo', revision=revision.node, repo=self.name)
+
+        for patch in build.stack:
             message = ''
-            if commit:
-                message += '{}\n'.format(commit[0]['message'])
-            message += 'Differential Diff: {}'.format(diff_phid)
+            if patch.commits:
+                message += '{}\n'.format(patch.commits[0]['message'])
+            message += 'Differential Diff: {}'.format(patch.phid)
 
-            logger.info('Applying patch', phid=diff_phid, message=message)
+            logger.info('Applying patch', phid=patch.phid, message=message)
             self.repo.import_(
-                patches=io.BytesIO(patch.encode('utf-8')),
+                patches=io.BytesIO(patch.patch.encode('utf-8')),
                 message=message,
                 user='pulselistener',
             )
-            await asyncio.sleep(1)
+
+            # Use parent until a base revision is available in the repository
+            # This is needed to support stack of patches with already merged patches
+            if patch.base_revision and self.has_revision(patch.base_revision):
+                logger.info('Found available revision', revision=patch.base_revision, repo=self.name)
+                break
 
     def add_try_commit(self, build):
         '''
@@ -127,7 +165,8 @@ class Repository(object):
                     'phabricator_diff': build.target_phid,
                 }
             }
-            message = 'try_task_config for code-review\nDifferential Diff: {}'.format(build.diff['phid'])
+            diff_phid = build.stack[-1].phid
+            message = 'try_task_config for code-review\nDifferential Diff: {}'.format(diff_phid)
 
         elif self.try_mode == TryMode.syntax:
             config = {
@@ -152,7 +191,7 @@ class Repository(object):
             user='pulselistener',
         )
 
-    async def push_to_try(self):
+    def push_to_try(self):
         '''
         Push the current tip on remote try repository
         '''
@@ -187,22 +226,13 @@ class Repository(object):
 
 class MercurialWorker(object):
     '''
-    Mercurial worker maintaining a local clone of mozilla-unified
+    Mercurial worker maintaining several local clones
     '''
-    def __init__(self, queue_name, queue_phabricator, phabricator_api, cache_root, repositories):
+    def __init__(self, queue_name, queue_phabricator, repositories):
+        assert all(map(lambda r: isinstance(r, Repository), repositories.values()))
         self.queue_name = queue_name
         self.queue_phabricator = queue_phabricator
-        self.phabricator_api = phabricator_api
-
-        # Configure repositories, and index them by phid
-        self.repositories = {
-            phab_repo['phid']: Repository(conf, cache_root)
-            for phab_repo in self.phabricator_api.list_repositories()
-            for conf in repositories
-            if phab_repo['fields']['name'] == conf['name']
-        }
-        assert len(self.repositories) > 0, 'No repositories configured'
-        logger.info('Configured repositories', names=[r.name for r in self.repositories.values()])
+        self.repositories = repositories
 
     def register(self, bus):
         self.bus = bus
@@ -222,13 +252,13 @@ class MercurialWorker(object):
             # Find the repository from the diff and trigger the build on it
             repository = self.repositories.get(build.repo_phid)
             if repository is not None:
-                result = await self.handle_build(repository, build)
+                result = self.handle_build(repository, build)
                 await self.bus.send(self.queue_phabricator, result)
 
             else:
                 logger.error('Unsupported repository', repo=build.repo_phid, build=build)
 
-    async def handle_build(self, repository, build):
+    def handle_build(self, repository, build):
         '''
         Try to load and apply a diff on local clone
         If successful, push to try and send a treeherder link
@@ -241,36 +271,14 @@ class MercurialWorker(object):
             # Start by cleaning the repo
             repository.clean()
 
-            # Get the stack of patches
-            base, patches = self.phabricator_api.load_patches_stack(
-                repository.repo,
-                build.diff,
-                default_revision=repository.default_revision,
-            )
-            assert len(patches) > 0, 'No patches to apply'
-
-            # Load all the diffs details with commits messages
-            diffs = self.phabricator_api.search_diffs(
-                diff_phid=[p[0] for p in patches],
-                attachments={
-                    'commits': True,
-                }
-            )
-            commits = {
-                diff['phid']: diff['attachments']['commits'].get('commits', [])
-                for diff in diffs
-            }
-
-            await asyncio.sleep(0)  # allow other tasks to run
-
             # First apply patches on local repo
-            await repository.apply_patches(patches, commits)
+            repository.apply_build(build)
 
             # Configure the try task
             repository.add_try_commit(build)
 
             # Then push that stack on try
-            tip = await repository.push_to_try()
+            tip = repository.push_to_try()
             logger.info('Diff has been pushed !')
 
             # Publish Treeherder link

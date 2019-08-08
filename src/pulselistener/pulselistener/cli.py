@@ -8,7 +8,6 @@ import os
 import tempfile
 
 import structlog
-from libmozdata.phabricator import PhabricatorAPI
 
 from pulselistener import config
 from pulselistener import taskcluster
@@ -74,22 +73,7 @@ def main():
                 SENTRY_DSN=taskcluster.secrets.get('SENTRY_DSN'),
                 )
 
-    phabricator = PhabricatorAPI(
-        api_key=taskcluster.secrets['PHABRICATOR']['token'],
-        url=taskcluster.secrets['PHABRICATOR']['url'],
-    )
-
-    pl = EventListener(taskcluster.secrets['PULSE_USER'],
-                       taskcluster.secrets['PULSE_PASSWORD'],
-                       taskcluster.secrets['HOOKS'],
-                       taskcluster.secrets['repositories'],
-                       phabricator,
-                       args.cache_root,
-                       args.taskcluster_client_id,
-                       args.taskcluster_access_token,
-                       )
-    logger.info('Listening to pulse messages...')
-
+    pl = EventListener(args.cache_root)
     pl.run()
 
 

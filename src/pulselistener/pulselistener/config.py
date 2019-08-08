@@ -5,7 +5,7 @@
 
 PROJECT_NAME = 'pulselistener'
 
-QUEUE_CODE_REVIEW = 'codereview:in'
+QUEUE_WEB_BUILDS = 'webserver:out'
 QUEUE_MONITORING = 'monitoring:in'
 QUEUE_PULSE_CODECOV = 'pulse:codecov:out'
 QUEUE_MERCURIAL = 'mercurial:in'
