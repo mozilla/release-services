@@ -63,7 +63,7 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates, produc
     if not product_key:
         product_key = product
 
-    if is_rc(version, partial_updates):
+    if is_rc(product_key, version, partial_updates):
         product_key = f'{product_key}_rc'
 
     # sanity check
