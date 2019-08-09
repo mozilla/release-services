@@ -96,6 +96,7 @@ def render_action_hook(payload, context, delete_params=[]):
     # some parameters contain a lot of entries, so we hit the payload
     # size limit. We don't use this parameter in any case, safe to
     # remove
-    for param in delete_params:
-        del rendered_payload['decision']['parameters'][param]
+    if 'parameters' in rendered_payload['decision']:
+        for param in delete_params:
+            del rendered_payload['decision']['parameters'][param]
     return rendered_payload
