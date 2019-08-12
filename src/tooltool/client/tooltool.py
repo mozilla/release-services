@@ -1180,6 +1180,30 @@ def upload(manifest, message, base_urls, auth_file, region):
     return success
 
 
+def change_visibility(base_urls, digest, visibility, auth_file):
+    url = base_urls[0]
+    url = urljoin(url, 'file/sha512/' + digest)
+
+    data = [{"op":"set_visibility", "visibility":visibility}]
+
+    if PY3:
+        data = to_binary(json.dumps(data))
+    else:
+        data = json.dumps(data)
+
+    req = Request(url, data, {'Content-Type': 'application/json'})
+    req.get_method = lambda: 'PATCH'
+
+    _authorize(req, auth_file)
+
+    try:
+        resp = urllib2.urlopen(req)
+    except (URLError, HTTPError) as e:
+        _log_api_error(e)
+        return False
+    return True
+
+
 def process_command(options, args):
     """ I know how to take a list of program arguments and
     start doing the right thing with them"""
@@ -1221,6 +1245,19 @@ def process_command(options, args):
             options.get('base_url'),
             options.get('auth_file'),
             options.get('region'))
+    elif cmd == 'change-visibility':
+        if not options.get('digest'):
+            log.critical('change-visibility command requires a digest option')
+            return False
+        if not options.get('visibility'):
+            log.critical('change-visibility command requires a visibility option')
+            return False
+        return change_visibility(
+            options.get('base_url'),
+            options.get('digest'),
+            options.get('visibility'),
+            options.get('auth_file'),
+        )
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -1239,6 +1276,9 @@ def main(argv, _skip_logging=False):
     parser.add_option('-d', '--algorithm', default='sha512',
                       dest='algorithm', action='store',
                       help='hashing algorithm to use (only sha512 is allowed)')
+    parser.add_option('--digest', default=None,
+                      dest='digest', action='store',
+                      help='digest hash to change visibility for')
     parser.add_option('--visibility', default=None,
                       dest='visibility', choices=['internal', 'public'],
                       help='Visibility level of this file; "internal" is for '
