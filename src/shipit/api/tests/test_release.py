@@ -50,16 +50,20 @@ def test_is_esr(version, result):
     assert is_esr(version) == result
 
 
-@pytest.mark.parametrize('version, partial_updates, result', (
-    ('57.0', {'56.0b1': [], '55.0': []}, True),
-    ('57.0', {'56.0': [], '55.0': []}, True),
-    ('64.0', None, True),
-    ('64.0.1', None, False),
-    ('56.0b3', None, False),
-    ('41.0esr', None, False),
+@pytest.mark.parametrize('product, version, partial_updates, result', (
+    ('firefox', '57.0', {'56.0b1': [], '55.0': []}, True),
+    ('firefox', '57.0', {'56.0': [], '55.0': []}, True),
+    ('thunderbird', '57.0', {'56.0': [], '55.0': []}, False),
+    ('firefox', '64.0', None, True),
+    ('thunderbird', '64.0', None, False),
+    ('fennec', '64.0', None, True),
+    ('firefox', '64.0.1', None, False),
+    ('thunderbird', '64.0.1', None, False),
+    ('fennec', '56.0b3', None, False),
+    ('firefox', '41.0esr', None, False),
 ))
-def test_is_rc(version, partial_updates, result):
-    assert is_rc(version, partial_updates) == result
+def test_is_rc(product, version, partial_updates, result):
+    assert is_rc(product, version, partial_updates) == result
 
 
 @pytest.mark.parametrize('version, result', (

@@ -54,17 +54,16 @@ class MessageBus(object):
             # Run the synchronous mp queue.get in the asynchronous loop
             return await asyncio.get_running_loop().run_in_executor(None, queue.get)
 
-    async def run(self, input_name, output_name, method):
+    async def run(self, method, input_name, output_name=None):
         '''
         Pass messages from input to output
         Optionally applies some conversions methods
         This is also the "ideal" usage between 2 queues
         '''
         assert input_name in self.queues, 'Missing queue {}'.format(input_name)
-        assert output_name in self.queues, 'Missing queue {}'.format(output_name)
+        assert output_name is None or output_name in self.queues, 'Missing queue {}'.format(output_name)
 
-        while not self.queues[output_name].full():
-
+        while True:
             message = await self.receive(input_name)
 
             # Run async or sync methods
@@ -77,4 +76,5 @@ class MessageBus(object):
                 logger.info('Skipping new message creation: no result', message=message)
                 continue
 
-            await self.send(output_name, new_message)
+            if output_name is not None:
+                await self.send(output_name, new_message)

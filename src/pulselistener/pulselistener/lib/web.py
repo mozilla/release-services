@@ -5,7 +5,7 @@ from multiprocessing import Process
 import structlog
 from aiohttp import web
 
-from pulselistener.phabricator import PhabricatorBuild
+from pulselistener.lib.phabricator import PhabricatorBuild
 
 logger = structlog.get_logger(__name__)
 

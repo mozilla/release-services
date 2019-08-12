@@ -8,7 +8,6 @@ import os
 import tempfile
 
 import structlog
-from libmozdata.phabricator import PhabricatorAPI
 
 from pulselistener import config
 from pulselistener import taskcluster
@@ -27,11 +26,6 @@ def parse_cli():
         '--cache-root',
         help='Cache root, used to pull changesets',
         default=os.path.join(tempfile.gettempdir(), 'pulselistener'),
-    )
-    parser.add_argument(
-        '--phab-build-target',
-        type=str,
-        help='A Phabricator build target PHID to test'
     )
     parser.add_argument(
         '--taskcluster-secret',
@@ -79,26 +73,7 @@ def main():
                 SENTRY_DSN=taskcluster.secrets.get('SENTRY_DSN'),
                 )
 
-    phabricator = PhabricatorAPI(
-        api_key=taskcluster.secrets['PHABRICATOR']['token'],
-        url=taskcluster.secrets['PHABRICATOR']['url'],
-    )
-
-    pl = EventListener(taskcluster.secrets['PULSE_USER'],
-                       taskcluster.secrets['PULSE_PASSWORD'],
-                       taskcluster.secrets['HOOKS'],
-                       taskcluster.secrets['repositories'],
-                       phabricator,
-                       args.cache_root,
-                       taskcluster.secrets['PHABRICATOR'].get('publish', False),
-                       args.taskcluster_client_id,
-                       args.taskcluster_access_token,
-                       )
-    logger.info('Listening to pulse messages...')
-
-    if args.phab_build_target:
-        pl.add_build(args.phab_build_target)
-
+    pl = EventListener(args.cache_root)
     pl.run()
 
 
