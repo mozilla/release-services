@@ -1184,7 +1184,10 @@ def change_visibility(base_urls, digest, visibility, auth_file):
     url = base_urls[0]
     url = urljoin(url, 'file/sha512/' + digest)
 
-    data = [{"op":"set_visibility", "visibility":visibility}]
+    data = [{
+        "op": "set_visibility",
+        "visibility": visibility,
+    }]
 
     if PY3:
         data = to_binary(json.dumps(data))
@@ -1197,7 +1200,7 @@ def change_visibility(base_urls, digest, visibility, auth_file):
     _authorize(req, auth_file)
 
     try:
-        resp = urllib2.urlopen(req)
+        urllib2.urlopen(req)
     except (URLError, HTTPError) as e:
         _log_api_error(e)
         return False
