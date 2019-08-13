@@ -1180,14 +1180,9 @@ def upload(manifest, message, base_urls, auth_file, region):
     return success
 
 
-def change_visibility(base_urls, digest, visibility, auth_file):
+def send_operation_on_file(data, base_urls, digest, auth_file):
     url = base_urls[0]
     url = urljoin(url, 'file/sha512/' + digest)
-
-    data = [{
-        "op": "set_visibility",
-        "visibility": visibility,
-    }]
 
     if PY3:
         data = to_binary(json.dumps(data))
@@ -1205,6 +1200,21 @@ def change_visibility(base_urls, digest, visibility, auth_file):
         _log_api_error(e)
         return False
     return True
+
+
+def change_visibility(base_urls, digest, visibility, auth_file):
+    data = [{
+        "op": "set_visibility",
+        "visibility": visibility,
+    }]
+    return send_operation_on_file(data, base_urls, digest, visibility, auth_file)
+
+
+def delete_instances(base_urls, digest, auth_file):
+    data = [{
+        "op": "delete_instances",
+    }]
+    return send_operation_on_file(data, base_urls, digest, auth_file)
 
 
 def process_command(options, args):
@@ -1259,6 +1269,15 @@ def process_command(options, args):
             options.get('base_url'),
             options.get('digest'),
             options.get('visibility'),
+            options.get('auth_file'),
+        )
+    elif cmd == 'delete':
+        if not options.get('digest'):
+            log.critical('change-visibility command requires a digest option')
+            return False
+        return delete_instances(
+            options.get('base_url'),
+            options.get('digest'),
             options.get('auth_file'),
         )
     else:
