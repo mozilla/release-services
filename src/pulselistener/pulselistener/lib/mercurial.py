@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import asyncio
 import atexit
 import enum
 import io
@@ -11,7 +10,6 @@ import json
 import os
 import tempfile
 import time
-from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 import structlog
@@ -72,17 +70,11 @@ class Repository(object):
         os.unlink(self.ssh_key_path)
         logger.info('Removed ssh key')
 
-    async def clone(self):
-        # Start by updating the repo in a separate process
-        loop = asyncio.get_running_loop()
-        with ProcessPoolExecutor() as pool:
-            logger.info('Checking out tip in a separate process', repo=self.url)
-            await loop.run_in_executor(
-                pool,
-                batch_checkout,
-                self.url, self.dir, b'tip', self.batch_size,
-            )
-            logger.info('Batch checkout finished')
+    def clone(self):
+        # Start by updating the repo using batch checkout
+        logger.info('Checking out tip', repo=self.url)
+        batch_checkout(self.url, self.dir, b'tip', self.batch_size)
+        logger.info('Batch checkout finished')
 
         # Setup repo in main process
         self.repo = hglib.open(self.dir)
@@ -252,7 +244,7 @@ class MercurialWorker(object):
         # First clone all repositories
         for repo in self.repositories.values():
             logger.info('Cloning repo {}'.format(repo))
-            await repo.clone()
+            repo.clone()
 
         # Wait for phabricator diffs to apply
         while True:
