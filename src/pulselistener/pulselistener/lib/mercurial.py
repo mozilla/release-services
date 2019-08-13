@@ -80,7 +80,7 @@ class Repository(object):
         elif self.checkout_mode == 'robust':
             robust_checkout(self.url, self.dir, b'tip')
         else:
-            raise Exception('Unsupported clone mode', mode=self.checkout_mode)
+            raise Exception('Unsupported clone mode: {}'.format(self.checkout_mode))
         logger.info('Full checkout finished')
 
         # Setup repo in main process
