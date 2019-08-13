@@ -159,6 +159,7 @@ update currentRoute msg model =
                                 ( { model
                                     | tree = RemoteData.Loading
                                     , treeLogs = RemoteData.Loading
+                                    , treeLogsAll = RemoteData.NotAsked
                                     , treesSelected = [ name ]
                                   }
                                 , Cmd.batch
