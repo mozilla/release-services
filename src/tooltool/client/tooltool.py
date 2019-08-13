@@ -1201,6 +1201,7 @@ def send_operation_on_file(data, base_urls, digest, auth_file):
         return False
     return True
 
+
 def change_visibility(base_urls, digest, visibility, auth_file):
     data = [{
         "op": "set_visibility",
