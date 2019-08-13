@@ -383,6 +383,7 @@ class TaskLabel extends React.PureComponent {
       submitted: props.submitted,
       errorMsg: null,
       selectedSignoff: null,
+      inProgress: false,
     };
   }
 
