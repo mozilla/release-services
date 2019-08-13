@@ -17,6 +17,7 @@ from libmozdata.phabricator import PhabricatorPatch
 
 from pulselistener.lib.phabricator import PhabricatorBuild
 from pulselistener.lib.utils import batch_checkout
+from pulselistener.lib.utils import robust_checkout
 
 logger = structlog.get_logger(__name__)
 
@@ -37,6 +38,7 @@ class Repository(object):
         self.name = config['name']
         self.url = config['url']
         self.dir = os.path.join(cache_root, config['name'])
+        self.checkout_mode = config.get('checkout', 'batch')
         self.batch_size = config.get('batch_size', 10000)
         self.try_url = config['try_url']
         self.try_mode = TryMode(config.get('try_mode', 'json'))
@@ -72,9 +74,14 @@ class Repository(object):
 
     def clone(self):
         # Start by updating the repo using batch checkout
-        logger.info('Checking out tip', repo=self.url)
-        batch_checkout(self.url, self.dir, b'tip', self.batch_size)
-        logger.info('Batch checkout finished')
+        logger.info('Checking out tip', repo=self.url, mode=self.checkout_mode)
+        if self.checkout_mode == 'batch':
+            batch_checkout(self.url, self.dir, b'tip', self.batch_size)
+        elif self.checkout_mode == 'robust':
+            robust_checkout(self.url, self.dir, b'tip')
+        else:
+            raise Exception('Unsupported clone mode', mode=self.checkout_mode)
+        logger.info('Full checkout finished')
 
         # Setup repo in main process
         self.repo = hglib.open(self.dir)

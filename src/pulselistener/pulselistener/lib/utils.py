@@ -112,3 +112,18 @@ def batch_checkout(repo_url, repo_dir, revision=b'tip', batch_size=100000):
     for rev in steps:
         log.info('Moving repo to revision', dir=repo_dir, rev=rev)
         repo.update(rev=rev)
+
+
+def robust_checkout(repo_url, repo_dir, branch=b'tip'):
+    '''
+    Helper to clone Mozilla Central using the robustcheckout extension
+    '''
+    assert isinstance(branch, bytes)
+
+    cmd = hglib.util.cmdbuilder('robustcheckout',
+                                repo_url,
+                                repo_dir,
+                                purge=True,
+                                sharebase=f'{repo_dir}-shared',
+                                branch=branch)
+    hg_run(cmd)
