@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import asyncio
 import atexit
 import enum
 import io
@@ -11,7 +10,6 @@ import json
 import os
 import tempfile
 import time
-from concurrent.futures import ProcessPoolExecutor
 
 import hglib
 import structlog
@@ -19,6 +17,7 @@ from libmozdata.phabricator import PhabricatorPatch
 
 from pulselistener.lib.phabricator import PhabricatorBuild
 from pulselistener.lib.utils import batch_checkout
+from pulselistener.lib.utils import robust_checkout
 
 logger = structlog.get_logger(__name__)
 
@@ -39,6 +38,7 @@ class Repository(object):
         self.name = config['name']
         self.url = config['url']
         self.dir = os.path.join(cache_root, config['name'])
+        self.checkout_mode = config.get('checkout', 'batch')
         self.batch_size = config.get('batch_size', 10000)
         self.try_url = config['try_url']
         self.try_mode = TryMode(config.get('try_mode', 'json'))
@@ -72,17 +72,15 @@ class Repository(object):
         os.unlink(self.ssh_key_path)
         logger.info('Removed ssh key')
 
-    async def clone(self):
-        # Start by updating the repo in a separate process
-        loop = asyncio.get_running_loop()
-        with ProcessPoolExecutor() as pool:
-            logger.info('Checking out tip in a separate process', repo=self.url)
-            await loop.run_in_executor(
-                pool,
-                batch_checkout,
-                self.url, self.dir, b'tip', self.batch_size,
-            )
-            logger.info('Batch checkout finished')
+    def clone(self):
+        logger.info('Checking out tip', repo=self.url, mode=self.checkout_mode)
+        if self.checkout_mode == 'batch':
+            batch_checkout(self.url, self.dir, b'tip', self.batch_size)
+        elif self.checkout_mode == 'robust':
+            robust_checkout(self.url, self.dir, b'tip')
+        else:
+            hglib.clone(self.url, self.dir)
+        logger.info('Full checkout finished')
 
         # Setup repo in main process
         self.repo = hglib.open(self.dir)
@@ -252,7 +250,7 @@ class MercurialWorker(object):
         # First clone all repositories
         for repo in self.repositories.values():
             logger.info('Cloning repo {}'.format(repo))
-            await repo.clone()
+            repo.clone()
 
         # Wait for phabricator diffs to apply
         while True:
