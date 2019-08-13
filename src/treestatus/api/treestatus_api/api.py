@@ -202,7 +202,7 @@ def _statuspage_resolve_incident(
         )
 
 
-def _notify_status_change(trees_changes, tags=[]):
+def _notify_status_change(trees_changes):
     if flask.current_app.config.get('STATUSPAGE_ENABLE'):
         log.debug('Notify statuspage about trees changes.')
 
@@ -214,7 +214,7 @@ def _notify_status_change(trees_changes, tags=[]):
             headers = {'Authorization': f'OAuth {token}'}
 
             for tree_change in trees_changes:
-                tree, status_from, status_to = tree_change
+                tree, status_from, status_to, tags = tree_change
 
                 if tree.tree not in components.keys():
                     continue
@@ -245,7 +245,7 @@ def _notify_status_change(trees_changes, tags=[]):
         exchange = flask.current_app.config.get('PULSE_TREESTATUS_EXCHANGE')
 
         for tree_change in trees_changes:
-            tree, status_from, status_to = tree_change
+            tree, status_from, status_to, tags = tree_change
 
             payload = {'status_from': status_from,
                        'status_to': status_to,
@@ -333,9 +333,10 @@ def update_trees(body):
         raise werkzeug.exceptions.BadRequest('tags are required when closing a tree')
 
     if not _is_unset(body, 'remember') and body['remember'] is True:
-        if _is_unset(body, 'status') or _is_unset(body, 'reason'):
+        if _is_unset(body, 'status') or _is_unset(body, 'reason') or \
+                _is_unset(body, 'tags'):
             raise werkzeug.exceptions.BadRequest(
-                'must specify status and reason to remember the change')
+                'must specify status, reason and tags to remember the change')
         # add a new stack entry with the new and existing states
         ch = treestatus_api.models.StatusChange(who=flask_login.current_user.get_id(),
                                                 reason=body['reason'],
@@ -346,7 +347,8 @@ def update_trees(body):
             stt = treestatus_api.models.StatusChangeTree(tree=tree.tree,
                                                          last_state=json.dumps({
                                                              'status': tree.status,
-                                                             'reason': tree.reason
+                                                             'reason': tree.reason,
+                                                             'tags': tree.tags,
                                                              }),
                                                          )
             ch.trees.append(stt)
@@ -369,11 +371,11 @@ def update_trees(body):
                             tags=new_tags,
                             )
         if new_status and current_status != new_status:
-            trees_status_change.append((tree, current_status, new_status))
+            trees_status_change.append((tree, current_status, new_status, new_tags))
 
     session.commit()
 
-    _notify_status_change(trees_status_change, new_tags)
+    _notify_status_change(trees_status_change)
 
     return None, 204
 
@@ -482,11 +484,12 @@ def _revert_change(id, revert=None):
             _update_tree_status(session, tree,
                                 status=last_state['status'],
                                 reason=last_state['reason'],
+                                tags=last_state.get('tags', []),
                                 )
 
             if last_state['status'] and current_status != last_state['status']:
                 trees_status_change.append(
-                    (tree, current_status, last_state['status']))
+                    (tree, current_status, last_state['status']), last_state.get('tags', []))
 
     session.delete(ch)
     session.commit()
