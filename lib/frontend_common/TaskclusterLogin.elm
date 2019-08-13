@@ -194,7 +194,13 @@ update msg model =
                     ( { model | credentials = Just credentials }, Cmd.none )
 
                 Err error ->
-                    ( { model | credentials = Nothing }, Cmd.none )
+                    ( { model
+                        | code = Nothing
+                        , tokens = Nothing
+                        , credentials = Nothing
+                      }
+                    , Cmd.none
+                    )
 
 
 loadTaskclusterCredentials : Model -> ( Model, Cmd Msg )
