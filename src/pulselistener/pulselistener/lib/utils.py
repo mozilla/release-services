@@ -2,6 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import asyncio
 import fcntl
 import os
 import time
@@ -33,6 +34,30 @@ def retry(operation,
             if retries == 0:
                 raise
             time.sleep(wait_between_retries)
+
+
+def run_tasks(awaitables):
+    '''
+    Helper to run tasks concurrenlty, but when an exception is raised
+    by one of the tasks, the whole stack stops.
+    '''
+    assert isinstance(awaitables, list)
+
+    async def _run():
+        try:
+            # Create a task grouping all awaitables
+            # and running them concurrently
+            task = asyncio.gather(*awaitables)
+            await task
+        except Exception as e:
+            log.error('Failure while running async tasks', error=str(e))
+
+            # When ANY exception from one of the awaitables
+            # make sure the other awaitables are cancelled
+            task.cancel()
+
+    event_loop = asyncio.get_event_loop()
+    event_loop.run_until_complete(_run())
 
 
 def hg_run(cmd):
@@ -116,7 +141,7 @@ def batch_checkout(repo_url, repo_dir, revision=b'tip', batch_size=100000):
 
 def robust_checkout(repo_url, repo_dir, branch=b'tip'):
     '''
-    Helper to clone Mozilla Central using the robustcheckout extension
+    Helper to clone a mercurial repo using the robustcheckout extension
     '''
     assert isinstance(branch, bytes)
 

@@ -15,6 +15,7 @@ class WebServer(object):
     WebServer used to receive hook
     '''
     def __init__(self, queue_name):
+        self.process = None
         self.http_port = int(os.environ.get('PORT', 9000))
         self.queue_name = queue_name
         logger.info('HTTP webhook server will listen', port=self.http_port)
@@ -38,11 +39,16 @@ class WebServer(object):
             web.run_app(self.app, port=self.http_port, print=logger.info)
 
         # Run webserver in its own process
-        server = Process(target=_run)
-        server.start()
-        logger.info('Web server started', pid=server.pid)
+        self.process = Process(target=_run)
+        self.process.start()
+        logger.info('Web server started', pid=self.process.pid)
 
-        return server
+        return self.process
+
+    def stop(self):
+        assert self.process is not None, 'Web server not started'
+        self.process.kill()
+        logger.info('Web server stopped')
 
     async def ping(self, request):
         '''
