@@ -348,7 +348,7 @@ def update_trees(body):
                                                          last_state=json.dumps({
                                                              'status': tree.status,
                                                              'reason': tree.reason,
-                                                             'tags': tree.tags,
+                                                             'tags': _get(body, 'tags', []),
                                                              }),
                                                          )
             ch.trees.append(stt)
