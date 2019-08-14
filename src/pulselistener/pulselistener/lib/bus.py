@@ -2,6 +2,7 @@
 import asyncio
 import inspect
 import multiprocessing
+from queue import Empty
 
 from cli_common.log import get_logger
 
@@ -52,7 +53,15 @@ class MessageBus(object):
             return await queue.get()
         else:
             # Run the synchronous mp queue.get in the asynchronous loop
-            return await asyncio.get_running_loop().run_in_executor(None, queue.get)
+            # but use an asyncio sleep to be able to react to cancellation
+            async def _get():
+                while True:
+                    try:
+                        return queue.get(timeout=1)
+                    except Empty:
+                        await asyncio.sleep(0)
+
+            return await _get()
 
     async def run(self, method, input_name, output_name=None):
         '''

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import asyncio
-
 import requests
 import structlog
 
@@ -15,8 +13,8 @@ from pulselistener.lib.bus import MessageBus
 from pulselistener.lib.mercurial import MercurialWorker
 from pulselistener.lib.monitoring import Monitoring
 from pulselistener.lib.pulse import PulseListener
-from pulselistener.lib.pulse import run_consumer
 from pulselistener.lib.utils import retry
+from pulselistener.lib.utils import run_tasks
 from pulselistener.lib.web import WebServer
 
 logger = structlog.get_logger(__name__)
@@ -208,7 +206,7 @@ class EventListener(object):
                 )
 
             # Start the web server in its own process
-            web_process = self.webserver.start()
+            self.webserver.start()
 
         if self.code_coverage:
             consumers += [
@@ -223,7 +221,8 @@ class EventListener(object):
             ]
 
         # Run all tasks concurrently
-        run_consumer(asyncio.gather(*consumers))
+        run_tasks(consumers)
 
-        if self.code_review:
-            web_process.join()
+        # Stop the webserver when other async process are stopped
+        if self.webserver:
+            self.webserver.stop()

@@ -5,7 +5,6 @@
 
 import asyncio
 import json
-import sys
 
 import aioamqp
 import structlog
@@ -82,25 +81,6 @@ async def create_pulse_listener(user, password, exchange, topic, callback):
         await asyncio.sleep(10)
         # raise AmqpClosedConnection in case the connection is closed.
         await protocol.ensure_open()
-
-
-def run_consumer(consumer):
-    '''
-    Helper to run indefinitely an asyncio consumer
-    '''
-    event_loop = asyncio.get_event_loop()
-
-    try:
-        event_loop.run_until_complete(consumer)
-        event_loop.run_forever()
-    except KeyboardInterrupt:
-        # TODO: make better shutdown
-        logger.exception('KeyboardInterrupt registered, exiting.')
-        event_loop.stop()
-        while event_loop.is_running():
-            pass
-        event_loop.close()
-        sys.exit()
 
 
 class PulseListener(object):
