@@ -186,3 +186,19 @@ appendItem item items =
 appendItems : List a -> List a -> List a
 appendItems items1 items2 =
     List.append items2 items1
+
+
+treeStatusLevel : String -> String
+treeStatusLevel status =
+    case status of
+        "closed" ->
+            "danger"
+
+        "open" ->
+            "success"
+
+        "approval required" ->
+            "warning"
+
+        _ ->
+            "default"

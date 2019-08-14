@@ -344,11 +344,16 @@ def update_trees(body):
                                                 status=body['status'],
                                                 )
         for tree in trees:
+            last_tree_log = treestatus_api.models.Log.query \
+                .filter_by(tree=tree.tree) \
+                .order_by(treestatus_api.models.Log.when.desc()) \
+                .limit(1) \
+                .one()
             stt = treestatus_api.models.StatusChangeTree(tree=tree.tree,
                                                          last_state=json.dumps({
                                                              'status': tree.status,
                                                              'reason': tree.reason,
-                                                             'tags': _get(body, 'tags', []),
+                                                             'tags': last_tree_log.tags,
                                                              }),
                                                          )
             ch.trees.append(stt)
@@ -489,7 +494,7 @@ def _revert_change(id, revert=None):
 
             if last_state['status'] and current_status != last_state['status']:
                 trees_status_change.append(
-                    (tree, current_status, last_state['status']), last_state.get('tags', []))
+                    (tree, current_status, last_state['status'], last_state.get('tags', [])))
 
     session.delete(ch)
     session.commit()

@@ -109,11 +109,27 @@ decoderRecentChange : JsonDecode.Decoder App.TreeStatus.Types.RecentChange
 decoderRecentChange =
     JsonDecode.map6 App.TreeStatus.Types.RecentChange
         (JsonDecode.field "id" JsonDecode.int)
-        (JsonDecode.field "trees" (JsonDecode.list JsonDecode.string))
+        (JsonDecode.field "trees" (JsonDecode.list decoderRecentChangeTree))
         (JsonDecode.field "when" JsonDecode.string)
         (JsonDecode.field "who" JsonDecode.string)
         (JsonDecode.field "status" JsonDecode.string)
         (JsonDecode.field "reason" JsonDecode.string)
+
+
+decoderRecentChangeTree : JsonDecode.Decoder App.TreeStatus.Types.RecentChangeTree
+decoderRecentChangeTree =
+    JsonDecode.map3 App.TreeStatus.Types.RecentChangeTree
+        (JsonDecode.field "id" JsonDecode.int)
+        (JsonDecode.field "tree" JsonDecode.string)
+        (JsonDecode.field "last_state" decoderRecentChangeTreeLastState)
+
+
+decoderRecentChangeTreeLastState : JsonDecode.Decoder App.TreeStatus.Types.RecentChangeTreeLastState
+decoderRecentChangeTreeLastState =
+    JsonDecode.map3 App.TreeStatus.Types.RecentChangeTreeLastState
+        (JsonDecode.field "reason" JsonDecode.string)
+        (JsonDecode.field "status" JsonDecode.string)
+        (JsonDecode.field "tags" (JsonDecode.list JsonDecode.string))
 
 
 get :

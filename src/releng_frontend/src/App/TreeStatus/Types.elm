@@ -39,9 +39,23 @@ type alias TreeLogs =
     List TreeLog
 
 
+type alias RecentChangeTreeLastState =
+    { reason : String
+    , status : String
+    , tags : List String
+    }
+
+
+type alias RecentChangeTree =
+    { id : Int
+    , tree : String
+    , last_state : RecentChangeTreeLastState
+    }
+
+
 type alias RecentChange =
     { id : Int
-    , trees : List String
+    , trees : List RecentChangeTree
     , when : String
     , who : String
     , status : String
@@ -99,14 +113,14 @@ possibleTreeStatuses =
     ]
 
 
-possibleTreeTags : List ( String, String, String )
+possibleTreeTags : List ( String, String )
 possibleTreeTags =
-    [ ( "checkin-compilation", "checkin_compilation", "Check-in compilation failure" )
-    , ( "checkin-test", "checkin_test", "Check-in test failure" )
-    , ( "infra", "infra", "Infrastructure related" )
-    , ( "backlog", "backlog", "Job backlog" )
-    , ( "planned", "planned", "Planned closure" )
-    , ( "merges", "merges", "Merges" )
-    , ( "waiting-for-coverage", "waiting_for_coverage", "Waiting for coverage" )
-    , ( "other", "other", "Other" )
+    [ ( "checkin_compilation", "Check-in compilation failure" )
+    , ( "checkin_test", "Check-in test failure" )
+    , ( "infra", "Infrastructure related" )
+    , ( "backlog", "Job backlog" )
+    , ( "planned", "Planned closure" )
+    , ( "merges", "Merges" )
+    , ( "waiting_for_coverage", "Waiting for coverage" )
+    , ( "other", "Other" )
     ]

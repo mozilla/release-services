@@ -21,23 +21,11 @@ type alias AddTree =
     { name : String }
 
 
-type alias UpadateTreeTags =
-    { checkin_compilation : Bool
-    , checkin_test : Bool
-    , infra : Bool
-    , backlog : Bool
-    , planned : Bool
-    , merges : Bool
-    , waiting_for_coverage : Bool
-    , other : Bool
-    }
-
-
 type alias UpdateTree =
     { status : String
     , reason : String
     , message_of_the_day : String
-    , tags : UpadateTreeTags
+    , tags : String
     , remember : Bool
     }
 
@@ -46,19 +34,6 @@ validateAddTree : Form.Validate.Validation () AddTree
 validateAddTree =
     Form.Validate.map AddTree
         (Form.Validate.field "name" Form.Validate.string)
-
-
-validateUpdateTreeTags : Form.Field.Field -> Result (Form.Error.Error a) UpadateTreeTags
-validateUpdateTreeTags =
-    Form.Validate.map8 UpadateTreeTags
-        (Form.Validate.field "checkin_compilation" Form.Validate.bool)
-        (Form.Validate.field "checkin_test" Form.Validate.bool)
-        (Form.Validate.field "infra" Form.Validate.bool)
-        (Form.Validate.field "backlog" Form.Validate.bool)
-        (Form.Validate.field "planned" Form.Validate.bool)
-        (Form.Validate.field "merges" Form.Validate.bool)
-        (Form.Validate.field "waiting_for_coverage" Form.Validate.bool)
-        (Form.Validate.field "other" Form.Validate.bool)
 
 
 validateUpdateTree : Form.Validate.Validation () UpdateTree
@@ -71,7 +46,7 @@ validateUpdateTree =
         (Form.Validate.field "message_of_the_day" Form.Validate.string
             |> Form.Validate.defaultValue ""
         )
-        (Form.Validate.field "tags" validateUpdateTreeTags)
+        (Form.Validate.field "tags" Form.Validate.string)
         (Form.Validate.field "remember" Form.Validate.bool)
 
 
@@ -85,11 +60,7 @@ initUpdateTreeFields =
     [ ( "status", Form.Field.string "" )
     , ( "reason", Form.Field.string "" )
     , ( "message_of_the_day", Form.Field.string "" )
-    , ( "tags"
-      , App.TreeStatus.Types.possibleTreeTags
-            |> List.map (\( _, x, _ ) -> ( x, Form.Field.bool False ))
-            |> Form.Field.group
-      )
+    , ( "tags", Form.Field.string "" )
     , ( "remember", Form.Field.bool True )
     ]
 
@@ -173,24 +144,6 @@ updateUpdateTree route model formMsg =
         form =
             Form.update validateUpdateTree formMsg model.formUpdateTree
 
-        tagsToList tags =
-            List.filterMap
-                (\( x, y ) ->
-                    if y then
-                        Just x
-                    else
-                        Nothing
-                )
-                [ ( "checkin-compilation", tags.checkin_compilation )
-                , ( "checkin-test", tags.checkin_test )
-                , ( "infra", tags.infra )
-                , ( "backlog", tags.backlog )
-                , ( "planned", tags.planned )
-                , ( "merges", tags.merges )
-                , ( "waiting-for-coverage", tags.waiting_for_coverage )
-                , ( "other", tags.other )
-                ]
-
         createRequest data =
             Hawk.Request
                 "UpdateTrees"
@@ -201,7 +154,7 @@ updateUpdateTree route model formMsg =
                     { trees = model.treesSelected
                     , status = data.status
                     , reason = data.reason
-                    , tags = tagsToList data.tags
+                    , tags = [ data.tags ]
                     , remember = data.remember
                     }
                         |> App.TreeStatus.Api.encoderUpdateTrees
@@ -209,7 +162,7 @@ updateUpdateTree route model formMsg =
                     { trees = model.treesSelected
                     , status = data.status
                     , reason = data.reason
-                    , tags = tagsToList data.tags
+                    , tags = [ data.tags ]
                     , message_of_the_day = data.message_of_the_day
                     , remember = data.remember
                     }
@@ -243,26 +196,27 @@ updateUpdateTree route model formMsg =
 getUpdateTreeErrors : Form.Form e o -> List ( String, Form.Error.ErrorValue e )
 getUpdateTreeErrors form =
     let
-        validateReason form =
+        requiredOnClose field form =
             let
                 status =
                     Form.getFieldAsString "status" form
 
-                reason =
-                    Form.getFieldAsString "reason" form
+                data =
+                    Form.getFieldAsString field form
             in
             if
                 Maybe.withDefault "" status.value
                     == "closed"
-                    && Maybe.withDefault "" reason.value
+                    && Maybe.withDefault "" data.value
                     == ""
             then
-                [ ( "reason", Form.Error.Empty ) ]
+                [ ( field, Form.Error.Empty ) ]
             else
                 []
     in
     Form.getErrors form
-        |> List.append (validateReason form)
+        |> List.append (requiredOnClose "reason" form)
+        |> List.append (requiredOnClose "tags" form)
 
 
 fieldClass : { b | error : Maybe a } -> String
@@ -335,7 +289,24 @@ viewUpdateTree treesSelected trees form =
                     (text "You are about to update the following trees:")
                 |> App.Utils.appendItem
                     (treesSelected
-                        |> List.map (\x -> li [] [ text x ])
+                        |> List.map (\treeName ->
+                            let
+                              status = trees
+                                  |> RemoteData.map (List.filter (\t -> t.name == treeName))
+                                  |> RemoteData.map (List.map (\t -> t.status))
+                                  |> RemoteData.toMaybe
+                                  |> Maybe.withDefault []
+                                  |> List.head
+                                  |> Maybe.withDefault "closed"
+                            in
+                            li []
+                                              [ text treeName
+                                              , text " ("
+                                              , span
+                                                  [ class ("badge badge-" ++ App.Utils.treeStatusLevel status) ]
+                                                  [ text status ]
+                                              , text ")"
+                                              ])
                         |> ul []
                     )
             )
@@ -350,20 +321,18 @@ viewUpdateTree treesSelected trees form =
                     |> List.append [ ( "", "" ) ]
                 )
                 []
-            , div
-                [ class "form-group" ]
-                [ label [ class "control-label" ] [ text "Tags" ]
-                , div
-                    []
-                    (List.map
-                        (\( _, x, y ) ->
-                            App.Form.viewCheckboxInput
-                                (Form.getFieldAsBool ("tags." ++ x) form)
-                                y
-                        )
-                        App.TreeStatus.Types.possibleTreeTags
-                    )
-                ]
+            , App.Form.viewSelectInput
+                (Form.getFieldAsString "tags" form)
+                (if (Form.getFieldAsString "status" form).value == Just "closed" then
+                    "Reason category (required to close)"
+                 else
+                    "Reason category"
+                )
+                []
+                (App.TreeStatus.Types.possibleTreeTags
+                    |> List.append [ ( "", "" ) ]
+                )
+                []
             , App.Form.viewTextInput
                 (Form.getFieldAsString "reason" form)
                 (if (Form.getFieldAsString "status" form).value == Just "closed" then

@@ -24,22 +24,6 @@ onClickGoTo route =
     Utils.onClick (App.TreeStatus.Types.NavigateTo route)
 
 
-treeStatusLevel : String -> String
-treeStatusLevel status =
-    case status of
-        "closed" ->
-            "danger"
-
-        "open" ->
-            "success"
-
-        "approval required" ->
-            "warning"
-
-        _ ->
-            "default"
-
-
 bugzillaBugAsLink : String -> List (Html a)
 bugzillaBugAsLink text_ =
     let
@@ -48,52 +32,50 @@ bugzillaBugAsLink text_ =
 
         previousWords =
             Nothing :: List.map Just words
-
-        asLink number =
-            a [ href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ number) ]
-                [ text ("Bug " ++ number) ]
     in
     List.map2 (\x y -> ( x, y )) previousWords words
-        |> List.filter (\( x, y ) -> y /= "Bug")
+        |> List.filter (\( _, word ) -> word /= "Bug")
         |> List.map
-            (\( x, y ) ->
-                if x == Just "Bug" then
-                    asLink y
+            (\( previousWord, number ) ->
+                if previousWord == Just "Bug" then
+                    a [ href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ number) ]
+                        [ text ("Bug " ++ number) ]
                 else
-                    text (" " ++ y ++ " ")
+                    text (" " ++ number ++ " ")
             )
+
+
+viewRecentChangeTree : String -> App.TreeStatus.Types.RecentChangeTree -> Html App.TreeStatus.Types.Msg
+viewRecentChangeTree status tree =
+    li []
+        [ em [] [ text tree.tree ]
+        , span [] [ text " from " ]
+        , span
+            [ class ("badge badge-" ++ App.Utils.treeStatusLevel tree.last_state.status) ]
+            [ text tree.last_state.status ]
+        , span [] [ text " to " ]
+        , span
+            [ class ("badge badge-" ++ App.Utils.treeStatusLevel status) ]
+            [ text status ]
+        ]
 
 
 viewRecentChange :
     List String
-    -> Bool
     ->
         { a
             | id : Int
             , reason : String
-            , trees : List String
+            , trees : List App.TreeStatus.Types.RecentChangeTree
             , when : String
             , who : String
             , status : String
         }
     -> List (Html App.TreeStatus.Types.Msg)
-viewRecentChange scopes plural recentChange =
+viewRecentChange scopes recentChange =
     let
-        treeLabel =
-            if plural then
-                "trees "
-            else
-                "tree "
-
-        recentChangeReason =
-            let
-                words =
-                    bugzillaBugAsLink recentChange.reason
-            in
-            if List.isEmpty words then
-                []
-            else
-                text " with reason: " :: words
+        reason =
+            bugzillaBugAsLink recentChange.reason
 
         parseTimestamp timestamp =
             timestamp
@@ -115,20 +97,21 @@ viewRecentChange scopes plural recentChange =
             [ class "list-group-item justify-content-between" ]
             [ div
                 []
-                (List.append
+                [ p
+                    []
                     [ text "At "
-                    , text (parseTimestamp recentChange.when)
-                    , text (" " ++ TaskclusterLogin.shortUsername recentChange.who)
-                    , text " changed "
-                    , text treeLabel
-                    , em [] [ text (String.join ", " recentChange.trees) ]
-                    , text " to "
-                    , span
-                        [ class ("badge badge-" ++ treeStatusLevel recentChange.status) ]
-                        [ text recentChange.status ]
+                    , em [] [ text (parseTimestamp recentChange.when) ]
+                    , b [] [ text (" " ++ TaskclusterLogin.shortUsername recentChange.who) ]
+                    , text " changed trees:"
                     ]
-                    recentChangeReason
-                )
+                , ul
+                    []
+                    (List.map (viewRecentChangeTree recentChange.status) recentChange.trees)
+                , if List.isEmpty reason then
+                    text ""
+                  else
+                    p [] [ text "With reason: ", b [] reason ]
+                ]
             , div
                 [ class "btn-group" ]
                 [ button
@@ -166,7 +149,7 @@ viewRecentChanges scopes recentChanges =
 
                 recentChanges =
                     data
-                        |> List.map (viewRecentChange scopes (List.length data > 1))
+                        |> List.map (viewRecentChange scopes)
                         |> List.concat
             in
             [ div
@@ -206,7 +189,7 @@ viewTreesItem scopes treesSelected tree =
                 |> App.TreeStatus.Types.NavigateTo
 
         treeTagClass =
-            "float-xs-right badge badge-" ++ treeStatusLevel tree.status
+            "float-xs-right badge badge-" ++ App.Utils.treeStatusLevel tree.status
 
         checkboxItem =
             if hasScope "trees/update" scopes || hasScope "trees/delete" scopes then
@@ -500,7 +483,7 @@ viewTreeDetails remote =
                     [ text tree.name ]
                 , text " status is "
                 , span
-                    [ class ("badge badge-" ++ treeStatusLevel tree.status) ]
+                    [ class ("badge badge-" ++ App.Utils.treeStatusLevel tree.status) ]
                     [ text tree.status ]
                 , p [ class "lead" ] (bugzillaBugAsLink tree.message_of_the_day)
                 ]
@@ -535,7 +518,7 @@ viewTreeLog log =
     in
     div [ class "timeline-item" ]
         --TODO: show status in hover of the badge
-        [ div [ class <| "timeline-badge badge-" ++ treeStatusLevel log.status ]
+        [ div [ class <| "timeline-badge badge-" ++ App.Utils.treeStatusLevel log.status ]
             [ text " " ]
         , div [ class "timeline-panel" ]
             [ div [ class "timeline-time" ]
@@ -550,7 +533,7 @@ viewTreeLog log =
                             [ class "badge badge-default" ]
                             [ App.TreeStatus.Types.possibleTreeTags
                                 |> List.filterMap
-                                    (\( x, _, y ) ->
+                                    (\( x, y ) ->
                                         if x == tag then
                                             Just y
                                         else

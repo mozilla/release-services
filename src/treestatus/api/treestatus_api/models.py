@@ -98,7 +98,7 @@ class StatusChange(db.Model):
 
     def to_dict(self):
         return dict(
-            trees=[t.tree for t in self.trees],
+            trees=[t.to_dict() for t in self.trees],
             status=self.status,
             when=self.when,
             who=self.who,
@@ -118,3 +118,10 @@ class StatusChangeTree(db.Model):
     last_state = sa.Column(sa.Text, nullable=False)
 
     stack = relation(StatusChange, backref='trees')
+
+    def to_dict(self):
+        return dict(
+            tree=self.tree,
+            last_state=json.loads(self.last_state),
+            id=self.id,
+        )

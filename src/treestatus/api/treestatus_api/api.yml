@@ -390,7 +390,31 @@ definitions:
         type: array
         description: the names of the affected trees
         items:
-          type: string
+          type: object
+          required:
+            - id
+            - tree
+            - last_state
+          properties:
+            id:
+              type: integer
+            tree:
+              type: string
+            last_state:
+              type: object
+              required:
+                - status
+                - reason
+                - tags
+              properties:
+                status:
+                  type: string
+                reason:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
       when:
         type: string # TODO: datetime
         description: the time the change occurred
