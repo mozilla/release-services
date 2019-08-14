@@ -73,14 +73,13 @@ class Repository(object):
         logger.info('Removed ssh key')
 
     def clone(self):
-        # Start by updating the repo using batch checkout
         logger.info('Checking out tip', repo=self.url, mode=self.checkout_mode)
         if self.checkout_mode == 'batch':
             batch_checkout(self.url, self.dir, b'tip', self.batch_size)
         elif self.checkout_mode == 'robust':
             robust_checkout(self.url, self.dir, b'tip')
         else:
-            raise Exception('Unsupported clone mode: {}'.format(self.checkout_mode))
+            hglib.clone(self.url, self.dir)
         logger.info('Full checkout finished')
 
         # Setup repo in main process
