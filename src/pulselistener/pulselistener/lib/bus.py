@@ -57,7 +57,7 @@ class MessageBus(object):
             async def _get():
                 while True:
                     try:
-                        return queue.get(timeout=1)
+                        return queue.get(timeout=0)
                     except Empty:
                         await asyncio.sleep(0)
 
