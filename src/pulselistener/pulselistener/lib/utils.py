@@ -38,7 +38,8 @@ def retry(operation,
 
 def run_tasks(awaitables):
     '''
-    Helper to run tasks concurrenlty and c
+    Helper to run tasks concurrenlty, but when an exception is raised
+    by one of the tasks, the whole stack stops.
     '''
     assert isinstance(awaitables, list)
 
@@ -55,7 +56,8 @@ def run_tasks(awaitables):
             # make sure the other awaitables are cancelled
             task.cancel()
 
-    asyncio.run(_run())
+    event_loop = asyncio.get_event_loop()
+    event_loop.run_until_complete(_run())
 
 
 def hg_run(cmd):
