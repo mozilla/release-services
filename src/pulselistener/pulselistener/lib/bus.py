@@ -59,7 +59,7 @@ class MessageBus(object):
                     try:
                         return queue.get(timeout=0)
                     except Empty:
-                        await asyncio.sleep(0)
+                        await asyncio.sleep(1)
 
             return await _get()
 
