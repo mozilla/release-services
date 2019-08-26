@@ -7,6 +7,7 @@ import copy
 
 import jsone
 import requests
+import yaml
 
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
@@ -21,7 +22,7 @@ class UnsupportedFlavor(Exception):
         self.description = description
 
 
-class ActionsJsonNotFound(Exception):
+class ArtifactNotFound(Exception):
     pass
 
 
@@ -38,16 +39,16 @@ def find_decision_task_id(project, revision):
     return index.findTask(decision_task_route)['taskId']
 
 
-def fetch_actions_json(task_id):
+def fetch_artifact(task_id, artifact):
     try:
         queue = get_service('queue')
-        actions_url = queue.buildUrl('getLatestArtifact', task_id, 'public/actions.json')
+        actions_url = queue.buildUrl('getLatestArtifact', task_id, artifact)
         q = requests.get(actions_url)
         q.raise_for_status()
-        return q.json()
+        return yaml.safe_load(q.text)
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
-            raise ActionsJsonNotFound
+            raise ArtifactNotFound
         raise
 
 
@@ -74,9 +75,9 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates, produc
     return SUPPORTED_FLAVORS[product_key]
 
 
-def generate_action_hook(task_group_id, action_name, actions, input_):
+def generate_action_hook(task_group_id, action_name, actions, parameters, input_):
     target_action = find_action(action_name, actions)
-    context = copy.deepcopy(actions['variables'])  # parameters
+    context = copy.deepcopy({'parameters': parameters})
     context.update({
         'taskGroupId': task_group_id,
         'taskId': None,
