@@ -42,8 +42,8 @@ def find_decision_task_id(project, revision):
 def fetch_artifact(task_id, artifact):
     try:
         queue = get_service('queue')
-        actions_url = queue.buildUrl('getLatestArtifact', task_id, artifact)
-        q = requests.get(actions_url)
+        url = queue.buildUrl('getLatestArtifact', task_id, artifact)
+        q = requests.get(url)
         q.raise_for_status()
         return yaml.safe_load(q.text)
     except requests.exceptions.HTTPError as e:
