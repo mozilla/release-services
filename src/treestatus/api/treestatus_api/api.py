@@ -300,18 +300,46 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
 
 @backend_common.cache.cache.memoize()
 def v0_get_tree(tree, format=None):
-    t = flask.current_app.db.session.query(treestatus_api.models.Tree).get(tree)
-    if not t:
-        raise werkzeug.exceptions.NotFound('No such tree')
-    return t.to_dict()
+    session = flask.current_app.db.session
+
+    q = session.query(treestatus_api.models.Tree)
+    q = q.distinct(treestatus_api.models.Tree.tree)
+    q = q.add_column(treestatus_api.models.Log._tags)
+    q = q.join(treestatus_api.models.Log,
+               treestatus_api.models.Log.tree == treestatus_api.models.Tree.tree)
+    q = q.order_by(treestatus_api.models.Tree.tree.desc(),
+                   treestatus_api.models.Log.when.desc())
+    q = q.filter(treestatus_api.models.Tree.tree == tree)
+
+    results = q.all()
+    if len(results) == 0:
+        raise werkzeug.exceptions.BadRequest(f'No tree {tree} found.')
+    if len(results) > 1:
+        raise werkzeug.exceptions.BadRequest(f'Too many trees with name {tree} found.')
+    tree, tags = results[0]
+
+    result = tree.to_dict()
+    result['tags'] = json.loads(tags)
+    return result
 
 
 def get_trees():
     session = flask.current_app.db.session
-    return dict(result={
-        t.tree: t.to_dict()
-        for t in session.query(treestatus_api.models.Tree)
-    })
+
+    q = session.query(treestatus_api.models.Tree)
+    q = q.distinct(treestatus_api.models.Tree.tree)
+    q = q.add_column(treestatus_api.models.Log._tags)
+    q = q.join(treestatus_api.models.Log,
+               treestatus_api.models.Log.tree == treestatus_api.models.Tree.tree)
+    q = q.order_by(treestatus_api.models.Tree.tree.desc(),
+                   treestatus_api.models.Log.when.desc())
+
+    result = dict()
+    for tree, tags in q.all():
+        result[tree.tree] = tree.to_dict()
+        result[tree.tree]['tags'] = json.loads(tags)
+
+    return dict(result=result)
 
 
 def get_trees2():
@@ -447,8 +475,8 @@ def get_logs(tree, all=0):
     return dict(result=logs)
 
 
-def v0_get_trees(format):
-    return get_trees()
+def v0_get_trees(format=None):
+    return get_trees()['result']
 
 
 def get_tree(tree):

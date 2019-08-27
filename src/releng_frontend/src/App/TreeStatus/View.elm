@@ -169,7 +169,7 @@ viewRecentChanges scopes recentChanges =
 viewTreesItem :
     List String
     -> List String
-    -> { a | reason : String, status : String, name : String }
+    -> { a | reason : String, status : String, name : String, tags : List String }
     -> Html App.TreeStatus.Types.Msg
 viewTreesItem scopes treesSelected tree =
     let
@@ -234,6 +234,26 @@ viewTreesItem scopes treesSelected tree =
                     |> List.append
                         [ h5 [ class "list-group-item-heading" ]
                             [ text tree.name
+                            , span [ style [("margin-left", "1em")] ] 
+                                (List.map
+                                    (\tag ->
+                                        span
+                                            [ class "badge badge-default" ]
+                                            [ App.TreeStatus.Types.possibleTreeTags
+                                                |> List.filterMap
+                                                    (\( x, y ) ->
+                                                        if x == tag then
+                                                            Just y
+                                                        else
+                                                            Nothing
+                                                    )
+                                                |> List.head
+                                                |> Maybe.withDefault tag
+                                                |> text
+                                            ]
+                                    )
+                                    tree.tags
+                                )
                             , span [ class treeTagClass ]
                                 [ text tree.status ]
                             ]

@@ -121,7 +121,7 @@ paths:
               result:
                 type: object
                 additionalProperties:
-                  $ref: '#/definitions/Tree'
+                  $ref: '#/definitions/TreeWithTags'
     patch:
       operationId: "treestatus_api.api.update_trees"
       description: |
@@ -168,7 +168,8 @@ paths:
               - result
             properties:
               result:
-                $ref: '#/definitions/Tree'
+                $ref: '#/definitions/TreeWithTags'
+
     put:
       operationId: "treestatus_api.api.make_tree"
       description: Make a new tree.
@@ -249,7 +250,7 @@ paths:
               result:
                 type: array
                 items:
-                  $ref: '#/definitions/Tree'
+                  $ref: '#/definitions/TreeWithTags'
     delete:
       operationId: "treestatus_api.api.kill_trees"
       description: Delete trees.
@@ -285,7 +286,7 @@ paths:
           schema:
             type: object
             additionalProperties:
-              $ref: '#/definitions/Tree'
+              $ref: '#/definitions/TreeWithTags'
 
   /v0/trees/{tree}:
     get:
@@ -307,7 +308,7 @@ paths:
         200:
           description: Tree
           schema:
-            $ref: '#/definitions/Tree'
+            $ref: '#/definitions/TreeWithTags'
 
 definitions:
 
@@ -332,6 +333,34 @@ definitions:
       message_of_the_day:
         type: string
         description: even more information about the status
+
+  TreeWithTags:
+    type: object
+    description: A representation of a single tree.
+    required:
+      - tree
+      - status
+      - reason
+      - message_of_the_day
+      - tags
+    properties:
+      tree:
+        type: string
+        description: the name of the tree
+      status:
+        type: string
+        description: the current status
+      reason:
+        type: string
+        description: the reason for the status
+      message_of_the_day:
+        type: string
+        description: even more information about the status
+      tags:
+        type: array
+        description: tags of the last change
+        items:
+          type: string
 
   TreeLog:
     type: object

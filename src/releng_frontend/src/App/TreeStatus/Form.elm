@@ -95,7 +95,7 @@ updateAddTree model formMsg =
             Form.update validateAddTree formMsg model.formAddTree
 
         tree name =
-            App.TreeStatus.Types.Tree name "closed" "new tree" ""
+            App.TreeStatus.Types.Tree name "closed" "new tree" "" []
 
         newTreeRequest name =
             Hawk.Request

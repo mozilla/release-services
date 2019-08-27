@@ -70,11 +70,12 @@ decoderTrees =
 
 decoderTree2 : JsonDecode.Decoder App.TreeStatus.Types.Tree
 decoderTree2 =
-    JsonDecode.map4 App.TreeStatus.Types.Tree
+    JsonDecode.map5 App.TreeStatus.Types.Tree
         (JsonDecode.field "tree" JsonDecode.string)
         (JsonDecode.field "status" JsonDecode.string)
         (JsonDecode.field "reason" JsonDecode.string)
         (JsonDecode.field "message_of_the_day" JsonDecode.string)
+        (JsonDecode.field "tags" (JsonDecode.list JsonDecode.string))
 
 
 decoderTree : JsonDecode.Decoder App.TreeStatus.Types.Tree

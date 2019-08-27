@@ -18,6 +18,7 @@ type alias Tree =
     , status : String
     , reason : String
     , message_of_the_day : String
+    , tags : List String
     }
 
 
