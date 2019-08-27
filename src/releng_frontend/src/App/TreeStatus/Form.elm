@@ -289,24 +289,27 @@ viewUpdateTree treesSelected trees form =
                     (text "You are about to update the following trees:")
                 |> App.Utils.appendItem
                     (treesSelected
-                        |> List.map (\treeName ->
-                            let
-                              status = trees
-                                  |> RemoteData.map (List.filter (\t -> t.name == treeName))
-                                  |> RemoteData.map (List.map (\t -> t.status))
-                                  |> RemoteData.toMaybe
-                                  |> Maybe.withDefault []
-                                  |> List.head
-                                  |> Maybe.withDefault "closed"
-                            in
-                            li []
-                                              [ text treeName
-                                              , text " ("
-                                              , span
-                                                  [ class ("badge badge-" ++ App.Utils.treeStatusLevel status) ]
-                                                  [ text status ]
-                                              , text ")"
-                                              ])
+                        |> List.map
+                            (\treeName ->
+                                let
+                                    status =
+                                        trees
+                                            |> RemoteData.map (List.filter (\t -> t.name == treeName))
+                                            |> RemoteData.map (List.map (\t -> t.status))
+                                            |> RemoteData.toMaybe
+                                            |> Maybe.withDefault []
+                                            |> List.head
+                                            |> Maybe.withDefault "closed"
+                                in
+                                li []
+                                    [ text treeName
+                                    , text " ("
+                                    , span
+                                        [ class ("badge badge-" ++ App.Utils.treeStatusLevel status) ]
+                                        [ text status ]
+                                    , text ")"
+                                    ]
+                            )
                         |> ul []
                     )
             )
