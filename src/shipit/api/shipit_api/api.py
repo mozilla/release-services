@@ -26,9 +26,9 @@ from shipit_api.models import Phase
 from shipit_api.models import Release
 from shipit_api.models import Signoff
 from shipit_api.release import Product
-from shipit_api.tasks import ActionsJsonNotFound
+from shipit_api.tasks import ArtifactNotFound
 from shipit_api.tasks import UnsupportedFlavor
-from shipit_api.tasks import fetch_actions_json
+from shipit_api.tasks import fetch_artifact
 from shipit_api.tasks import generate_action_hook
 from shipit_api.tasks import render_action_hook
 
@@ -229,8 +229,9 @@ def abandon_release(name):
         # Cancel all submitted task groups first
         for phase in filter(lambda x: x.submitted, release.phases):
             try:
-                actions = fetch_actions_json(phase.task_id)
-            except ActionsJsonNotFound:
+                actions = fetch_artifact(phase.task_id, 'public/actions.json')
+                parameters = fetch_artifact(phase.task_id, 'public/parameters.yml')
+            except ArtifactNotFound:
                 logger.info('Ignoring not completed action task %s', phase.task_id)
                 continue
 
@@ -238,6 +239,7 @@ def abandon_release(name):
                 task_group_id=phase.task_id,
                 action_name='cancel-all',
                 actions=actions,
+                parameters=parameters,
                 input_={},
             )
             hooks = get_service('hooks')

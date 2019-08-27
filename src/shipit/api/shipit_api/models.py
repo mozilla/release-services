@@ -18,7 +18,7 @@ from shipit_api.release import bump_version
 from shipit_api.release import is_eme_free_enabled
 from shipit_api.release import is_partner_enabled
 from shipit_api.tasks import extract_our_flavors
-from shipit_api.tasks import fetch_actions_json
+from shipit_api.tasks import fetch_artifact
 from shipit_api.tasks import find_action
 from shipit_api.tasks import find_decision_task_id
 from shipit_api.tasks import generate_action_hook
@@ -201,6 +201,7 @@ class Release(db.Model):
                 task_group_id=self.decision_task_id,
                 action_name='release-promotion',
                 actions=self.actions,
+                parameters=self.parameters,
                 input_=input_,
             )
             hook_no_context = {k: v for k, v in hook.items() if k != 'context'}
@@ -226,7 +227,11 @@ class Release(db.Model):
 
     @property
     def actions(self):
-        return fetch_actions_json(self.decision_task_id)
+        return fetch_artifact(self.decision_task_id, 'public/actions.json')
+
+    @property
+    def parameters(self):
+        return fetch_artifact(self.decision_task_id, 'public/parameters.yml')
 
     def release_promotion_flavors(self):
         relpro = find_action('release-promotion', self.actions)

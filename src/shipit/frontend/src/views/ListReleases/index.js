@@ -383,6 +383,7 @@ class TaskLabel extends React.PureComponent {
       submitted: props.submitted,
       errorMsg: null,
       selectedSignoff: null,
+      inProgress: false,
     };
   }
 
@@ -399,6 +400,7 @@ class TaskLabel extends React.PureComponent {
   };
 
   signOff = async () => {
+    this.setState({ inProgress: true });
     const { accessToken } = this.context.authController.getUserSession();
     const { releaseName, name } = this.props;
     const { selectedSignoff } = this.state;
@@ -419,10 +421,13 @@ class TaskLabel extends React.PureComponent {
     } catch (e) {
       this.setState({ errorMsg: 'Server issues!' });
       throw e;
+    } finally {
+      this.setState({ inProgress: false });
     }
   };
 
   schedulePhase = async () => {
+    this.setState({ inProgress: true });
     const { accessToken } = this.context.authController.getUserSession();
     const { releaseName, name } = this.props;
     const headers = { Authorization: `Bearer ${accessToken}` };
@@ -438,6 +443,8 @@ class TaskLabel extends React.PureComponent {
     } catch (e) {
       this.setState({ errorMsg: 'Server issues!' });
       throw e;
+    } finally {
+      this.setState({ inProgress: false });
     }
   };
 
@@ -480,11 +487,18 @@ class TaskLabel extends React.PureComponent {
   };
 
   renderBody = () => {
-    const { submitted, errorMsg } = this.state;
+    const { inProgress, submitted, errorMsg } = this.state;
     if (errorMsg) {
       return (
         <div>
           <p>{errorMsg}</p>
+        </div>
+      );
+    }
+    if (inProgress) {
+      return (
+        <div>
+          <h4>Working...</h4>
         </div>
       );
     }
@@ -530,7 +544,7 @@ class TaskLabel extends React.PureComponent {
                   <Button
                     onClick={this.doEet}
                     bsStyle="danger"
-                    disabled={!this.context.authController.userSession && !this.state.submitted}
+                    disabled={!this.context.authController.userSession || this.state.inProgress}
                   >
                     Do eet!
                   </Button>
