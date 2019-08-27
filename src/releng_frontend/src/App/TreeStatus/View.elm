@@ -234,7 +234,7 @@ viewTreesItem scopes treesSelected tree =
                     |> List.append
                         [ h5 [ class "list-group-item-heading" ]
                             [ text tree.name
-                            , span [ style [("margin-left", "1em")] ] 
+                            , span [ style [ ( "margin-left", "1em" ) ] ]
                                 (List.map
                                     (\tag ->
                                         span
