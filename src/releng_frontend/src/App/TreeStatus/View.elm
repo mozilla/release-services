@@ -490,6 +490,33 @@ viewTreesTitle route =
             h2 [ class "float-xs-left" ] [ text ("Tree: " ++ name) ]
 
 
+treeRulesLink : String -> String
+treeRulesLink treeName =
+    case treeName of
+        "autoland" ->
+            "https://wiki.mozilla.org/Tree_Rules#autoland.2FLando"
+
+        "mozilla-inbound" ->
+            "https://wiki.mozilla.org/Tree_Rules#mozilla-inbound"
+
+        "mozilla-central" ->
+            "https://wiki.mozilla.org/Tree_Rules#mozilla-central_.28Nightly_channel.29"
+
+        "mozilla-beta" ->
+            "https://wiki.mozilla.org/Tree_Rules#mozilla-beta"
+
+        "mozilla-release" ->
+            "https://wiki.mozilla.org/Tree_Rules#mozilla-release"
+
+        _ ->
+            if String.startsWith "mozilla-esr" treeName then
+                "https://wiki.mozilla.org/Release_Management/ESR_Landing_Process"
+            else if String.startsWith "comm-" treeName then
+                "https://wiki.mozilla.org/Tree_Rules/comm-central"
+            else
+                "https://wiki.mozilla.org/Tree_Rules"
+
+
 viewTreeDetails :
     RemoteData.RemoteData a { b | message_of_the_day : String, name : String, status : String }
     -> Html App.TreeStatus.Types.Msg
@@ -506,6 +533,7 @@ viewTreeDetails remote =
                     [ class ("badge badge-" ++ App.Utils.treeStatusLevel tree.status) ]
                     [ text tree.status ]
                 , p [ class "lead" ] (bugzillaBugAsLink tree.message_of_the_day)
+                , p [] [ a [ href (treeRulesLink tree.name) ] [ text "Tree rules" ] ]
                 ]
 
         RemoteData.Failure message ->
