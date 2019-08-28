@@ -64,7 +64,7 @@ class MessageBus(object):
         if isinstance(queue, RedisQueue):
             async with AsyncRedis() as redis:
                 nb = await redis.rpush(queue.name, pickle.dumps(payload))
-                logger.info('Put new item in redis queue', queue=queue, nb=nb)
+                logger.info('Put new item in redis queue', queue=queue.name, nb=nb)
 
         elif isinstance(queue, asyncio.Queue):
             await queue.put(payload)
@@ -81,12 +81,19 @@ class MessageBus(object):
         assert name in self.queues, 'Missing queue {}'.format(name)
         queue = self.queues[name]
 
+        logger.debug('Wait for message on bus', queue=name, instance=queue)
+
         if isinstance(queue, RedisQueue):
             async with AsyncRedis() as redis:
                 _, payload = await redis.blpop(queue.name)
                 assert isinstance(payload, bytes)
-                logger.info('Read item from redis queue', queue=queue)
-                return pickle.loads(payload)
+                logger.info('Read item from redis queue', queue=queue.name)
+                try:
+                    return pickle.loads(payload)
+                except Exception as e:
+                    logger.error('Bad redis payload', error=str(e))
+                    await asyncio.sleep(1)
+                    return
 
         elif isinstance(queue, asyncio.Queue):
             return await queue.get()

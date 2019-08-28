@@ -57,6 +57,8 @@ class CodeReview(PhabricatorActions):
 
             # Receive build from webserver
             build = await self.bus.receive(QUEUE_WEB_BUILDS)
+            if build is None:
+                continue
             assert isinstance(build, PhabricatorBuild)
 
             # Update its state
