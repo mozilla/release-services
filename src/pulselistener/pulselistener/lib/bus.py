@@ -1,11 +1,31 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import collections
 import inspect
 import multiprocessing
+import os
+import pickle
+
+import aioredis
 
 from cli_common.log import get_logger
 
 logger = get_logger(__name__)
+
+RedisQueue = collections.namedtuple('RedisQueue', 'name')
+
+
+class AsyncRedis(object):
+    '''
+    Async context manager to create a redis connection
+    '''
+    async def __aenter__(self):
+        self.conn = await aioredis.create_redis(os.environ['REDIS_URL'])
+        return self.conn
+
+    async def __aexit__(self, exc_type, exc, tb):
+        self.conn.close()
+        await self.conn.wait_closed()
 
 
 class MessageBus(object):
@@ -14,8 +34,10 @@ class MessageBus(object):
     '''
     def __init__(self):
         self.queues = {}
+        self.redis_enabled = 'REDIS_URL' in os.environ
+        logger.info('Redis support', enabled=self.redis_enabled and 'yes' or 'no')
 
-    def add_queue(self, name, mp=False, maxsize=-1):
+    def add_queue(self, name, mp=False, redis=False, maxsize=-1):
         '''
         Create a new queue on the message bus
         * asyncio by default
@@ -24,7 +46,9 @@ class MessageBus(object):
         '''
         assert name not in self.queues, 'Queue {} already setup'.format(name)
         assert isinstance(maxsize, int)
-        if mp:
+        if self.redis_enabled and redis:
+            self.queues[name] = RedisQueue(f'pulselistener:{name}')
+        elif mp:
             self.queues[name] = multiprocessing.Queue(maxsize=maxsize)
         else:
             self.queues[name] = asyncio.Queue(maxsize=maxsize)
@@ -35,8 +59,15 @@ class MessageBus(object):
         '''
         assert name in self.queues, 'Missing queue {}'.format(name)
         queue = self.queues[name]
-        if isinstance(queue, asyncio.Queue):
+
+        if isinstance(queue, RedisQueue):
+            async with AsyncRedis() as redis:
+                nb = await redis.rpush(queue.name, pickle.dumps(payload))
+                logger.info('Put new item in redis queue', queue=queue.name, nb=nb)
+
+        elif isinstance(queue, asyncio.Queue):
             await queue.put(payload)
+
         else:
             # Run the synchronous mp queue.put in the asynchronous loop
             await asyncio.get_running_loop().run_in_executor(None, lambda: queue.put(payload))
@@ -48,8 +79,24 @@ class MessageBus(object):
         '''
         assert name in self.queues, 'Missing queue {}'.format(name)
         queue = self.queues[name]
-        if isinstance(queue, asyncio.Queue):
+
+        logger.debug('Wait for message on bus', queue=name, instance=queue)
+
+        if isinstance(queue, RedisQueue):
+            async with AsyncRedis() as redis:
+                _, payload = await redis.blpop(queue.name)
+                assert isinstance(payload, bytes)
+                logger.info('Read item from redis queue', queue=queue.name)
+                try:
+                    return pickle.loads(payload)
+                except Exception as e:
+                    logger.error('Bad redis payload', error=str(e))
+                    await asyncio.sleep(1)
+                    return
+
+        elif isinstance(queue, asyncio.Queue):
             return await queue.get()
+
         else:
             # Run the synchronous mp queue.get in the asynchronous loop
             return await asyncio.get_running_loop().run_in_executor(None, queue.get)

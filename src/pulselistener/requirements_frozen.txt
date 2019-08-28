@@ -1,5 +1,6 @@
 aioamqp==0.12.0
 aiohttp==3.5.4
+aioredis==1.2.0
 asn1crypto==0.24.0
 async-timeout==3.0.1
 atomicwrites==1.3.0

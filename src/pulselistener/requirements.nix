@@ -187,6 +187,45 @@ let
       };
     };
 
+    "aioredis" = python.mkDerivation {
+      name = "aioredis-1.2.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/2e/a3/cd122b68d8071d332972027d225f548e0206001da1aa0685ea08db803b06/aioredis-1.2.0.tar.gz";
+        sha256 = "06i53xpz4x6qrmdxqwvkpd17lbgmwfq20v0jrwc73f5y57kjpml4";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [
+        self."hiredis"
+        self."async-timeout"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/aio-libs/aioredis";
+        license = licenses.mit;
+        description = "asyncio (PEP 3156) Redis client library.";
+      };
+    };
+
+    "hiredis" = python.mkDerivation {
+      name = "hiredis-1.0.0";
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/9e/e0/c160dbdff032ffe68e4b3c576cba3db22d8ceffc9513ae63368296d1bcc8/hiredis-1.0.0.tar.gz";
+        sha256 = "158pymdlnv4d218w66i8kzdn4ka30l1pdwa0wyjh16bj10zraz79";
+      };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs ++ [ ];
+      propagatedBuildInputs = [];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/redis/hiredis-py";
+        license = licenses.mit;
+        description = "High speed redis client";
+      };
+    };
+
     "async-timeout" = python.mkDerivation {
       name = "async-timeout-3.0.1";
       src = pkgs.fetchurl {
