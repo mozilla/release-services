@@ -166,12 +166,12 @@ viewRecentChanges scopes recentChanges =
             []
 
 
-viewTreesItem :
+viewTreesCategoryItem :
     List String
     -> List String
     -> { a | reason : String, status : String, name : String, tags : List String }
     -> Html App.TreeStatus.Types.Msg
-viewTreesItem scopes treesSelected tree =
+viewTreesCategoryItem scopes treesSelected tree =
     let
         isChecked =
             List.member tree.name treesSelected
@@ -264,6 +264,127 @@ viewTreesItem scopes treesSelected tree =
         (List.append checkboxItem [ treeItem ])
 
 
+type Category
+    = Development
+    | ReleaseStabilization
+    | Try
+    | CommRepositories
+    | Other
+
+
+categoryTitle : Category -> String
+categoryTitle category =
+    case category of
+        Development ->
+            "Development"
+
+        ReleaseStabilization ->
+            "Release Stabilization"
+
+        Try ->
+            "Try"
+
+        CommRepositories ->
+            "Comm Repositories"
+
+        Other ->
+            "Other"
+
+
+categorizeTrees :
+    App.TreeStatus.Types.Trees
+    -> List ( Category, App.TreeStatus.Types.Trees )
+categorizeTrees trees =
+    let
+        ( developmentTrees, developmentTreesOther ) =
+            List.partition
+                (\tree ->
+                    List.member tree.name
+                        [ "autoland"
+                        , "mozilla-inbound"
+                        , "mozilla-central"
+                        ]
+                )
+                trees
+
+        ( releaseStabilizationTrees, releaseStabilizationTreesOther ) =
+            List.partition
+                (\tree ->
+                    List.member tree.name
+                        [ "mozilla-beta"
+                        , "mozilla-release"
+                        , "mozilla-esr60"
+                        , "mozilla-esr52"
+                        ]
+                )
+                developmentTreesOther
+
+        ( tryTrees, tryTreesOther ) =
+            List.partition
+                (\tree ->
+                    List.member tree.name
+                        [ "try"
+                        , "try-comm-central"
+                        , "nss-try"
+                        ]
+                )
+                releaseStabilizationTreesOther
+
+        ( commRepositoriesTrees, otherTrees ) =
+            List.partition
+                (\tree ->
+                    List.member tree.name
+                        [ "comm-central-thunderbird"
+                        , "comm-central-seamonkey"
+                        , "comm-beta-thunderbird"
+                        , "comm-beta-seamonkey"
+                        , "comm-release-thunderbird"
+                        , "comm-release-seamonkey"
+                        , "comm-esr60-thunderbird"
+                        , "comm-esr60-seamonkey"
+                        , "comm-esr52-thunderbird"
+                        , "comm-esr52-seamonkey"
+                        ]
+                )
+                tryTreesOther
+    in
+    [ ( Development, developmentTrees )
+    , ( ReleaseStabilization, releaseStabilizationTrees )
+    , ( Try, tryTrees )
+    , ( CommRepositories, commRepositoriesTrees )
+    , ( Other, otherTrees )
+    ]
+
+
+viewTreesCategory :
+    List String
+    -> List String
+    -> ( Category, App.TreeStatus.Types.Trees )
+    -> List (Html App.TreeStatus.Types.Msg)
+viewTreesCategory scopes treesSelected ( category, trees ) =
+    if List.isEmpty trees then
+        []
+    else
+        [ h4 [] [ text (categoryTitle category) ]
+        , div
+            [ id "treestatus-trees"
+            , class "list-group"
+            ]
+            (trees
+                |> List.sortBy .name
+                |> List.map (viewTreesCategoryItem scopes treesSelected)
+                |> (\x ->
+                        [ div
+                            [ id "treestatus-trees"
+                            , class "list-group"
+                            ]
+                            x
+                        ]
+                   )
+            )
+        ]
+
+
 viewTrees :
     List String
     -> RemoteData.WebData App.TreeStatus.Types.Trees
@@ -272,14 +393,9 @@ viewTrees :
 viewTrees scopes trees treesSelected =
     case trees of
         RemoteData.Success trees ->
-            trees
-                |> List.sortBy .name
-                |> List.map (viewTreesItem scopes treesSelected)
-                |> div
-                    [ id "treestatus-trees"
-                    , class "list-group"
-                    ]
-                |> (\x -> [ x ])
+            categorizeTrees trees
+                |> List.map (viewTreesCategory scopes treesSelected)
+                |> List.concat
 
         RemoteData.Failure message ->
             [ App.Utils.error
