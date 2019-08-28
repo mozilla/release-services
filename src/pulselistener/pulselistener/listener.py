@@ -77,18 +77,19 @@ class CodeCoverage(object):
             return None
 
         def load_tasks(limit=200, continuationToken=None):
-            reply = retry(lambda: self.queue.listTaskGroup(
-                group_id,
-                limit=limit,
-                continuationToken=continuationToken,
-            ))
+            query = {
+                'limit': limit,
+            }
+            if continuationToken is not None:
+                query['continuationToken'] = continuationToken
+            reply = retry(lambda: self.queue.listTaskGroup(group_id, query=query))
             return maybe_trigger(reply['tasks']), reply.get('continuationToken')
 
         async def retrieve_coverage_task():
             task, token = load_tasks()
 
             while task is None and token is not None:
-                task, token = load_tasks()
+                task, token = load_tasks(continuationToken=token)
 
                 # Let other tasks run on long batches
                 await asyncio.sleep(2)
