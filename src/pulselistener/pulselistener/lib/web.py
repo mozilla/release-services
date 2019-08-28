@@ -29,7 +29,7 @@ class WebServer(object):
 
     def register(self, bus):
         self.bus = bus
-        self.bus.add_queue(self.queue_name, mp=True)
+        self.bus.add_queue(self.queue_name, mp=True, redis=True)
 
     def start(self):
         '''

@@ -83,6 +83,7 @@ PROJECTS_CONFIG = {
         'run': 'REDIS',
         'run_options': {
             'port': 6379,
+            'schema': 'redis',
             'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
@@ -377,7 +378,7 @@ PROJECTS_CONFIG = {
     },
     'pulselistener': {
         'update': False,
-        'requires': [],
+        'requires': ['redis'],
         'deploys': [
             {
                 'target': 'HEROKU',
