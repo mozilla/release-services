@@ -105,17 +105,20 @@ class PulseListener(object):
         return protocol
 
     async def run(self):
-        # Initial connection
-        pulse = await self.connect()
-
+        pulse = None
         while True:
             try:
+                if pulse is None:
+                    pulse = await self.connect()
+
+                # Check pulse server is still connected
+                # AmqpClosedConnection will be thrown otherwise
                 await pulse.ensure_open()
                 await asyncio.sleep(0)
             except (aioamqp.AmqpClosedConnection, OSError) as e:
                 logger.exception('Reconnecting pulse client in 5 seconds', error=str(e))
+                pulse = None
                 await asyncio.sleep(5)
-                pulse = await self.connect()
 
     async def got_message(self, channel, body, envelope, properties):
         '''
