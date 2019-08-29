@@ -63,7 +63,7 @@ more-itertools==6.0.0
 mozdef-client==1.0.11
 mozilla-backend-common==1.0.0
 mozilla-cli-common==1.0.0
-mozilla-version==0.3.3
+mozilla-version==0.4.1
 multidict==4.5.2
 mypy==0.670
 mypy-extensions==0.4.1
