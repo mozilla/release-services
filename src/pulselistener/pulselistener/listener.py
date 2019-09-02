@@ -92,7 +92,7 @@ class CodeCoverage(object):
                 task, token = load_tasks(continuationToken=token)
 
                 # Let other tasks run on long batches
-                await asyncio.sleep(2)
+                await asyncio.sleep(0)
 
             return task
 
