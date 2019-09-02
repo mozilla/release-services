@@ -38,7 +38,7 @@ def retry(operation,
 
 def run_tasks(awaitables):
     '''
-    Helper to run tasks concurrenlty, but when an exception is raised
+    Helper to run tasks concurrently, but when an exception is raised
     by one of the tasks, the whole stack stops.
     '''
     assert isinstance(awaitables, list)
