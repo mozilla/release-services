@@ -15,27 +15,20 @@ logger = structlog.get_logger(__name__)
 RedisQueue = collections.namedtuple('RedisQueue', 'name')
 
 
-class AsyncRedis(object):
-    '''
-    Async context manager to create a redis connection
-    '''
-    async def __aenter__(self):
-        self.conn = await aioredis.create_redis(os.environ['REDIS_URL'])
-        return self.conn
-
-    async def __aexit__(self, exc_type, exc, tb):
-        self.conn.close()
-        await self.conn.wait_closed()
-
-
 class MessageBus(object):
     '''
     Communication bus between processes
     '''
     def __init__(self):
         self.queues = {}
-        self.redis_enabled = 'REDIS_URL' in os.environ
+
+        # Redis support
+        self._redis_client = None
         logger.info('Redis support', enabled=self.redis_enabled and 'yes' or 'no')
+
+    @property
+    def redis_enabled(self):
+        return 'REDIS_URL' in os.environ
 
     def add_queue(self, name, mp=False, redis=False, maxsize=-1):
         '''
@@ -61,9 +54,9 @@ class MessageBus(object):
         queue = self.queues[name]
 
         if isinstance(queue, RedisQueue):
-            async with AsyncRedis() as redis:
-                nb = await redis.rpush(queue.name, pickle.dumps(payload, pickle.HIGHEST_PROTOCOL))
-                logger.info('Put new item in redis queue', queue=queue.name, nb=nb)
+            redis = await self.connect_redis()
+            nb = await redis.rpush(queue.name, pickle.dumps(payload, protocol=pickle.HIGHEST_PROTOCOL))
+            logger.info('Put new item in redis queue', queue=queue.name, nb=nb)
 
         elif isinstance(queue, asyncio.Queue):
             await queue.put(payload)
@@ -83,16 +76,16 @@ class MessageBus(object):
         logger.debug('Wait for message on bus', queue=name, instance=queue)
 
         if isinstance(queue, RedisQueue):
-            async with AsyncRedis() as redis:
-                _, payload = await redis.blpop(queue.name)
-                assert isinstance(payload, bytes)
-                logger.info('Read item from redis queue', queue=queue.name)
-                try:
-                    return pickle.loads(payload, pickle.HIGHEST_PROTOCOL)
-                except Exception as e:
-                    logger.error('Bad redis payload', error=str(e))
-                    await asyncio.sleep(1)
-                    return
+            redis = await self.connect_redis()
+            _, payload = await redis.blpop(queue.name)
+            assert isinstance(payload, bytes)
+            logger.info('Read item from redis queue', queue=queue.name)
+            try:
+                return pickle.loads(payload)
+            except Exception as e:
+                logger.error('Bad redis payload', error=str(e))
+                await asyncio.sleep(1)
+                return
 
         elif isinstance(queue, asyncio.Queue):
             return await queue.get()
@@ -133,3 +126,11 @@ class MessageBus(object):
 
             if output_name is not None:
                 await self.send(output_name, new_message)
+
+    async def connect_redis(self):
+        '''
+        Connect on the redis server, using the pool method to get an auto-reconnecting client
+        '''
+        if self._redis_client is None:
+            self._redis_client = await aioredis.create_redis_pool(os.environ['REDIS_URL'])
+        return self._redis_client
