@@ -83,7 +83,6 @@ class MessageBus(object):
                 return pickle.loads(payload)
             except Exception as e:
                 logger.error('Bad redis payload', error=str(e))
-                await asyncio.sleep(1)
                 return
 
         elif isinstance(queue, asyncio.Queue):
