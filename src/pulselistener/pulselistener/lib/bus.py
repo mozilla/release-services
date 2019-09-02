@@ -5,7 +5,6 @@ import inspect
 import multiprocessing
 import os
 import pickle
-from queue import Empty
 
 import aioredis
 import structlog
@@ -92,15 +91,7 @@ class MessageBus(object):
 
         else:
             # Run the synchronous mp queue.get in the asynchronous loop
-            # but use an asyncio sleep to be able to react to cancellation
-            async def _get():
-                while True:
-                    try:
-                        return queue.get(timeout=0)
-                    except Empty:
-                        await asyncio.sleep(1)
-
-            return await _get()
+            return await asyncio.get_running_loop().run_in_executor(None, queue.get)
 
     async def run(self, method, input_name, output_name=None):
         '''
