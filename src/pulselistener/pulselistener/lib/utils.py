@@ -47,14 +47,14 @@ def run_tasks(awaitables):
         try:
             # Create a task grouping all awaitables
             # and running them concurrently
-            task = asyncio.gather(*awaitables)
-            await task
+            tasks_future = asyncio.gather(*awaitables)
+            await tasks_future
         except Exception as e:
             log.error('Failure while running async tasks', error=str(e))
 
             # When ANY exception from one of the awaitables
             # make sure the other awaitables are cancelled
-            task.cancel()
+            tasks_future.cancel()
 
     event_loop = asyncio.get_event_loop()
     event_loop.run_until_complete(_run())
