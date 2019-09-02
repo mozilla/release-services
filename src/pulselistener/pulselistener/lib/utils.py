@@ -2,6 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import asyncio
 import fcntl
 import os
 import time
@@ -33,6 +34,30 @@ def retry(operation,
             if retries == 0:
                 raise
             time.sleep(wait_between_retries)
+
+
+def run_tasks(awaitables):
+    '''
+    Helper to run tasks concurrently, but when an exception is raised
+    by one of the tasks, the whole stack stops.
+    '''
+    assert isinstance(awaitables, list)
+
+    async def _run():
+        try:
+            # Create a task grouping all awaitables
+            # and running them concurrently
+            tasks_future = asyncio.gather(*awaitables)
+            await tasks_future
+        except Exception as e:
+            log.error('Failure while running async tasks', error=str(e))
+
+            # When ANY exception from one of the awaitables
+            # make sure the other awaitables are cancelled
+            tasks_future.cancel()
+
+    event_loop = asyncio.get_event_loop()
+    event_loop.run_until_complete(_run())
 
 
 def hg_run(cmd):
@@ -112,3 +137,18 @@ def batch_checkout(repo_url, repo_dir, revision=b'tip', batch_size=100000):
     for rev in steps:
         log.info('Moving repo to revision', dir=repo_dir, rev=rev)
         repo.update(rev=rev)
+
+
+def robust_checkout(repo_url, repo_dir, branch=b'tip'):
+    '''
+    Helper to clone a mercurial repo using the robustcheckout extension
+    '''
+    assert isinstance(branch, bytes)
+
+    cmd = hglib.util.cmdbuilder('robustcheckout',
+                                repo_url,
+                                repo_dir,
+                                purge=True,
+                                sharebase=f'{repo_dir}-shared',
+                                branch=branch)
+    hg_run(cmd)
