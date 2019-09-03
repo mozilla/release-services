@@ -165,7 +165,7 @@ class Release(db.Model):
     def generate_phases(self, partner_urls=None, github_token=None):
         phases = []
         previous_graph_ids = [self.decision_task_id]
-        next_version = bump_version(self.version.replace('esr', ''))
+        next_version = bump_version(self.product, self.version)
         input_common = {
             'build_number': self.build_number,
             'next_version': next_version,
