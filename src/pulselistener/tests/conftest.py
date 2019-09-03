@@ -23,6 +23,7 @@ from pulselistener.lib.mercurial import Repository
 from pulselistener.lib.phabricator import PhabricatorActions
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
+FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
 @pytest.fixture

@@ -5,7 +5,6 @@
 
 import asyncio
 import json
-import sys
 
 import aioamqp
 import structlog
@@ -69,38 +68,14 @@ async def create_pulse_listener(user, password, exchange, topic, callback):
                                        type_name='topic',
                                        durable=True)
 
-    logger.info('Connected', queue=queue, topic=topic, exchange=exchange)
+    logger.info('Connected on pulse', queue=queue, topic=topic, exchange=exchange)
 
     await channel.queue_bind(exchange_name=exchange,
                              queue_name=queue,
                              routing_key=topic)
     await channel.basic_consume(callback, queue_name=queue)
 
-    logger.info('Worker starts consuming messages')
-    logger.info('Starting loop to ensure connection is open')
-    while True:
-        await asyncio.sleep(10)
-        # raise AmqpClosedConnection in case the connection is closed.
-        await protocol.ensure_open()
-
-
-def run_consumer(consumer):
-    '''
-    Helper to run indefinitely an asyncio consumer
-    '''
-    event_loop = asyncio.get_event_loop()
-
-    try:
-        event_loop.run_until_complete(consumer)
-        event_loop.run_forever()
-    except KeyboardInterrupt:
-        # TODO: make better shutdown
-        logger.exception('KeyboardInterrupt registered, exiting.')
-        event_loop.stop()
-        while event_loop.is_running():
-            pass
-        event_loop.close()
-        sys.exit()
+    return protocol
 
 
 class PulseListener(object):
@@ -113,25 +88,37 @@ class PulseListener(object):
         self.route = route
         self.user = user
         self.password = password
-        logger.info('Listening for new messages', queue=queue, route=route)
 
     def register(self, bus):
         self.bus = bus
         self.bus.add_queue(self.queue_name)
 
+    async def connect(self):
+        protocol = await create_pulse_listener(
+            self.user,
+            self.password,
+            self.queue,
+            self.route,
+            self.got_message,
+        )
+        logger.info('Worker starts consuming messages', queue=self.queue)
+        return protocol
+
     async def run(self):
+        pulse = None
         while True:
             try:
-                await create_pulse_listener(
-                    self.user,
-                    self.password,
-                    self.queue,
-                    self.route,
-                    self.got_message,
-                )
-            except (aioamqp.AmqpClosedConnection, OSError):
-                logger.exception('Reconnecting in 10 seconds')
-                await asyncio.sleep(10)
+                if pulse is None:
+                    pulse = await self.connect()
+
+                # Check pulse server is still connected
+                # AmqpClosedConnection will be thrown otherwise
+                await pulse.ensure_open()
+                await asyncio.sleep(0)
+            except (aioamqp.AmqpClosedConnection, OSError) as e:
+                logger.exception('Reconnecting pulse client in 5 seconds', error=str(e))
+                pulse = None
+                await asyncio.sleep(5)
 
     async def got_message(self, channel, body, envelope, properties):
         '''
@@ -143,6 +130,7 @@ class PulseListener(object):
         body = json.loads(body.decode('utf-8'))
 
         # Push the message in the message bus
+        logger.debug('Received a pulse message')
         await self.bus.send(self.queue_name, body)
 
         # Ack the message so it is removed from the broker's queue
