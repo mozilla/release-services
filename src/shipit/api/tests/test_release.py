@@ -36,9 +36,6 @@ def test_parse_version(product, version, expectation, result):
 
 
 @pytest.mark.parametrize('product, version, partial_updates, result', (
-    ('firefox', '57.0', {'56.0b1': [], '55.0': []}, True),
-    ('firefox', '57.0', {'56.0': [], '55.0': []}, True),
-    ('thunderbird', '57.0', {'56.0': [], '55.0': []}, False),
     ('firefox', '64.0', None, True),
     ('thunderbird', '64.0', None, False),
     ('fennec', '64.0', None, True),
@@ -48,6 +45,14 @@ def test_parse_version(product, version, expectation, result):
     ('firefox', '56.0b3', None, False),
     ('fennec', '56.0b3', None, False),
     ('firefox', '45.0esr', None, False),
+
+    ('firefox', '57.0', {'56.0b1': [], '55.0': []}, True),
+    ('firefox', '57.0', {'56.0': [], '55.0': []}, True),
+    ('firefox', '57.0.1', {'57.0': [], '56.0.1': [], '56.0': []}, False),
+    ('thunderbird', '57.0', {'56.0': [], '55.0': []}, False),
+    ('thunderbird', '57.0', {'56.0': [], '56.0b4': [], '55.0': []}, True),
+    ('firefox', '70.0b4', {'69.0b15': [], '69.0b16': [], '70.0b3': []}, False),
+    ('devedition', '70.0b4', {'70.0b3': [], '70.0b1': [], '70.0b2': []}, False),
 ))
 def test_is_rc(product, version, partial_updates, result):
     assert is_rc(product, version, partial_updates) == result

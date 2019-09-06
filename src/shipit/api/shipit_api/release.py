@@ -53,14 +53,16 @@ def parse_version(product, version):
 def is_rc(product, version, partial_updates):
     gecko_version = parse_version(product, version)
 
-    if gecko_version.is_release and gecko_version.patch_number is None:
-        # version supports rc flavor
-        # now validate that the product itself supports rc flavor
-        if SUPPORTED_FLAVORS.get(f'{product}_rc'):
-            # could hard code "Thunderbird" condition here but
-            # suspect it's better to use SUPPORTED_FLAVORS for a
-            # configuration driven decision.
-            return True
+    # Release candidates are only expected when the version number matches
+    # the release pattern
+    if not gecko_version.is_release or gecko_version.patch_number is not None:
+        return False
+
+    if SUPPORTED_FLAVORS.get(f'{product}_rc'):
+        # could hard code "Thunderbird" condition here but
+        # suspect it's better to use SUPPORTED_FLAVORS for a
+        # configuration driven decision.
+        return True
 
     # RC release types will enable beta-channel testing &
     # shipping. We need this for all "final" releases
