@@ -3,79 +3,72 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import pytest
+from contextlib import nullcontext as does_not_raise
 
+import pytest
+from mozilla_version.gecko import DeveditionVersion
+from mozilla_version.gecko import FennecVersion
+from mozilla_version.gecko import FirefoxVersion
+from mozilla_version.gecko import ThunderbirdVersion
+
+from shipit_api.release import Product
 from shipit_api.release import bump_version
-from shipit_api.release import is_beta
 from shipit_api.release import is_eme_free_enabled
-from shipit_api.release import is_esr
-from shipit_api.release import is_final_release
 from shipit_api.release import is_partner_enabled
 from shipit_api.release import is_rc
+from shipit_api.release import parse_version
 
 
-@pytest.mark.parametrize('version, result', (
-    ('57.0', True),
-    ('7.0', True),
-    ('123.0', True),
-    ('56.0b3', False),
-    ('41.0esr', False),
-    ('78.0.1', False),
+@pytest.mark.parametrize('product, version, expectation, result', (
+    ('devedition', '56.0b1', does_not_raise(), DeveditionVersion(56, 0, beta_number=1)),
+    (Product.DEVEDITION, '56.0b1', does_not_raise(), DeveditionVersion(56, 0, beta_number=1)),
+    ('fennec', '68.2b3', does_not_raise(), FennecVersion(68, 2, beta_number=3)),
+    (Product.FENNEC, '68.2b3', does_not_raise(), FennecVersion(68, 2, beta_number=3)),
+    ('firefox', '45.0', does_not_raise(), FirefoxVersion(45, 0)),
+    (Product.FIREFOX, '45.0', does_not_raise(), FirefoxVersion(45, 0)),
+    ('thunderbird', '60.8.0', does_not_raise(), ThunderbirdVersion(60, 8, 0)),
+    (Product.THUNDERBIRD, '60.8.0', does_not_raise(), ThunderbirdVersion(60, 8, 0)),
+    ('non-existing-product', '68.0', pytest.raises(ValueError), None),
 ))
-def test_is_final_version(version, result):
-    assert is_final_release(version) == result
-
-
-@pytest.mark.parametrize('version, result', (
-    ('57.0', False),
-    ('7.0', False),
-    ('123.0', False),
-    ('56.0b3', True),
-    ('41.0esr', False),
-    ('78.0.1', False),
-))
-def test_is_beta(version, result):
-    assert is_beta(version) == result
-
-
-@pytest.mark.parametrize('version, result', (
-    ('57.0', False),
-    ('7.0', False),
-    ('123.0', False),
-    ('56.0b3', False),
-    ('41.0esr', True),
-    ('78.0.1', False),
-))
-def test_is_esr(version, result):
-    assert is_esr(version) == result
+def test_parse_version(product, version, expectation, result):
+    with expectation:
+        assert parse_version(product, version) == result
 
 
 @pytest.mark.parametrize('product, version, partial_updates, result', (
-    ('firefox', '57.0', {'56.0b1': [], '55.0': []}, True),
-    ('firefox', '57.0', {'56.0': [], '55.0': []}, True),
-    ('thunderbird', '57.0', {'56.0': [], '55.0': []}, False),
     ('firefox', '64.0', None, True),
     ('thunderbird', '64.0', None, False),
     ('fennec', '64.0', None, True),
     ('firefox', '64.0.1', None, False),
     ('thunderbird', '64.0.1', None, False),
+    ('fennec', '64.0.1', None, False),
+    ('firefox', '56.0b3', None, False),
     ('fennec', '56.0b3', None, False),
-    ('firefox', '41.0esr', None, False),
+    ('firefox', '45.0esr', None, False),
+
+    ('firefox', '57.0', {'56.0b1': [], '55.0': []}, True),
+    ('firefox', '57.0', {'56.0': [], '55.0': []}, True),
+    ('firefox', '57.0.1', {'57.0': [], '56.0.1': [], '56.0': []}, False),
+    ('thunderbird', '57.0', {'56.0': [], '55.0': []}, False),
+    ('thunderbird', '57.0', {'56.0': [], '56.0b4': [], '55.0': []}, True),
+    ('firefox', '70.0b4', {'69.0b15': [], '69.0b16': [], '70.0b3': []}, False),
+    ('devedition', '70.0b4', {'70.0b3': [], '70.0b1': [], '70.0b2': []}, False),
 ))
 def test_is_rc(product, version, partial_updates, result):
     assert is_rc(product, version, partial_updates) == result
 
 
-@pytest.mark.parametrize('version, result', (
-    ('45.0', '45.0.1'),
-    ('45.0.1', '45.0.2'),
-    ('45.0b3', '45.0b4'),
-    ('45.0esr', '45.0.1esr'),
-    ('45.0.1esr', '45.0.2esr'),
-    ('45.2.1esr', '45.2.2esr'),
+@pytest.mark.parametrize('product, version, result', (
+    ('firefox', '45.0', '45.0.1'),
+    ('firefox', '45.0.1', '45.0.2'),
+    ('firefox', '45.0b3', '45.0b4'),
+    ('firefox', '45.0esr', '45.0.1esr'),
+    ('firefox', '45.0.1esr', '45.0.2esr'),
+    ('firefox', '45.2.1esr', '45.2.2esr'),
+    ('fennec', '68.1b2', '68.1b3'),
 ))
-def test_bump_version(version, result):
-    assert bump_version(version) == result
+def test_bump_version(product, version, result):
+    assert bump_version(product, version) == result
 
 
 @pytest.mark.parametrize('product, version, result', (
