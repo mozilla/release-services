@@ -31,8 +31,6 @@ Projects
     TreeStatus <projects/treestatus>
     Mapper <projects/mapper>
     releng-frontend <projects/releng-frontend>
-    uplift/backend <projects/uplift-backend>
-    uplift/bot <projects/uplift-bot>
     docs <projects/docs>
 
 
