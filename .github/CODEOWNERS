@@ -8,7 +8,6 @@
 /src/releng_notification_policy       @mozilla/Releng
 /src/releng_tooltool                  @mozilla/Releng
 /src/releng_treestatus                @mozilla/Releng
-/src/uplift                           @mozilla/release-management
 /src/shipit/frontend                  @mozilla/Releng
 /src/shipit_pipeline                  @mozilla/Releng
 /src/shipit_signoff                   @mozilla/Releng

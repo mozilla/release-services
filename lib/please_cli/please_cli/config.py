@@ -348,46 +348,6 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'uplift/bot': {
-        'update': False,
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
-    'uplift/backend': {
-        'update': False,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8011,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-        ],
-    },
     'shipit/api': {
         'update': False,
         'run': 'FLASK',
