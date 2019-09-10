@@ -11,7 +11,6 @@
 /src/uplift                           @mozilla/release-management
 /src/shipit/frontend                  @mozilla/Releng
 /src/shipit_pipeline                  @mozilla/Releng
-/src/pulselistener                    @mozilla/release-management
 /src/shipit_signoff                   @mozilla/Releng
 /src/shipit_taskcluster               @mozilla/Releng
 /src/shipit/api                       @mozilla/Releng

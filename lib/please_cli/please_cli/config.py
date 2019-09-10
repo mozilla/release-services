@@ -376,41 +376,6 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'pulselistener': {
-        'update': False,
-        'requires': ['redis'],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': False,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-pulse-listener',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://eventlistener.testing.moz.tools',
-                        'dns': 'adjacent-shelf-2mxct7inb0tl5tg1rwt73ev4.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': False,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-pulse-listener',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://eventlistener.staging.moz.tools',
-                        'dns': 'immense-refuge-f4ii4ur88iq0x707ybzq5mfn.herokudns.com',
-                    },
-                    'production': {
-                        'enable': False,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-production-pulse-listen',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://eventlistener.moz.tools',
-                        'dns': 'convex-woodland-ilwk96s11s92e5otfkmb5ybe.herokudns.com',
-                    },
-                },
-            },
-        ],
-    },
     'uplift/backend': {
         'update': False,
         'run': 'FLASK',
