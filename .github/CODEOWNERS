@@ -1,7 +1,7 @@
-*                                     @garbas @La0
+*                                     @garbas
 /src/releng_archiver                  @mozilla/Releng
 /src/releng_clobberer                 @mozilla/Releng
-/src/releng_docs                      @mozilla/Releng @mozilla/release-management
+/src/releng_docs                      @mozilla/Releng
 /src/releng_frontend                  @mozilla/Releng
 /src/releng_mapper                    @mozilla/Releng
 /src/releng_notification_identity     @mozilla/Releng
