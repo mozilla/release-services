@@ -4,13 +4,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import enum
-
-from mozilla_version.gecko import DeveditionVersion
-from mozilla_version.gecko import FennecVersion
-from mozilla_version.gecko import FirefoxVersion
-from mozilla_version.gecko import ThunderbirdVersion
+import re
 
 from shipit_api.config import SUPPORTED_FLAVORS
+
+# If version has two parts with no trailing specifiers like "rc", we
+# consider it a 'final' release for which we only create a _RELEASE tag.
+FINAL_RELEASE_REGEX = r'^\d+\.\d+$'
+
+
+VERSION_REGEX = re.compile(
+    r'^'
+    r'(?P<major_minor>[0-9]+\.[0-9]+)'  # Major and minor version
+    r'(?:'  # Patch or beta version is optional
+    r'(?P<point>[.ba])'  # Separator from patch or beta version
+    r'(?P<patch>[0-9]+)'  # Patch or beta version
+    r')?'
+    r'(?P<esr>(?:esr)?)'  # ESR indicator
+    r'$'
+)
 
 
 @enum.unique
@@ -29,85 +41,84 @@ class ProductCategory(enum.Enum):
     ESR = 'esr'
 
 
-_VERSION_CLASS_PER_PRODUCT = {
-    Product.DEVEDITION: DeveditionVersion,
-    Product.FENNEC: FennecVersion,
-    Product.FIREFOX: FirefoxVersion,
-    Product.THUNDERBIRD: ThunderbirdVersion,
-}
+def parse_version(version):
+    match = VERSION_REGEX.match(version)
+    if not match:
+        raise Exception('Unknown version format.')
+    return match.groupdict()
 
 
-def parse_version(product, version):
-    if isinstance(product, Product):
-        product_enum = product
-    else:
-        try:
-            product_enum = Product[product.upper()]
-        except KeyError:
-            raise ValueError(f'Product {product} versions are not supported')
+def is_final_release(version):
+    return bool(re.match(FINAL_RELEASE_REGEX, version))
 
-    VersionClass = _VERSION_CLASS_PER_PRODUCT[product_enum]
-    return VersionClass.parse(version)
+
+def is_beta(version):
+    return parse_version(version)['point'] == 'b'
+
+
+def is_esr(version):
+    return parse_version(version)['esr'] == 'esr'
 
 
 def is_rc(product, version, partial_updates):
-    gecko_version = parse_version(product, version)
-
-    # Release candidates are only expected when the version number matches
-    # the release pattern
-    if not gecko_version.is_release or gecko_version.patch_number is not None:
-        return False
-
-    if SUPPORTED_FLAVORS.get(f'{product}_rc'):
-        # could hard code "Thunderbird" condition here but
-        # suspect it's better to use SUPPORTED_FLAVORS for a
-        # configuration driven decision.
-        return True
-
-    # RC release types will enable beta-channel testing &
-    # shipping. We need this for all "final" releases
-    # and also any releases that include a beta as a partial.
-    # The assumption that "shipping to beta channel" always
-    # implies other RC behaviour is bound to break at some
-    # point, but this works for now.
-    if partial_updates:
-        for partial_version in partial_updates:
-            partial_gecko_version = parse_version(product, partial_version)
-            if partial_gecko_version.is_beta:
+    if not is_beta(version) and not is_esr(version):
+        if is_final_release(version):
+            # version supports rc flavor
+            # now validate that the product itself supports rc flavor
+            if SUPPORTED_FLAVORS.get(f'{product}_rc'):
+                # could hard code "Thunderbird" condition here but
+                # suspect it's better to use SUPPORTED_FLAVORS for a
+                # configuration driven decision.
                 return True
-
+        # RC release types will enable beta-channel testing &
+        # shipping. We need this for all "final" releases
+        # and also any releases that include a beta as a partial.
+        # The assumption that "shipping to beta channel" always
+        # implies other RC behaviour is bound to break at some
+        # point, but this works for now.
+        if partial_updates:
+            for version in partial_updates:
+                if is_beta(version):
+                    return True
     return False
 
 
-def bump_version(product, version):
+def bump_version(version):
     '''Bump last digit'''
-    gecko_version = parse_version(product, version)
-    number_to_bump = 'beta_number' if gecko_version.is_beta else 'patch_number'
-    bumped_version = gecko_version.bump(number_to_bump)
-    return str(bumped_version)
+    parts = parse_version(version)
+    if parts['patch']:
+        parts['patch'] = int(parts['patch']) + 1
+    else:
+        parts['patch'] = 1
+    if not parts['point']:
+        parts['point'] = '.'
+    return f'{parts["major_minor"]}{parts["point"]}{parts["patch"]}{parts["esr"]}'
+
+
+def get_beta_num(version):
+    if is_beta(version):
+        parts = version.split('b')
+        return int(parts[-1])
 
 
 def is_partner_enabled(product, version, min_version=60):
-    if product == 'firefox':
-        firefox_version = FirefoxVersion.parse(version)
-        return (
-            firefox_version.major_number >= min_version and
-            any((
-                firefox_version.is_beta and firefox_version.beta_number >= 8,
-                firefox_version.is_release,
-                firefox_version.is_esr,
-            ))
-        )
-
+    major_version = int(version.split('.')[0])
+    if product == 'firefox' and major_version >= min_version:
+        if is_beta(version):
+            if get_beta_num(version) >= 8:
+                return True
+        elif is_esr(version):
+            return True
+        else:
+            return True
     return False
 
 
 def is_eme_free_enabled(product, version):
     if product == 'firefox':
-        firefox_version = FirefoxVersion.parse(version)
-        return any((
-            firefox_version.is_beta and firefox_version.beta_number >= 8,
-            firefox_version.is_release,
-        ))
-
+        if is_beta(version):
+            if get_beta_num(version) >= 8:
+                return True
+        elif not is_esr(version):
+            return True
     return False
