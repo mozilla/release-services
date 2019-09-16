@@ -27,8 +27,8 @@ logger = cli_common.log.get_logger(__name__)
 
 UNAUTHORIZED_JSON = {
     'status': 401,
-    'title': '401 Unauthorized: Invalid user scopes',
-    'detail': 'Invalid user scopes',
+    'title': '401 Unauthorized: Invalid user permissions',
+    'detail': 'Invalid user permissions',
     'instance': 'about:blank',
     'type': 'about:blank',
 }
@@ -65,9 +65,12 @@ class BaseUser(object):
         raise NotImplementedError
 
     def has_permissions(self, permissions):
+
         if not isinstance(permissions, (tuple, list)):
             permissions = [permissions]
+
         user_permissions = self.get_permissions()
+
         return all([
             permission in list(user_permissions)
             for permission in permissions
@@ -108,7 +111,7 @@ class TaskclusterUser(BaseUser):
 
         self.credentials = credentials
 
-        logger.info('Init user {}'.format(self.get_id()))
+        logger.info(f'Init user {self.get_id()}')
 
     def get_id(self):
         return self.credentials['clientId']
@@ -183,9 +186,9 @@ class RelengapiTokenUser(BaseUser):
     def get_id(self):
         parts = ['token', self.claims['typ']]
         if 'jti' in self.claims:
-            parts.append('id={}'.format(self.claims['jti']))
+            parts.append(f'id={self.claims["jti"]}')
         try:
-            parts.append('user={}'.format(self.authenticated_email))
+            parts.append(f'user={self.authenticated_email}')
         except AttributeError:
             pass
         return ':'.join(parts)
@@ -210,7 +213,7 @@ class Auth(object):
             try:
                 return flask_login.current_user.is_authenticated
             except Exception as e:
-                logger.error('Invalid authentication: {}'.format(e))
+                logger.error(f'Invalid authentication: {e}')
                 return False
 
     def require_login(self, method):
@@ -235,35 +238,29 @@ class Auth(object):
                     ', '.join(set(p).difference(user_permissions))
                     for p in permissions
                 ])
-                logger.error(f'User {user} misses some scopes: {diff}')
+                logger.error(f'User {user} misses some permissions: {diff}')
                 return False
 
         return True
 
-    def require_permissions(self, scopes):
-        '''Decorator to check if user has required scopes or set of scopes
+    def require_permissions(self, permissions):
+        '''Decorator to check if user has required permissions or set of
+           permissions
         '''
-
-        assert isinstance(scopes, (tuple, list))
-
-        if len(scopes) > 0 and not isinstance(scopes[0], (tuple, list)):
-            scopes = [scopes]
 
         def decorator(method):
             @functools.wraps(method)
             def wrapper(*args, **kwargs):
-                logger.info('Checking scopes', scopes=scopes)
-                if self._require_permissions(scopes):
-                    # Validated scopes, running method
-                    logger.info('Validated scopes, processing api request')
+                logger.info('Checking permissions', permissions=permissions)
+                if self._require_permissions(permissions):
+                    # Validated permissions, running method
+                    logger.info('Validated permissions, processing api request')
                     return method(*args, **kwargs)
                 else:
                     # Abort with a 401 status code
                     return flask.jsonify(UNAUTHORIZED_JSON), 401
             return wrapper
         return decorator
-
-    require_scopes = require_permissions
 
 
 auth0 = flask_oidc.OpenIDConnect()
@@ -381,15 +378,13 @@ class RelengapiToken(backend_common.db.db.Model):
 
 
 def parse_header_taskcluster(request):
-
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         auth_header = request.headers.get('Authentication')
-        if not auth_header:
-            return NO_AUTH
-        header = auth_header.split()
-        if len(header) != 2:
-            return NO_AUTH
+    if not auth_header:
+        return NO_AUTH
+    if not auth_header.startswith('Hawk'):
+        return NO_AUTH
 
     # Get Endpoint configuration
     if ':' in request.host:
@@ -417,8 +412,8 @@ def parse_header_taskcluster(request):
         if not resp.get('status') == 'auth-success':
             raise Exception('Taskcluster rejected the authentication')
     except Exception as e:
-        logger.error('TC auth error: {}'.format(e))
-        logger.error('TC auth details: {}'.format(payload))
+        logger.error(f'TC auth error: {e}')
+        logger.error(f'TC auth details: {payload}')
         return NO_AUTH
 
     return TaskclusterUser(resp)
@@ -463,8 +458,8 @@ def parse_header_relengapi(request):
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         auth_header = request.headers.get('Authentication')
-        if not auth_header:
-            return NO_AUTH
+    if not auth_header:
+        return NO_AUTH
 
     header = auth_header.split()
     if len(header) != 2:

@@ -51,27 +51,24 @@ OPENSSL_ETC_DIR = os.environ.get('OPENSSL_ETC_DIR', '')  # must end with /
 POSTGRESQL_BIN_DIR = os.environ.get('POSTGRESQL_BIN_DIR', '')  # must end with /
 
 IN_DOCKER = False
-if os.path.isdir('/proc/1'):
-    with open('/proc/1/cgroup', 'rt') as ifh:
-        IN_DOCKER = 'docker' in ifh.read()
+with open('/proc/1/cgroup', 'rt') as ifh:
+    IN_DOCKER = 'docker' in ifh.read()
 
 TEMPLATES = {
     'backend-json-api': {}
 }
 
 DEV_PROJECTS = ['postgresql', 'redis']
-OUTSIDE_PROJECTS = ['scriptworker/shipitscript']
+PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
+                    filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
+                           glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
+PROJECTS += DEV_PROJECTS
 
-PROJECTS = OUTSIDE_PROJECTS + DEV_PROJECTS
-PROJECTS += list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
-                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
-                            glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
-PROJECTS = sorted(PROJECTS)
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
     'common/naming': {
-        'update': True,
+        'update': False,
     },
     'postgresql': {
         'update': False,
@@ -86,93 +83,12 @@ PROJECTS_CONFIG = {
         'run': 'REDIS',
         'run_options': {
             'port': 6379,
+            'schema': 'redis',
             'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
-    'notification/policy': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8006,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.testing.mozilla-releng.net',
-                        'dns': 'policy.notification.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.staging.mozilla-releng.net',
-                        'dns': 'policy.notification.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-notif-policy',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://policy.notification.mozilla-releng.net',
-                        'dns': 'policy.notification.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-        ],
-    },
-    'notification/identity': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8007,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-notif-identity',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.testing.mozilla-releng.net',
-                        'dns': 'identity.notification.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-notif-identity',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.staging.mozilla-releng.net',
-                        'dns': 'identity.notification.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-notif-ident',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://identity.notification.mozilla-releng.net',
-                        'dns': 'identity.notification.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-        ],
-    },
     'docs': {
-        'update': True,
+        'update': False,
         'run': 'SPHINX',
         'run_options': {
             'schema': 'http',
@@ -184,19 +100,19 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        's3_bucket': 'releng-testing-docs',
+                        's3_bucket': 'relengstatic-testing-relengdocs-static-website',
                         'url': 'https://docs.testing.mozilla-releng.net',
                         'dns': 'd1sw5c8kdn03y.cloudfront.net.',
                     },
                     'staging': {
                         'enable': True,
-                        's3_bucket': 'releng-staging-docs',
+                        's3_bucket': 'relengstatic-staging-relengdocs-static-website',
                         'url': 'https://docs.staging.mozilla-releng.net',
                         'dns': 'd32jt14rospqzr.cloudfront.net.',
                     },
                     'production': {
                         'enable': True,
-                        's3_bucket': 'releng-production-docs',
+                        's3_bucket': 'relengstatic-prod-relengdocs-static-website',
                         'url': 'https://docs.mozilla-releng.net',
                         'dns': 'd1945er7u4liht.cloudfront.net.',
                     },
@@ -213,11 +129,7 @@ PROJECTS_CONFIG = {
         'requires': [
             'docs',
             'tooltool/api',
-            'tokens/api',
             'treestatus/api',
-            'mapper/api',
-            'notification/policy',
-            'notification/identity',
         ],
         'deploys': [
             {
@@ -225,7 +137,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        's3_bucket': 'releng-testing-frontend',
+                        's3_bucket': 'relengstatic-testing-relengfrontend-static-website',
                         'url': 'https://testing.mozilla-releng.net',
                         'dns': 'd1l70lpksx3ik7.cloudfront.net.',
                         'csp': [
@@ -235,7 +147,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        's3_bucket': 'releng-staging-frontend',
+                        's3_bucket': 'relengstatic-staging-relengfrontend-static-website',
                         'url': 'https://staging.mozilla-releng.net',
                         'dns': 'dpwmwa9tge2p3.cloudfront.net.',
                         'csp': [
@@ -245,7 +157,7 @@ PROJECTS_CONFIG = {
                     },
                     'production': {
                         'enable': True,
-                        's3_bucket': 'releng-production-frontend',
+                        's3_bucket': 'relengstatic-prod-relengfrontend-static-website',
                         'url': 'https://mozilla-releng.net',
                         'dns': 'd1qqwps52z1e12.cloudfront.net.',
                         'dns_domain': 'www.mozilla-releng.net',
@@ -259,7 +171,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'mapper/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8004,
@@ -273,7 +185,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        'url': 'https://mapper.testing.mozilla-releng.net',
+                        'url': 'https://dev.mapper.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -281,7 +193,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        'url': 'https://mapper.staging.mozilla-releng.net',
+                        'url': 'https://stage.mapper.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -297,109 +209,13 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.testing.mozilla-releng.net',
-                        'dns': 'mapper.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.staging.mozilla-releng.net',
-                        'dns': 'mapper.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-mapper',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://mapper.mozilla-releng.net',
-                        'dns': 'mapper.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
         ],
     },
-    'tokens/api': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8003,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'url': 'https://tokens.testing.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'tokens_api_dockerflow_testing',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'url': 'https://tokens.staging.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'tokens_api_dockerflow_staging',
-                    },
-                    'production': {
-                        'enable': True,
-                        'url': 'https://tokens.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'tokens_api_dockerflow_production',
-                    },
-                },
-            },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-tokens',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tokens.testing.mozilla-releng.net',
-                        'dns': 'tokens.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-tokens',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tokens.staging.mozilla-releng.net',
-                        'dns': 'tokens.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-tokens',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tokens.mozilla-releng.net',
-                        'dns': 'tokens.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-        ],
+    'tooltool/client': {
+        'update': False,
     },
     'tooltool/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8002,
@@ -413,7 +229,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        'url': 'https://tooltool.testing.mozilla-releng.net',
+                        'url': 'https://dev.tooltool.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -421,7 +237,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        'url': 'https://tooltool.staging.mozilla-releng.net',
+                        'url': 'https://stage.tooltool.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -434,61 +250,6 @@ PROJECTS_CONFIG = {
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'tooltool_api_dockerflow_production',
-                    },
-                },
-            },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-tooltool',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tooltool.testing.mozilla-releng.net',
-                        'dns': 'shizuoka-60622.herokussl.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-tooltool',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tooltool.staging.mozilla-releng.net',
-                        'dns': 'shizuoka-60622.herokussl.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-tooltool',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://tooltool.mozilla-releng.net',
-                        'dns': 'kochi-11433.herokussl.com',
-                    },
-                },
-            },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-tooltool',
-                        'heroku_dyno_type': 'worker',
-                        'heroku_command': '/bin/flask worker',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-tooltool',
-                        'heroku_dyno_type': 'worker',
-                        'heroku_command': '/bin/flask worker',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-tooltool',
-                        'heroku_dyno_type': 'worker',
-                        'heroku_command': '/bin/flask worker',
                     },
                 },
             },
@@ -547,7 +308,7 @@ PROJECTS_CONFIG = {
         ],
     },
     'treestatus/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8000,
@@ -561,7 +322,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        'url': 'https://treestatus.testing.mozilla-releng.net',
+                        'url': 'https://dev.treestatus.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -569,7 +330,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        'url': 'https://treestatus.staging.mozilla-releng.net',
+                        'url': 'https://stage.treestatus.mozilla-releng.net',
                         'nix_path_attribute': 'dockerflow',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
@@ -585,426 +346,10 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-treestatus',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://treestatus.testing.mozilla-releng.net',
-                        # TODO: we need to change this to SSL Endpoint
-                        'dns': 'treestatus.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-treestatus',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://treestatus.staging.mozilla-releng.net',
-                        # TODO: we need to change this to SSL Endpoint
-                        'dns': 'nagasaki-25852.herokussl.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-production-treestatus',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://treestatus.mozilla-releng.net',
-                        # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
-                        'dns': 'kochi-31413.herokussl.com',
-                    },
-                },
-            },
-        ],
-    },
-    'uplift/bot': {
-        'update': True,
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
-    'codecoverage/bot': {
-        'update': True,
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
-    'codecoverage/backend': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8011,
-        },
-        'requires': [
-            'redis',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-codecoverage',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://coverage.testing.moz.tools',
-                        'dns': 'coverage.testing.moz.tools.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-codecoverage',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://coverage.staging.moz.tools',
-                        'dns': 'coverage.staging.moz.tools.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-production-codecoverage',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://coverage.moz.tools',
-                        'dns': 'coverage.moz.tools.herokudns.com',
-                    },
-                },
-            },
-        ],
-    },
-    'codecoverage/crawler': {
-        'update': True,
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
-    'bugbug/data': {
-        'update': True,
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': False,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': False,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
-    'bugbug/train': {
-        'update': True,
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': False,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': False,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
-    'bugbug/eval': {
-        'update': True,
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': False,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': False,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
-    'pulselistener': {
-        'update': True,
-        'requires': [],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-pulse-listener',
-                        'heroku_dyno_type': 'worker',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-pulse-listener',
-                        'heroku_dyno_type': 'worker',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-production-pulse-listen',
-                        'heroku_dyno_type': 'worker',
-                    },
-                },
-            },
-        ],
-    },
-    'staticanalysis/bot': {
-        'update': True,
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                        'docker_stable_tag': 'static-analysis-bot-testing',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                        'docker_stable_tag': 'static-analysis-bot-staging',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                        'docker_stable_tag': 'static-analysis-bot-production',
-                    },
-                },
-            },
-        ]
-    },
-    'staticanalysis/frontend': {
-        'update': False,
-        'run': 'NEUTRINO',
-        'run_options': {
-            'port': 8010,
-            'envs': {
-                'CONFIG': 'dev',
-            },
-        },
-        'requires': [],
-        'deploys': [
-            {
-                'target': 'S3',
-                'options': {
-
-                    'testing': {
-                        'enable': True,
-                        's3_bucket': 'release-services-staticanalysis-frontend-testing',
-                        'url': 'https://static-analysis.testing.moz.tools',
-                        'dns': 'd1blqs705aw8h9.cloudfront.net.',
-                        'envs': {
-                            # Use the same API as staging
-                            'CONFIG': 'staging',
-                        },
-                        'csp': [
-                            'https://index.taskcluster.net',
-                            'https://queue.taskcluster.net',
-                            'https://taskcluster-artifacts.net',
-                        ],
-                    },
-                    'staging': {
-                        'enable': True,
-                        's3_bucket': 'release-services-staticanalysis-frontend-staging',
-                        'url': 'https://static-analysis.staging.moz.tools',
-                        'dns': 'd21hzgxp28m0tc.cloudfront.net.',
-                        'envs': {
-                            'CONFIG': 'staging',
-                        },
-                        'csp': [
-                            'https://index.taskcluster.net',
-                            'https://queue.taskcluster.net',
-                            'https://taskcluster-artifacts.net',
-                        ],
-                    },
-                    'production': {
-                        'enable': True,
-                        's3_bucket': 'release-services-staticanalysis-frontend-production',
-                        'url': 'https://static-analysis.moz.tools',
-                        'dns': 'd2ezri92497z3m.cloudfront.net.',
-                        'envs': {
-                            'CONFIG': 'production',
-                        },
-                        'csp': [
-                            'https://index.taskcluster.net',
-                            'https://queue.taskcluster.net',
-                            'https://taskcluster-artifacts.net',
-                        ],
-                    },
-                },
-            },
-        ],
-    },
-    'uplift/backend': {
-        'update': True,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8011,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-uplift',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://uplift.shipit.testing.mozilla-releng.net',
-                        'dns': 'uplift.shipit.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-uplift',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://uplift.shipit.staging.mozilla-releng.net',
-                        'dns': 'uplift.shipit.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-production-uplift',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://uplift.shipit.mozilla-releng.net',
-                        'dns': 'uplift.shipit.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
         ],
     },
     'shipit/api': {
-        'update': True,
+        'update': False,
         'run': 'FLASK',
         'run_options': {
             'port': 8015,
@@ -1013,37 +358,6 @@ PROJECTS_CONFIG = {
             'postgresql',
         ],
         'deploys': [
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'url': 'https://api.shipit.testing.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-testing',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'url': 'https://api.shipit.staging.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-staging',
-                    },
-                    'production': {
-                        'enable': True,
-                        # TODO: we will switch to new url soon
-                        # 'url': 'https://api.shipit.mozilla-releng.net',
-                        'url': 'https://shipit-api.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/shipitbackend',
-                        'docker_stable_tag': 'shipit-api-shipit-api.dockerflow-production',
-                    },
-                },
-            },
             {
                 'target': 'DOCKERHUB',
                 'options': {
@@ -1095,7 +409,7 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'enable': True,
-                        's3_bucket': 'shipit-testing-frontend',
+                        's3_bucket': 'relengstatic-testing-shipitfrontend-static-website',
                         'url': 'https://shipit.testing.mozilla-releng.net',
                         'dns': 'd2jpisuzgldax2.cloudfront.net.',
                         'envs': {
@@ -1110,7 +424,7 @@ PROJECTS_CONFIG = {
                     },
                     'staging': {
                         'enable': True,
-                        's3_bucket': 'shipit-staging-frontend',
+                        's3_bucket': 'relengstatic-staging-shipitfrontend-static-website',
                         'url': 'https://shipit.staging.mozilla-releng.net',
                         'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                         'envs': {
@@ -1124,8 +438,7 @@ PROJECTS_CONFIG = {
                     },
                     'production': {
                         'enable': True,
-                        's3_bucket': 'shipit-production-frontend',
-                        'url': 'https://shipit.mozilla-releng.net',
+                        's3_bucket': 'relengstatic-prod-shipitfrontend-static-website',
                         'dns': 'dve8yd1431ifz.cloudfront.net.',
                         'envs': {
                             'CONFIG': 'production',
@@ -1147,21 +460,21 @@ PROJECTS_CONFIG = {
                 'target': 'DOCKERHUB',
                 'options': {
                     'testing': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'scriptworker_shipitscript_docker_testing',
                     },
                     'staging': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'scriptworker_shipitscript_docker_staging',
                     },
                     'production': {
-                        'enable': True,
+                        'enable': False,
                         'nix_path_attribute': 'docker',
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',

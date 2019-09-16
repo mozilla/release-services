@@ -1,4 +1,0 @@
--e ./../../../lib/cli_common[log] #egg=mozilla-cli-common
-
-https://github.com/marco-c/firefox-code-coverage/archive/d378786543cd0d15e7c80c2feec1c3f06aabebe4.tar.gz#egg=firefox-code-coverage
-https://github.com/mozilla/coverage-crawler/archive/0f20282ae05ee6e15e697d39d82dc7c89865b255.tar.gz#egg=coverage-crawler

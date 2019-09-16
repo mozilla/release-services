@@ -5,3 +5,9 @@
 
 PROJECT_NAME = 'treestatus/api'
 APP_NAME = 'treestatus_api'
+
+SCOPE_PREFIX = 'project:releng:treestatus'
+SCOPE_TREES_UPDATE = f'{SCOPE_PREFIX}/trees/update'
+SCOPE_TREES_CREATE = f'{SCOPE_PREFIX}/trees/create'
+SCOPE_TREES_DELETE = f'{SCOPE_PREFIX}/trees/delete'
+SCOPE_REVERT_CHANGES = f'{SCOPE_PREFIX}/recent_changes/revert'

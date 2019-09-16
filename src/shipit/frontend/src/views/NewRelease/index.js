@@ -100,11 +100,27 @@ export default class NewRelease extends React.Component {
 
   guessPartialVersions = async () => {
     const { product } = this.state.selectedProduct;
-    const { branch, rcBranch, numberOfPartials } = this.state.selectedBranch;
+    const {
+      branch, rcBranch, numberOfPartials, alternativeBranch,
+    } = this.state.selectedBranch;
+    const numberOfPartialsOrDefault = numberOfPartials || 3;
+
     const shippedReleases = await getShippedReleases(product, branch);
     const shippedBuilds = shippedReleases.map(r => `${r.version}build${r.build_number}`);
     // take first N releases
-    const suggestedBuilds = shippedBuilds.slice(0, numberOfPartials || 3);
+    const suggestedBuilds = shippedBuilds.slice(0, numberOfPartialsOrDefault);
+
+    // alternativeBranch is used for find partials from a different branch, and
+    // usually used for ESR releases
+    let suggestedAlternativeBuilds = [];
+    if (suggestedBuilds.length < numberOfPartialsOrDefault && alternativeBranch) {
+      const alternativeReleases = await getShippedReleases(product, alternativeBranch);
+      const shippedAlternativeBuilds = alternativeReleases.map(r => `${r.version}build${r.build_number}`);
+      suggestedAlternativeBuilds = shippedAlternativeBuilds.slice(
+        0,
+        numberOfPartialsOrDefault - suggestedBuilds.length,
+      );
+    }
     // if RC, also add last shipped beta
     let suggestedRcBuilds = [];
     if (rcBranch && this.isRc(this.state.version)) {
@@ -114,7 +130,7 @@ export default class NewRelease extends React.Component {
     }
 
     this.setState({
-      partialVersions: suggestedBuilds.concat(suggestedRcBuilds),
+      partialVersions: suggestedBuilds.concat(suggestedRcBuilds, suggestedAlternativeBuilds),
     });
   };
 
@@ -125,6 +141,7 @@ export default class NewRelease extends React.Component {
     this.version = await getVersion(
       this.state.selectedBranch.repo, rev.node,
       this.state.selectedProduct.appName,
+      this.state.selectedBranch.versionFile,
     );
     await this.guessBuildId();
     if (this.state.selectedProduct.enablePartials) {
@@ -151,6 +168,7 @@ export default class NewRelease extends React.Component {
     this.version = await getVersion(
       this.state.selectedBranch.repo, event.target.value,
       this.state.selectedProduct.appName,
+      this.state.selectedBranch.versionFile,
     );
     await this.guessBuildId();
     if (this.state.selectedProduct.enablePartials) {
@@ -189,7 +207,8 @@ export default class NewRelease extends React.Component {
     this.setState({ inProgress: true });
     const { product } = this.state.selectedProduct;
     const {
-      branch, repo, rcBranch, rcBranchVersionPattern, rcRepo,
+      branch, repo, rcBranch, rcBranchVersionPattern, rcRepo, productKey,
+      alternativeBranch, alternativeRepo,
     } = this.state.selectedBranch;
     const releaseObj = {
       product,
@@ -210,10 +229,15 @@ export default class NewRelease extends React.Component {
           partialBranch = rcBranch;
           partialRepo = rcRepo;
         }
-        const shippedReleases = await getShippedReleases(
+        let shippedReleases = await getShippedReleases(
           product, partialBranch, version,
           buildNumber,
         );
+        if (shippedReleases.length === 0 && alternativeBranch) {
+          partialBranch = alternativeBranch;
+          partialRepo = alternativeRepo;
+          shippedReleases = await getShippedReleases(product, partialBranch, version, buildNumber);
+        }
         if (shippedReleases.length !== 1) {
           this.setState({
             inProgress: false,
@@ -236,6 +260,10 @@ export default class NewRelease extends React.Component {
       });
       releaseObj.partial_updates = partialUpdatesFlattened;
     }
+    if (productKey) {
+      releaseObj.product_key = productKey;
+    }
+
     await this.doEet(releaseObj);
     this.setState({ inProgress: false });
   };

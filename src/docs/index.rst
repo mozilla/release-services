@@ -27,20 +27,11 @@ Projects
 .. toctree::
     :maxdepth: 1
 
-    docs <projects/docs>
+    ToolTool <projects/tooltool>
+    TreeStatus <projects/treestatus>
+    Mapper <projects/mapper>
     releng-frontend <projects/releng-frontend>
-    mapper <projects/mapper>
-    notification <projects/notification>
-    tooltool <projects/tooltool>
-    treestatus <projects/treestatus>
-    codecoverage/bot <projects/codecoverage-bot>
-    codecoverage/backend <projects/codecoverage-backend>
-    codecoverage/crawler <projects/codecoverage-crawler>
-    shipit/frontend <projects/shipit-frontend>
-    staticanalysis/bot <projects/staticanalysis-bot>
-    pulselistener <projects/pulselistener>
-    uplift/backend <projects/uplift-backend>
-    uplift/bot <projects/uplift-bot>
+    docs <projects/docs>
 
 
 Develop

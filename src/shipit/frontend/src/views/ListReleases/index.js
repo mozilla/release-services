@@ -4,6 +4,7 @@ import { object } from 'prop-types';
 import ReactInterval from 'react-interval';
 import { Queue } from 'taskcluster-client-web';
 import config, { SHIPIT_API_URL } from '../../config';
+import { getShippedReleases } from '../../components/api';
 
 const statusStyles = {
   // TC statuses
@@ -63,22 +64,17 @@ export default class ListReleases extends React.Component {
     }
   };
 
-  getRecentReleases = async () => {
-    // this is an expensive call, let's not repeat it
-    if (this.state.shippedReleases.length > 0) {
-      return;
-    }
+  getRecentReleases = async (product, branch) => {
     try {
-      const req = await fetch(`${SHIPIT_API_URL}/releases?status=shipped`);
-      const shippedReleases = await req.json();
+      const shippedReleases = await getShippedReleases(product, branch);
       let shippedReleasesMessage = '';
       if (shippedReleases.length === 0) {
         shippedReleasesMessage = <h3>No recent releases!</h3>;
       }
-      this.setState({
+      this.setState(state => ({
         shippedReleasesMessage,
-        shippedReleases: shippedReleases.reverse().slice(0, 8),
-      });
+        shippedReleases: state.shippedReleases.concat(shippedReleases.slice(0, 4)),
+      }));
     } catch (e) {
       const shippedReleasesMessage = <h3>Failed to fetch releases!</h3>;
       this.setState({
@@ -91,18 +87,28 @@ export default class ListReleases extends React.Component {
 
   handleTabSelect = (key) => {
     if (key === 'recentReleases') {
-      this.getRecentReleases();
+      // this is an expensive call, let's not repeat it
+      if (this.state.shippedReleases.length > 0) {
+        return;
+      }
+      config.PRODUCTS.forEach((product) => {
+        product.branches.forEach((branch) => {
+          this.getRecentReleases(product.product, branch.branch);
+        });
+      });
     }
   };
 
   renderRecentReleases = () => {
     const { shippedReleases, shippedReleasesMessage } = this.state;
+    // Sort the releases by date, reversed
+    const sortedShippedReleases = shippedReleases.sort((a, b) => a.created < b.created);
     return (
       <div className="container">
         <h3>Recent releases</h3>
         <div>
           {shippedReleasesMessage}
-          {shippedReleases.length > 0 && shippedReleases.map(release => (
+          {sortedShippedReleases.length > 0 && sortedShippedReleases.map(release => (
             <Release
               release={release}
               key={release.name}
@@ -377,6 +383,7 @@ class TaskLabel extends React.PureComponent {
       submitted: props.submitted,
       errorMsg: null,
       selectedSignoff: null,
+      inProgress: false,
     };
   }
 
@@ -393,6 +400,7 @@ class TaskLabel extends React.PureComponent {
   };
 
   signOff = async () => {
+    this.setState({ inProgress: true });
     const { accessToken } = this.context.authController.getUserSession();
     const { releaseName, name } = this.props;
     const { selectedSignoff } = this.state;
@@ -413,10 +421,13 @@ class TaskLabel extends React.PureComponent {
     } catch (e) {
       this.setState({ errorMsg: 'Server issues!' });
       throw e;
+    } finally {
+      this.setState({ inProgress: false });
     }
   };
 
   schedulePhase = async () => {
+    this.setState({ inProgress: true });
     const { accessToken } = this.context.authController.getUserSession();
     const { releaseName, name } = this.props;
     const headers = { Authorization: `Bearer ${accessToken}` };
@@ -432,6 +443,8 @@ class TaskLabel extends React.PureComponent {
     } catch (e) {
       this.setState({ errorMsg: 'Server issues!' });
       throw e;
+    } finally {
+      this.setState({ inProgress: false });
     }
   };
 
@@ -474,11 +487,18 @@ class TaskLabel extends React.PureComponent {
   };
 
   renderBody = () => {
-    const { submitted, errorMsg } = this.state;
+    const { inProgress, submitted, errorMsg } = this.state;
     if (errorMsg) {
       return (
         <div>
           <p>{errorMsg}</p>
+        </div>
+      );
+    }
+    if (inProgress) {
+      return (
+        <div>
+          <h4>Working...</h4>
         </div>
       );
     }
@@ -524,7 +544,7 @@ class TaskLabel extends React.PureComponent {
                   <Button
                     onClick={this.doEet}
                     bsStyle="danger"
-                    disabled={!this.context.authController.userSession && !this.state.submitted}
+                    disabled={!this.context.authController.userSession || this.state.inProgress}
                   >
                     Do eet!
                   </Button>

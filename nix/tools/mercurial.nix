@@ -8,8 +8,8 @@ let
   hg_tools = mkDerivation {
     name = "mozilla-hg-tools";
     src = fetchurl {
-      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/6cd994e30bb1.tar.bz2";
-      sha256 = "0dh82jz7b1qqfv7ghrzf6xdgcgpk10z7338d90inyckk0naiac5g";
+      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/307f3c28687630bf91b4c19c913f0c677e0ae724.tar.bz2";
+      sha256 = "0m7s6vnmbyfps9gp7pspr5x6y8czj0adp8d5hq6n5gl18xrjhdhg";
     };
     installPhase = ''
       mkdir -p $out
@@ -25,8 +25,8 @@ let
     };
   };
 
-  # Stick to 4.8, which is supported by version-control-tools.
-  version = "4.8";
+  # Stick to 5.1, which is supported by version-control-tools.
+  version = "5.1";
   name = "mercurial-${version}";
 
 in python2Packages.buildPythonApplication {
@@ -35,10 +35,10 @@ in python2Packages.buildPythonApplication {
 
   src = fetchurl {
     url = "https://mercurial-scm.org/release/${name}.tar.gz";
-    sha256 = "00rzjbf2blxkc0qwd9mdzx5fnzgpp4jxzijq6wgsjgmqscx40sy5";
+    sha256 = "0af8wx5sn35l8c8sfj7cabx15i9b2di81ibx5d11wh8fhqnxj8k2";
   };
 
-  buildInputs = [ makeWrapper docutils unzip ];
+  buildInputs = [ makeWrapper python2Packages.docutils unzip ];
 
   makeFlags = [ "PREFIX=$(out)" ];
 
@@ -55,6 +55,7 @@ in python2Packages.buildPythonApplication {
     hgmo = ${hg_tools}/hgext/hgmo
     pushlog = ${hg_tools}/hgext/pushlog
     mozext = ${hg_tools}/hgext/mozext
+    firefoxtree = ${hg_tools}/hgext/firefoxtree
     EOF
   '';
 }

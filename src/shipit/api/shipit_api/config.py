@@ -8,7 +8,7 @@ import tempfile
 
 PROJECT_NAME = 'shipit/api'
 APP_NAME = 'shipit_api'
-SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)
+SCOPE_PREFIX = f'project:releng:services/{APP_NAME}'
 
 # A route key that triggers rebuild of product details.
 # Worker will listen to this route key to trigger the rebuild.
@@ -26,19 +26,32 @@ BREAKPOINT_VERSION = 60
 # should be using the major version of the older release, while ESR_NEXT should
 # be using the major version of the release with greater version.
 CURRENT_ESR = '60'
-ESR_NEXT = ''
+ESR_NEXT = '68'
 # Pre Firefox version
 LATEST_FIREFOX_OLDER_VERSION = '3.6.28'
 # TODO: move the branch configs to secrets
 RELEASE_BRANCH = 'releases/mozilla-release'
+FENNEC_RELEASE_BRANCH = 'releases/mozilla-esr68'
 BETA_BRANCH = 'releases/mozilla-beta'
+FENNEC_BETA_BRANCH = 'releases/mozilla-esr68'
 ESR_BRANCH_PREFIX = 'releases/mozilla-esr'
 # FIREFOX_NIGHTLY version is hard coded and requires a human to update it after
 # the latest Nightly builds are available on CDNs after version bump (merge
 # day).
 # We could have used the in-tree version, but there can be race conditions,
 # e.g. version bumped, but still no builds available.
-FIREFOX_NIGHTLY = '67.0a1'
+FIREFOX_NIGHTLY = '71.0a1'
+FENNEC_NIGHTLY = '68.2a1'
+# The next 6 dates are information about the current and next release
+# They must be updated at the same time as FIREFOX_NIGHTLY
+# They can be found: https://wiki.mozilla.org/Release_Management/Calendar
+LAST_SOFTFREEZE_DATE = '2019-08-26'
+LAST_MERGE_DATE = '2019-09-02'
+LAST_RELEASE_DATE = '2019-09-03'
+NEXT_SOFTFREEZE_DATE = '2019-10-14'
+NEXT_MERGE_DATE = '2019-10-21'
+NEXT_RELEASE_DATE = '2019-10-22'
+
 # Aurora has been replaced by Dev Edition, but some 3rd party applications may
 # still rely on this value.
 FIREFOX_AURORA = ''
@@ -49,9 +62,9 @@ IOS_VERSION = '12.1'
 
 # Thunderbird configs
 LATEST_THUNDERBIRD_ALPHA_VERSION = '54.0a2'
-LATEST_THUNDERBIRD_NIGHTLY_VERSION = '67.0a1'
-# TODO: Need to update this every cycle?
-THUNDERBIRD_RELEASE_BRANCH = 'releases/comm-esr60'
+LATEST_THUNDERBIRD_NIGHTLY_VERSION = '71.0a1'
+# TODO: Need to update this every cycle
+THUNDERBIRD_RELEASE_BRANCH = 'releases/comm-esr68'
 THUNDERBIRD_BETA_BRANCH = 'releases/comm-beta'
 
 # Mixed
@@ -446,6 +459,19 @@ SUPPORTED_FLAVORS = {
         {'name': 'promote_thunderbird', 'in_previous_graph_ids': True},
         {'name': 'push_thunderbird', 'in_previous_graph_ids': True},
         {'name': 'ship_thunderbird', 'in_previous_graph_ids': True},
+    ],
+    'fennec_beta': [
+        {'name': 'promote_fennec_beta', 'in_previous_graph_ids': True},
+        {'name': 'ship_fennec_beta', 'in_previous_graph_ids': True},
+    ],
+    'fennec_release': [
+        {'name': 'promote_fennec_release', 'in_previous_graph_ids': True},
+        {'name': 'ship_fennec_release', 'in_previous_graph_ids': True},
+    ],
+    'fennec_release_rc': [
+        {'name': 'promote_fennec_release', 'in_previous_graph_ids': True},
+        {'name': 'ship_fennec_release_rc', 'in_previous_graph_ids': True},
+        {'name': 'ship_fennec_release', 'in_previous_graph_ids': True},
     ],
 }
 

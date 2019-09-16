@@ -15,13 +15,13 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 # -- LOAD SECRETS -------------------------------------------------------------
 
 required = [
-    'SECRET_KEY_BASE64',
-    'DATABASE_URL',
-    'AUTH_DOMAIN',
+    'AUTH_AUDIENCE',
     'AUTH_CLIENT_ID',
     'AUTH_CLIENT_SECRET',
+    'AUTH_DOMAIN',
     'AUTH_REDIRECT_URI',
-    'AUTH_AUDIENCE',
+    'DATABASE_URL',
+    'SECRET_KEY_BASE64',
 ]
 
 secrets = cli_common.taskcluster.get_secrets(
@@ -37,8 +37,16 @@ locals().update(secrets)
 
 SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
 
+# -- PULSE -----------------------------------------------------------------
+
+if 'PULSE_PASSWORD' in os.environ:
+    PULSE_PASSWORD = os.environ['PULSE_PASSWORD']
+
+if 'PULSE_USER' in os.environ:
+    PULSE_USER = os.environ['PULSE_USER']
 
 # -- DATABASE -----------------------------------------------------------------
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 if DEBUG:
@@ -55,6 +63,7 @@ else:
     SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 
 # -- AUTH --------------------------------------------------------------------
+
 OIDC_USER_INFO_ENABLED = True
 args = [
     secrets['AUTH_CLIENT_ID'],
@@ -104,7 +113,13 @@ for product in ['firefox', 'fennec', 'devedition']:
         f'abandon_release/{product}': GROUPS['firefox-signoff'],
     }
     phases = []
-    for flavor in [product, f'{product}_rc']:
+    for flavor in [
+        product,
+        f'{product}_rc',
+        f'{product}_release',
+        f'{product}_release_rc',
+        f'{product}_beta',
+    ]:
         phases += [i['name'] for i in shipit_api.config.SUPPORTED_FLAVORS.get(flavor, [])]
     for phase in set(phases):
         scopes.update({
@@ -130,9 +145,7 @@ AUTH0_AUTH_SCOPES.update(scopes)
 
 # other scopes
 AUTH0_AUTH_SCOPES.update({
-    'sync_releases': [],
     'rebuild_product_details': [],
-    'sync_release_datetimes': [],
     'update_release_status': [],
 })
 

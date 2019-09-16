@@ -9,7 +9,10 @@ from flask import abort
 from flask import current_app
 from flask import jsonify
 from flask_login import current_user
+from mozilla_version.gecko import DeveditionVersion
+from mozilla_version.gecko import FennecVersion
 from mozilla_version.gecko import FirefoxVersion
+from mozilla_version.gecko import ThunderbirdVersion
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
@@ -22,13 +25,21 @@ from shipit_api.config import SCOPE_PREFIX
 from shipit_api.models import Phase
 from shipit_api.models import Release
 from shipit_api.models import Signoff
-from shipit_api.tasks import ActionsJsonNotFound
+from shipit_api.release import Product
+from shipit_api.tasks import ArtifactNotFound
 from shipit_api.tasks import UnsupportedFlavor
-from shipit_api.tasks import fetch_actions_json
+from shipit_api.tasks import fetch_artifact
 from shipit_api.tasks import generate_action_hook
 from shipit_api.tasks import render_action_hook
 
 logger = get_logger(__name__)
+
+VERSION_CLASSES = {
+    Product.FIREFOX.value: FirefoxVersion,
+    Product.FENNEC.value: FennecVersion,
+    Product.THUNDERBIRD.value: ThunderbirdVersion,
+    Product.DEVEDITION.value: DeveditionVersion,
+}
 
 
 def good_version(release):
@@ -39,23 +50,34 @@ def good_version(release):
     Example versions that cannot be parsed:
     1.1, 1.1b1, 2.0.0.1
     '''
+    product = release['product']
+    if product not in VERSION_CLASSES:
+        raise ValueError(f'Product {product} versions are not supported')
     try:
-        FirefoxVersion.parse(release['version'])
+        VERSION_CLASSES[product].parse(release['version'])
         return True
     except ValueError:
         return False
 
 
-def notify_via_irc(message):
-    owners = current_app.config.get('IRC_NOTIFICATIONS_OWNERS')
-    channel = current_app.config.get('IRC_NOTIFICATIONS_CHANNEL')
+def notify_via_irc(product, message):
+    owners_section = current_app.config.get('IRC_NOTIFICATIONS_OWNERS_PER_PRODUCT')
+    channels_section = current_app.config.get('IRC_NOTIFICATIONS_CHANNELS_PER_PRODUCT')
 
-    if owners and channel:
+    if not (owners_section and channels_section):
+        logger.info(f'Product "{product}" IRC notifications are not enabled')
+        return
+
+    owners = owners_section.get(product, owners_section.get('default'))
+    channels = channels_section.get(product, channels_section.get('default'))
+
+    if owners and channels:
         owners = ': '.join(owners)
-        current_app.notify.irc({
-            'channel': channel,
-            'message': f'{owners}: {message}',
-        })
+        for channel in channels:
+            current_app.notify.irc({
+                'channel': channel,
+                'message': f'{owners}: {message}',
+            })
 
 
 def add_release(body):
@@ -66,15 +88,17 @@ def add_release(body):
         abort(401, f'required permission: {required_permission}, user permissions: {user_permissions}')
 
     session = current_app.db.session
+    product = body['product']
     r = Release(
-        product=body['product'],
+        product=product,
         version=body['version'],
         branch=body['branch'],
         revision=body['revision'],
         build_number=body['build_number'],
         release_eta=body.get('release_eta'),
         status='scheduled',
-        partial_updates=body.get('partial_updates')
+        partial_updates=body.get('partial_updates'),
+        product_key=body.get('product_key'),
     )
     try:
         r.generate_phases(
@@ -87,7 +111,7 @@ def add_release(body):
     except UnsupportedFlavor as e:
         raise BadRequest(description=e.description)
 
-    notify_via_irc(f'New release ({r.product} {r.version} build{r.build_number}) was just created.')
+    notify_via_irc(product, f'New release ({product} {r.version} build{r.build_number}) was just created.')
 
     return release, 201
 
@@ -111,7 +135,7 @@ def list_releases(product=None, branch=None, version=None, build_number=None,
     releases = [r.json for r in releases.all()]
     # filter out not parsable releases, like 1.1, 1.1b1, etc
     releases = filter(good_version, releases)
-    return sorted(releases, key=lambda r: FirefoxVersion.parse(r['version']))
+    return sorted(releases, key=lambda r: VERSION_CLASSES[r['product']].parse(r['version']))
 
 
 def get_release(name):
@@ -158,22 +182,20 @@ def schedule_phase(name, phase):
         if not signoff.signed:
             abort(400, 'Pending signoffs')
 
-    task_or_hook = phase.task_json
-    if 'hook_payload' in task_or_hook:
-        hooks = get_service('hooks')
-        client_id = hooks.options['credentials']['clientId'].decode('utf-8')
-        extra_context = {'clientId': client_id}
-        result = hooks.triggerHook(
-            task_or_hook['hook_group_id'],
-            task_or_hook['hook_id'],
-            phase.rendered_hook_payload(extra_context=extra_context),
-        )
-        phase.task_id = result['status']['taskId']
-    else:
-        queue = get_service('queue')
-        client_id = queue.options['credentials']['clientId'].decode('utf-8')
-        extra_context = {'clientId': client_id}
-        queue.createTask(phase.task_id, phase.rendered(extra_context=extra_context))
+    hook = phase.task_json
+
+    if 'hook_payload' not in hook:
+        raise ValueError('Action tasks are not supported')
+
+    hooks = get_service('hooks')
+    client_id = hooks.options['credentials']['clientId'].decode('utf-8')
+    extra_context = {'clientId': client_id}
+    result = hooks.triggerHook(
+        hook['hook_group_id'],
+        hook['hook_id'],
+        phase.rendered_hook_payload(extra_context=extra_context),
+    )
+    phase.task_id = result['status']['taskId']
 
     phase.submitted = True
     phase.completed_by = current_user.get_id()
@@ -184,7 +206,8 @@ def schedule_phase(name, phase):
         phase.release.completed = completed
     session.commit()
 
-    notify_via_irc(f'Phase {phase.name} was just scheduled '
+    notify_via_irc(phase.release.product,
+                   f'Phase {phase.name} was just scheduled '
                    f'for release {phase.release.product} {phase.release.version} '
                    f'build{phase.release.build_number} - '
                    f'(https://tools.taskcluster.net/groups/{phase.task_id})')
@@ -206,8 +229,9 @@ def abandon_release(name):
         # Cancel all submitted task groups first
         for phase in filter(lambda x: x.submitted, release.phases):
             try:
-                actions = fetch_actions_json(phase.task_id)
-            except ActionsJsonNotFound:
+                actions = fetch_artifact(phase.task_id, 'public/actions.json')
+                parameters = fetch_artifact(phase.task_id, 'public/parameters.yml')
+            except ArtifactNotFound:
                 logger.info('Ignoring not completed action task %s', phase.task_id)
                 continue
 
@@ -215,6 +239,7 @@ def abandon_release(name):
                 task_group_id=phase.task_id,
                 action_name='cancel-all',
                 actions=actions,
+                parameters=parameters,
                 input_={},
             )
             hooks = get_service('hooks')
@@ -237,40 +262,14 @@ def abandon_release(name):
     except NoResultFound:
         abort(404)
 
-    notify_via_irc(f'Release {release.product} {release.version} build{release.build_number} was just canceled.')
+    notify_via_irc(
+        release.product,
+        f'Release {release.product} {release.version} build{release.build_number} was just canceled.')
 
     return release_json
 
 
-@auth.require_scopes([SCOPE_PREFIX + '/sync_releases'])
-def sync_releases(releases):
-    session = current_app.db.session
-    for release in releases:
-        try:
-            session.query(Release).filter(Release.name == release['name']).one()
-            # nothing todo
-        except NoResultFound:
-            status = 'shipped'
-            if not release['shippedAt']:
-                status = 'aborted'
-            r = Release(
-                product=release['product'],
-                version=release['version'],
-                branch=release['branch'],
-                revision=release['mozillaRevision'],
-                build_number=release['buildNumber'],
-                release_eta=release.get('release_eta'),
-                partial_updates=release.get('partials'),
-                status=status,
-            )
-            r.created = release['submittedAt']
-            r.completed = release['shippedAt']
-            session.add(r)
-            session.commit()
-    return jsonify({'ok': 'ok'})
-
-
-@auth.require_scopes([SCOPE_PREFIX + '/rebuild_product_details'])
+@auth.require_permissions([SCOPE_PREFIX + '/rebuild_product_details'])
 def rebuild_product_details(options):
     pulse_user = current_app.config['PULSE_USER']
     exchange = f'exchange/{pulse_user}/{PROJECT_NAME}'
@@ -288,22 +287,7 @@ def rebuild_product_details(options):
     return jsonify({'ok': 'ok'})
 
 
-@auth.require_scopes([SCOPE_PREFIX + '/sync_release_datetimes'])
-def sync_release_datetimes(releases):
-    session = current_app.db.session
-    for release in releases:
-        try:
-            r = session.query(Release).filter(Release.name == release['name']).one()
-            r.created = release['submittedAt']
-            r.completed = release['shippedAt']
-            session.commit()
-        except NoResultFound:
-            # nothing todo
-            pass
-    return jsonify({'ok': 'ok'})
-
-
-@auth.require_scopes([SCOPE_PREFIX + '/update_release_status'])
+@auth.require_permissions([SCOPE_PREFIX + '/update_release_status'])
 def update_release_status(name, body):
     session = current_app.db.session
     try:
@@ -318,7 +302,9 @@ def update_release_status(name, body):
     session.commit()
     release = r.json
 
-    notify_via_irc(f'Release {r.product} {r.version} build{r.build_number} status changed to `{status}`.')
+    notify_via_irc(
+        r.product,
+        f'Release {r.product} {r.version} build{r.build_number} status changed to `{status}`.')
 
     return release
 
@@ -379,6 +365,7 @@ def phase_signoff(name, phase, uid):
 
     r = phase_obj.release
     notify_via_irc(
+        r.product,
         f'{phase} of {r.product} {r.version} build{r.build_number} signed off by {who}.')
 
     return dict(signoffs=signoffs)

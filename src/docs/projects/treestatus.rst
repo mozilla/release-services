@@ -4,26 +4,10 @@ Project: treestatus
 ===================
 
 
-:Url:
-  `production <https://treestatus.mozilla-releng.net>`_,
-  `staging <https://treestatus.staging.mozilla-releng.net>`_
-:Papertrail:
-  `production <https://papertrailapp.com/groups/4472992/events?q=program%3Amozilla-releng%2Fservices%2Fproduction%2Freleng-treestatus>`_,
-  `staging <https://papertrailapp.com/groups/4472992/events?q=program%3Amozilla-releng%2Fservices%2Fstaging%2Freleng-treestatus>`_
-:Sentry:
-  `production <https://sentry.prod.mozaws.net/operations/mozilla-releng-services/?query=environment%3Aproduction+site%3Areleng-treestatus+>`_,
-  `staging <https://sentry.prod.mozaws.net/operations/mozilla-releng-services/?query=environment%3Astaging+site%3Areleng-treestatus+>`_
-:Heroku:
-  `production <https://dashboard.heroku.com/apps/releng-production-treestatus>`_,
-  `staging <https://dashboard.heroku.com/apps/releng-staging-treestatus>`_
-:Database (PostreSQL):
-  `production <https://data.heroku.com/datastores/dad34d86-54d0-46fc-911e-82768c73f247>`_,
-  `staging <https://data.heroku.com/datastores/81feab6a-0a7c-4489-a6a1-9c0106c5e0ea>`_
-:Cache (Redis):
-  `production <https://data.heroku.com/datastores/04b0b822-a806-475b-a397-38df291284fc>`_,
-  `staging <https://data.heroku.com/datastores/6f5e3490-0e46-4e7b-89d1-abbfb1fd9026>`_
 :Contact: `Rok Garbas`_, (backup `Release Engineering`_)
 
+.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
+.. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
 
 TreeStatus is a relatively simple tool to keep track of the status of the
 **trees** at Mozilla.
@@ -116,6 +100,9 @@ Client Scopes ``secrets:get:garbage/michel/treestatus-api-dev``
   it won't be displayed afterwards.
 
 
+.. _`Taskcluster client`: https://tools.taskcluster.net/auth/clients
+
+
 3. Project shell
 ^^^^^^^^^^^^^^^^
 
@@ -173,8 +160,7 @@ which endpoint is protected by you can look at ``api.py``). Those scopes
   revert those updates. This role is usually given to *sheriff's deputies* to
   be able to close/open certain trees.
 
-  Roles / Clients with **admin role** are listed `here
-  <https://tools.taskcluster.net/auth/scopes/assume%3Aproject%3Areleng%3Atreestatus%2Fsheriff>`_.
+  Roles / Clients with **admin role** are listed here: https://tools.taskcluster.net/auth/scopes/assume%3Aproject%3Areleng%3Atreestatus%2Fsheriff
 
 
 
@@ -335,8 +321,6 @@ To start developing ``treestatus`` you would need to:
 
 
 
-.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
-.. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
 .. _`SQLAlchemy`: https://pypi.python.org/pypi/SQLAlchemy
 .. _`Taskcluster Auth service`: https://docs.taskcluster.net/reference/platform/taskcluster-auth
 .. _`Pulse`: https://wiki.mozilla.org/Auto-tools/Projects/Pulse

@@ -21,7 +21,7 @@ import mapper_api.models
 logger = cli_common.log.get_logger(__name__)
 
 
-@backend_common.auth.auth.require_scopes([mapper_api.config.SCOPE_PREFIX + '/project/insert'])
+@backend_common.auth.auth.require_permissions([mapper_api.config.SCOPE_PROJECT_INSERT])
 def post_project(project: str) -> dict:
     session = flask.current_app.db.session
 
@@ -39,7 +39,7 @@ def post_project(project: str) -> dict:
     return {}
 
 
-@backend_common.auth.auth.require_scopes([mapper_api.config.SCOPE_PREFIX + '/mapping/insert'])
+@backend_common.auth.auth.require_permissions([mapper_api.config.SCOPE_MAPPING_INSERT])
 def post_hg_git_mapping(project: str,
                         git_commit: str,
                         hg_changeset: str,
@@ -94,7 +94,7 @@ def post_hg_git_mapping(project: str,
         )
 
 
-@backend_common.auth.auth.require_scopes([mapper_api.config.SCOPE_PREFIX + '/mapping/insert'])
+@backend_common.auth.auth.require_permissions([mapper_api.config.SCOPE_MAPPING_INSERT])
 def post_insert_many_ignoredups(project: str,
                                 body: typing.Union[bytes, str],
                                 ) -> dict:
@@ -106,7 +106,7 @@ def post_insert_many_ignoredups(project: str,
     )
 
 
-@backend_common.auth.auth.require_scopes([mapper_api.config.SCOPE_PREFIX + '/mapping/insert'])
+@backend_common.auth.auth.require_permissions([mapper_api.config.SCOPE_MAPPING_INSERT])
 def post_insert_many(project: str,
                      body: typing.Union[bytes, str],
                      ) -> dict:
@@ -131,7 +131,7 @@ def get_projects() -> dict:
 
 def get_mapfile_since(projects: str,
                       since: str,
-                      ) -> typing.Tuple[str, int, dict]:
+                      ) -> typing.Optional[flask.Response]:
     try:
         since_dt = dateutil.parser.parse(since)
 
@@ -150,7 +150,7 @@ def get_mapfile_since(projects: str,
     return _stream_mapfile(q)
 
 
-def get_full_mapfile(projects: str) -> typing.Tuple[str, int, dict]:
+def get_full_mapfile(projects: str) -> typing.Optional[flask.Response]:
     q = mapper_api.models.Hash.query
     q = q.join(mapper_api.models.Project)
     q = q.filter(_project_filter(projects))
@@ -161,7 +161,7 @@ def get_full_mapfile(projects: str) -> typing.Tuple[str, int, dict]:
 def get_revision(projects: str,
                  vcs_type: str,
                  commit: str,
-                 ) -> str:
+                 ) -> flask.Response:
     _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can raise http 400
     q = mapper_api.models.Hash.query
     q = q.join(mapper_api.models.Project)
@@ -229,7 +229,7 @@ def _project_filter(projects_arg):
         return mapper_api.models.Project.name == projects_arg
 
 
-def _stream_mapfile(query) -> typing.Tuple[str, int, dict]:
+def _stream_mapfile(query) -> typing.Optional[flask.Response]:
     '''Helper method to build a map file from a SQLAlchemy query.
     Args:
         query: SQLAlchemy query

@@ -167,7 +167,7 @@ def run_update(project, nix_shell, root_dir, interactive):
         project
     ]
 
-    click.echo('Updating dependencies of {}: '.format(project), nl=False)
+    click.echo(f'Updating dependencies of {project}: ', nl=False)
     with click_spinner.spinner():
         returncode, output, error = cli_common.command.run(
             command,

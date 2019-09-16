@@ -25,12 +25,3 @@ def test_python_module_name(name, expected):
 def test_distribution_name(name, expected):
     import common_naming  # noqa
     assert common_naming.Project(name).python_distribution_name == expected
-
-
-@pytest.mark.parametrize('name, expected', [
-    ('shipit/api', 'shipit.api'),
-    ('codecoverage/api', 'codecoverage.api'),
-    ])
-def test_taskcluster_route_name(name, expected):
-    import common_naming  # noqa
-    assert common_naming.Project(name).taskcluster_route_name == expected

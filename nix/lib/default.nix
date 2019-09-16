@@ -130,6 +130,7 @@ in rec {
     , Cmd ? []
     , src
     , githubCommit ? builtins.getEnv "GITHUB_COMMIT"
+    , taskId ? builtins.getEnv "TASK_ID"
     , taskGroupId ? builtins.getEnv "TASK_GROUP_ID"
     , defaultConfig ? {}
     }:
@@ -139,8 +140,8 @@ in rec {
         source = "https://github.com/mozilla/release-services";
         commit = githubCommit;
         build =
-          if taskGroupId != ""
-            then "https://tools.taskcluster.net/groups/${taskGroupId}"
+          if taskGroupId != "" && taskId != ""
+            then "https://tools.taskcluster.net/groups/${taskGroupId}/tasks/${taskId}"
             else "unknown";
       };
     in mkDocker {
@@ -244,10 +245,11 @@ in rec {
     , taskRoutes ? []
     , scopes ? []
     , cache ? {}
+    , bindings ? []
     , maxRunTime ? 3600
     , workerType ? "releng-svc"
     }:
-    { inherit schedule;
+    { inherit schedule bindings;
       metadata = { inherit name description owner emailOnError; };
       task = mkTaskclusterTask ({
         created = created;
@@ -430,6 +432,8 @@ in rec {
     }:
     let
 
+      module_name = mkProjectModuleName project_name;
+
       self = mkProject {
         # yarn2nix knows how to extract the name/version from package.json
         inherit src project_name version;
@@ -439,6 +443,11 @@ in rec {
         doCheck = true;
 
         extraBuildInputs = extraBuildInputs;
+
+        preConfigure = ''
+          export HOME=$TMPDIR/${module_name}-$RANDOM
+          mkdir $HOME
+        '';
 
         checkPhase = ''
           yarn lint
@@ -789,7 +798,7 @@ in rec {
           echo "################################################################"
           echo "## flake8 ######################################################"
           echo "################################################################"
-          flake8 -v --mypy-config=setup.cfg
+          flake8 -v --mypy-config=setup.cfg setup.py tests/ ${self.dirname}/
           echo "################################################################"
 
           echo "################################################################"
@@ -888,12 +897,26 @@ in rec {
 
         inherit src;
 
+        checkInputs =
+          [ makeWrapper
+            glibcLocales
+          ] ++ buildInputs ++ propagatedBuildInputs;
+
         buildInputs =
           [ makeWrapper
             glibcLocales
-          ] ++ buildInputs;
+          ] ++ buildInputs ++ propagatedBuildInputs;
+
+        nativeBuildInputs =
+          [ makeWrapper
+            glibcLocales
+          ] ++ buildInputs ++ propagatedBuildInputs;
 
         propagatedBuildInputs =
+          [ releng_pkgs.pkgs.cacert
+          ] ++ propagatedBuildInputs;
+
+        nativePropagatedBuildInputs =
           [ releng_pkgs.pkgs.cacert
           ] ++ propagatedBuildInputs;
 
@@ -917,6 +940,7 @@ in rec {
           include ${self.dirname}/*.json
           include ${self.dirname}/*.mako
           include ${self.dirname}/*.yml
+          include ${self.dirname}/*.download
 
           recursive-exclude * __pycache__
           recursive-exclude * *.py[co]
@@ -932,7 +956,7 @@ in rec {
           echo "################################################################"
           echo "## flake8 ######################################################"
           echo "################################################################"
-          flake8 -v
+          flake8 -v --mypy-config=setup.cfg setup.py tests/ ${self.dirname}/
           echo "################################################################"
 
           echo "################################################################"

@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+
 import backend_common
+import cli_common.taskcluster
 import treestatus_api.config
 import treestatus_api.models  # noqa
 
@@ -25,6 +27,13 @@ def create_app(config=None):
             'pulse',
         ],
     )
-    # TODO: add predefined api.yml
+
+    app.notify = cli_common.taskcluster.get_service(
+        'notify',
+        os.environ.get('TASKCLUSTER_CLIENT_ID', app.config.get('TASKCLUSTER_CLIENT_ID')),
+        os.environ.get('TASKCLUSTER_ACCESS_TOKEN', app.config.get('TASKCLUSTER_ACCESS_TOKEN')),
+    )
+
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
+
     return app

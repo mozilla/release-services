@@ -1,21 +1,15 @@
-*                                     @garbas @La0
+*                                     @garbas
 /src/releng_archiver                  @mozilla/Releng
 /src/releng_clobberer                 @mozilla/Releng
-/src/releng_docs                      @mozilla/Releng @mozilla/release-management
+/src/releng_docs                      @mozilla/Releng
 /src/releng_frontend                  @mozilla/Releng
 /src/releng_mapper                    @mozilla/Releng
 /src/releng_notification_identity     @mozilla/Releng
 /src/releng_notification_policy       @mozilla/Releng
 /src/releng_tooltool                  @mozilla/Releng
 /src/releng_treestatus                @mozilla/Releng
-/src/uplift                           @mozilla/release-management
-/src/codecoverage/bot                 @mozilla/release-management
-/src/codecoverage/backend             @mozilla/release-management
-/src/codecoverage/crawler             @mozilla/release-management
 /src/shipit/frontend                  @mozilla/Releng
 /src/shipit_pipeline                  @mozilla/Releng
-/src/pulselistener                    @mozilla/release-management
 /src/shipit_signoff                   @mozilla/Releng
-/src/staticanalysis                   @mozilla/release-management
 /src/shipit_taskcluster               @mozilla/Releng
 /src/shipit/api                       @mozilla/Releng

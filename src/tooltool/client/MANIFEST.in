@@ -1,0 +1,11 @@
+# NOTE: these files must *also* be specified in setup.py
+include LICENSE.txt
+include Makefile
+include README.md
+include VERSION
+include requirements-dev.txt
+include requirements.txt
+include test.sh
+include test_file.ogg
+include test_tooltool.py
+include tooltool.py

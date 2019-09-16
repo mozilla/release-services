@@ -6,23 +6,35 @@
 import datetime
 import json
 
+import flask
+import flask_login
 import pytz
+import requests
 import sqlalchemy as sa
-from flask import current_app
-from flask_login import current_user
-from werkzeug.exceptions import BadRequest
-from werkzeug.exceptions import NotFound
+import werkzeug.exceptions
 
+import backend_common.auth
+import backend_common.cache
 import cli_common.log
-from backend_common.auth import auth
-from backend_common.cache import cache
-from treestatus_api.models import Log
-from treestatus_api.models import StatusChange
-from treestatus_api.models import StatusChangeTree
-from treestatus_api.models import Tree
+import treestatus_api.config
+import treestatus_api.models
 
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5
+STATUSPAGE_URL = 'https://api.statuspage.io/v1'
+STATUSPAGE_ERROR_ON_CREATE = '''Hi,
+
+For some reason we weren't able to create an incident for tree `{tree}`.
+
+Please make sure that an incident is open for every closed tree.
+'''
+STATUSPAGE_ERROR_ON_CLOSE = '''Hi,
+
+For some reason we weren't able to close an incident for tree `{tree}`.
+
+Please make sure that an incident is closed for every open (or under approval) tree.
+'''
+
 
 log = cli_common.log.get_logger(__name__)
 
@@ -39,10 +51,198 @@ def _now():
     return datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
 
 
+def _statuspage_data(
+    resolved,
+    component_id,
+    tree,
+    status_from,
+    status_to,
+):
+    data = {
+        'status': resolved and 'resolved' or 'investigating',
+        'components': {
+            component_id: resolved and 'operational' or 'major_outage',
+        }
+    }
+    if not resolved:
+        data['name'] = f'Tree {tree.tree} closed'
+        data['component_ids'] = [component_id]
+        data['metadata'] = {
+            'treestatus': {
+                'tree': tree.tree,
+                'status_from': status_from,
+                'status_to': status_to,
+            },
+        }
+        data['body'] = (
+            f'Message of the day: {tree.message_of_the_day}\n'
+            f'Reason: {tree.reason}\n'
+        )
+    return dict(incident=data)
+
+
+def _statuspage_send_email_on_error(subject, content, incident_id=None):
+    page_id = flask.current_app.config.get('STATUSPAGE_PAGE_ID')
+    address = flask.current_app.config.get('STATUSPAGE_NOTIFY_ON_ERROR')
+    if not address or not page_id:
+        log.error('STATUSPAGE_NOTIFY_ON_ERROR and/or STATUSPAGE_PAGE_ID not defined in app config.')
+        return
+
+    link = {
+        'href': f'https://manage.statuspage.io/pages/{page_id}',
+        'text': 'Visit statuspage',
+    }
+    if incident_id:
+        link = {
+            'href': f'https://manage.statuspage.io/pages/{page_id}/incidents/{incident_id}',
+            'text': 'Visit statuspage incident',
+        }
+    flask.current_app.notify.email({
+        'address': address,
+        'subject': subject,
+        'content': content,
+        'link': link,
+    })
+
+
+def _statuspage_create_incident(
+    headers,
+    component_id,
+    tree,
+    status_from,
+    status_to,
+):
+    page_id = flask.current_app.config.get('STATUSPAGE_PAGE_ID')
+    if not page_id:
+        log.error('STATUSPAGE_PAGE_ID not defined in app config.')
+        return
+
+    data = _statuspage_data(False,
+                            component_id,
+                            tree,
+                            status_from,
+                            status_to,
+                            )
+    log.debug(f'Create statuspage incident for tree `{tree.tree}` under page `{page_id}`', data=data)
+    response = requests.post(
+        f'{STATUSPAGE_URL}/pages/{page_id}/incidents',
+        headers=headers,
+        json=data,
+    )
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        log.exception(e)
+        _statuspage_send_email_on_error(
+            subject=f'[treestatus] Error when creating statuspage incident',
+            content=STATUSPAGE_ERROR_ON_CREATE.format(tree=tree.tree),
+        )
+
+
+def _statuspage_resolve_incident(
+    headers,
+    component_id,
+    tree,
+    status_from,
+    status_to,
+):
+    page_id = flask.current_app.config.get('STATUSPAGE_PAGE_ID')
+    response = requests.get(
+        f'{STATUSPAGE_URL}/pages/{page_id}/incidents/unresolved',
+        headers=headers,
+    )
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        log.exception(e)
+        _statuspage_send_email_on_error(
+            subject=f'[treestatus] Error when closing statuspage incident',
+            content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
+        )
+        return
+
+    # last incident with meta.treestatus.tree == tree.tree
+    incident_id = None
+    incidents = sorted(response.json(), key=lambda x: x['created_at'])
+    for incident in incidents:
+        if 'id' in incident and \
+                'metadata' in incident and \
+                'treestatus' in incident['metadata'] and \
+                'tree' in incident['metadata']['treestatus'] and \
+                incident['metadata']['treestatus']['tree'] == tree.tree:
+            incident_id = incident['id']
+            break
+
+    if incident_id is None:
+        log.error(f'No incident found when closing tree `{tree.tree}`')
+        _statuspage_send_email_on_error(
+            subject=f'[treestatus] Error when closing statuspage incident',
+            content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
+        )
+        return
+
+    response = requests.patch(
+        f'{STATUSPAGE_URL}/pages/{page_id}/incidents/{incident_id}',
+        headers=headers,
+        json=_statuspage_data(True,
+                              component_id,
+                              tree,
+                              status_from,
+                              status_to,
+                              ),
+    )
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        log.exception(e)
+        _statuspage_send_email_on_error(
+            subject=f'[treestatus] Error when closing statuspage incident',
+            content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
+            incident_id=incident_id,
+        )
+
+
 def _notify_status_change(trees_changes, tags=[]):
-    if current_app.config.get('PULSE_TREESTATUS_ENABLE'):
+    if flask.current_app.config.get('STATUSPAGE_ENABLE'):
+        log.debug('Notify statuspage about trees changes.')
+
+        components = flask.current_app.config.get('STATUSPAGE_COMPONENTS', {})
+        token = flask.current_app.config.get('STATUSPAGE_TOKEN')
+        if not token:
+            log.error('STATUSPAGE_PAGE_ID not defined in app config.')
+        else:
+            headers = {'Authorization': f'OAuth {token}'}
+
+            for tree_change in trees_changes:
+                tree, status_from, status_to = tree_change
+
+                if tree.tree not in components.keys():
+                    continue
+
+                log.debug(f'Notify statuspage about: {tree.tree}')
+                component_id = components[tree.tree]
+
+                # create an accident
+                if status_from in ['open', 'approval required'] and status_to == 'closed':
+                    _statuspage_create_incident(headers,
+                                                component_id,
+                                                tree,
+                                                status_from,
+                                                status_to,
+                                                )
+
+                # close an accident
+                elif status_from == 'closed' and status_to in ['open', 'approval required']:
+                    _statuspage_resolve_incident(headers,
+                                                 component_id,
+                                                 tree,
+                                                 status_from,
+                                                 status_to,
+                                                 )
+
+    if flask.current_app.config.get('PULSE_TREESTATUS_ENABLE'):
         routing_key_pattern = 'tree/{0}/status_change'
-        exchange = current_app.config.get('PULSE_TREESTATUS_EXCHANGE')
+        exchange = flask.current_app.config.get('PULSE_TREESTATUS_EXCHANGE')
 
         for tree_change in trees_changes:
             tree, status_from, status_to = tree_change
@@ -60,7 +260,7 @@ def _notify_status_change(trees_changes, tags=[]):
                 ))
 
             try:
-                current_app.pulse.publish(exchange, routing_key, payload)
+                flask.current_app.pulse.publish(exchange, routing_key, payload)
             except Exception as e:
                 import traceback
                 msg = 'Can\'t send notification to pulse.'
@@ -86,60 +286,69 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
             status = 'no change'
         if reason is None:
             reason = 'no change'
-        log = Log(tree=tree.tree,
-                  when=_now(),
-                  who=str(current_user),
-                  status=status,
-                  reason=reason,
-                  tags=tags)
+        log = treestatus_api.models.Log(tree=tree.tree,
+                                        when=_now(),
+                                        who=flask_login.current_user.get_id(),
+                                        status=status,
+                                        reason=reason,
+                                        tags=tags,
+                                        )
         session.add(log)
 
-    cache.delete_memoized(v0_get_tree, tree.tree)
+    backend_common.cache.cache.delete_memoized(v0_get_tree, tree.tree)
 
 
-@cache.memoize()
+@backend_common.cache.cache.memoize()
 def v0_get_tree(tree, format=None):
-    t = current_app.db.session.query(Tree).get(tree)
+    t = flask.current_app.db.session.query(treestatus_api.models.Tree).get(tree)
     if not t:
-        raise NotFound('No such tree')
+        raise werkzeug.exceptions.NotFound('No such tree')
     return t.to_dict()
 
 
 def get_trees():
-    session = current_app.db.session
-    return dict(result={t.tree: t.to_dict() for t in session.query(Tree)})
+    session = flask.current_app.db.session
+    return dict(result={
+        t.tree: t.to_dict()
+        for t in session.query(treestatus_api.models.Tree)
+    })
 
 
 def get_trees2():
     return dict(result=[i for i in get_trees()['result'].values()])
 
 
-@auth.require_scopes(['project:releng:treestatus/trees/update'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_TREES_UPDATE])
 def update_trees(body):
-    session = current_app.db.session
-    trees = [session.query(Tree).get(t) for t in body['trees']]
+    session = flask.current_app.db.session
+    trees = [
+        session.query(treestatus_api.models.Tree).get(t)
+        for t in body['trees']
+    ]
     if not all(trees):
-        raise NotFound('one or more trees not found')
+        raise werkzeug.exceptions.NotFound('one or more trees not found')
 
     if _is_unset(body, 'tags') \
             and _get(body, 'status') == 'closed':
-        raise BadRequest('tags are required when closing a tree')
+        raise werkzeug.exceptions.BadRequest('tags are required when closing a tree')
 
     if not _is_unset(body, 'remember') and body['remember'] is True:
         if _is_unset(body, 'status') or _is_unset(body, 'reason'):
-            raise BadRequest(
+            raise werkzeug.exceptions.BadRequest(
                 'must specify status and reason to remember the change')
         # add a new stack entry with the new and existing states
-        ch = StatusChange(
-            who=str(current_user),
-            reason=body['reason'],
-            when=_now(),
-            status=body['status'])
+        ch = treestatus_api.models.StatusChange(who=flask_login.current_user.get_id(),
+                                                reason=body['reason'],
+                                                when=_now(),
+                                                status=body['status'],
+                                                )
         for tree in trees:
-            stt = StatusChangeTree(
-                tree=tree.tree,
-                last_state=json.dumps(
-                    {'status': tree.status, 'reason': tree.reason}))
+            stt = treestatus_api.models.StatusChangeTree(tree=tree.tree,
+                                                         last_state=json.dumps({
+                                                             'status': tree.status,
+                                                             'reason': tree.reason
+                                                             }),
+                                                         )
             ch.trees.append(stt)
         session.add(ch)
 
@@ -169,44 +378,44 @@ def update_trees(body):
     return None, 204
 
 
-@auth.require_scopes(['project:releng:treestatus/trees/create'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_TREES_CREATE])
 def make_tree(tree, body):
-    session = current_app.db.session
+    session = flask.current_app.db.session
     if body['tree'] != tree:
-        raise BadRequest('Tree names must match')
-    t = Tree(
-        tree=tree,
-        status=body['status'],
-        reason=body['reason'],
-        message_of_the_day=body['message_of_the_day'])
+        raise werkzeug.exceptions.BadRequest('Tree names must match')
+    t = treestatus_api.models.Tree(tree=tree,
+                                   status=body['status'],
+                                   reason=body['reason'],
+                                   message_of_the_day=body['message_of_the_day'],
+                                   )
     try:
         session.add(t)
         session.commit()
     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-        raise BadRequest('tree already exists')
+        raise werkzeug.exceptions.BadRequest('tree already exists')
     return None, 204
 
 
 def _kill_tree(tree):
-    session = current_app.db.session
-    t = session.query(Tree).get(tree)
+    session = flask.current_app.db.session
+    t = session.query(treestatus_api.models.Tree).get(tree)
     if not t:
-        raise NotFound('No such tree')
+        raise werkzeug.exceptions.NotFound('No such tree')
     session.delete(t)
     # delete from logs and change stack, too
-    Log.query.filter_by(tree=tree).delete()
-    StatusChangeTree.query.filter_by(tree=tree).delete()
+    treestatus_api.models.Log.query.filter_by(tree=tree).delete()
+    treestatus_api.models.StatusChangeTree.query.filter_by(tree=tree).delete()
     session.commit()
-    cache.delete_memoized(v0_get_tree, tree)
+    backend_common.cache.cache.delete_memoized(v0_get_tree, tree)
 
 
-@auth.require_scopes(['project:releng:treestatus/trees/delete'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_TREES_DELETE])
 def kill_tree(tree):
     _kill_tree(tree)
     return None, 204
 
 
-@auth.require_scopes(['project:releng:treestatus/trees/delete'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_TREES_DELETE])
 def kill_trees(trees):
     for tree in trees:
         _kill_tree(tree)
@@ -214,16 +423,16 @@ def kill_trees(trees):
 
 
 def get_logs(tree, all=0):
-    session = current_app.db.session
+    session = flask.current_app.db.session
 
     # verify the tree exists first
-    t = session.query(Tree).get(tree)
+    t = session.query(treestatus_api.models.Tree).get(tree)
     if not t:
-        raise NotFound('No such tree')
+        raise werkzeug.exceptions.NotFound('No such tree')
 
     logs = []
-    q = session.query(Log).filter_by(tree=tree)
-    q = q.order_by(Log.when.desc())
+    q = session.query(treestatus_api.models.Log).filter_by(tree=tree)
+    q = q.order_by(treestatus_api.models.Log.when.desc())
     if not all:
         q = q.limit(TREE_SUMMARY_LOG_LIMIT)
 
@@ -243,19 +452,20 @@ def get_stack():
     return dict(
         result=[
             i.to_dict()
-            for i in StatusChange.query.order_by(StatusChange.when.desc())
+            for i in treestatus_api.models.StatusChange.query.order_by(
+                treestatus_api.models.StatusChange.when.desc())
         ]
     )
 
 
 def _revert_change(id, revert=None):
     if revert not in (0, 1, None):
-        raise BadRequest('Unexpected value for `revert`')
+        raise werkzeug.exceptions.BadRequest('Unexpected value for `revert`')
 
-    session = current_app.db.session
-    ch = session.query(StatusChange).get(id)
+    session = flask.current_app.db.session
+    ch = session.query(treestatus_api.models.StatusChange).get(id)
     if not ch:
-        raise NotFound
+        raise werkzeug.exceptions.NotFound
 
     trees_status_change = []
 
@@ -263,7 +473,7 @@ def _revert_change(id, revert=None):
         for chtree in ch.trees:
 
             last_state = json.loads(chtree.last_state)
-            tree = Tree.query.get(chtree.tree)
+            tree = treestatus_api.models.Tree.query.get(chtree.tree)
             if tree is None:
                 # if there's no tree to update, don't worry about it
                 pass
@@ -286,16 +496,16 @@ def _revert_change(id, revert=None):
     return None, 204
 
 
-@auth.require_scopes(['project:releng:treestatus/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_REVERT_CHANGES])
 def revert_change(id, revert=None):
     return _revert_change(id, revert)
 
 
-@auth.require_scopes(['project:releng:treestatus/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_REVERT_CHANGES])
 def restore_change(id):
     return _revert_change(id, 1)
 
 
-@auth.require_scopes(['project:releng:treestatus/recent_changes/revert'])
+@backend_common.auth.auth.require_permissions([treestatus_api.config.SCOPE_REVERT_CHANGES])
 def discard_change(id):
     return _revert_change(id, 0)

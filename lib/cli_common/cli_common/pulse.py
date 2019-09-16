@@ -13,7 +13,7 @@ import cli_common.log
 logger = cli_common.log.get_logger(__name__)
 
 
-async def create_consumer(user, password, exchange, topic, callback):
+async def _create_consumer(user, password, exchange, topic, callback):
     '''
     Create an async consumer for Mozilla pulse queues
     Inspired by : https://github.com/mozilla-releng/fennec-aurora-task-creator/blob/master/fennec_aurora_task_creator/worker.py  # noqa
@@ -26,17 +26,13 @@ async def create_consumer(user, password, exchange, topic, callback):
     host = 'pulse.mozilla.org'
     port = 5671
 
-    try:
-        _, protocol = await aioamqp.connect(
-            host=host,
-            login=user,
-            password=password,
-            ssl=True,
-            port=port,
-        )
-    except aioamqp.AmqpClosedConnection as acc:
-        logger.exception('AMQP Connection closed: %s', acc)
-        return
+    _, protocol = await aioamqp.connect(
+        host=host,
+        login=user,
+        password=password,
+        ssl=True,
+        port=port,
+    )
 
     channel = await protocol.channel()
     await channel.basic_qos(
@@ -81,6 +77,20 @@ async def create_consumer(user, password, exchange, topic, callback):
     await channel.basic_consume(callback, queue_name=queue)
 
     logger.info('Worker starts consuming messages')
+    logger.info('Starting loop to ensure connection is open')
+    while True:
+        await asyncio.sleep(10)
+        # raise AmqpClosedConnection in case the connection is closed.
+        await protocol.ensure_open()
+
+
+async def create_consumer(user, password, exchange, topic, callback):
+    while True:
+        try:
+            return await _create_consumer(user, password, exchange, topic, callback)
+        except (aioamqp.AmqpClosedConnection, OSError):
+            logger.exception('Reconnecting in 10 seconds')
+            await asyncio.sleep(10)
 
 
 def run_consumer(consumer):

@@ -7,7 +7,7 @@ import copy
 
 import jsone
 import requests
-import slugid
+import yaml
 
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
@@ -22,7 +22,7 @@ class UnsupportedFlavor(Exception):
         self.description = description
 
 
-class ActionsJsonNotFound(Exception):
+class ArtifactNotFound(Exception):
     pass
 
 
@@ -39,16 +39,16 @@ def find_decision_task_id(project, revision):
     return index.findTask(decision_task_route)['taskId']
 
 
-def fetch_actions_json(task_id):
+def fetch_artifact(task_id, artifact):
     try:
         queue = get_service('queue')
-        actions_url = queue.buildUrl('getLatestArtifact', task_id, 'public/actions.json')
-        q = requests.get(actions_url)
+        url = queue.buildUrl('getLatestArtifact', task_id, artifact)
+        q = requests.get(url)
         q.raise_for_status()
-        return q.json()
+        return yaml.safe_load(q.text)
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
-            raise ActionsJsonNotFound
+            raise ArtifactNotFound
         raise
 
 
@@ -60,11 +60,13 @@ def find_action(name, actions):
         return None
 
 
-def extract_our_flavors(avail_flavors, product, version, partial_updates):
-    if is_rc(version, partial_updates):
-        product_key = f'{product}_rc'
-    else:
+def extract_our_flavors(avail_flavors, product, version, partial_updates, product_key=None):
+    if not product_key:
         product_key = product
+
+    if is_rc(product_key, version, partial_updates):
+        product_key = f'{product_key}_rc'
+
     # sanity check
     all_flavors = set([fl['name'] for fl in SUPPORTED_FLAVORS[product_key]])
     if not set(avail_flavors).issuperset(all_flavors):
@@ -73,30 +75,9 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates):
     return SUPPORTED_FLAVORS[product_key]
 
 
-def generate_action_task(decision_task_id, action_name, input_, actions):
+def generate_action_hook(task_group_id, action_name, actions, parameters, input_):
     target_action = find_action(action_name, actions)
-    context = copy.deepcopy(actions['variables'])  # parameters
-    action_task_id = slugid.nice().decode('utf-8')
-    context.update({
-        'input': input_,
-        'taskGroupId': decision_task_id,
-        'ownTaskId': action_task_id,
-        'taskId': None,
-        'task': None,
-    })
-    action_task = copy.deepcopy(target_action['task'])
-    log.info('TASK: %s', action_task)
-    return action_task_id, action_task, context
-
-
-def render_action_task(task, context):
-    action_task = jsone.render(task, context)
-    return action_task
-
-
-def generate_action_hook(task_group_id, action_name, actions, input_):
-    target_action = find_action(action_name, actions)
-    context = copy.deepcopy(actions['variables'])  # parameters
+    context = copy.deepcopy({'parameters': parameters})
     context.update({
         'taskGroupId': task_group_id,
         'taskId': None,
@@ -116,6 +97,7 @@ def render_action_hook(payload, context, delete_params=[]):
     # some parameters contain a lot of entries, so we hit the payload
     # size limit. We don't use this parameter in any case, safe to
     # remove
-    for param in delete_params:
-        del rendered_payload['decision']['parameters'][param]
+    if 'parameters' in rendered_payload['decision']:
+        for param in delete_params:
+            del rendered_payload['decision']['parameters'][param]
     return rendered_payload

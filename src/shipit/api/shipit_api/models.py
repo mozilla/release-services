@@ -14,20 +14,15 @@ import sqlalchemy.orm
 
 import shipit_api.config
 from backend_common.db import db
-from cli_common.log import get_logger
 from shipit_api.release import bump_version
 from shipit_api.release import is_eme_free_enabled
 from shipit_api.release import is_partner_enabled
 from shipit_api.tasks import extract_our_flavors
-from shipit_api.tasks import fetch_actions_json
+from shipit_api.tasks import fetch_artifact
 from shipit_api.tasks import find_action
 from shipit_api.tasks import find_decision_task_id
 from shipit_api.tasks import generate_action_hook
-from shipit_api.tasks import generate_action_task
 from shipit_api.tasks import render_action_hook
-from shipit_api.tasks import render_action_task
-
-log = get_logger(__name__)
 
 
 class Signoff(db.Model):
@@ -92,12 +87,6 @@ class Phase(db.Model):
     def context_json(self):
         return json.loads(self.context)
 
-    def rendered(self, extra_context={}):
-        context = self.context_json
-        if extra_context:
-            context.update(extra_context)
-        return render_action_task(self.task_json, context)
-
     def rendered_hook_payload(self, extra_context={}):
         context = self.context_json
         previous_graph_ids = context['input']['previous_graph_ids']
@@ -142,7 +131,7 @@ class Release(db.Model):
     completed = sa.Column(sa.DateTime)
 
     def __init__(self, product, version, branch, revision, build_number,
-                 release_eta, partial_updates, status):
+                 release_eta, partial_updates, status, product_key=None):
         self.name = f'{product.capitalize()}-{version}-build{build_number}'
         self.product = product
         self.version = version
@@ -154,6 +143,7 @@ class Release(db.Model):
         self.release_eta = release_eta or None
         self.partial_updates = partial_updates
         self.status = status
+        self.product_key = product_key
 
     @property
     def project(self):
@@ -163,7 +153,7 @@ class Release(db.Model):
     def phase_signoffs(branch, product, phase):
         return [
             Signoff(
-                uid=slugid.nice().decode('utf-8'),
+                uid=slugid.nice(),
                 name=req['name'],
                 description=req['description'],
                 permissions=req['permissions']
@@ -199,41 +189,32 @@ class Release(db.Model):
                 }
         target_action = find_action('release-promotion', self.actions)
         kind = target_action['kind']
+        if kind != 'hook':
+            raise ValueError(f'Unsupported kind: {kind}')
+
         for phase in self.release_promotion_flavors():
             input_ = copy.deepcopy(input_common)
             input_['release_promotion_flavor'] = phase['name']
             input_['previous_graph_ids'] = list(previous_graph_ids)
-            if kind == 'task':
-                action_task_id, action_task, context = generate_action_task(
-                    decision_task_id=self.decision_task_id,
-                    action_name='release-promotion',
-                    input_=input_,
-                    actions=self.actions,
-                )
-                if phase['in_previous_graph_ids']:
-                    previous_graph_ids.append(action_task_id)
-                phase_obj = Phase(
-                    phase['name'], action_task_id, json.dumps(action_task), json.dumps(context))
-            elif kind == 'hook':
-                hook = generate_action_hook(
-                    task_group_id=self.decision_task_id,
-                    action_name='release-promotion',
-                    actions=self.actions,
-                    input_=input_,
-                )
-                hook_no_context = {k: v for k, v in hook.items() if k != 'context'}
-                phase_obj = Phase(
-                    name=phase['name'],
-                    task_id='',
-                    task=json.dumps(hook_no_context),
-                    context=json.dumps(hook['context']),
-                )
-                # we need to update input_['previous_graph_ids'] later, because
-                # the task IDs cannot be set for hooks in advance
-                if phase['in_previous_graph_ids']:
-                    previous_graph_ids.append(phase['name'])
-            else:
-                raise ValueError(f'Unsupported kind: {kind}')
+
+            hook = generate_action_hook(
+                task_group_id=self.decision_task_id,
+                action_name='release-promotion',
+                actions=self.actions,
+                parameters=self.parameters,
+                input_=input_,
+            )
+            hook_no_context = {k: v for k, v in hook.items() if k != 'context'}
+            phase_obj = Phase(
+                name=phase['name'],
+                task_id='',
+                task=json.dumps(hook_no_context),
+                context=json.dumps(hook['context']),
+            )
+            # we need to update input_['previous_graph_ids'] later, because
+            # the task IDs cannot be set for hooks in advance
+            if phase['in_previous_graph_ids']:
+                previous_graph_ids.append(phase['name'])
 
             phase_obj.signoffs = self.phase_signoffs(self.branch, self.product, phase['name'])
             phases.append(phase_obj)
@@ -246,13 +227,17 @@ class Release(db.Model):
 
     @property
     def actions(self):
-        return fetch_actions_json(self.decision_task_id)
+        return fetch_artifact(self.decision_task_id, 'public/actions.json')
+
+    @property
+    def parameters(self):
+        return fetch_artifact(self.decision_task_id, 'public/parameters.yml')
 
     def release_promotion_flavors(self):
         relpro = find_action('release-promotion', self.actions)
         avail_flavors = relpro['schema']['properties']['release_promotion_flavor']['enum']
         our_flavors = extract_our_flavors(avail_flavors, self.product,
-                                          self.version, self.partial_updates)
+                                          self.version, self.partial_updates, self.product_key)
         return our_flavors
 
     @property

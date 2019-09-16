@@ -27,7 +27,6 @@ def app():
         'OIDC_CLIENT_SECRETS': os.path.join(os.path.dirname(__file__), 'client_secrets.json'),
         'TASKCLUSTER_CLIENT_ID': 'something',
         'TASKCLUSTER_ACCESS_TOKEN': 'something',
-
     })
     app = shipit_api.create_app(config)
 

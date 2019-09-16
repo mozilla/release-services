@@ -36,6 +36,7 @@ let
       "gunicorn"
       "${self.dirname}.flask:app"
       "--worker-class" "gevent"
+      "--timeout" "120"
       "--log-file"
       "-"
     ];

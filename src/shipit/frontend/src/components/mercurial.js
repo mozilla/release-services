@@ -10,8 +10,9 @@ export async function getPushes(repo) {
 /**
  * Get in-tree product "display" version.
  */
-export async function getVersion(repo, revision, appName) {
-  const url = `${repo}/raw-file/${revision}/${appName}/config/version_display.txt`;
+export async function getVersion(repo, revision, appName, versionFile) {
+  const versionFilePath = versionFile || `${appName}/config/version_display.txt`;
+  const url = `${repo}/raw-file/${revision}/${versionFilePath}`;
   const res = await fetch(url);
   if (res.ok) {
     const version = await res.text();

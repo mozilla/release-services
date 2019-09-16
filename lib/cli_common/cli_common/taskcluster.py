@@ -4,13 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
-import datetime
-import hashlib
 import os
 import re
 
 import click
-import requests
 import taskcluster
 
 from cli_common.log import get_logger
@@ -71,7 +68,8 @@ def get_options(client_id=None, access_token=None):
 
         # Load secrets from TC task context
         # with taskclusterProxy
-        root_url = 'http://{}'.format(hosts['taskcluster'])
+        root_url = f"http://{hosts['taskcluster']}"
+
         logger.info('Taskcluster Proxy enabled', url=root_url)
         tc_options = {
             'rootUrl': root_url
@@ -92,7 +90,7 @@ def get_service(service_name, client_id=None, access_token=None):
      * taskclusterProxy
     '''
     if service_name not in TASKCLUSTER_SERVICES:
-        raise Exception('Service `{}` does not exists.'.format(service_name))
+        raise Exception(f'Service `{service_name}` does not exists.')
 
     # Credentials preference: Use click variables
     if client_id is None and access_token is None:
@@ -152,7 +150,7 @@ def get_secrets(name,
 
     for required_secret in required:
         if required_secret not in secrets:
-            raise Exception('Missing value {} in secrets.'.format(required_secret))
+            raise Exception(f'Missing value {required_secret} in secrets.')
 
     return secrets
 
@@ -175,7 +173,7 @@ def get_hook_artifact(hook_group_id, hook_id, artifact_name, client_id=None,
     queue = get_service('queue', client_id, access_token)
     task_status = queue.status(task_id)
     if task_status['status']['state'] != 'completed':
-        raise Exception('Task {} is not completed'.format(task_id))
+        raise Exception(f'Task {task_id} is not completed')
     run_id = None
     for run in task_status['status']['runs']:
         if run['state'] == 'completed':
@@ -186,53 +184,3 @@ def get_hook_artifact(hook_group_id, hook_id, artifact_name, client_id=None,
 
     # Load artifact from task run
     return queue.getArtifact(task_id, run_id, artifact_name)
-
-
-def create_blob_artifact(queue_service, task_id, run_id, path, content, content_type, ttl):
-    '''
-    Manually create and upload a blob artifact to use a specific content type
-    '''
-    assert isinstance(content, str)
-    assert isinstance(ttl, datetime.timedelta)
-
-    # Create artifact on Taskcluster
-    sha256 = hashlib.sha256(content.encode('utf-8')).hexdigest()
-    resp = queue_service.createArtifact(
-        task_id,
-        run_id,
-        path,
-        {
-            'storageType': 'blob',
-            'expires': (datetime.datetime.utcnow() + ttl).strftime(TASKCLUSTER_DATE_FORMAT),
-            'contentType': content_type,
-            'contentSha256': sha256,
-            'contentLength': len(content),
-        }
-    )
-    assert resp['storageType'] == 'blob', 'Not a blob storage'
-    assert len(resp['requests']) == 1, 'Should only get one request'
-    request = resp['requests'][0]
-    assert request['method'] == 'PUT', 'Should get a PUT request'
-
-    # Push the artifact on storage service
-    push = requests.put(
-        url=request['url'],
-        headers=request['headers'],
-        data=content,
-    )
-    push.raise_for_status()
-
-    # Mark artifact as completed
-    queue_service.completeArtifact(
-        task_id,
-        run_id,
-        path,
-        {
-            'etags': [
-                push.headers['ETag'],
-            ],
-        }
-    )
-
-    # Build the absolute url
-    return f'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/{path}'

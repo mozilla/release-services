@@ -40,52 +40,6 @@ paths:
         200:
           description: Product details rebuild triggered.
 
-  /sync:
-    post:
-      summary: Sync release data from Ship-it v1
-      operationId: shipit_api.api.sync_releases
-      consumes:
-      - "application/json"
-      parameters:
-      - in: body
-        name: releases
-        description: Releases array
-        required: true
-        schema:
-          type: array
-          items:
-            type: object
-      responses:
-        405:
-          description: Invalid input
-        201:
-          description: Releases synced
-          schema:
-            type: object
-
-  /sync_datetime:
-    post:
-      summary: Sync release datetimes from Ship-it v1
-      operationId: shipit_api.api.sync_release_datetimes
-      consumes:
-      - "application/json"
-      parameters:
-      - in: body
-        name: releases
-        description: Releases array
-        required: true
-        schema:
-          type: array
-          items:
-            type: object
-      responses:
-        405:
-          description: Invalid input
-        201:
-          description: Releases synced
-          schema:
-            type: object
-
   /releases:
     post:
       summary: Add a new release
@@ -312,6 +266,9 @@ definitions:
       partial_updates:
         type: object
         default: {}
+      product_key:
+        type: string
+        example: fennec_beta
 
   ReleaseStatus:
     type: object

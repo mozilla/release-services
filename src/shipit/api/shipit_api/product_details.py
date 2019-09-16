@@ -4,10 +4,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import asyncio
+import collections
 import datetime
-import enum
 import functools
 import hashlib
+import io
 import json
 import os
 import pathlib
@@ -29,25 +30,10 @@ import cli_common.log
 import cli_common.utils
 import shipit_api.config
 import shipit_api.models
+from shipit_api.release import Product
+from shipit_api.release import ProductCategory
 
 logger = cli_common.log.get_logger(__name__)
-
-
-@enum.unique
-class Product(enum.Enum):
-    DEVEDITION = 'devedition'
-    FIREFOX = 'firefox'
-    FENNEC = 'fennec'
-    THUNDERBIRD = 'thunderbird'
-
-
-@enum.unique
-class ProductCategory(enum.Enum):
-    MAJOR = 'major'
-    DEVELOPMENT = 'dev'
-    STABILITY = 'stability'
-    ESR = 'esr'
-
 
 File = str
 ReleaseDetails = mypy_extensions.TypedDict('ReleaseDetails', {
@@ -88,6 +74,12 @@ FirefoxVersions = mypy_extensions.TypedDict('FirefoxVersions', {
     'LATEST_FIREFOX_OLDER_VERSION': str,
     'LATEST_FIREFOX_RELEASED_DEVEL_VERSION': str,
     'LATEST_FIREFOX_VERSION': str,
+    'LAST_SOFTFREEZE_DATE': str,
+    'LAST_MERGE_DATE': str,
+    'LAST_RELEASE_DATE': str,
+    'NEXT_SOFTFREEZE_DATE': str,
+    'NEXT_MERGE_DATE': str,
+    'NEXT_RELEASE_DATE': str,
 })
 L10nChangeset = mypy_extensions.TypedDict('L10nChangeset', {
     'changeset': str,
@@ -141,6 +133,7 @@ ThunderbirdVersions = mypy_extensions.TypedDict('ThunderbirdVersions', {
     'LATEST_THUNDERBIRD_DEVEL_VERSION': str,
     'LATEST_THUNDERBIRD_NIGHTLY_VERSION': str,
 })
+IndexListing = str
 ProductDetails = typing.Dict[File, typing.Union[
     Releases,
     ReleasesHistory,
@@ -152,6 +145,7 @@ ProductDetails = typing.Dict[File, typing.Union[
     L10n,
     Languages,
     ThunderbirdVersions,
+    IndexListing
 ]]
 Products = typing.List[Product]
 
@@ -189,6 +183,56 @@ def get_product_mozilla_version(product: Product,
     if klass:
         return klass.parse(version)
     return None
+
+
+def create_index_listing_html(folder: pathlib.Path,
+                              items: typing.Set[pathlib.Path]
+                              ) -> str:
+
+    folder = '/' / folder  # noqa : T484 Unsupported left operand type for / ("str")
+    with io.StringIO() as html:
+
+        def write(x):
+            return html.write(f'{x}{os.linesep}')
+
+        write(f'<!doctype html>')
+        write(f'<html>')
+        write(f'  <head>')
+        write(f'    <title>Index of {folder}</title>')
+        write(f'  </head>')
+        write(f'  <body>')
+        write(f'    <h1>Index of {folder}</h1>')
+        write(f'    <ul>')
+        if folder != folder.parent:
+            write(f'      <li><a href="{folder.parent}"> Parent Directory</a></li>')
+        for item in sorted(items):
+            is_dir = item.suffix not in ['.json', '.html']
+            itemStr = is_dir and f'{item.name}/' or f'{item.name}'
+            write(f'      <li><a href="{itemStr}"> {itemStr}</a></li>')
+        write(f'    </ul>')
+        write(f'  </body>')
+        write(f'</html>')
+
+        return html.getvalue()
+
+
+def create_index_listing(product_details: ProductDetails) -> ProductDetails:
+    new_product_details: ProductDetails = dict()
+    folders: typing.Dict[pathlib.Path, typing.List[pathlib.Path]] = dict()
+
+    for file_, content in product_details.items():
+        new_product_details[file_] = content
+
+        path = pathlib.Path(file_)
+        for folder in list(path.parents):
+            folders.setdefault(folder, [])
+            folders[folder].append(path)
+            path = folder
+
+    for folder, items in folders.items():
+        new_product_details[str(folder / 'index.html')] = create_index_listing_html(folder, set(items))
+
+    return new_product_details
 
 
 async def fetch_l10n_data(
@@ -239,6 +283,7 @@ async def fetch_l10n_data(
                 with cache.open('w+') as f:
                     f.write(json.dumps(changesets))
         except Exception as e:
+            logger.fatal('Failed to fetch', url=url, release=release.json)
             logger.exception(e)
             if git_branch == 'production':
                 raise
@@ -368,7 +413,7 @@ def get_releases(breakpoint_version: int,
         if product is Product.FENNEC:
             product_file = '1.0/mobile_android.json'
 
-        old_releases = typing.cast(typing.Dict[str, ReleaseDetails], old_product_details[product_file].get('releases', dict()))
+        old_releases = typing.cast(typing.Dict[str, ReleaseDetails], old_product_details[product_file].get('releases', dict()))  # noqa
         for product_with_version in old_releases:
             # mozilla_version.gecko.GeckoVersion does not parse rc (yet)
             # https://github.com/mozilla-releng/mozilla-version/pull/40
@@ -500,7 +545,10 @@ def get_release_history(breakpoint_version: int,
                                                 default='',
                                                 )
 
-    return history
+    # Sort the releases in their chronological order
+    # TODO: the consumers should not rely on this order, see bug 1541636
+    ordered_history = collections.OrderedDict(sorted(history.items(), key=lambda x: x[1]))
+    return ordered_history
 
 
 def get_primary_builds(breakpoint_version: int,
@@ -538,65 +586,73 @@ def get_primary_builds(breakpoint_version: int,
 
     if product is Product.FIREFOX:
         firefox_versions = get_firefox_versions(releases)
-        versions = [
+        # make sure that Devedition is included in the list
+        products = [Product.FIREFOX, Product.DEVEDITION]
+        versions = set([
             firefox_versions['FIREFOX_NIGHTLY'],
+            firefox_versions['FIREFOX_DEVEDITION'],
             firefox_versions['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
             firefox_versions['LATEST_FIREFOX_VERSION'],
             firefox_versions['FIREFOX_ESR'],
-        ]
+        ])
+        if firefox_versions['FIREFOX_ESR_NEXT']:
+            versions.add(firefox_versions['FIREFOX_ESR_NEXT'])
     elif product is Product.THUNDERBIRD:
         thunderbird_versions = get_thunderbird_versions(releases)
-        versions = [
+        products = [Product.THUNDERBIRD]
+        versions = set([
             thunderbird_versions['LATEST_THUNDERBIRD_VERSION'],
-            thunderbird_versions['LATEST_THUNDERBIRD_ALPHA_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_DEVEL_VERSION'],
             thunderbird_versions['LATEST_THUNDERBIRD_NIGHTLY_VERSION'],
-        ]
+        ])
     else:
         raise click.ClickException(f'We don\'t generate product history for "{product.value}" product.')
 
     builds: PrimaryBuilds = dict()
 
     for release in releases:
-        if product is not Product(release.product) or \
-           release.version in versions:
+        # Skip other products and older versions
+        if Product(release.product) not in products or \
+           release.version not in versions:
             continue
-        for l10n in releases_l10n.get(release, {}).keys():
+        # Make sure to add en-US, it's not listed in the l10n changesets file
+        for l10n in list(releases_l10n.get(release, {}).keys()) + ['en-US']:
+            # for compatibility with shipit v1, skip ja-JP-mac
+            if l10n == 'ja-JP-mac':
+                continue
             builds.setdefault(l10n, dict())
-            for version in versions:
-                if version == '':
-                    continue
-                if product is Product.THUNDERBIRD:
-                    builds[l10n][version] = {
-                        'Windows': {
-                            'filesize': 25.1
-                        },
-                        'OS X': {
-                            'filesize': 50.8
-                        },
-                        'Linux': {
-                            'filesize': 31.8
-                        }
+            if product is Product.THUNDERBIRD:
+                builds[l10n][release.version] = {
+                    'Windows': {
+                        'filesize': 25.1
+                    },
+                    'OS X': {
+                        'filesize': 50.8
+                    },
+                    'Linux': {
+                        'filesize': 31.8
                     }
-                else:
-                    builds[l10n][version] = {
-                        'Windows': {
-                            'filesize': 0,
-                        },
-                        'OS X': {
-                            'filesize': 0,
-                        },
-                        'Linux': {
-                            'filesize': 0,
-                        },
-                    }
+                }
+            else:
+                builds[l10n][release.version] = {
+                    'Windows': {
+                        'filesize': 0,
+                    },
+                    'OS X': {
+                        'filesize': 0,
+                    },
+                    'Linux': {
+                        'filesize': 0,
+                    },
+                }
 
     return builds
 
 
 def get_latest_version(releases: typing.List[shipit_api.models.Release],
                        branch: str,
-                       product: Product
+                       product: Product,
+                       filter_closure: typing.Optional[typing.Callable] = None
                        ) -> str:
     '''Get latest version
 
@@ -608,6 +664,8 @@ def get_latest_version(releases: typing.List[shipit_api.models.Release],
     filtered_releases = [r for r in releases if
                          r.product == product.value and
                          r.branch == branch]
+    if filter_closure:
+        filtered_releases = list(filter(filter_closure, filtered_releases))
     releases_ = sorted(
         filtered_releases,
         reverse=True,
@@ -665,6 +723,12 @@ def get_firefox_versions(releases: typing.List[shipit_api.models.Release]) -> Fi
                "LATEST_FIREFOX_OLDER_VERSION":           "3.6.28",
                "LATEST_FIREFOX_RELEASED_DEVEL_VERSION":  "59.0b14",
                "LATEST_FIREFOX_VERSION":                 "58.0.2",
+               "LAST_SOFTFREEZE_DATE":                   "2019-03-11",
+               "LAST_MERGE_DATE":                        "2019-03-18",
+               "LAST_RELEASE_DATE":                      "2019-03-19",
+               "NEXT_SOFTFREEZE_DATE":                   "2019-05-06",
+               "NEXT_MERGE_DATE":                        "2019-05-13",
+               "NEXT_RELEASE_DATE":                      "2019-05-14"
            }
     '''
 
@@ -697,6 +761,12 @@ def get_firefox_versions(releases: typing.List[shipit_api.models.Release]) -> Fi
                                               Product.DEVEDITION,
                                               ),
         LATEST_FIREFOX_OLDER_VERSION=shipit_api.config.LATEST_FIREFOX_OLDER_VERSION,
+        LAST_SOFTFREEZE_DATE=shipit_api.config.LAST_SOFTFREEZE_DATE,
+        LAST_MERGE_DATE=shipit_api.config.LAST_MERGE_DATE,
+        LAST_RELEASE_DATE=shipit_api.config.LAST_RELEASE_DATE,
+        NEXT_SOFTFREEZE_DATE=shipit_api.config.NEXT_SOFTFREEZE_DATE,
+        NEXT_MERGE_DATE=shipit_api.config.NEXT_MERGE_DATE,
+        NEXT_RELEASE_DATE=shipit_api.config.NEXT_RELEASE_DATE,
     )
 
 
@@ -917,15 +987,17 @@ def get_mobile_versions(releases: typing.List[shipit_api.models.Release]) -> Mob
     return dict(
         ios_beta_version=shipit_api.config.IOS_BETA_VERSION,
         ios_version=shipit_api.config.IOS_VERSION,
-        nightly_version=shipit_api.config.FIREFOX_NIGHTLY,
-        alpha_version=shipit_api.config.FIREFOX_NIGHTLY,
+        nightly_version=shipit_api.config.FENNEC_NIGHTLY,
+        alpha_version=shipit_api.config.FENNEC_NIGHTLY,
         beta_version=get_latest_version(releases,
-                                        shipit_api.config.BETA_BRANCH,
+                                        shipit_api.config.FENNEC_BETA_BRANCH,
                                         Product.FENNEC,
+                                        lambda r: mozilla_version.gecko.FennecVersion.parse(r.version).is_beta
                                         ),
         version=get_latest_version(releases,
-                                   shipit_api.config.RELEASE_BRANCH,
+                                   shipit_api.config.FENNEC_RELEASE_BRANCH,
                                    Product.FENNEC,
+                                   lambda r: mozilla_version.gecko.FennecVersion.parse(r.version).is_release
                                    ),
     )
 
@@ -970,6 +1042,72 @@ def get_thunderbird_beta_builds() -> typing.Dict:
            {}
     '''
     return dict()
+
+
+def sanity_check_firefox_builds(firefox_versions: FirefoxVersions,
+                                firefox_primary_builds: PrimaryBuilds,
+                                version_key: str,
+                                min_builds: int = 20
+                                ) -> None:
+    if version_key in ('FIREFOX_ESR_NEXT', 'FIREFOX_AURORA'):
+        return
+
+    version = firefox_versions.get(version_key)
+    if not version:
+        return
+
+    builds = len([
+        locale
+        for locale, build in firefox_primary_builds.items()
+        if version in build
+    ])
+
+    if builds < min_builds:
+        raise click.ClickException(f'Too few firefox primary builds for {version_key}')
+
+
+def sanity_check_thunderbuild_builds(thunderbird_versions: ThunderbirdVersions,
+                                     thunderbird_primary_builds: PrimaryBuilds,
+                                     version_key: str,
+                                     min_builds: int = 20,
+                                     ) -> None:
+    version = thunderbird_versions.get(version_key)
+    if not version:
+        return
+
+    builds = len([
+        locale
+        for locale, build in thunderbird_primary_builds.items()
+        if version in build
+    ])
+
+    if builds < min_builds:
+        raise click.ClickException(f'Too few thunderbird primary builds for {version_key}')
+
+
+def sanity_checks(product_details: ProductDetails) -> None:
+    for version_key in ('FIREFOX_NIGHTLY',
+                        'FIREFOX_AURORA',
+                        'FIREFOX_DEVEDITION',
+                        'FIREFOX_ESR',
+                        'FIREFOX_ESR_NEXT',
+                        'LATEST_FIREFOX_DEVEL_VERSION',
+                        'LATEST_FIREFOX_RELEASED_DEVEL_VERSION',
+                        'LATEST_FIREFOX_VERSION',
+                        ):
+        sanity_check_firefox_builds(typing.cast(FirefoxVersions, product_details['1.0/firefox_versions.json']),
+                                    typing.cast(PrimaryBuilds, product_details['1.0/firefox_primary_builds.json']),
+                                    version_key,
+                                    )
+
+    # so far p-d only lists builds for the latest version
+    # bedrock uses the locales for the release channel to
+    # build download pages for the other channels
+    for version_key in ('LATEST_THUNDERBIRD_VERSION',):
+        sanity_check_thunderbuild_builds(typing.cast(ThunderbirdVersions, product_details['1.0/thunderbird_versions.json']),
+                                         typing.cast(PrimaryBuilds, product_details['1.0/thunderbird_primary_builds.json']),
+                                         version_key,
+                                         )
 
 
 def run_check(*arg, **kw):
@@ -1063,11 +1201,42 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
             fetch_l10n_data(session, release, git_branch)
             for release in releases
         ])
+
     releases_l10n = {
         release: changeset
         for (release, changeset) in releases_l10n
         if changeset is not None
     }
+
+    # Also fetch latest nightly builds with their L10N info
+    nightly_builds = [
+        shipit_api.models.Release(
+            product=Product.FIREFOX.value,
+            version=shipit_api.config.FIREFOX_NIGHTLY,
+            branch='mozilla-central', revision='default', build_number=None,
+            release_eta=None, partial_updates=None, status=None),
+        shipit_api.models.Release(
+            product=Product.THUNDERBIRD.value,
+            version=shipit_api.config.LATEST_THUNDERBIRD_NIGHTLY_VERSION,
+            branch='comm-central', revision='default', build_number=None,
+            release_eta=None, partial_updates=None, status=None),
+    ]
+
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit_per_host=50)) as session:
+        nightly_l10n = await asyncio.gather(*[
+            fetch_l10n_data(session, release, git_branch)
+            for release in nightly_builds
+        ])
+
+    nightly_l10n = {
+        release: changeset
+        for (release, changeset) in nightly_l10n
+        if changeset is not None
+    }
+
+    combined_releases = releases + nightly_builds
+    combined_l10n = releases_l10n.copy()
+    combined_l10n.update(nightly_l10n)
 
     # combine old and new data
     product_details: ProductDetails = {
@@ -1106,8 +1275,8 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                                                                        ),
         'firefox_primary_builds.json': get_primary_builds(breakpoint_version,
                                                           Product.FIREFOX,
-                                                          releases,
-                                                          releases_l10n,
+                                                          combined_releases,
+                                                          combined_l10n,
                                                           old_product_details,
                                                           ),
         'firefox_versions.json': get_firefox_versions(releases),
@@ -1163,8 +1332,8 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
                                                                            ),
         'thunderbird_primary_builds.json': get_primary_builds(breakpoint_version,
                                                               Product.THUNDERBIRD,
-                                                              releases,
-                                                              releases_l10n,
+                                                              combined_releases,
+                                                              combined_l10n,
                                                               old_product_details,
                                                               ),
         'thunderbird_versions.json': get_thunderbird_versions(releases),
@@ -1179,6 +1348,12 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
         for file_, content in product_details.items()
     }
 
+    # create index.html for every folder
+    product_details = create_index_listing(product_details)
+
+    # run sanity checks
+    sanity_checks(product_details)
+
     if shipit_api.config.PRODUCT_DETAILS_NEW_DIR.exists():
         shutil.rmtree(shipit_api.config.PRODUCT_DETAILS_NEW_DIR)
 
@@ -1190,7 +1365,12 @@ async def rebuild(db_session: sqlalchemy.orm.Session,
 
         # write content into json file
         with new_file.open('w+') as f:
-            f.write(json.dumps(content, sort_keys=True, indent=4))
+            if new_file.suffix == '.json':
+                f.write(json.dumps(
+                    content, sort_keys=(not isinstance(content, collections.OrderedDict)),
+                    indent=4))
+            else:
+                f.write(content)
 
     # remove all top level items in folder_in_repo
     for item in os.listdir(shipit_api.config.PRODUCT_DETAILS_DIR / folder_in_repo):

@@ -129,7 +129,7 @@ def cmd(ctx,
     outputs = []
     trace = ctx.obj['verbose'] > 1 and ['--show-trace'] or []
     for nix_path_attribute in nix_path_attributes:
-        click.echo(' => Building {} ... '.format(nix_path_attribute), nl=False)
+        click.echo(f' => Building {nix_path_attribute} ... ', nl=False)
 
         argstrs = []
         if github_commit:
@@ -172,10 +172,10 @@ def cmd(ctx,
         os.environ['AWS_SECRET_ACCESS_KEY'] = secrets['CACHE_SECRET_ACCESS_KEY']
         command = [
             nix, 'copy',
-            '--to', 's3://{}?region={}'.format(cache_bucket, cache_region),
+            '--to', f's3://{cache_bucket}?region={cache_region}',
             '-vvvv',
         ] + outputs
-        click.echo(' => Creating cache artifacts for {} project ... '.format(project), nl=False)
+        click.echo(f' => Creating cache artifacts for {project} project ... ', nl=False)
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(
                 command,
@@ -237,12 +237,12 @@ def cmd_docker(project,
     image_path = please_cli.config.TMP_DIR + '/result-docker-{project}'.format(project=project)
 
     # Build docker image for project
-    click.echo(' => Building docker image for {}'.format(project))
+    click.echo(f' => Building docker image for {project}')
     with click_spinner.spinner():
         command = [
             nix_build,
             please_cli.config.ROOT_DIR + '/nix/default.nix',
-            '-A', '{}.docker'.format(project),
+            '-A', f'{project}.docker',
             '-o', image_path
         ]
         result, output, error = cli_common.command.run(
@@ -260,7 +260,7 @@ def cmd_docker(project,
 
     if not load_image:
         real_image_path = os.path.realpath(image_path)
-        click.echo(' => Copying docker image {} to {}'.format(real_image_path, please_cli.config.TMP_DIR))
+        click.echo(f' => Copying docker image {real_image_path} to {please_cli.config.TMP_DIR}')
         with click_spinner.spinner():
             command = ['cp', real_image_path, please_cli.config.TMP_DIR]
             result, output, error = cli_common.command.run(
@@ -276,7 +276,7 @@ def cmd_docker(project,
         return
 
     # Loading docker image
-    click.echo(' => Importing docker image from {}'.format(image_path))
+    click.echo(f' => Importing docker image from {image_path}')
     with click_spinner.spinner():
         command = [
             docker,

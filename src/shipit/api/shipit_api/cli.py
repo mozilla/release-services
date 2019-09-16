@@ -13,12 +13,15 @@ import typing
 import aiohttp
 import backoff
 import click
+import flask
+import flask.cli
 import mohawk
 import requests
 import sqlalchemy
 import sqlalchemy.orm
 
 import shipit_api.product_details
+from shipit_api.models import Release
 
 
 def coroutine(f):
@@ -86,7 +89,7 @@ async def download_product_details(url: str, download_dir: str):
                 f'{download_dir}{path}',
             )
             for path in paths
-            if path.endswith('.json')
+            if path.endswith('.json') and not os.path.exists(f'{download_dir}{path}')
         ])
 
     click.echo('All files were downloaded successfully!')
@@ -178,87 +181,35 @@ def get_taskcluster_headers(request_url,
     }
 
 
-@click.command(name='shipit-v1-sync')
-@click.option(
-    '--ldap-username',
-    help='LDAP username',
-    required=True,
-    prompt=True,
-)
-@click.option(
-    '--ldap-password',
-    help='LDAP password',
-    required=True,
-    prompt=True,
-    hide_input=True,
-)
-@click.option(
-    '--taskcluster-client-id',
-    help='Taskcluster Client ID',
-    required=True,
-    prompt=True,
-)
-@click.option(
-    '--taskcluster-access-token',
-    help='Taskcluster Access token',
-    required=True,
-    prompt=True,
-    hide_input=True,
-)
+@click.command(name='shipit-import')
 @click.option(
     '--api-from',
-    default='https://ship-it.mozilla.org',
+    default='https://shipit-api.mozilla-releng.net',
 )
-@click.option(
-    '--api-to',
-    required=True,
-)
-@click.option(
-    '--timestamps-only',
-    is_flag=True,
-)
-def v1_sync(ldap_username,
-            ldap_password,
-            taskcluster_client_id,
-            taskcluster_access_token,
-            api_from,
-            api_to,
-            timestamps_only,
-            ):
-    s = requests.Session()
-    s.auth = (ldap_username, ldap_password)
+@flask.cli.with_appcontext
+def shipit_import(api_from):
+    session = flask.current_app.db.session
 
     click.echo('Fetching release list...', nl=False)
-    req = s.get(f'{api_from}/releases')
-    releases = req.json()['releases']
-    click.echo(click.style('OK', fg='green'))
+    req = requests.get(f'{api_from}/releases?status=shipped,aborted,scheduled')
+    req.raise_for_status()
+    releases = req.json()
 
-    releases_json = []
-
-    with click.progressbar(releases, label='Fetching release data') as releases:
-        for release in releases:
-            r = s.get(f'{api_from}/releases/{release}')
-            releases_json.append(r.json())
-
-    api_url = f'{api_to}/sync'
-    if timestamps_only:
-        api_url = f'{api_to}/sync_datetime'
-    click.echo(f'Syncing release list to {api_url}...', nl=False)
-    headers = get_taskcluster_headers(
-        api_url,
-        'post',
-        json.dumps(releases_json),
-        taskcluster_client_id,
-        taskcluster_access_token,
-    )
-    r = requests.post(
-        api_url,
-        headers=headers,
-        verify=False,
-        json=releases_json,
-    )
-    r.raise_for_status()
-    click.echo(click.style('OK', fg='green'))
+    for release in releases:
+        r = Release(
+            product=release['product'],
+            version=release['version'],
+            branch=release['branch'],
+            revision=release['revision'],
+            build_number=release['build_number'],
+            release_eta=release.get('release_eta'),
+            partial_updates=release.get('partials'),
+            status=release['status'],
+        )
+        r.created = release['created']
+        r.completed = release['completed'] or release['created']
+        session.add(r)
+        session.commit()
 
 
 @click.command(name='trigger-product-details')
@@ -283,9 +234,11 @@ def trigger_product_details(base_url: str,
                             taskcluster_client_id: str,
                             taskcluster_access_token: str,
                             ):
-    url = f'{base_url}/product-details'
     data = '{}'
+    url = f'{base_url}/product-details'
+
     click.echo(f'Triggering product details rebuild on {url} url ... ', nl=False)
+
     headers = get_taskcluster_headers(
         url,
         'post',
@@ -293,11 +246,22 @@ def trigger_product_details(base_url: str,
         taskcluster_client_id,
         taskcluster_access_token,
     )
+
+    # skip ssl verification when working against development instances
+    verify = not any(map(lambda x: x in base_url, ['localhost', '127.0.0.1']))
+
     r = requests.post(
         url,
         headers=headers,
-        verify=False,
+        verify=verify,
         data=data,
     )
+
     r.raise_for_status()
-    click.echo(click.style('OK', fg='green'))
+
+    if r.json() != {'ok': 'ok'}:
+        click.secho('ERROR: Something went wrong', fg='red')
+        click.echo(f'  URL={url}')
+        click.echo(f'  RESPONSE={r.content}')
+
+    click.echo(click.style('Product details triggered successfully!', fg='green'))

@@ -3,7 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import enum
 import re
+
+from shipit_api.config import SUPPORTED_FLAVORS
 
 # If version has two parts with no trailing specifiers like "rc", we
 # consider it a 'final' release for which we only create a _RELEASE tag.
@@ -20,6 +23,22 @@ VERSION_REGEX = re.compile(
     r'(?P<esr>(?:esr)?)'  # ESR indicator
     r'$'
 )
+
+
+@enum.unique
+class Product(enum.Enum):
+    DEVEDITION = 'devedition'
+    FIREFOX = 'firefox'
+    FENNEC = 'fennec'
+    THUNDERBIRD = 'thunderbird'
+
+
+@enum.unique
+class ProductCategory(enum.Enum):
+    MAJOR = 'major'
+    DEVELOPMENT = 'dev'
+    STABILITY = 'stability'
+    ESR = 'esr'
 
 
 def parse_version(version):
@@ -41,10 +60,16 @@ def is_esr(version):
     return parse_version(version)['esr'] == 'esr'
 
 
-def is_rc(version, partial_updates):
+def is_rc(product, version, partial_updates):
     if not is_beta(version) and not is_esr(version):
         if is_final_release(version):
-            return True
+            # version supports rc flavor
+            # now validate that the product itself supports rc flavor
+            if SUPPORTED_FLAVORS.get(f'{product}_rc'):
+                # could hard code "Thunderbird" condition here but
+                # suspect it's better to use SUPPORTED_FLAVORS for a
+                # configuration driven decision.
+                return True
         # RC release types will enable beta-channel testing &
         # shipping. We need this for all "final" releases
         # and also any releases that include a beta as a partial.
