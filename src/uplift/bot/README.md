@@ -1,2 +1,0 @@
-ShipIt Bot Uplift
-=================

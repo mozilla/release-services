@@ -40,17 +40,17 @@ ESR_BRANCH_PREFIX = 'releases/mozilla-esr'
 # day).
 # We could have used the in-tree version, but there can be race conditions,
 # e.g. version bumped, but still no builds available.
-FIREFOX_NIGHTLY = '70.0a1'
-FENNEC_NIGHTLY = '68.1a1'
+FIREFOX_NIGHTLY = '71.0a1'
+FENNEC_NIGHTLY = '68.2a1'
 # The next 6 dates are information about the current and next release
 # They must be updated at the same time as FIREFOX_NIGHTLY
 # They can be found: https://wiki.mozilla.org/Release_Management/Calendar
-LAST_SOFTFREEZE_DATE = '2019-07-01'
-LAST_MERGE_DATE = '2019-07-08'
-LAST_RELEASE_DATE = '2019-07-09'
-NEXT_SOFTFREEZE_DATE = '2019-08-26'
-NEXT_MERGE_DATE = '2019-09-02'
-NEXT_RELEASE_DATE = '2019-09-03'
+LAST_SOFTFREEZE_DATE = '2019-08-26'
+LAST_MERGE_DATE = '2019-09-02'
+LAST_RELEASE_DATE = '2019-09-03'
+NEXT_SOFTFREEZE_DATE = '2019-10-14'
+NEXT_MERGE_DATE = '2019-10-21'
+NEXT_RELEASE_DATE = '2019-10-22'
 
 # Aurora has been replaced by Dev Edition, but some 3rd party applications may
 # still rely on this value.
@@ -62,9 +62,9 @@ IOS_VERSION = '12.1'
 
 # Thunderbird configs
 LATEST_THUNDERBIRD_ALPHA_VERSION = '54.0a2'
-LATEST_THUNDERBIRD_NIGHTLY_VERSION = '70.0a1'
-# TODO: Need to update this every cycle?
-THUNDERBIRD_RELEASE_BRANCH = 'releases/comm-esr60'
+LATEST_THUNDERBIRD_NIGHTLY_VERSION = '71.0a1'
+# TODO: Need to update this every cycle
+THUNDERBIRD_RELEASE_BRANCH = 'releases/comm-esr68'
 THUNDERBIRD_BETA_BRANCH = 'releases/comm-beta'
 
 # Mixed

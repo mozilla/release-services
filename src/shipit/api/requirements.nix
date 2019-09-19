@@ -1495,10 +1495,10 @@ let
     };
 
     "mozilla-version" = python.mkDerivation {
-      name = "mozilla-version-0.3.3";
+      name = "mozilla-version-0.4.1";
       src = pkgs.fetchurl {
-        url = "https://files.pythonhosted.org/packages/35/26/c425e104b3e077569788dcc79b456f73ac4ffc8f05c7515f89643a64d4ed/mozilla-version-0.3.3.tar.gz";
-        sha256 = "d7db096a637629ff29c1979dbd29d0afb3779c394f58b4f8f8731c984c2cc374";
+        url = "https://files.pythonhosted.org/packages/0d/93/b6f97dcaf7b67e67ea557182d50388dcc177f4ffa27277b2efe21d24f1b6/mozilla-version-0.4.1.tar.gz";
+        sha256 = "0569m132xnqag8qqwgmrv69y8yiwz1h8xczmmb7qyymw24cs1l7i";
       };
       doCheck = commonDoCheck;
       checkPhase = "";
@@ -1506,6 +1506,7 @@ let
       buildInputs = commonBuildInputs ++ [ ];
       propagatedBuildInputs = [
         self."attrs"
+        self."future"
       ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/mozilla-releng/mozilla-version";

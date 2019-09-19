@@ -84,6 +84,7 @@ PROJECTS_CONFIG = {
         'run': 'REDIS',
         'run_options': {
             'port': 6379,
+            'schema': 'redis',
             'data_dir': os.path.join(TMP_DIR, 'redis'),
         },
     },
@@ -346,107 +347,6 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
-        ],
-    },
-    'uplift/bot': {
-        'update': False,
-        'deploys': [
-            {
-                'target': 'TASKCLUSTER_HOOK',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.testing',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.staging',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'deploy.production',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozillareleng/services',
-                    },
-                },
-            },
-        ],
-    },
-    'pulselistener': {
-        'update': False,
-        'requires': [],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-pulse-listener',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://eventlistener.testing.moz.tools',
-                        'dns': 'adjacent-shelf-2mxct7inb0tl5tg1rwt73ev4.herokudns.com',
-                    },
-                    'staging': {
-                        'enable': False,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-pulse-listener',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://eventlistener.staging.moz.tools',
-                        'dns': 'immense-refuge-f4ii4ur88iq0x707ybzq5mfn.herokudns.com',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-production-pulse-listen',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://eventlistener.moz.tools',
-                        'dns': 'convex-woodland-ilwk96s11s92e5otfkmb5ybe.herokudns.com',
-                    },
-                },
-            },
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'eventlistener-testing',
-                    },
-                    'staging': {
-                        'enable': False,
-                        'nix_path_attribute': 'docker',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'eventlistener-staging',
-                    },
-                    'production': {
-                        'enable': True,
-                        'nix_path_attribute': 'docker',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'eventlistener-production',
-                    },
-                },
-            },
-        ],
-    },
-    'uplift/backend': {
-        'update': False,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8011,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
         ],
     },
     'shipit/api': {
