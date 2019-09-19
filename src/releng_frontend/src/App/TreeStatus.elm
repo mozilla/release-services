@@ -385,30 +385,33 @@ update currentRoute msg model =
 
         App.TreeStatus.Types.UpdateStackShow stack ->
             let
-
-                (reason, category, status) =
+                ( reason, category, status ) =
                     case model.recentChanges of
-                      RemoteData.Success recentChanges -> 
-                          recentChanges
-                            |> List.filter (\x -> x.id == stack)
-                            |> List.head
-                            |> Maybe.map (\x ->
-                                  x.trees
-                                      |> List.head
-                                      |> Maybe.map (\y -> ( y.last_state.current_reason
-                                                          , y.last_state.current_tags |> List.head |> Maybe.withDefault ""
-                                                          , y.last_state.current_status))
-                                      |> Maybe.withDefault ("", "", "")
-                               )
-                            |> Maybe.withDefault ("", "", "")
+                        RemoteData.Success recentChanges ->
+                            recentChanges
+                                |> List.filter (\x -> x.id == stack)
+                                |> List.head
+                                |> Maybe.map
+                                    (\x ->
+                                        x.trees
+                                            |> List.head
+                                            |> Maybe.map
+                                                (\y ->
+                                                    ( y.last_state.current_reason
+                                                    , y.last_state.current_tags |> List.head |> Maybe.withDefault ""
+                                                    , y.last_state.current_status
+                                                    )
+                                                )
+                                            |> Maybe.withDefault ( "", "", "" )
+                                    )
+                                |> Maybe.withDefault ( "", "", "" )
 
-                      _ -> ("", "", "")
-
+                        _ ->
+                            ( "", "", "" )
             in
-            
             ( { model
-                  | showUpdateStackForm = Just stack
-                  , formUpdateStack = Form.initial (App.TreeStatus.Form.initUpdateStackFields reason category) (App.TreeStatus.Form.validateUpdateLog status)
+                | showUpdateStackForm = Just stack
+                , formUpdateStack = Form.initial (App.TreeStatus.Form.initUpdateStackFields reason category) (App.TreeStatus.Form.validateUpdateLog status)
               }
             , Cmd.none
             , Nothing
@@ -441,6 +444,7 @@ update currentRoute msg model =
                         ]
                     , Nothing
                     )
+
                 _ ->
                     ( { model
                         | recentChangesAlerts = App.Utils.getAlerts result
@@ -455,33 +459,35 @@ update currentRoute msg model =
 
         App.TreeStatus.Types.UpdateLogShow logId ->
             let
-
                 treeLogs =
-                    if RemoteData.isSuccess model.treeLogsAll
-                    then model.treeLogsAll
-                    else model.treeLogs
+                    if RemoteData.isSuccess model.treeLogsAll then
+                        model.treeLogsAll
+                    else
+                        model.treeLogs
 
-                (reason, category, status) =
+                ( reason, category, status ) =
                     case treeLogs of
-                      RemoteData.Success logs -> 
-                          logs
-                            |> List.filter (\x -> x.id == logId)
-                            |> List.head
-                            |> Maybe.map (\x ->
-                              ( x.reason
-                              , x.tags
-                                  |> List.head
-                                  |> Maybe.withDefault ""
-                              , x.status
-                              ))
-                            |> Maybe.withDefault ("", "", "")
-                      _ -> ("", "", "")
+                        RemoteData.Success logs ->
+                            logs
+                                |> List.filter (\x -> x.id == logId)
+                                |> List.head
+                                |> Maybe.map
+                                    (\x ->
+                                        ( x.reason
+                                        , x.tags
+                                            |> List.head
+                                            |> Maybe.withDefault ""
+                                        , x.status
+                                        )
+                                    )
+                                |> Maybe.withDefault ( "", "", "" )
 
+                        _ ->
+                            ( "", "", "" )
             in
-            
             ( { model
-                  | showUpdateLog = Just logId
-                  , formUpdateLog = Form.initial (App.TreeStatus.Form.initUpdateLogFields reason category) (App.TreeStatus.Form.validateUpdateLog status)
+                | showUpdateLog = Just logId
+                , formUpdateLog = Form.initial (App.TreeStatus.Form.initUpdateLogFields reason category) (App.TreeStatus.Form.validateUpdateLog status)
               }
             , Cmd.none
             , Nothing
@@ -510,11 +516,13 @@ update currentRoute msg model =
                         ]
                     , Nothing
                     )
+
                 _ ->
                     ( model
                     , Cmd.none
                     , Nothing
                     )
+
 
 view :
     App.TreeStatus.Types.Route

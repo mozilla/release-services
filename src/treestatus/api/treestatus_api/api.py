@@ -38,8 +38,8 @@ Please make sure that an incident is closed for every open (or under approval) t
 '''
 
 DEFAULT_TREE = dict(
-    reason="New tree",
-    status="closed",
+    reason='New tree',
+    status='closed',
     tags=[],
     log_id=None,
 )

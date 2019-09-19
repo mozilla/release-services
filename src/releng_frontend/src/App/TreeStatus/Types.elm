@@ -27,7 +27,7 @@ type alias Trees =
 
 
 type alias TreeLog =
-    { id: Int
+    { id : Int
     , name : String
     , when : String
     , who : String
@@ -49,7 +49,7 @@ type alias RecentChangeTreeLastState =
     , current_reason : String
     , current_status : String
     , current_tags : List String
-    , current_log_id: Int
+    , current_log_id : Int
     }
 
 
@@ -59,7 +59,10 @@ type alias RecentChangeTree =
     , last_state : RecentChangeTreeLastState
     }
 
-type alias RecentChangeId = Int
+
+type alias RecentChangeId =
+    Int
+
 
 type alias RecentChange =
     { id : RecentChangeId
@@ -121,7 +124,6 @@ type Msg
     | UpdateLogShow Int
     | FormUpdateLogMsg Form.Msg
     | FormUpdateLogResult (WebData String)
-
 
 
 possibleTreeStatuses : List ( String, String )

@@ -74,9 +74,9 @@ viewTextInput :
 viewTextInput state labelText helpNodes attributes =
     viewField
         (if state.liveError == Nothing then
-             state.error
+            state.error
          else
-             state.liveError
+            state.liveError
         )
         (Just labelText)
         helpNodes
@@ -100,9 +100,9 @@ viewSelectInput :
 viewSelectInput state labelText helpNodes options attributes =
     viewField
         (if state.liveError == Nothing then
-             state.error
+            state.error
          else
-             state.liveError
+            state.liveError
         )
         (Just labelText)
         helpNodes

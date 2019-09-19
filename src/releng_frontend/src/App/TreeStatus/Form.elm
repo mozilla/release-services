@@ -50,19 +50,26 @@ validateAddTree =
 
 validateUpdateLog : String -> Form.Validate.Validation () UpdateLog
 validateUpdateLog status =
-    if status == "closed"
-    then 
+    if status == "closed" then
         Form.Validate.map2 UpdateLog
             (Form.Validate.field "reason" Form.Validate.string)
             (Form.Validate.field "tags" Form.Validate.string)
     else
         Form.Validate.map2 UpdateLog
-            (Form.Validate.field "reason" (Form.Validate.oneOf [ Form.Validate.string
-                                                               , Form.Validate.emptyString
-                                                               ]))
-            (Form.Validate.field "tags" (Form.Validate.oneOf [ Form.Validate.string
-                                                             , Form.Validate.emptyString
-                                                             ]))
+            (Form.Validate.field "reason"
+                (Form.Validate.oneOf
+                    [ Form.Validate.string
+                    , Form.Validate.emptyString
+                    ]
+                )
+            )
+            (Form.Validate.field "tags"
+                (Form.Validate.oneOf
+                    [ Form.Validate.string
+                    , Form.Validate.emptyString
+                    ]
+                )
+            )
 
 
 validateUpdateTree : Form.Validate.Validation () UpdateTree
@@ -120,7 +127,7 @@ initUpdateStack status =
     Form.initial (initUpdateStackFields "" "") (validateUpdateLog status)
 
 
-initUpdateLog: String -> Form.Form () UpdateLog
+initUpdateLog : String -> Form.Form () UpdateLog
 initUpdateLog status =
     Form.initial (initUpdateLogFields "" "") (validateUpdateLog status)
 
@@ -189,122 +196,138 @@ updateAddTree model formMsg =
     )
 
 
-updateUpdateStack:
+updateUpdateStack :
     App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog
     -> Form.Msg
     -> ( App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog, Maybe Hawk.Request )
 updateUpdateStack model formMsg =
     let
-        status = model.recentChanges
-          |> RemoteData.withDefault []
-          |> List.filter (\x -> Just x.id == model.showUpdateStackForm)
-          |> List.map (\x ->
-                 x.trees 
-                     |> List.head
-                     |> Maybe.map (\y -> y.last_state.current_status)
-                     |> Maybe.withDefault "")
-          |> List.head
-          |> Maybe.withDefault ""
+        status =
+            model.recentChanges
+                |> RemoteData.withDefault []
+                |> List.filter (\x -> Just x.id == model.showUpdateStackForm)
+                |> List.map
+                    (\x ->
+                        x.trees
+                            |> List.head
+                            |> Maybe.map (\y -> y.last_state.current_status)
+                            |> Maybe.withDefault ""
+                    )
+                |> List.head
+                |> Maybe.withDefault ""
 
         form =
             Form.update (validateUpdateLog status) formMsg model.formUpdateStack
 
-        formOutput = Form.getOutput form
+        formOutput =
+            Form.getOutput form
 
-        (recentChanges, alerts, hawkRequest, showUpdateStackForm) =
-            case (formMsg, model.recentChanges, model.showUpdateStackForm, formOutput) of
-                (Form.Submit, RemoteData.Success recentChanges, Just recentChangeId, Just formOutput) ->
-                  let
-                    newRecentChanges = List.map updateRecentChange recentChanges
+        ( recentChanges, alerts, hawkRequest, showUpdateStackForm ) =
+            case ( formMsg, model.recentChanges, model.showUpdateStackForm, formOutput ) of
+                ( Form.Submit, RemoteData.Success recentChanges, Just recentChangeId, Just formOutput ) ->
+                    let
+                        newRecentChanges =
+                            List.map updateRecentChange recentChanges
 
-                    updateRecentChange recentChange =
-                        if recentChangeId == recentChange.id
-                        then { recentChange
-                                 | reason = formOutput.reason
-                                 , trees = List.map updateRecentChangeTree recentChange.trees
-                             }
-                        else recentChange
+                        updateRecentChange recentChange =
+                            if recentChangeId == recentChange.id then
+                                { recentChange
+                                    | reason = formOutput.reason
+                                    , trees = List.map updateRecentChangeTree recentChange.trees
+                                }
+                            else
+                                recentChange
 
-                    updateRecentChangeTree tree =
-                      let
-                        last_state = tree.last_state
-                      in
-                      { tree 
-                          | last_state =
-                              { last_state
-                                  | reason = formOutput.reason
-                                  , tags = [ formOutput.tags ]
-                              }
-                      }
+                        updateRecentChangeTree tree =
+                            let
+                                last_state =
+                                    tree.last_state
+                            in
+                            { tree
+                                | last_state =
+                                    { last_state
+                                        | reason = formOutput.reason
+                                        , tags = [ formOutput.tags ]
+                                    }
+                            }
 
-                    hawkRequest_ =
-                        Hawk.Request
-                            "UpdateStack"
-                            "PATCH"
-                            (model.baseUrl ++ "/stack/" ++ toString recentChangeId)
-                            [ Http.header "Accept" "application/json" ]
-                            (Http.jsonBody (App.TreeStatus.Api.encoderUpdateStack { reason = formOutput.reason, tags = [ formOutput.tags ] }))
+                        hawkRequest_ =
+                            Hawk.Request
+                                "UpdateStack"
+                                "PATCH"
+                                (model.baseUrl ++ "/stack/" ++ toString recentChangeId)
+                                [ Http.header "Accept" "application/json" ]
+                                (Http.jsonBody (App.TreeStatus.Api.encoderUpdateStack { reason = formOutput.reason, tags = [ formOutput.tags ] }))
 
-                    (alerts, hawkRequest) =
-                        if getUpdateTreeErrors form == []
-                        then ([], Just hawkRequest_)
-                        else (model.recentChangesAlerts, Nothing)
-                  in
-                    (RemoteData.Success newRecentChanges, alerts, hawkRequest, model.showUpdateStackForm)
-                (Form.Reset _, _, _, _) ->
-                    (model.recentChanges, model.recentChangesAlerts, Nothing, Nothing)
-                (_, _, _, _) ->
-                    (model.recentChanges, model.recentChangesAlerts, Nothing, model.showUpdateStackForm)
+                        ( alerts, hawkRequest ) =
+                            if getUpdateTreeErrors form == [] then
+                                ( [], Just hawkRequest_ )
+                            else
+                                ( model.recentChangesAlerts, Nothing )
+                    in
+                    ( RemoteData.Success newRecentChanges, alerts, hawkRequest, model.showUpdateStackForm )
 
+                ( Form.Reset _, _, _, _ ) ->
+                    ( model.recentChanges, model.recentChangesAlerts, Nothing, Nothing )
+
+                ( _, _, _, _ ) ->
+                    ( model.recentChanges, model.recentChangesAlerts, Nothing, model.showUpdateStackForm )
     in
-    ( { model 
+    ( { model
         | formUpdateStack = form
         , recentChangesAlerts = alerts
         , recentChanges = recentChanges
         , showUpdateStackForm = showUpdateStackForm
       }
-    , hawkRequest 
+    , hawkRequest
     )
 
 
-updateUpdateLog:
+updateUpdateLog :
     App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog
     -> Form.Msg
     -> ( App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog, Maybe Hawk.Request )
 updateUpdateLog model formMsg =
     let
-        status = logs
-            |> List.filter (\x -> Just x.id == model.showUpdateLog)
-            |> List.map (\x -> x.status)
-            |> List.head
-            |> Maybe.withDefault ""
+        status =
+            logs
+                |> List.filter (\x -> Just x.id == model.showUpdateLog)
+                |> List.map (\x -> x.status)
+                |> List.head
+                |> Maybe.withDefault ""
 
-        logs = RemoteData.withDefault [] (
-            if RemoteData.isSuccess model.treeLogsAll
-            then model.treeLogsAll
-            else model.treeLogs)
+        logs =
+            RemoteData.withDefault []
+                (if RemoteData.isSuccess model.treeLogsAll then
+                    model.treeLogsAll
+                 else
+                    model.treeLogs
+                )
 
-        formOutput = Form.getOutput form |> Maybe.withDefault (UpdateLog "" "")
+        formOutput =
+            Form.getOutput form |> Maybe.withDefault (UpdateLog "" "")
 
         form =
             Form.update (validateUpdateLog status) formMsg model.formUpdateLog
 
-
         updateLog logId logs =
-          List.map (\log ->
-            if logId == log.id
-            then
-                { log 
-                    | reason = formOutput.reason
-                    , tags = [ formOutput.tags ]
-                }
-            else log
-                ) logs
+            List.map
+                (\log ->
+                    if logId == log.id then
+                        { log
+                            | reason = formOutput.reason
+                            , tags = [ formOutput.tags ]
+                        }
+                    else
+                        log
+                )
+                logs
 
-        requestBody = App.TreeStatus.Api.encoderUpdateStack
-            { reason = formOutput.reason
-            , tags = [ formOutput.tags ]
-            }
+        requestBody =
+            App.TreeStatus.Api.encoderUpdateStack
+                { reason = formOutput.reason
+                , tags = [ formOutput.tags ]
+                }
 
         makeHawkRequest logId =
             Hawk.Request
@@ -314,44 +337,46 @@ updateUpdateLog model formMsg =
                 [ Http.header "Accept" "application/json" ]
                 (Http.jsonBody requestBody)
 
-        (showUpdateLog, treeLogs, treeLogsAll, hawkRequest) =
-             case (formMsg, model.showUpdateLog) of
-                  (Form.Submit, Just logId) ->
-                      let
-                          errors = Form.getErrors form
-                      in
-                          ( if List.isEmpty errors then
-                                Nothing
-                            else
-                                model.showUpdateLog
-                          -- TODO: update recentChanges
-                          , RemoteData.map (updateLog logId) model.treeLogs
-                          , RemoteData.map (updateLog logId) model.treeLogsAll
-                          -- TODO: pass in status
-                          , if List.isEmpty errors then
-                                Just (makeHawkRequest logId)
-                            else
-                                Nothing
-                          )
-                  (Form.Reset _, _) ->
-                      ( Nothing
-                      , model.treeLogs
-                      , model.treeLogsAll
-                      , Nothing
-                      )
-                  (_, _) -> 
-                      ( model.showUpdateLog
-                      , model.treeLogs
-                      , model.treeLogsAll
-                      , Nothing
-                      )
-        
+        ( showUpdateLog, treeLogs, treeLogsAll, hawkRequest ) =
+            case ( formMsg, model.showUpdateLog ) of
+                ( Form.Submit, Just logId ) ->
+                    let
+                        errors =
+                            Form.getErrors form
+                    in
+                    ( if List.isEmpty errors then
+                        Nothing
+                      else
+                        model.showUpdateLog
+                      -- TODO: update recentChanges
+                    , RemoteData.map (updateLog logId) model.treeLogs
+                    , RemoteData.map (updateLog logId) model.treeLogsAll
+                      -- TODO: pass in status
+                    , if List.isEmpty errors then
+                        Just (makeHawkRequest logId)
+                      else
+                        Nothing
+                    )
+
+                ( Form.Reset _, _ ) ->
+                    ( Nothing
+                    , model.treeLogs
+                    , model.treeLogsAll
+                    , Nothing
+                    )
+
+                ( _, _ ) ->
+                    ( model.showUpdateLog
+                    , model.treeLogs
+                    , model.treeLogsAll
+                    , Nothing
+                    )
     in
-    ( { model 
-          | formUpdateLog = form
-          , showUpdateLog = showUpdateLog
-          , treeLogs = treeLogs
-          , treeLogsAll = treeLogsAll
+    ( { model
+        | formUpdateLog = form
+        , showUpdateLog = showUpdateLog
+        , treeLogs = treeLogs
+        , treeLogsAll = treeLogsAll
       }
     , hawkRequest
     )
@@ -423,17 +448,15 @@ getUpdateTreeErrors form =
             let
                 status =
                     Form.getFieldAsString "status" form
-                      |> .value
-                      |> Maybe.withDefault ""
+                        |> .value
+                        |> Maybe.withDefault ""
 
                 data =
                     Form.getFieldAsString field form
-                      |> .value
-                      |> Maybe.withDefault ""
+                        |> .value
+                        |> Maybe.withDefault ""
             in
-            if
-                status == "closed" && data == ""
-            then
+            if status == "closed" && data == "" then
                 [ ( field, Form.Error.Empty ) ]
             else
                 []
@@ -500,7 +523,7 @@ viewAddTree form =
 
 
 viewUpdateStack :
-       App.TreeStatus.Types.RecentChange
+    App.TreeStatus.Types.RecentChange
     -> Form.Form () UpdateStack
     -> Html Form.Msg
 viewUpdateStack recentChange form =
@@ -537,24 +560,24 @@ viewUpdateStack recentChange form =
                     ]
                 ]
                 [ placeholder "(no reason)" ]
-              ]
-            , div [ class "btn-group"]
-                  [ App.Form.viewButton
-                      "Update"
-                      [ Utils.onClick Form.Submit
-                      ]
-                  , App.Form.viewButton
-                      "Cancel"
-                      [ Utils.onClick (Form.Reset (initUpdateStackFields "" ""))
-                      , class "btn btn-outline-danger"
-                      ]
-                  ]
-            , div [ class "clearfix" ] []
+            ]
+        , div [ class "btn-group" ]
+            [ App.Form.viewButton
+                "Update"
+                [ Utils.onClick Form.Submit
+                ]
+            , App.Form.viewButton
+                "Cancel"
+                [ Utils.onClick (Form.Reset (initUpdateStackFields "" ""))
+                , class "btn btn-outline-danger"
+                ]
+            ]
+        , div [ class "clearfix" ] []
         ]
 
 
-viewUpdateLog:
-       Form.Form () UpdateLog
+viewUpdateLog :
+    Form.Form () UpdateLog
     -> Html Form.Msg
 viewUpdateLog form =
     div [ id "treestatus-form" ]
@@ -590,20 +613,20 @@ viewUpdateLog form =
                     ]
                 ]
                 [ placeholder "(no reason)" ]
-              ]
-            , div [ class "btn-group"]
-                  [ App.Form.viewButton
-                      "Update"
-                      [ Utils.onClick Form.Submit
-                      ]
-                  , App.Form.viewButton
-                      "Cancel"
-                      -- TODO: this should reset to original fields
-                      [ Utils.onClick (Form.Reset (initUpdateLogFields "" ""))
-                      , class "btn btn-outline-danger"
-                      ]
-                  ]
-            , div [ class "clearfix" ] []
+            ]
+        , div [ class "btn-group" ]
+            [ App.Form.viewButton
+                "Update"
+                [ Utils.onClick Form.Submit
+                ]
+            , App.Form.viewButton
+                "Cancel"
+                -- TODO: this should reset to original fields
+                [ Utils.onClick (Form.Reset (initUpdateLogFields "" ""))
+                , class "btn btn-outline-danger"
+                ]
+            ]
+        , div [ class "clearfix" ] []
         ]
 
 
@@ -720,6 +743,7 @@ viewUpdateTree treesSelected trees form =
             , App.Form.viewButton
                 "Update"
                 [ Utils.onClick Form.Submit
+
                 -- TODO, disabled (getUpdateTreeErrors form /= [])
                 ]
             , div [ class "clearfix" ] []

@@ -73,7 +73,7 @@ encoderTree tree =
 encoderTreeNames : App.TreeStatus.Types.Trees -> JsonEncode.Value
 encoderTreeNames trees =
     JsonEncode.object
-        [ ( "trees", JsonEncode.list (List.map (\x -> JsonEncode.string x.name) trees))
+        [ ( "trees", JsonEncode.list (List.map (\x -> JsonEncode.string x.name) trees) )
         ]
 
 

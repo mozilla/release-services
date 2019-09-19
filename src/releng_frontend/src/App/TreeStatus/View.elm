@@ -2,10 +2,10 @@ module App.TreeStatus.View exposing (..)
 
 import App.Form
 import App.TreeStatus.Form
-import Dict
 import App.TreeStatus.Types
 import App.UserScopes
 import App.Utils
+import Dict
 import Form
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -70,17 +70,21 @@ viewRecentChange :
     -> List (Html App.TreeStatus.Types.Msg)
 viewRecentChange scopes showUpdateStackForm formUpdateStack recentChange =
     let
-        (reason, category) =
+        ( reason, category ) =
             recentChange.trees
                 |> List.head
-                |> Maybe.map (\x -> ( x.last_state.current_reason
-                                    , x.last_state.current_tags
-                                      |> List.head
-                                      |> Maybe.withDefault ""
-                                    ))
-                |> Maybe.withDefault ("", "")
+                |> Maybe.map
+                    (\x ->
+                        ( x.last_state.current_reason
+                        , x.last_state.current_tags
+                            |> List.head
+                            |> Maybe.withDefault ""
+                        )
+                    )
+                |> Maybe.withDefault ( "", "" )
 
-        possibleTreeTags = Dict.fromList App.TreeStatus.Types.possibleTreeTags
+        possibleTreeTags =
+            Dict.fromList App.TreeStatus.Types.possibleTreeTags
 
         parseTimestamp timestamp =
             timestamp
@@ -98,31 +102,31 @@ viewRecentChange scopes showUpdateStackForm formUpdateStack recentChange =
                 |> Maybe.withDefault timestamp
 
         buttons =
-            if showUpdateStackForm == Just recentChange.id
-                then []
-                else [ div
-                         [ class "btn-group" ]
-                         [ button
-                             [ type_ "button"
-                             , class "btn btn-sm btn-outline-success"
-                             , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
-                             ]
-                             [ text "Restore" ]
-                         , button
-                             [ type_ "button"
-                             , class "btn btn-sm btn-outline-info"
-                             , Utils.onClick (App.TreeStatus.Types.UpdateStackShow recentChange.id)
-                             ]
-                             [ text "Update" ]
-                         , button
-                             [ type_ "button"
-                             , class "btn btn-sm btn-outline-warning"
-                             , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
-                             ]
-                             [ text "Discard" ]
-                         ]
-                     ]
-
+            if showUpdateStackForm == Just recentChange.id then
+                []
+            else
+                [ div
+                    [ class "btn-group" ]
+                    [ button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-success"
+                        , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
+                        ]
+                        [ text "Restore" ]
+                    , button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-info"
+                        , Utils.onClick (App.TreeStatus.Types.UpdateStackShow recentChange.id)
+                        ]
+                        [ text "Update" ]
+                    , button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-warning"
+                        , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
+                        ]
+                        [ text "Discard" ]
+                    ]
+                ]
     in
     if hasScope "recent_changes/revert" scopes then
         [ div
@@ -137,29 +141,32 @@ viewRecentChange scopes showUpdateStackForm formUpdateStack recentChange =
                     , text " changed trees:"
                     ]
                  , ul [] (List.map (viewRecentChangeTree recentChange.status) recentChange.trees)
-                ]
-                  |> App.Utils.appendItems
-                    (if showUpdateStackForm == Just recentChange.id 
-                     then
-                       [ App.TreeStatus.Form.viewUpdateStack recentChange formUpdateStack
-                           |> Html.map App.TreeStatus.Types.FormUpdateStackMsg
-                       ]
-                     else
-                       [ p [] [ div [] [ text "Reason category: "
-
-                                       , span [ class "badge badge-default" ]
-                                              [ text (possibleTreeTags
-                                                          |> Dict.get category
-                                                          |> Maybe.withDefault category)
-                                              ]
-                                       ]
-                              , div [] [ text "Reason: ", b [] (bugzillaBugAsLink reason) ]
-                              ]
-                       ]
-                    )
+                 ]
+                    |> App.Utils.appendItems
+                        (if showUpdateStackForm == Just recentChange.id then
+                            [ App.TreeStatus.Form.viewUpdateStack recentChange formUpdateStack
+                                |> Html.map App.TreeStatus.Types.FormUpdateStackMsg
+                            ]
+                         else
+                            [ p []
+                                [ div []
+                                    [ text "Reason category: "
+                                    , span [ class "badge badge-default" ]
+                                        [ text
+                                            (possibleTreeTags
+                                                |> Dict.get category
+                                                |> Maybe.withDefault category
+                                            )
+                                        ]
+                                    ]
+                                , div [] [ text "Reason: ", b [] (bugzillaBugAsLink reason) ]
+                                ]
+                            ]
+                        )
                 )
-            ]
-              |> App.Utils.appendItems buttons) 
+             ]
+                |> App.Utils.appendItems buttons
+            )
         ]
     else
         []
@@ -447,7 +454,7 @@ viewTrees scopes trees treesSelected =
 viewButtons :
     App.TreeStatus.Types.Route
     -> List String
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree  App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
 viewButtons route scopes model =
     let
@@ -697,7 +704,7 @@ viewTreeDetails remote =
 
 
 viewTreeLog :
-       Maybe Int
+    Maybe Int
     -> Form.Form () App.TreeStatus.Form.UpdateLog
     -> App.TreeStatus.Types.TreeLog
     -> Html App.TreeStatus.Types.Msg
@@ -716,26 +723,32 @@ viewTreeLog showUpdateLog formUpdateLog log =
                 |> List.head
                 |> Maybe.withDefault who2
 
-        possibleTreeTags = Dict.fromList App.TreeStatus.Types.possibleTreeTags
+        possibleTreeTags =
+            Dict.fromList App.TreeStatus.Types.possibleTreeTags
 
         category =
             log.tags
                 |> List.head
-                |> Maybe.map (\tag -> possibleTreeTags
-                                        |> Dict.get tag
-                                        |> Maybe.withDefault tag)
+                |> Maybe.map
+                    (\tag ->
+                        possibleTreeTags
+                            |> Dict.get tag
+                            |> Maybe.withDefault tag
+                    )
                 |> Maybe.withDefault ""
 
         view =
-            [ p [] [ div [] [ text "Reason category: "
-                            , span [ class "badge badge-default" ] [ text category ]
-                            ]
-                   , div [] [ text "Reason: ", b [] (bugzillaBugAsLink log.reason) ]
-                   ]
+            [ p []
+                [ div []
+                    [ text "Reason category: "
+                    , span [ class "badge badge-default" ] [ text category ]
+                    ]
+                , div [] [ text "Reason: ", b [] (bugzillaBugAsLink log.reason) ]
+                ]
             , button
                 [ type_ "button"
                 , class "btn btn-sm btn-outline-info"
-                , style [("float", "left")]
+                , style [ ( "float", "left" ) ]
                 , Utils.onClick (App.TreeStatus.Types.UpdateLogShow log.id)
                 ]
                 [ text "Update" ]
@@ -755,7 +768,12 @@ viewTreeLog showUpdateLog formUpdateLog log =
             [ div [ class "timeline-time" ]
                 [ text log.when ]
             , h5 [] [ text who ]
-            , div [] (if showUpdateLog == Just log.id then form else view)
+            , div []
+                (if showUpdateLog == Just log.id then
+                    form
+                 else
+                    view
+                )
             ]
         ]
 
