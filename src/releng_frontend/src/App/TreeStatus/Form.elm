@@ -21,6 +21,18 @@ type alias AddTree =
     { name : String }
 
 
+type alias UpdateStack =
+    { reason : String
+    , tags : String
+    }
+
+
+type alias UpdateLog =
+    { reason : String
+    , tags : String
+    }
+
+
 type alias UpdateTree =
     { status : String
     , reason : String
@@ -36,6 +48,30 @@ validateAddTree =
         (Form.Validate.field "name" Form.Validate.string)
 
 
+validateUpdateStack : Form.Validate.Validation () UpdateStack
+validateUpdateStack =
+    Form.Validate.map2 UpdateStack
+        (Form.Validate.field "reason" Form.Validate.string)
+        (Form.Validate.field "tags" Form.Validate.string)
+
+
+validateUpdateLog : String -> Form.Validate.Validation () UpdateLog
+validateUpdateLog status =
+    if status == "closed"
+    then 
+        Form.Validate.map2 UpdateLog
+            (Form.Validate.field "reason" Form.Validate.string)
+            (Form.Validate.field "tags" Form.Validate.string)
+    else
+        Form.Validate.map2 UpdateLog
+            (Form.Validate.field "reason" (Form.Validate.oneOf [ Form.Validate.string
+                                                               , Form.Validate.emptyString
+                                                               ]))
+            (Form.Validate.field "tags" (Form.Validate.oneOf [ Form.Validate.string
+                                                             , Form.Validate.emptyString
+                                                             ]))
+
+
 validateUpdateTree : Form.Validate.Validation () UpdateTree
 validateUpdateTree =
     Form.Validate.map5 UpdateTree
@@ -46,13 +82,29 @@ validateUpdateTree =
         (Form.Validate.field "message_of_the_day" Form.Validate.string
             |> Form.Validate.defaultValue ""
         )
-        (Form.Validate.field "tags" Form.Validate.string)
+        (Form.Validate.field "tags" Form.Validate.string
+            |> Form.Validate.defaultValue ""
+        )
         (Form.Validate.field "remember" Form.Validate.bool)
 
 
 initAddTreeFields : List ( String, Form.Field.Field )
 initAddTreeFields =
     [ ( "name", Form.Field.string "" ) ]
+
+
+initUpdateStackFields : String -> String -> List ( String, Form.Field.Field )
+initUpdateStackFields reason tags =
+    [ ( "reason", Form.Field.string reason )
+    , ( "tags", Form.Field.string tags )
+    ]
+
+
+initUpdateLogFields : String -> String -> List ( String, Form.Field.Field )
+initUpdateLogFields reason tags =
+    [ ( "reason", Form.Field.string reason )
+    , ( "tags", Form.Field.string tags )
+    ]
 
 
 initUpdateTreeFields : List ( String, Form.Field.Field )
@@ -68,6 +120,16 @@ initUpdateTreeFields =
 initAddTree : Form.Form () AddTree
 initAddTree =
     Form.initial initAddTreeFields validateAddTree
+
+
+initUpdateStack : Form.Form () UpdateStack
+initUpdateStack =
+    Form.initial (initUpdateStackFields "" "") validateUpdateStack
+
+
+initUpdateLog: String -> Form.Form () UpdateLog
+initUpdateLog status =
+    Form.initial (initUpdateLogFields "" "") (validateUpdateLog status)
 
 
 initUpdateTree : Form.Form () UpdateTree
@@ -86,9 +148,9 @@ resetUpdateTree =
 
 
 updateAddTree :
-    App.TreeStatus.Types.Model AddTree UpdateTree
+    App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog
     -> Form.Msg
-    -> ( App.TreeStatus.Types.Model AddTree UpdateTree, Maybe Hawk.Request )
+    -> ( App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog, Maybe Hawk.Request )
 updateAddTree model formMsg =
     let
         form =
@@ -134,11 +196,168 @@ updateAddTree model formMsg =
     )
 
 
+updateUpdateStack:
+    App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog
+    -> Form.Msg
+    -> ( App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog, Maybe Hawk.Request )
+updateUpdateStack model formMsg =
+    let
+        form =
+            Form.update validateUpdateStack formMsg model.formUpdateStack
+
+        formOutput = Form.getOutput form
+
+        (recentChanges, alerts, hawkRequest, showUpdateStackForm) =
+            case (formMsg, model.recentChanges, model.showUpdateStackForm, formOutput) of
+                (Form.Submit, RemoteData.Success recentChanges, Just recentChangeId, Just formOutput) ->
+                  let
+                    newRecentChanges = List.map updateRecentChange recentChanges
+
+                    updateRecentChange recentChange =
+                        if recentChangeId == recentChange.id
+                        then { recentChange
+                                 | reason = formOutput.reason
+                                 , trees = List.map updateRecentChangeTree recentChange.trees
+                             }
+                        else recentChange
+
+                    updateRecentChangeTree tree =
+                      let
+                        last_state = tree.last_state
+                      in
+                      { tree 
+                          | last_state =
+                              { last_state
+                                  | reason = formOutput.reason
+                                  , tags = [ formOutput.tags ]
+                              }
+                      }
+
+                    hawkRequest_ =
+                        Hawk.Request
+                            "UpdateStack"
+                            "PATCH"
+                            (model.baseUrl ++ "/stack/" ++ toString recentChangeId)
+                            [ Http.header "Accept" "application/json" ]
+                            (Http.jsonBody (App.TreeStatus.Api.encoderUpdateStack { reason = formOutput.reason, tags = [ formOutput.tags ] }))
+
+                    (alerts, hawkRequest) =
+                        if getUpdateTreeErrors form == []
+                        then ([], Just hawkRequest_)
+                        else (model.recentChangesAlerts, Nothing)
+                  in
+                    (RemoteData.Success newRecentChanges, alerts, hawkRequest, model.showUpdateStackForm)
+                (Form.Reset _, _, _, _) ->
+                    (model.recentChanges, model.recentChangesAlerts, Nothing, Nothing)
+                (_, _, _, _) ->
+                    (model.recentChanges, model.recentChangesAlerts, Nothing, model.showUpdateStackForm)
+
+    in
+    ( { model 
+        | formUpdateStack = form
+        , recentChangesAlerts = alerts
+        , recentChanges = recentChanges
+        , showUpdateStackForm = showUpdateStackForm
+      }
+    , hawkRequest 
+    )
+
+
+updateUpdateLog:
+    App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog
+    -> Form.Msg
+    -> ( App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog, Maybe Hawk.Request )
+updateUpdateLog model formMsg =
+    let
+        status = logs
+            |> List.filter (\x -> Just x.id == model.showUpdateLog)
+            |> List.map (\x -> x.status)
+            |> List.head
+            |> Maybe.withDefault ""
+
+        logs = RemoteData.withDefault [] (
+            if RemoteData.isSuccess model.treeLogsAll
+            then model.treeLogsAll
+            else model.treeLogs)
+
+        formOutput = Form.getOutput form |> Maybe.withDefault (UpdateLog "" "")
+
+        form =
+            Form.update (validateUpdateLog status) formMsg model.formUpdateLog
+
+
+        updateLog logId logs =
+          List.map (\log ->
+            if logId == log.id
+            then
+                { log 
+                    | reason = formOutput.reason
+                    , tags = [ formOutput.tags ]
+                }
+            else log
+                ) logs
+
+        requestBody = App.TreeStatus.Api.encoderUpdateStack
+            { reason = formOutput.reason
+            , tags = [ formOutput.tags ]
+            }
+
+        makeHawkRequest logId =
+            Hawk.Request
+                "UpdateStack"
+                "PATCH"
+                (model.baseUrl ++ "/log/" ++ toString logId)
+                [ Http.header "Accept" "application/json" ]
+                (Http.jsonBody requestBody)
+
+        (showUpdateLog, treeLogs, treeLogsAll, hawkRequest) =
+             case (formMsg, model.showUpdateLog) of
+                  (Form.Submit, Just logId) ->
+                      let
+                          errors = Form.getErrors form
+                      in
+                          ( if List.isEmpty errors then
+                                Nothing
+                            else
+                                model.showUpdateLog
+                          -- TODO: update recentChanges
+                          , RemoteData.map (updateLog logId) model.treeLogs
+                          , RemoteData.map (updateLog logId) model.treeLogsAll
+                          -- TODO: pass in status
+                          , if List.isEmpty errors then
+                                Just (makeHawkRequest logId)
+                            else
+                                Nothing
+                          )
+                  (Form.Reset _, _) ->
+                      ( Nothing
+                      , model.treeLogs
+                      , model.treeLogsAll
+                      , Nothing
+                      )
+                  (_, _) -> 
+                      ( model.showUpdateLog
+                      , model.treeLogs
+                      , model.treeLogsAll
+                      , Nothing
+                      )
+        
+    in
+    ( { model 
+          | formUpdateLog = form
+          , showUpdateLog = showUpdateLog
+          , treeLogs = treeLogs
+          , treeLogsAll = treeLogsAll
+      }
+    , hawkRequest
+    )
+
+
 updateUpdateTree :
     App.TreeStatus.Types.Route
-    -> App.TreeStatus.Types.Model AddTree UpdateTree
+    -> App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog
     -> Form.Msg
-    -> ( App.TreeStatus.Types.Model AddTree UpdateTree, Maybe Hawk.Request )
+    -> ( App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog, Maybe Hawk.Request )
 updateUpdateTree route model formMsg =
     let
         form =
@@ -196,27 +415,28 @@ updateUpdateTree route model formMsg =
 getUpdateTreeErrors : Form.Form e o -> List ( String, Form.Error.ErrorValue e )
 getUpdateTreeErrors form =
     let
-        requiredOnClose field form =
+        requiredOnClose field =
             let
                 status =
                     Form.getFieldAsString "status" form
+                      |> .value
+                      |> Maybe.withDefault ""
 
                 data =
                     Form.getFieldAsString field form
+                      |> .value
+                      |> Maybe.withDefault ""
             in
             if
-                Maybe.withDefault "" status.value
-                    == "closed"
-                    && Maybe.withDefault "" data.value
-                    == ""
+                status == "closed" && data == ""
             then
                 [ ( field, Form.Error.Empty ) ]
             else
                 []
     in
     Form.getErrors form
-        |> List.append (requiredOnClose "reason" form)
-        |> List.append (requiredOnClose "tags" form)
+        |> List.append (requiredOnClose "reason")
+        |> List.append (requiredOnClose "tags")
 
 
 fieldClass : { b | error : Maybe a } -> String
@@ -272,6 +492,114 @@ viewAddTree form =
                 ]
             , div [ class "clearfix" ] []
             ]
+        ]
+
+
+viewUpdateStack :
+       App.TreeStatus.Types.RecentChange
+    -> Form.Form () UpdateStack
+    -> Html Form.Msg
+viewUpdateStack recentChange form =
+    div [ id "treestatus-form" ]
+        [ Html.form
+            []
+            [ App.Form.viewSelectInput
+                (Form.getFieldAsString "tags" form)
+                "Reason category"
+                []
+                (App.TreeStatus.Types.possibleTreeTags
+                    |> List.append [ ( "", "" ) ]
+                )
+                []
+            , App.Form.viewTextInput
+                (Form.getFieldAsString "reason" form)
+                "Reason"
+                [ small
+                    [ class "form-text text-muted" ]
+                    [ p []
+                        [ text
+                            ("Please indicate the reason for "
+                                ++ "closure, preferably with a bug link."
+                            )
+                        ]
+                    , p []
+                        [ text
+                            ("Please indicate conditions for "
+                                ++ "reopening, especially if you might "
+                                ++ "disappear before reopening the "
+                                ++ "tree yourself."
+                            )
+                        ]
+                    ]
+                ]
+                [ placeholder "(no reason)" ]
+              ]
+            , div [ class "btn-group"]
+                  [ App.Form.viewButton
+                      "Update"
+                      [ Utils.onClick Form.Submit
+                      ]
+                  , App.Form.viewButton
+                      "Cancel"
+                      [ Utils.onClick (Form.Reset (initUpdateStackFields "" ""))
+                      , class "btn btn-outline-danger"
+                      ]
+                  ]
+            , div [ class "clearfix" ] []
+        ]
+
+
+viewUpdateLog:
+       Form.Form () UpdateLog
+    -> Html Form.Msg
+viewUpdateLog form =
+    div [ id "treestatus-form" ]
+        [ Html.form
+            []
+            [ App.Form.viewSelectInput
+                (Form.getFieldAsString "tags" form)
+                "Reason category"
+                []
+                (App.TreeStatus.Types.possibleTreeTags
+                    |> List.append [ ( "", "" ) ]
+                )
+                []
+            , App.Form.viewTextInput
+                (Form.getFieldAsString "reason" form)
+                "Reason"
+                [ small
+                    [ class "form-text text-muted" ]
+                    [ p []
+                        [ text
+                            ("Please indicate the reason for "
+                                ++ "closure, preferably with a bug link."
+                            )
+                        ]
+                    , p []
+                        [ text
+                            ("Please indicate conditions for "
+                                ++ "reopening, especially if you might "
+                                ++ "disappear before reopening the "
+                                ++ "tree yourself."
+                            )
+                        ]
+                    ]
+                ]
+                [ placeholder "(no reason)" ]
+              ]
+            , div [ class "btn-group"]
+                  [ App.Form.viewButton
+                      "Update"
+                      [ Utils.onClick Form.Submit
+                      ]
+                  , App.Form.viewButton
+                      "Cancel"
+                      -- TODO: this should reset to original fields
+                      [ Utils.onClick (Form.Reset (initUpdateLogFields "" ""))
+                      , class "btn btn-outline-danger"
+                      ]
+                  ]
+            , div [ class "clearfix" ] []
         ]
 
 
@@ -388,7 +716,7 @@ viewUpdateTree treesSelected trees form =
             , App.Form.viewButton
                 "Update"
                 [ Utils.onClick Form.Submit
-                , disabled (getUpdateTreeErrors form /= [])
+                -- TODO, disabled (getUpdateTreeErrors form /= [])
                 ]
             , div [ class "clearfix" ] []
             ]

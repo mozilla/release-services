@@ -66,14 +66,18 @@ viewField maybeError maybeLabel helpNodes inputNode =
 
 
 viewTextInput :
-    Form.FieldState a String
+    Form.FieldState () String
     -> String
     -> List (Html Form.Msg)
     -> List (Attribute Form.Msg)
     -> Html Form.Msg
 viewTextInput state labelText helpNodes attributes =
     viewField
-        state.error
+        (if state.liveError == Nothing then
+             state.error
+         else
+             state.liveError
+        )
         (Just labelText)
         helpNodes
         (Form.Input.textInput state
@@ -95,7 +99,11 @@ viewSelectInput :
     -> Html Form.Msg
 viewSelectInput state labelText helpNodes options attributes =
     viewField
-        state.liveError
+        (if state.liveError == Nothing then
+             state.error
+         else
+             state.liveError
+        )
         (Just labelText)
         helpNodes
         (Form.Input.selectInput

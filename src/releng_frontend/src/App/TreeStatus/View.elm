@@ -2,9 +2,11 @@ module App.TreeStatus.View exposing (..)
 
 import App.Form
 import App.TreeStatus.Form
+import Dict
 import App.TreeStatus.Types
 import App.UserScopes
 import App.Utils
+import Form
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -62,20 +64,23 @@ viewRecentChangeTree status tree =
 
 viewRecentChange :
     List String
-    ->
-        { a
-            | id : Int
-            , reason : String
-            , trees : List App.TreeStatus.Types.RecentChangeTree
-            , when : String
-            , who : String
-            , status : String
-        }
+    -> Maybe App.TreeStatus.Types.RecentChangeId
+    -> Form.Form () App.TreeStatus.Form.UpdateStack
+    -> App.TreeStatus.Types.RecentChange
     -> List (Html App.TreeStatus.Types.Msg)
-viewRecentChange scopes recentChange =
+viewRecentChange scopes showUpdateStackForm formUpdateStack recentChange =
     let
-        reason =
-            bugzillaBugAsLink recentChange.reason
+        (reason, category) =
+            recentChange.trees
+                |> List.head
+                |> Maybe.map (\x -> ( x.last_state.current_reason
+                                    , x.last_state.current_tags
+                                      |> List.head
+                                      |> Maybe.withDefault ""
+                                    ))
+                |> Maybe.withDefault ("", "")
+
+        possibleTreeTags = Dict.fromList App.TreeStatus.Types.possibleTreeTags
 
         parseTimestamp timestamp =
             timestamp
@@ -91,43 +96,70 @@ viewRecentChange scopes recentChange =
                 |> String.split "."
                 |> List.head
                 |> Maybe.withDefault timestamp
+
+        buttons =
+            if showUpdateStackForm == Just recentChange.id
+                then []
+                else [ div
+                         [ class "btn-group" ]
+                         [ button
+                             [ type_ "button"
+                             , class "btn btn-sm btn-outline-success"
+                             , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
+                             ]
+                             [ text "Restore" ]
+                         , button
+                             [ type_ "button"
+                             , class "btn btn-sm btn-outline-info"
+                             , Utils.onClick (App.TreeStatus.Types.UpdateStackShow recentChange.id)
+                             ]
+                             [ text "Update" ]
+                         , button
+                             [ type_ "button"
+                             , class "btn btn-sm btn-outline-warning"
+                             , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
+                             ]
+                             [ text "Discard" ]
+                         ]
+                     ]
+
     in
     if hasScope "recent_changes/revert" scopes then
         [ div
             [ class "list-group-item justify-content-between" ]
-            [ div
+            ([ div
                 []
-                [ p
+                ([ p
                     []
                     [ text "At "
                     , em [] [ text (parseTimestamp recentChange.when) ]
                     , b [] [ text (" " ++ TaskclusterLogin.shortUsername recentChange.who) ]
                     , text " changed trees:"
                     ]
-                , ul
-                    []
-                    (List.map (viewRecentChangeTree recentChange.status) recentChange.trees)
-                , if List.isEmpty reason then
-                    text ""
-                  else
-                    p [] [ text "With reason: ", b [] reason ]
+                 , ul [] (List.map (viewRecentChangeTree recentChange.status) recentChange.trees)
                 ]
-            , div
-                [ class "btn-group" ]
-                [ button
-                    [ type_ "button"
-                    , class "btn btn-sm btn-outline-success"
-                    , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
-                    ]
-                    [ text "Restore" ]
-                , button
-                    [ type_ "button"
-                    , class "btn btn-sm btn-outline-warning"
-                    , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
-                    ]
-                    [ text "Discard" ]
-                ]
+                  |> App.Utils.appendItems
+                    (if showUpdateStackForm == Just recentChange.id 
+                     then
+                       [ App.TreeStatus.Form.viewUpdateStack recentChange formUpdateStack
+                           |> Html.map App.TreeStatus.Types.FormUpdateStackMsg
+                       ]
+                     else
+                       [ p [] [ div [] [ text "Reason category: "
+
+                                       , span [ class "badge badge-default" ]
+                                              [ text (possibleTreeTags
+                                                          |> Dict.get category
+                                                          |> Maybe.withDefault category)
+                                              ]
+                                       ]
+                              , div [] [ text "Reason: ", b [] (bugzillaBugAsLink reason) ]
+                              ]
+                       ]
+                    )
+                )
             ]
+              |> App.Utils.appendItems buttons) 
         ]
     else
         []
@@ -135,9 +167,11 @@ viewRecentChange scopes recentChange =
 
 viewRecentChanges :
     List String
+    -> Maybe App.TreeStatus.Types.RecentChangeId
+    -> Form.Form () App.TreeStatus.Form.UpdateStack
     -> RemoteData.WebData (List App.TreeStatus.Types.RecentChange)
     -> List (Html App.TreeStatus.Types.Msg)
-viewRecentChanges scopes recentChanges =
+viewRecentChanges scopes showUpdateStackForm formUpdateStack recentChanges =
     case recentChanges of
         RemoteData.Success data ->
             let
@@ -149,7 +183,7 @@ viewRecentChanges scopes recentChanges =
 
                 recentChanges =
                     data
-                        |> List.map (viewRecentChange scopes)
+                        |> List.map (viewRecentChange scopes showUpdateStackForm formUpdateStack)
                         |> List.concat
             in
             [ div
@@ -413,7 +447,7 @@ viewTrees scopes trees treesSelected =
 viewButtons :
     App.TreeStatus.Types.Route
     -> List String
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree  App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
 viewButtons route scopes model =
     let
@@ -663,9 +697,11 @@ viewTreeDetails remote =
 
 
 viewTreeLog :
-    App.TreeStatus.Types.TreeLog
+       Maybe Int
+    -> Form.Form () App.TreeStatus.Form.UpdateLog
+    -> App.TreeStatus.Types.TreeLog
     -> Html App.TreeStatus.Types.Msg
-viewTreeLog log =
+viewTreeLog showUpdateLog formUpdateLog log =
     let
         who2 =
             if String.startsWith "human:" log.who then
@@ -679,6 +715,37 @@ viewTreeLog log =
                 |> String.split "@"
                 |> List.head
                 |> Maybe.withDefault who2
+
+        possibleTreeTags = Dict.fromList App.TreeStatus.Types.possibleTreeTags
+
+        category =
+            log.tags
+                |> List.head
+                |> Maybe.map (\tag -> possibleTreeTags
+                                        |> Dict.get tag
+                                        |> Maybe.withDefault tag)
+                |> Maybe.withDefault ""
+
+        view =
+            [ p [] [ div [] [ text "Reason category: "
+                            , span [ class "badge badge-default" ] [ text category ]
+                            ]
+                   , div [] [ text "Reason: ", b [] (bugzillaBugAsLink log.reason) ]
+                   ]
+            , button
+                [ type_ "button"
+                , class "btn btn-sm btn-outline-info"
+                , style [("float", "left")]
+                , Utils.onClick (App.TreeStatus.Types.UpdateLogShow log.id)
+                ]
+                [ text "Update" ]
+            , div [ class "clearfix" ] []
+            ]
+
+        form =
+            [ App.TreeStatus.Form.viewUpdateLog formUpdateLog
+                |> Html.map App.TreeStatus.Types.FormUpdateLogMsg
+            ]
     in
     div [ class "timeline-item" ]
         --TODO: show status in hover of the badge
@@ -688,28 +755,7 @@ viewTreeLog log =
             [ div [ class "timeline-time" ]
                 [ text log.when ]
             , h5 [] [ text who ]
-            , p [] [ text log.reason ]
-            , p
-                []
-                (List.map
-                    (\tag ->
-                        span
-                            [ class "badge badge-default" ]
-                            [ App.TreeStatus.Types.possibleTreeTags
-                                |> List.filterMap
-                                    (\( x, y ) ->
-                                        if x == tag then
-                                            Just y
-                                        else
-                                            Nothing
-                                    )
-                                |> List.head
-                                |> Maybe.withDefault tag
-                                |> text
-                            ]
-                    )
-                    log.tags
-                )
+            , div [] (if showUpdateLog == Just log.id then form else view)
             ]
         ]
 
@@ -718,8 +764,10 @@ viewTreeLogs :
     String
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
+    -> Maybe Int
+    -> Form.Form () App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
-viewTreeLogs name treeLogs_ treeLogsAll_ =
+viewTreeLogs name treeLogs_ treeLogsAll_ showUpdateLog formUpdateLog =
     let
         ( moreButton, treeLogsAll ) =
             case treeLogsAll_ of
@@ -760,8 +808,8 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
             div [ class "timeline" ]
                 (List.append
                     (List.append
-                        (List.map viewTreeLog treeLogs)
-                        (List.map viewTreeLog treeLogsAll)
+                        (List.map (viewTreeLog showUpdateLog formUpdateLog) treeLogs)
+                        (List.map (viewTreeLog showUpdateLog formUpdateLog) treeLogsAll)
                     )
                     [ div [ class "timeline-item timeline-more" ]
                         [ div [ class "timeline-panel" ] moreButton ]
@@ -783,13 +831,15 @@ viewTree :
     -> RemoteData.WebData App.TreeStatus.Types.Tree
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
+    -> Maybe Int
+    -> Form.Form () App.TreeStatus.Form.UpdateLog
     -> String
     -> List (Html App.TreeStatus.Types.Msg)
-viewTree scopes tree treeLogs treeLogsAll name =
+viewTree scopes tree treeLogs treeLogsAll showUpdateLog formUpdateLog name =
     [ div
         [ id "treestatus-form" ]
         [ viewTreeDetails tree
         , hr [] []
-        , viewTreeLogs name treeLogs treeLogsAll
+        , viewTreeLogs name treeLogs treeLogsAll showUpdateLog formUpdateLog
         ]
     ]

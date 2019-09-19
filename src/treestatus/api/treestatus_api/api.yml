@@ -46,6 +46,34 @@ paths:
                   $ref: '#/definitions/StateChange'
 
   /stack/{id}:
+    patch:
+      operationId: "treestatus_api.api.update_stack"
+      description: |
+        Change (stack) changes to trees.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+        - name: body
+          in: body
+          description: Stack update
+          required: true
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+              tags:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
     delete:
       operationId: "treestatus_api.api.revert_change"
       description: |
@@ -205,6 +233,35 @@ paths:
           schema:
             type: string
 
+  /log/{id}:
+    patch:
+      operationId: "treestatus_api.api.update_log"
+      description: |
+        Change log of the tree.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+        - name: body
+          in: body
+          description: Log update
+          required: true
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+              tags:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
   /trees/{tree}/logs:
     get:
       operationId: "treestatus_api.api.get_logs"
@@ -255,17 +312,22 @@ paths:
       operationId: "treestatus_api.api.kill_trees"
       description: Delete trees.
       parameters:
-        - name: trees
+        - name: body
           in: body
           description: Trees to delete
           required: true
           schema:
-            type: array
-            items:
-              type: string
+            type: object
+            required:
+              - trees
+            properties:
+              trees:
+                type: array
+                items:
+                  type: string
       responses:
         200:
-          description: None
+          description: Trees deleted
           schema:
             type: string
 
@@ -369,6 +431,7 @@ definitions:
       assigned at the time.  This is useful for analysis of tree closures and
       their causes.
     required:
+      - id 
       - tree
       - when
       - who
@@ -376,6 +439,9 @@ definitions:
       - reason
       - tags
     properties:
+      id:
+        type: integer
+        description: the id of the tree log
       tree:
         type: string
         description: the name of the tree
@@ -444,6 +510,8 @@ definitions:
                   type: array
                   items:
                     type: string
+                reason:
+                  type: string
       when:
         type: string # TODO: datetime
         description: the time the change occurred

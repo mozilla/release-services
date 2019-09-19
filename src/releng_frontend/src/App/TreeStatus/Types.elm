@@ -27,7 +27,8 @@ type alias Trees =
 
 
 type alias TreeLog =
-    { name : String
+    { id: Int
+    , name : String
     , when : String
     , who : String
     , status : String
@@ -44,6 +45,11 @@ type alias RecentChangeTreeLastState =
     { reason : String
     , status : String
     , tags : List String
+    , log_id : Int
+    , current_reason : String
+    , current_status : String
+    , current_tags : List String
+    , current_log_id: Int
     }
 
 
@@ -53,9 +59,10 @@ type alias RecentChangeTree =
     , last_state : RecentChangeTreeLastState
     }
 
+type alias RecentChangeId = Int
 
 type alias RecentChange =
-    { id : Int
+    { id : RecentChangeId
     , trees : List RecentChangeTree
     , when : String
     , who : String
@@ -64,7 +71,7 @@ type alias RecentChange =
     }
 
 
-type alias Model addForm updateForm =
+type alias Model addForm updateForm updateStackForm updateLogForm =
     { baseUrl : String
     , treesAlerts : List App.Types.Alert
     , trees : RemoteData.WebData Trees
@@ -75,10 +82,14 @@ type alias Model addForm updateForm =
     , showMoreTreeLogs : Bool
     , formAddTree : Form.Form () addForm
     , formUpdateTree : Form.Form () updateForm
+    , formUpdateStack : Form.Form () updateStackForm
+    , showUpdateStackForm : Maybe RecentChangeId
     , recentChangesAlerts : List App.Types.Alert
     , recentChanges : RemoteData.WebData (List RecentChange)
     , deleteTreesConfirm : Bool
     , deleteError : Maybe String
+    , showUpdateLog : Maybe Int
+    , formUpdateLog : Form.Form () updateLogForm
     }
 
 
@@ -104,6 +115,13 @@ type Msg
     | RevertChange Int
     | DiscardChange Int
     | RecentChangeResult (WebData String)
+    | UpdateStackShow Int
+    | FormUpdateStackMsg Form.Msg
+    | FormUpdateStackResult (WebData String)
+    | UpdateLogShow Int
+    | FormUpdateLogMsg Form.Msg
+    | FormUpdateLogResult (WebData String)
+
 
 
 possibleTreeStatuses : List ( String, String )

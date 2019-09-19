@@ -41,7 +41,9 @@ class Tree(db.Model):
     __tablename__ = 'releng_treestatus_trees'
 
     tree = sa.Column(sa.String(32), primary_key=True)
+    # DDD: this field is not used anywhere
     status = sa.Column(sa.String(64), default='open', nullable=False)
+    # DDD: this field is not used anywhere
     reason = sa.Column(sa.Text, default='', nullable=False)
     message_of_the_day = sa.Column(sa.Text, default='', nullable=False)
 
@@ -77,6 +79,7 @@ class Log(db.Model):
 
     def to_dict(self):
         return dict(
+            id=self.id,
             tree=self.tree,
             when=self.when,
             who=self.who,

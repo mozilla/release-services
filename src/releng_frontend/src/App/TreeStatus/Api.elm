@@ -7,6 +7,19 @@ import Json.Encode as JsonEncode
 import RemoteData exposing (WebData)
 
 
+encoderUpdateStack :
+    { a
+        | reason : String
+        , tags : List String
+    }
+    -> JsonEncode.Value
+encoderUpdateStack data =
+    JsonEncode.object
+        [ ( "reason", JsonEncode.string data.reason )
+        , ( "tags", JsonEncode.list (List.map JsonEncode.string data.tags) )
+        ]
+
+
 encoderUpdateTree :
     { a
         | message_of_the_day : String
@@ -59,7 +72,9 @@ encoderTree tree =
 
 encoderTreeNames : App.TreeStatus.Types.Trees -> JsonEncode.Value
 encoderTreeNames trees =
-    JsonEncode.list (List.map (\x -> JsonEncode.string x.name) trees)
+    JsonEncode.object
+        [ ( "trees", JsonEncode.list (List.map (\x -> JsonEncode.string x.name) trees))
+        ]
 
 
 decoderTrees : JsonDecode.Decoder App.TreeStatus.Types.Trees
@@ -91,7 +106,8 @@ decoderTreeLogs =
 
 decoderTreeLog : JsonDecode.Decoder App.TreeStatus.Types.TreeLog
 decoderTreeLog =
-    JsonDecode.map6 App.TreeStatus.Types.TreeLog
+    JsonDecode.map7 App.TreeStatus.Types.TreeLog
+        (JsonDecode.field "id" JsonDecode.int)
         (JsonDecode.field "tree" JsonDecode.string)
         (JsonDecode.field "when" JsonDecode.string)
         (JsonDecode.field "who" JsonDecode.string)
@@ -127,10 +143,15 @@ decoderRecentChangeTree =
 
 decoderRecentChangeTreeLastState : JsonDecode.Decoder App.TreeStatus.Types.RecentChangeTreeLastState
 decoderRecentChangeTreeLastState =
-    JsonDecode.map3 App.TreeStatus.Types.RecentChangeTreeLastState
+    JsonDecode.map8 App.TreeStatus.Types.RecentChangeTreeLastState
         (JsonDecode.field "reason" JsonDecode.string)
         (JsonDecode.field "status" JsonDecode.string)
         (JsonDecode.field "tags" (JsonDecode.list JsonDecode.string))
+        (JsonDecode.field "log_id" JsonDecode.int)
+        (JsonDecode.field "current_reason" JsonDecode.string)
+        (JsonDecode.field "current_status" JsonDecode.string)
+        (JsonDecode.field "current_tags" (JsonDecode.list JsonDecode.string))
+        (JsonDecode.field "current_log_id" JsonDecode.int)
 
 
 get :
@@ -211,6 +232,12 @@ hawkResponse response route =
 
         "DiscardChange" ->
             Cmd.map App.TreeStatus.Types.RecentChangeResult response
+
+        "UpdateStack" ->
+            Cmd.map App.TreeStatus.Types.FormUpdateStackResult response
+
+        "UpdateLog" ->
+            Cmd.map App.TreeStatus.Types.FormUpdateLogResult response
 
         _ ->
             Cmd.none
