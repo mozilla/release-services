@@ -81,8 +81,8 @@ init url =
     , showMoreTreeLogs = False
     , formAddTree = App.TreeStatus.Form.initAddTree
     , formUpdateTree = App.TreeStatus.Form.initUpdateTree
-    , formUpdateStack = App.TreeStatus.Form.initUpdateStack
     , showUpdateStackForm = Nothing
+    , formUpdateStack = App.TreeStatus.Form.initUpdateStack ""
     , recentChangesAlerts = []
     , recentChanges = RemoteData.NotAsked
     , deleteTreesConfirm = False
@@ -386,7 +386,7 @@ update currentRoute msg model =
         App.TreeStatus.Types.UpdateStackShow stack ->
             let
 
-                (reason, category) =
+                (reason, category, status) =
                     case model.recentChanges of
                       RemoteData.Success recentChanges -> 
                           recentChanges
@@ -395,18 +395,20 @@ update currentRoute msg model =
                             |> Maybe.map (\x ->
                                   x.trees
                                       |> List.head
-                                      |> Maybe.map (\y -> (y.last_state.current_reason, y.last_state.current_tags |> List.head |> Maybe.withDefault ""))
-                                      |> Maybe.withDefault ("", "")
+                                      |> Maybe.map (\y -> ( y.last_state.current_reason
+                                                          , y.last_state.current_tags |> List.head |> Maybe.withDefault ""
+                                                          , y.last_state.current_status))
+                                      |> Maybe.withDefault ("", "", "")
                                )
-                            |> Maybe.withDefault ("", "")
+                            |> Maybe.withDefault ("", "", "")
 
-                      _ -> ("", "")
+                      _ -> ("", "", "")
 
             in
             
             ( { model
                   | showUpdateStackForm = Just stack
-                  , formUpdateStack = Form.initial (App.TreeStatus.Form.initUpdateStackFields reason category) App.TreeStatus.Form.validateUpdateStack
+                  , formUpdateStack = Form.initial (App.TreeStatus.Form.initUpdateStackFields reason category) (App.TreeStatus.Form.validateUpdateLog status)
               }
             , Cmd.none
             , Nothing

@@ -48,13 +48,6 @@ validateAddTree =
         (Form.Validate.field "name" Form.Validate.string)
 
 
-validateUpdateStack : Form.Validate.Validation () UpdateStack
-validateUpdateStack =
-    Form.Validate.map2 UpdateStack
-        (Form.Validate.field "reason" Form.Validate.string)
-        (Form.Validate.field "tags" Form.Validate.string)
-
-
 validateUpdateLog : String -> Form.Validate.Validation () UpdateLog
 validateUpdateLog status =
     if status == "closed"
@@ -122,9 +115,9 @@ initAddTree =
     Form.initial initAddTreeFields validateAddTree
 
 
-initUpdateStack : Form.Form () UpdateStack
-initUpdateStack =
-    Form.initial (initUpdateStackFields "" "") validateUpdateStack
+initUpdateStack : String -> Form.Form () UpdateStack
+initUpdateStack status =
+    Form.initial (initUpdateStackFields "" "") (validateUpdateLog status)
 
 
 initUpdateLog: String -> Form.Form () UpdateLog
@@ -202,8 +195,19 @@ updateUpdateStack:
     -> ( App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog, Maybe Hawk.Request )
 updateUpdateStack model formMsg =
     let
+        status = model.recentChanges
+          |> RemoteData.withDefault []
+          |> List.filter (\x -> Just x.id == model.showUpdateStackForm)
+          |> List.map (\x ->
+                 x.trees 
+                     |> List.head
+                     |> Maybe.map (\y -> y.last_state.current_status)
+                     |> Maybe.withDefault "")
+          |> List.head
+          |> Maybe.withDefault ""
+
         form =
-            Form.update validateUpdateStack formMsg model.formUpdateStack
+            Form.update (validateUpdateLog status) formMsg model.formUpdateStack
 
         formOutput = Form.getOutput form
 
