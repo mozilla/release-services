@@ -37,13 +37,6 @@ For some reason we weren't able to close an incident for tree `{tree}`.
 Please make sure that an incident is closed for every open (or under approval) tree.
 '''
 
-DEFAULT_TREE = dict(
-    reason='New tree',
-    status='closed',
-    tags=[],
-    log_id=None,
-)
-
 log = cli_common.log.get_logger(__name__)
 
 
@@ -74,7 +67,7 @@ def _get_combined_tree(tree, tags=None, status=None, reason=None, log_id=None):
 
        This also shows status, reason and tags from last Tree Log.
     '''
-    result = copy.deepcopy(DEFAULT_TREE)
+    result = copy.deepcopy(treestatus_api.config.DEFAULT_TREE)
     result.update(tree.to_dict())
 
     if tags is not None:
