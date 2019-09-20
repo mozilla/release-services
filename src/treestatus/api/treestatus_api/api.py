@@ -439,7 +439,7 @@ def update_log(id, body):
     # iterate over all stack
     for ch in session.query(treestatus_api.models.StatusChange).all():
         for tree in ch.trees:
-            last_state = backend_common.models.load_last_state(tree.last_state)
+            last_state = treestatus_api.models.load_last_state(tree.last_state)
 
             if last_state['current_log_id'] != id:
                 continue
@@ -632,7 +632,7 @@ def update_stack(id, body=dict()):
         raise werkzeug.exceptions.NotFound
 
     for tree in change.trees:
-        last_state = backend_common.models.load_last_state(tree.last_state)
+        last_state = treestatus_api.models.load_last_state(tree.last_state)
         last_state['current_tags'] = body.get('tags', last_state['current_tags'])
         last_state['current_reason'] = body.get('reason', last_state['current_reason'])
         _update_tree_log(
@@ -668,7 +668,7 @@ def _revert_change(id, revert=None):
                 # if there's no tree to update, don't worry about it
                 pass
 
-            last_state = backend_common.models.load_last_state(chtree.last_state)
+            last_state = treestatus_api.models.load_last_state(chtree.last_state)
             _update_tree_status(session, tree.model,
                                 status=last_state['status'],
                                 reason=last_state['reason'],
