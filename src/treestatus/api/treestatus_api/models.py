@@ -15,6 +15,30 @@ from backend_common.db import db
 from treestatus_api.config import DEFAULT_TREE
 
 
+def load_last_state(last_state):
+    ''' ensure that structure of last_state is backwards compatible
+    '''
+    last_state = json.loads(last_state)
+
+    for field in ['status',
+                  'reason',
+                  'tags',
+                  'log_id',
+                  'current_status',
+                  'current_reason',
+                  'current_tags',
+                  'current_log_id',
+                  ]:
+        if field in last_state:
+            continue
+        if field.startswith('current_'):
+            last_state[field] = DEFAULT_TREE[field[len('current_'):]]
+        else:
+            last_state[field] = DEFAULT_TREE[field]
+
+    return last_state
+
+
 class UTCDateTime(types.TypeDecorator):
     impl = types.DateTime
 
@@ -124,27 +148,8 @@ class StatusChangeTree(db.Model):
     stack = relation(StatusChange, backref='trees')
 
     def to_dict(self):
-        last_state = json.loads(self.last_state)
-
-        # ensure that structure of last_state is correct
-        for field in ['status',
-                      'reason',
-                      'tags',
-                      'log_id',
-                      'current_status',
-                      'current_reason',
-                      'current_tags',
-                      'current_log_id',
-                      ]:
-            if field in last_state:
-                continue
-            if field.startswith('current_'):
-                last_state[field] = DEFAULT_TREE[field[len('current_'):]]
-            else:
-                last_state[field] = DEFAULT_TREE[field]
-
         return dict(
             tree=self.tree,
-            last_state=last_state,
+            last_state=load_last_state(self.last_state),
             id=self.id,
         )
