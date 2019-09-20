@@ -704,11 +704,12 @@ viewTreeDetails remote =
 
 
 viewTreeLog :
-    Maybe Int
+    List String
+    -> Maybe Int
     -> Form.Form () App.TreeStatus.Form.UpdateLog
     -> App.TreeStatus.Types.TreeLog
     -> Html App.TreeStatus.Types.Msg
-viewTreeLog showUpdateLog formUpdateLog log =
+viewTreeLog scopes showUpdateLog formUpdateLog log =
     let
         who2 =
             if String.startsWith "human:" log.who then
@@ -745,13 +746,16 @@ viewTreeLog showUpdateLog formUpdateLog log =
                     ]
                 , div [] [ text "Reason: ", b [] (bugzillaBugAsLink log.reason) ]
                 ]
-            , button
-                [ type_ "button"
-                , class "btn btn-sm btn-outline-info"
-                , style [ ( "float", "left" ) ]
-                , Utils.onClick (App.TreeStatus.Types.UpdateLogShow log.id)
-                ]
-                [ text "Update" ]
+            , if hasScope "trees/update" scopes then
+                button
+                    [ type_ "button"
+                    , class "btn btn-sm btn-outline-info"
+                    , style [ ( "float", "left" ) ]
+                    , Utils.onClick (App.TreeStatus.Types.UpdateLogShow log.id)
+                    ]
+                    [ text "Update" ]
+              else
+                span [] []
             , div [ class "clearfix" ] []
             ]
 
@@ -779,13 +783,14 @@ viewTreeLog showUpdateLog formUpdateLog log =
 
 
 viewTreeLogs :
-    String
+    List String
+    -> String
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
     -> Maybe Int
     -> Form.Form () App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
-viewTreeLogs name treeLogs_ treeLogsAll_ showUpdateLog formUpdateLog =
+viewTreeLogs scopes name treeLogs_ treeLogsAll_ showUpdateLog formUpdateLog =
     let
         ( moreButton, treeLogsAll ) =
             case treeLogsAll_ of
@@ -826,8 +831,8 @@ viewTreeLogs name treeLogs_ treeLogsAll_ showUpdateLog formUpdateLog =
             div [ class "timeline" ]
                 (List.append
                     (List.append
-                        (List.map (viewTreeLog showUpdateLog formUpdateLog) treeLogs)
-                        (List.map (viewTreeLog showUpdateLog formUpdateLog) treeLogsAll)
+                        (List.map (viewTreeLog scopes showUpdateLog formUpdateLog) treeLogs)
+                        (List.map (viewTreeLog scopes showUpdateLog formUpdateLog) treeLogsAll)
                     )
                     [ div [ class "timeline-item timeline-more" ]
                         [ div [ class "timeline-panel" ] moreButton ]
@@ -858,6 +863,6 @@ viewTree scopes tree treeLogs treeLogsAll showUpdateLog formUpdateLog name =
         [ id "treestatus-form" ]
         [ viewTreeDetails tree
         , hr [] []
-        , viewTreeLogs name treeLogs treeLogsAll showUpdateLog formUpdateLog
+        , viewTreeLogs scopes name treeLogs treeLogsAll showUpdateLog formUpdateLog
         ]
     ]
