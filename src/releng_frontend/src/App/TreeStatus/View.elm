@@ -366,7 +366,6 @@ categorizeTrees trees =
                     List.member tree.name
                         [ "try"
                         , "try-comm-central"
-                        , "nss-try"
                         ]
                 )
                 releaseStabilizationTreesOther
