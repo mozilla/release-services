@@ -589,6 +589,9 @@ viewLoaded :
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
 viewLoaded route scopes model =
+    let
+      _ = Debug.log "SCOPES" scopes
+    in
     div []
         ([]
             |> App.Utils.appendItem

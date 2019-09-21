@@ -70,6 +70,8 @@ viewRecentChange :
     -> List (Html App.TreeStatus.Types.Msg)
 viewRecentChange scopes showUpdateStackForm formUpdateStack recentChange =
     let
+        _ = Debug.log "RECENT_CHANGE" recentChange
+
         ( reason, category ) =
             recentChange.trees
                 |> List.head
@@ -179,6 +181,9 @@ viewRecentChanges :
     -> RemoteData.WebData (List App.TreeStatus.Types.RecentChange)
     -> List (Html App.TreeStatus.Types.Msg)
 viewRecentChanges scopes showUpdateStackForm formUpdateStack recentChanges =
+    let
+      _ = Debug.log "RECENT_CHANGES" recentChanges
+    in
     case recentChanges of
         RemoteData.Success data ->
             let
