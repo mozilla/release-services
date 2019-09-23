@@ -147,11 +147,11 @@ decoderRecentChangeTreeLastState =
         (JsonDecode.field "reason" JsonDecode.string)
         (JsonDecode.field "status" JsonDecode.string)
         (JsonDecode.field "tags" (JsonDecode.list JsonDecode.string))
-        (JsonDecode.field "log_id" JsonDecode.int)
+        (JsonDecode.field "log_id" (JsonDecode.nullable JsonDecode.int))
         (JsonDecode.field "current_reason" JsonDecode.string)
         (JsonDecode.field "current_status" JsonDecode.string)
         (JsonDecode.field "current_tags" (JsonDecode.list JsonDecode.string))
-        (JsonDecode.field "current_log_id" JsonDecode.int)
+        (JsonDecode.field "current_log_id" (JsonDecode.nullable JsonDecode.int))
 
 
 get :

@@ -590,7 +590,8 @@ viewLoaded :
     -> Html App.TreeStatus.Types.Msg
 viewLoaded route scopes model =
     let
-      _ = Debug.log "SCOPES" scopes
+        _ =
+            Debug.log "SCOPES" scopes
     in
     div []
         ([]

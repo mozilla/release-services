@@ -45,11 +45,11 @@ type alias RecentChangeTreeLastState =
     { reason : String
     , status : String
     , tags : List String
-    , log_id : Int
+    , log_id : Maybe Int
     , current_reason : String
     , current_status : String
     , current_tags : List String
-    , current_log_id : Int
+    , current_log_id : Maybe Int
     }
 
 
