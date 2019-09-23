@@ -112,10 +112,15 @@ view : (App.Model -> Html.Html App.Msg) -> App.Model -> Html.Html App.Msg
 view viewRoute model =
     let
         routeName =
-            model.route
-                |> toString
-                |> String.toLower
-                |> String.dropRight (String.length "Route")
+            case model.route of
+                App.ToolToolRoute ->
+                    "tooltool"
+
+                App.TreeStatusRoute _ ->
+                    "treestatus"
+
+                _ ->
+                    ""
 
         isLoading =
             case model.user.tokens of
