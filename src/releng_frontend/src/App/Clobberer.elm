@@ -400,8 +400,7 @@ update msg model =
         Clobbered backend newData ->
             let
                 -- TODO from newData set clobber_message
-                newModel =
-                    Debug.log "XXX" newData
+                newModel = newData
 
                 --case backend of
                 --    TaskclusterBackend ->
