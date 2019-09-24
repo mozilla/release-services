@@ -56,8 +56,6 @@ def cmd(ctx, template, project):
     template_options['project_url'] = 'TODO'
     if project.startswith('releng-'):
         template_options['project_url'] = f"{project[len('releng-'):]}.mozilla-releng.net"
-    if project.startswith('shipit-'):
-        template_options['project_url'] = f"{project[len('shipit-'):]}.shipit.mozilla-releng.net"
 
     click.echo('=> Creating project structure ...')
     cookiecutter.main.cookiecutter(
