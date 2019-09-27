@@ -112,6 +112,9 @@ view viewRoute model =
     let
         routeName =
             case model.route of
+                App.HomeRoute ->
+                    "home"
+
                 App.ToolToolRoute ->
                     "tooltool"
 

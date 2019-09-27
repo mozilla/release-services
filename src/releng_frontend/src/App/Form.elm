@@ -113,6 +113,33 @@ viewSelectInput state labelText helpNodes options attributes =
         )
 
 
+viewRadioInput :
+    Form.FieldState a String
+    -> String
+    -> List (Html Form.Msg)
+    -> List ( String, String )
+    -> List (Attribute Form.Msg)
+    -> Html Form.Msg
+viewRadioInput state labelText helpNodes options attributes =
+    let
+        item ( v, l ) =
+            label
+                [ class "radio-inline" ]
+                [ Form.Input.radioInput v state []
+                , text l
+                ]
+    in
+    viewField
+        (if state.liveError == Nothing then
+            state.error
+         else
+            state.liveError
+        )
+        (Just labelText)
+        helpNodes
+        (div [] (List.map item options))
+
+
 viewCheckboxInput :
     Form.FieldState a Bool
     -> String

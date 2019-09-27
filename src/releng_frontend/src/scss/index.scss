@@ -292,11 +292,19 @@ footer {
 }
 
 
-#treestatus h2 {
+#page-treestatus .radio-inline {
+    margin-right: 1em;
+}
+
+#page-treestatus .radio-inline > input {
+    margin-right: 0.5em;
+}
+
+#page-treestatus h2 {
     margin-top: 1em;
 }
 
-#treestatus h4 {
+#page-treestatus h4 {
     margin-top: 2em;
 }
 

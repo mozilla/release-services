@@ -530,12 +530,17 @@ viewUpdateStack recentChange form =
     div [ id "treestatus-form" ]
         [ Html.form
             []
-            [ App.Form.viewSelectInput
+            [ App.Form.viewRadioInput
                 (Form.getFieldAsString "tags" form)
                 "Reason category"
                 []
                 (App.TreeStatus.Types.possibleTreeTags
-                    |> List.append [ ( "", "" ) ]
+                    |> List.append
+                        (if recentChange.status == "closed" then
+                            []
+                         else
+                            [ ( "", "No category" ) ]
+                        )
                 )
                 []
             , App.Form.viewTextInput
@@ -577,18 +582,24 @@ viewUpdateStack recentChange form =
 
 
 viewUpdateLog :
-    Form.Form () UpdateLog
+    String
+    -> Form.Form () UpdateLog
     -> Html Form.Msg
-viewUpdateLog form =
+viewUpdateLog status form =
     div [ id "treestatus-form" ]
         [ Html.form
             []
-            [ App.Form.viewSelectInput
+            [ App.Form.viewRadioInput
                 (Form.getFieldAsString "tags" form)
                 "Reason category"
                 []
                 (App.TreeStatus.Types.possibleTreeTags
-                    |> List.append [ ( "", "" ) ]
+                    |> List.append
+                        (if status == "closed" then
+                            []
+                         else
+                            [ ( "", "No category" ) ]
+                        )
                 )
                 []
             , App.Form.viewTextInput
@@ -679,7 +690,7 @@ viewUpdateTree treesSelected trees form =
                     |> List.append [ ( "", "" ) ]
                 )
                 []
-            , App.Form.viewSelectInput
+            , App.Form.viewRadioInput
                 (Form.getFieldAsString "tags" form)
                 (if (Form.getFieldAsString "status" form).value == Just "closed" then
                     "Reason category (required to close)"
@@ -688,7 +699,7 @@ viewUpdateTree treesSelected trees form =
                 )
                 []
                 (App.TreeStatus.Types.possibleTreeTags
-                    |> List.append [ ( "", "" ) ]
+                    |> List.append [ ( "", "No category" ) ]
                 )
                 []
             , App.Form.viewTextInput

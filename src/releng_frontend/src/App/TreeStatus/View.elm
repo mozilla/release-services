@@ -759,7 +759,7 @@ viewTreeLog scopes showUpdateLog formUpdateLog log =
             ]
 
         form =
-            [ App.TreeStatus.Form.viewUpdateLog formUpdateLog
+            [ App.TreeStatus.Form.viewUpdateLog log.status formUpdateLog
                 |> Html.map App.TreeStatus.Types.FormUpdateLogMsg
             ]
     in
