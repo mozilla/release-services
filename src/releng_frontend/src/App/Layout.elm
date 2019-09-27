@@ -4,7 +4,6 @@ import App
 import App.Utils
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import String
 import TaskclusterLogin
 import Utils
 
