@@ -222,11 +222,7 @@ def _statuspage_resolve_incident(
             break
 
     if incident_id is None:
-        log.error(f'No incident found when closing tree `{tree.tree}`')
-        _statuspage_send_email_on_error(
-            subject=f'[treestatus] Error when closing statuspage incident',
-            content=STATUSPAGE_ERROR_ON_CLOSE.format(tree=tree.tree),
-        )
+        log.info(f'No incident found when closing tree `{tree.tree}`')
         return
 
     response = requests.patch(
@@ -254,6 +250,7 @@ def _notify_status_change(trees_changes):
     if flask.current_app.config.get('STATUSPAGE_ENABLE'):
         log.debug('Notify statuspage about trees changes.')
 
+        statuspage_tags = flask.current_app.config.get('STATUSPAGE_TAGS', [])
         components = flask.current_app.config.get('STATUSPAGE_COMPONENTS', {})
         token = flask.current_app.config.get('STATUSPAGE_TOKEN')
         if not token:
@@ -267,11 +264,21 @@ def _notify_status_change(trees_changes):
                 if tree.tree not in components.keys():
                     continue
 
+                if len(tags) > 1:
+                    log.error(f'Multiple tags defined: {tags}')
+                    continue
+                elif len(tags) == 1:
+                    tag = tags[0]
+                else:
+                    tag = ''
+
                 log.debug(f'Notify statuspage about: {tree.tree}')
                 component_id = components[tree.tree]
 
                 # create an accident
-                if status_from in ['open', 'approval required'] and status_to == 'closed':
+                if status_from in ['open', 'approval required'] and \
+                   status_to == 'closed' and \
+                   tag in statuspage_tags:
                     _statuspage_create_incident(headers,
                                                 component_id,
                                                 tree,
