@@ -29,7 +29,6 @@ Projects
 
     ToolTool <projects/tooltool>
     TreeStatus <projects/treestatus>
-    Mapper <projects/mapper>
     releng-frontend <projects/releng-frontend>
     docs <projects/docs>
 
