@@ -7,7 +7,6 @@ import pytest
 
 
 @pytest.mark.parametrize('name, expected', [
-    ('shipit/api', 'shipit_api'),
     ('code-coverage/api', 'code_coverage_api'),
     ('static_analysis/api', 'static_analysis_api'),
     ])
@@ -18,7 +17,6 @@ def test_python_module_name(name, expected):
 
 
 @pytest.mark.parametrize('name, expected', [
-    ('shipit/api', 'mozilla-release-shipit-api'),
     ('code-coverage/api', 'mozilla-release-code-coverage-api'),
     ('static_analysis/api', 'mozilla-release-static-analysis-api'),
     ])
