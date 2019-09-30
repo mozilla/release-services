@@ -74,43 +74,43 @@ validateUpdateLog status =
 validateUpdateTree : String -> Form.Validate.Validation () UpdateTree
 validateUpdateTree status =
     if status == "closed" then
-      Form.Validate.map5 UpdateTree
-          (Form.Validate.field "status" Form.Validate.string)
-          (Form.Validate.field "reason" Form.Validate.string)
-          (Form.Validate.field "message_of_the_day"
+        Form.Validate.map5 UpdateTree
+            (Form.Validate.field "status" Form.Validate.string)
+            (Form.Validate.field "reason" Form.Validate.string)
+            (Form.Validate.field "message_of_the_day"
                 (Form.Validate.oneOf
                     [ Form.Validate.string
                     , Form.Validate.emptyString
                     ]
                 )
-          )
-          (Form.Validate.field "tags" Form.Validate.string)
-          (Form.Validate.field "remember" Form.Validate.bool)
+            )
+            (Form.Validate.field "tags" Form.Validate.string)
+            (Form.Validate.field "remember" Form.Validate.bool)
     else
-      Form.Validate.map5 UpdateTree
-          (Form.Validate.field "status" Form.Validate.string)
-          (Form.Validate.field "reason"
+        Form.Validate.map5 UpdateTree
+            (Form.Validate.field "status" Form.Validate.string)
+            (Form.Validate.field "reason"
                 (Form.Validate.oneOf
                     [ Form.Validate.string
                     , Form.Validate.emptyString
                     ]
                 )
-          )
-          (Form.Validate.field "message_of_the_day"
+            )
+            (Form.Validate.field "message_of_the_day"
                 (Form.Validate.oneOf
                     [ Form.Validate.string
                     , Form.Validate.emptyString
                     ]
                 )
-          )
-          (Form.Validate.field "tags"
+            )
+            (Form.Validate.field "tags"
                 (Form.Validate.oneOf
                     [ Form.Validate.string
                     , Form.Validate.emptyString
                     ]
                 )
-          )
-          (Form.Validate.field "remember" Form.Validate.bool)
+            )
+            (Form.Validate.field "remember" Form.Validate.bool)
 
 
 initAddTreeFields : List ( String, Form.Field.Field )
