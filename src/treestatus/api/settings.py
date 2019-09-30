@@ -127,3 +127,4 @@ STATUSPAGE_ENABLE = True
 # STATUSPAGE_PAGE_ID <- id of the page which we are interacting with
 # STATUSPAGE_COMPONENTS = <- a tree_name=>component_id mapping
 # STATUSPAGE_NOTIFY_ON_ERROR <- email to where to send when error happens
+# STATUSPAGE_TAGS <- list of tags which will trigger creation of status page incident

@@ -12,6 +12,31 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation
 
 from backend_common.db import db
+from treestatus_api.config import DEFAULT_TREE
+
+
+def load_last_state(last_state):
+    ''' ensure that structure of last_state is backwards compatible
+    '''
+    last_state = json.loads(last_state)
+
+    for field in ['status',
+                  'reason',
+                  'tags',
+                  'log_id',
+                  'current_status',
+                  'current_reason',
+                  'current_tags',
+                  'current_log_id',
+                  ]:
+        if field in last_state:
+            continue
+        if field.startswith('current_'):
+            last_state[field] = DEFAULT_TREE[field[len('current_'):]]
+        else:
+            last_state[field] = DEFAULT_TREE[field]
+
+    return last_state
 
 
 class UTCDateTime(types.TypeDecorator):
@@ -41,7 +66,9 @@ class Tree(db.Model):
     __tablename__ = 'releng_treestatus_trees'
 
     tree = sa.Column(sa.String(32), primary_key=True)
+    # DDD: this field is not used anywhere
     status = sa.Column(sa.String(64), default='open', nullable=False)
+    # DDD: this field is not used anywhere
     reason = sa.Column(sa.Text, default='', nullable=False)
     message_of_the_day = sa.Column(sa.Text, default='', nullable=False)
 
@@ -77,6 +104,7 @@ class Log(db.Model):
 
     def to_dict(self):
         return dict(
+            id=self.id,
             tree=self.tree,
             when=self.when,
             who=self.who,
@@ -98,7 +126,7 @@ class StatusChange(db.Model):
 
     def to_dict(self):
         return dict(
-            trees=[t.tree for t in self.trees],
+            trees=[t.to_dict() for t in self.trees],
             status=self.status,
             when=self.when,
             who=self.who,
@@ -118,3 +146,10 @@ class StatusChangeTree(db.Model):
     last_state = sa.Column(sa.Text, nullable=False)
 
     stack = relation(StatusChange, backref='trees')
+
+    def to_dict(self):
+        return dict(
+            tree=self.tree,
+            last_state=load_last_state(self.last_state),
+            id=self.id,
+        )

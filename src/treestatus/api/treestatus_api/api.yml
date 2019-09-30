@@ -46,6 +46,34 @@ paths:
                   $ref: '#/definitions/StateChange'
 
   /stack/{id}:
+    patch:
+      operationId: "treestatus_api.api.update_stack"
+      description: |
+        Change (stack) changes to trees.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+        - name: body
+          in: body
+          description: Stack update
+          required: true
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+              tags:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
     delete:
       operationId: "treestatus_api.api.revert_change"
       description: |
@@ -121,7 +149,7 @@ paths:
               result:
                 type: object
                 additionalProperties:
-                  $ref: '#/definitions/Tree'
+                  $ref: '#/definitions/TreeWithTags'
     patch:
       operationId: "treestatus_api.api.update_trees"
       description: |
@@ -168,7 +196,8 @@ paths:
               - result
             properties:
               result:
-                $ref: '#/definitions/Tree'
+                $ref: '#/definitions/TreeWithTags'
+
     put:
       operationId: "treestatus_api.api.make_tree"
       description: Make a new tree.
@@ -201,6 +230,35 @@ paths:
       responses:
         200:
           description: Tree
+          schema:
+            type: string
+
+  /log/{id}:
+    patch:
+      operationId: "treestatus_api.api.update_log"
+      description: |
+        Change log of the tree.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+        - name: body
+          in: body
+          description: Log update
+          required: true
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+              tags:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: Status
           schema:
             type: string
 
@@ -249,22 +307,27 @@ paths:
               result:
                 type: array
                 items:
-                  $ref: '#/definitions/Tree'
+                  $ref: '#/definitions/TreeWithTags'
     delete:
       operationId: "treestatus_api.api.kill_trees"
       description: Delete trees.
       parameters:
-        - name: trees
+        - name: body
           in: body
           description: Trees to delete
           required: true
           schema:
-            type: array
-            items:
-              type: string
+            type: object
+            required:
+              - trees
+            properties:
+              trees:
+                type: array
+                items:
+                  type: string
       responses:
         200:
-          description: None
+          description: Trees deleted
           schema:
             type: string
 
@@ -285,7 +348,7 @@ paths:
           schema:
             type: object
             additionalProperties:
-              $ref: '#/definitions/Tree'
+              $ref: '#/definitions/TreeWithTags'
 
   /v0/trees/{tree}:
     get:
@@ -307,7 +370,7 @@ paths:
         200:
           description: Tree
           schema:
-            $ref: '#/definitions/Tree'
+            $ref: '#/definitions/TreeWithTags'
 
 definitions:
 
@@ -333,6 +396,34 @@ definitions:
         type: string
         description: even more information about the status
 
+  TreeWithTags:
+    type: object
+    description: A representation of a single tree.
+    required:
+      - tree
+      - status
+      - reason
+      - message_of_the_day
+      - tags
+    properties:
+      tree:
+        type: string
+        description: the name of the tree
+      status:
+        type: string
+        description: the current status
+      reason:
+        type: string
+        description: the reason for the status
+      message_of_the_day:
+        type: string
+        description: even more information about the status
+      tags:
+        type: array
+        description: tags of the last change
+        items:
+          type: string
+
   TreeLog:
     type: object
     description: |
@@ -340,6 +431,7 @@ definitions:
       assigned at the time.  This is useful for analysis of tree closures and
       their causes.
     required:
+      - id 
       - tree
       - when
       - who
@@ -347,6 +439,9 @@ definitions:
       - reason
       - tags
     properties:
+      id:
+        type: integer
+        description: the id of the tree log
       tree:
         type: string
         description: the name of the tree
@@ -390,7 +485,33 @@ definitions:
         type: array
         description: the names of the affected trees
         items:
-          type: string
+          type: object
+          required:
+            - id
+            - tree
+            - last_state
+          properties:
+            id:
+              type: integer
+            tree:
+              type: string
+            last_state:
+              type: object
+              required:
+                - status
+                - reason
+                - tags
+              properties:
+                status:
+                  type: string
+                reason:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                reason:
+                  type: string
       when:
         type: string # TODO: datetime
         description: the time the change occurred

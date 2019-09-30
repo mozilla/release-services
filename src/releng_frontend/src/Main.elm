@@ -9,7 +9,6 @@ import App.TreeStatus
 import App.TreeStatus.Api
 import App.TreeStatus.Types
 import App.UserScopes
-import App.Utils exposing (error)
 import Hawk
 import Html exposing (..)
 import Navigation

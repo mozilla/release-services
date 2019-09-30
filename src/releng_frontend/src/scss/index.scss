@@ -202,7 +202,7 @@ footer {
     }
 }
 
-#page-treestatus table tr:hover {
+#treestatus table tr:hover {
     cursor: pointer;
 }
 
@@ -292,8 +292,20 @@ footer {
 }
 
 
-#treestatus > h2 {
+#page-treestatus .radio-inline {
+    margin-right: 1em;
+}
+
+#page-treestatus .radio-inline > input {
+    margin-right: 0.5em;
+}
+
+#page-treestatus h2 {
     margin-top: 1em;
+}
+
+#page-treestatus h4 {
+    margin-top: 2em;
 }
 
 #treestatus-trees {

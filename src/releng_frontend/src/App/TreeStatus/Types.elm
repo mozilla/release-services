@@ -18,6 +18,7 @@ type alias Tree =
     , status : String
     , reason : String
     , message_of_the_day : String
+    , tags : List String
     }
 
 
@@ -26,7 +27,8 @@ type alias Trees =
 
 
 type alias TreeLog =
-    { name : String
+    { id : Int
+    , name : String
     , when : String
     , who : String
     , status : String
@@ -39,9 +41,32 @@ type alias TreeLogs =
     List TreeLog
 
 
-type alias RecentChange =
+type alias RecentChangeTreeLastState =
+    { reason : String
+    , status : String
+    , tags : List String
+    , log_id : Maybe Int
+    , current_reason : String
+    , current_status : String
+    , current_tags : List String
+    , current_log_id : Maybe Int
+    }
+
+
+type alias RecentChangeTree =
     { id : Int
-    , trees : List String
+    , tree : String
+    , last_state : RecentChangeTreeLastState
+    }
+
+
+type alias RecentChangeId =
+    Int
+
+
+type alias RecentChange =
+    { id : RecentChangeId
+    , trees : List RecentChangeTree
     , when : String
     , who : String
     , status : String
@@ -49,7 +74,7 @@ type alias RecentChange =
     }
 
 
-type alias Model addForm updateForm =
+type alias Model addForm updateForm updateStackForm updateLogForm =
     { baseUrl : String
     , treesAlerts : List App.Types.Alert
     , trees : RemoteData.WebData Trees
@@ -60,10 +85,14 @@ type alias Model addForm updateForm =
     , showMoreTreeLogs : Bool
     , formAddTree : Form.Form () addForm
     , formUpdateTree : Form.Form () updateForm
+    , formUpdateStack : Form.Form () updateStackForm
+    , showUpdateStackForm : Maybe RecentChangeId
     , recentChangesAlerts : List App.Types.Alert
     , recentChanges : RemoteData.WebData (List RecentChange)
     , deleteTreesConfirm : Bool
     , deleteError : Maybe String
+    , showUpdateLog : Maybe Int
+    , formUpdateLog : Form.Form () updateLogForm
     }
 
 
@@ -89,6 +118,12 @@ type Msg
     | RevertChange Int
     | DiscardChange Int
     | RecentChangeResult (WebData String)
+    | UpdateStackShow Int
+    | FormUpdateStackMsg Form.Msg
+    | FormUpdateStackResult (WebData String)
+    | UpdateLogShow Int
+    | FormUpdateLogMsg Form.Msg
+    | FormUpdateLogResult (WebData String)
 
 
 possibleTreeStatuses : List ( String, String )
@@ -99,14 +134,14 @@ possibleTreeStatuses =
     ]
 
 
-possibleTreeTags : List ( String, String, String )
+possibleTreeTags : List ( String, String )
 possibleTreeTags =
-    [ ( "checkin-compilation", "checkin_compilation", "Check-in compilation failure" )
-    , ( "checkin-test", "checkin_test", "Check-in test failure" )
-    , ( "infra", "infra", "Infrastructure related" )
-    , ( "backlog", "backlog", "Job backlog" )
-    , ( "planned", "planned", "Planned closure" )
-    , ( "merges", "merges", "Merges" )
-    , ( "waiting-for-coverage", "waiting_for_coverage", "Waiting for coverage" )
-    , ( "other", "other", "Other" )
+    [ ( "checkin_compilation", "Check-in compilation failure" )
+    , ( "checkin_test", "Check-in test failure" )
+    , ( "infra", "Infrastructure related" )
+    , ( "backlog", "Job backlog" )
+    , ( "planned", "Planned closure" )
+    , ( "merges", "Merges" )
+    , ( "waiting_for_coverage", "Waiting for coverage" )
+    , ( "other", "Other" )
     ]

@@ -4,7 +4,6 @@ import App
 import App.Utils
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import String
 import TaskclusterLogin
 import Utils
 
@@ -112,10 +111,18 @@ view : (App.Model -> Html.Html App.Msg) -> App.Model -> Html.Html App.Msg
 view viewRoute model =
     let
         routeName =
-            model.route
-                |> toString
-                |> String.toLower
-                |> String.dropRight (String.length "Route")
+            case model.route of
+                App.HomeRoute ->
+                    "home"
+
+                App.ToolToolRoute ->
+                    "tooltool"
+
+                App.TreeStatusRoute _ ->
+                    "treestatus"
+
+                _ ->
+                    ""
 
         isLoading =
             case model.user.tokens of

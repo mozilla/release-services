@@ -7,6 +7,7 @@ import App.TreeStatus.View
 import App.Types
 import App.UserScopes
 import App.Utils
+import Form
 import Hawk
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -68,7 +69,7 @@ page outRoute =
 --
 
 
-init : String -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+init : String -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
 init url =
     { baseUrl = url
     , treesAlerts = []
@@ -80,18 +81,22 @@ init url =
     , showMoreTreeLogs = False
     , formAddTree = App.TreeStatus.Form.initAddTree
     , formUpdateTree = App.TreeStatus.Form.initUpdateTree
+    , showUpdateStackForm = Nothing
+    , formUpdateStack = App.TreeStatus.Form.initUpdateStack ""
     , recentChangesAlerts = []
     , recentChanges = RemoteData.NotAsked
     , deleteTreesConfirm = False
     , deleteError = Nothing
+    , showUpdateLog = Nothing
+    , formUpdateLog = App.TreeStatus.Form.initUpdateLog ""
     }
 
 
 update :
     App.TreeStatus.Types.Route
     -> App.TreeStatus.Types.Msg
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
-    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree, Cmd App.TreeStatus.Types.Msg, Maybe Hawk.Request )
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
+    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog, Cmd App.TreeStatus.Types.Msg, Maybe Hawk.Request )
 update currentRoute msg model =
     case msg of
         App.TreeStatus.Types.NavigateTo route ->
@@ -159,6 +164,7 @@ update currentRoute msg model =
                                 ( { model
                                     | tree = RemoteData.Loading
                                     , treeLogs = RemoteData.Loading
+                                    , treeLogsAll = RemoteData.NotAsked
                                     , treesSelected = [ name ]
                                   }
                                 , Cmd.batch
@@ -377,12 +383,152 @@ update currentRoute msg model =
             , Nothing
             )
 
+        App.TreeStatus.Types.UpdateStackShow stack ->
+            let
+                ( reason, category, status ) =
+                    case model.recentChanges of
+                        RemoteData.Success recentChanges ->
+                            recentChanges
+                                |> List.filter (\x -> x.id == stack)
+                                |> List.head
+                                |> Maybe.map
+                                    (\x ->
+                                        x.trees
+                                            |> List.head
+                                            |> Maybe.map
+                                                (\y ->
+                                                    ( y.last_state.current_reason
+                                                    , y.last_state.current_tags |> List.head |> Maybe.withDefault ""
+                                                    , y.last_state.current_status
+                                                    )
+                                                )
+                                            |> Maybe.withDefault ( "", "", "" )
+                                    )
+                                |> Maybe.withDefault ( "", "", "" )
+
+                        _ ->
+                            ( "", "", "" )
+            in
+            ( { model
+                | showUpdateStackForm = Just stack
+                , formUpdateStack = Form.initial (App.TreeStatus.Form.initUpdateStackFields reason category) (App.TreeStatus.Form.validateUpdateLog status)
+              }
+            , Cmd.none
+            , Nothing
+            )
+
+        App.TreeStatus.Types.FormUpdateStackMsg formMsg ->
+            let
+                ( newModel, hawkRequest ) =
+                    App.TreeStatus.Form.updateUpdateStack model formMsg
+            in
+            ( newModel
+            , Cmd.none
+            , hawkRequest
+            )
+
+        App.TreeStatus.Types.FormUpdateStackResult result ->
+            case currentRoute of
+                App.TreeStatus.Types.ShowTreeRoute name ->
+                    ( { model
+                        | recentChangesAlerts = App.Utils.getAlerts result
+                        , showUpdateStackForm = Nothing
+                        , treeLogs = RemoteData.Loading
+                        , treeLogsAll = RemoteData.Loading
+                      }
+                    , Cmd.batch
+                        [ App.TreeStatus.Api.fetchRecentChanges model.baseUrl
+                        , App.TreeStatus.Api.fetchTrees model.baseUrl
+                        , App.TreeStatus.Api.fetchTreeLogs model.baseUrl name False
+                        , App.TreeStatus.Api.fetchTreeLogs model.baseUrl name True
+                        ]
+                    , Nothing
+                    )
+
+                _ ->
+                    ( { model
+                        | recentChangesAlerts = App.Utils.getAlerts result
+                        , showUpdateStackForm = Nothing
+                      }
+                    , Cmd.batch
+                        [ App.TreeStatus.Api.fetchRecentChanges model.baseUrl
+                        , App.TreeStatus.Api.fetchTrees model.baseUrl
+                        ]
+                    , Nothing
+                    )
+
+        App.TreeStatus.Types.UpdateLogShow logId ->
+            let
+                treeLogs =
+                    if RemoteData.isSuccess model.treeLogsAll then
+                        model.treeLogsAll
+                    else
+                        model.treeLogs
+
+                ( reason, category, status ) =
+                    case treeLogs of
+                        RemoteData.Success logs ->
+                            logs
+                                |> List.filter (\x -> x.id == logId)
+                                |> List.head
+                                |> Maybe.map
+                                    (\x ->
+                                        ( x.reason
+                                        , x.tags
+                                            |> List.head
+                                            |> Maybe.withDefault ""
+                                        , x.status
+                                        )
+                                    )
+                                |> Maybe.withDefault ( "", "", "" )
+
+                        _ ->
+                            ( "", "", "" )
+            in
+            ( { model
+                | showUpdateLog = Just logId
+                , formUpdateLog = Form.initial (App.TreeStatus.Form.initUpdateLogFields reason category) (App.TreeStatus.Form.validateUpdateLog status)
+              }
+            , Cmd.none
+            , Nothing
+            )
+
+        App.TreeStatus.Types.FormUpdateLogMsg formMsg ->
+            let
+                ( newModel, hawkRequest ) =
+                    App.TreeStatus.Form.updateUpdateLog model formMsg
+            in
+            ( newModel
+            , Cmd.none
+            , hawkRequest
+            )
+
+        App.TreeStatus.Types.FormUpdateLogResult result ->
+            case currentRoute of
+                App.TreeStatus.Types.ShowTreeRoute name ->
+                    ( { model
+                        | treeLogs = RemoteData.Loading
+                        , treeLogsAll = RemoteData.Loading
+                      }
+                    , Cmd.batch
+                        [ App.TreeStatus.Api.fetchTreeLogs model.baseUrl name False
+                        , App.TreeStatus.Api.fetchTreeLogs model.baseUrl name True
+                        ]
+                    , Nothing
+                    )
+
+                _ ->
+                    ( model
+                    , Cmd.none
+                    , Nothing
+                    )
+
 
 view :
     App.TreeStatus.Types.Route
     -> TaskclusterLogin.Model
     -> App.UserScopes.Model
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
 view route user scopes model =
     let
@@ -440,7 +586,7 @@ view route user scopes model =
 viewLoaded :
     App.TreeStatus.Types.Route
     -> List String
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
 viewLoaded route scopes model =
     div []
@@ -448,7 +594,7 @@ viewLoaded route scopes model =
             |> App.Utils.appendItem
                 (App.Utils.viewAlerts model.recentChangesAlerts)
             |> App.Utils.appendItems
-                (App.TreeStatus.View.viewRecentChanges scopes model.recentChanges)
+                (App.TreeStatus.View.viewRecentChanges scopes model.showUpdateStackForm model.formUpdateStack model.recentChanges)
             |> App.Utils.appendItem
                 (App.Utils.viewAlerts model.treesAlerts)
             |> App.Utils.appendItem
@@ -474,6 +620,6 @@ viewLoaded route scopes model =
                         App.TreeStatus.View.viewConfirmDelete model.deleteError model.deleteTreesConfirm model.treesSelected
 
                     App.TreeStatus.Types.ShowTreeRoute name ->
-                        App.TreeStatus.View.viewTree scopes model.tree model.treeLogs model.treeLogsAll name
+                        App.TreeStatus.View.viewTree scopes model.tree model.treeLogs model.treeLogsAll model.showUpdateLog model.formUpdateLog name
                 )
         )

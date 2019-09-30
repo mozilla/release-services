@@ -66,14 +66,18 @@ viewField maybeError maybeLabel helpNodes inputNode =
 
 
 viewTextInput :
-    Form.FieldState a String
+    Form.FieldState () String
     -> String
     -> List (Html Form.Msg)
     -> List (Attribute Form.Msg)
     -> Html Form.Msg
 viewTextInput state labelText helpNodes attributes =
     viewField
-        state.error
+        (if state.liveError == Nothing then
+            state.error
+         else
+            state.liveError
+        )
         (Just labelText)
         helpNodes
         (Form.Input.textInput state
@@ -95,7 +99,11 @@ viewSelectInput :
     -> Html Form.Msg
 viewSelectInput state labelText helpNodes options attributes =
     viewField
-        state.liveError
+        (if state.liveError == Nothing then
+            state.error
+         else
+            state.liveError
+        )
         (Just labelText)
         helpNodes
         (Form.Input.selectInput
@@ -103,6 +111,33 @@ viewSelectInput state labelText helpNodes options attributes =
             state
             (attributes |> List.append [ class "form-control" ])
         )
+
+
+viewRadioInput :
+    Form.FieldState a String
+    -> String
+    -> List (Html Form.Msg)
+    -> List ( String, String )
+    -> List (Attribute Form.Msg)
+    -> Html Form.Msg
+viewRadioInput state labelText helpNodes options attributes =
+    let
+        item ( v, l ) =
+            label
+                [ class "radio-inline" ]
+                [ Form.Input.radioInput v state []
+                , text l
+                ]
+    in
+    viewField
+        (if state.liveError == Nothing then
+            state.error
+         else
+            state.liveError
+        )
+        (Just labelText)
+        helpNodes
+        (div [] (List.map item options))
 
 
 viewCheckboxInput :

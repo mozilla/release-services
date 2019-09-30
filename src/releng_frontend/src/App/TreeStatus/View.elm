@@ -5,6 +5,8 @@ import App.TreeStatus.Form
 import App.TreeStatus.Types
 import App.UserScopes
 import App.Utils
+import Dict
+import Form
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -24,22 +26,6 @@ onClickGoTo route =
     Utils.onClick (App.TreeStatus.Types.NavigateTo route)
 
 
-treeStatusLevel : String -> String
-treeStatusLevel status =
-    case status of
-        "closed" ->
-            "danger"
-
-        "open" ->
-            "success"
-
-        "approval required" ->
-            "warning"
-
-        _ ->
-            "default"
-
-
 bugzillaBugAsLink : String -> List (Html a)
 bugzillaBugAsLink text_ =
     let
@@ -48,52 +34,57 @@ bugzillaBugAsLink text_ =
 
         previousWords =
             Nothing :: List.map Just words
-
-        asLink number =
-            a [ href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ number) ]
-                [ text ("Bug " ++ number) ]
     in
     List.map2 (\x y -> ( x, y )) previousWords words
-        |> List.filter (\( x, y ) -> y /= "Bug")
+        |> List.filter (\( _, word ) -> word /= "Bug")
         |> List.map
-            (\( x, y ) ->
-                if x == Just "Bug" then
-                    asLink y
+            (\( previousWord, number ) ->
+                if previousWord == Just "Bug" then
+                    a [ href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ number) ]
+                        [ text ("Bug " ++ number) ]
                 else
-                    text (" " ++ y ++ " ")
+                    text (" " ++ number ++ " ")
             )
+
+
+viewRecentChangeTree : String -> App.TreeStatus.Types.RecentChangeTree -> Html App.TreeStatus.Types.Msg
+viewRecentChangeTree status tree =
+    li []
+        [ em [] [ text tree.tree ]
+        , span [] [ text " from " ]
+        , span
+            [ class ("badge badge-" ++ App.Utils.treeStatusLevel tree.last_state.status) ]
+            [ text tree.last_state.status ]
+        , span [] [ text " to " ]
+        , span
+            [ class ("badge badge-" ++ App.Utils.treeStatusLevel status) ]
+            [ text status ]
+        ]
 
 
 viewRecentChange :
     List String
-    -> Bool
-    ->
-        { a
-            | id : Int
-            , reason : String
-            , trees : List String
-            , when : String
-            , who : String
-            , status : String
-        }
+    -> Maybe App.TreeStatus.Types.RecentChangeId
+    -> Form.Form () App.TreeStatus.Form.UpdateStack
+    -> App.TreeStatus.Types.RecentChange
     -> List (Html App.TreeStatus.Types.Msg)
-viewRecentChange scopes plural recentChange =
+viewRecentChange scopes showUpdateStackForm formUpdateStack recentChange =
     let
-        treeLabel =
-            if plural then
-                "trees "
-            else
-                "tree "
+        ( reason, category ) =
+            recentChange.trees
+                |> List.head
+                |> Maybe.map
+                    (\x ->
+                        ( x.last_state.current_reason
+                        , x.last_state.current_tags
+                            |> List.head
+                            |> Maybe.withDefault ""
+                        )
+                    )
+                |> Maybe.withDefault ( "", "" )
 
-        recentChangeReason =
-            let
-                words =
-                    bugzillaBugAsLink recentChange.reason
-            in
-            if List.isEmpty words then
-                []
-            else
-                text " with reason: " :: words
+        possibleTreeTags =
+            Dict.fromList App.TreeStatus.Types.possibleTreeTags
 
         parseTimestamp timestamp =
             timestamp
@@ -109,42 +100,73 @@ viewRecentChange scopes plural recentChange =
                 |> String.split "."
                 |> List.head
                 |> Maybe.withDefault timestamp
+
+        buttons =
+            if showUpdateStackForm == Just recentChange.id then
+                []
+            else
+                [ div
+                    [ class "btn-group" ]
+                    [ button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-success"
+                        , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
+                        ]
+                        [ text "Restore" ]
+                    , button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-info"
+                        , Utils.onClick (App.TreeStatus.Types.UpdateStackShow recentChange.id)
+                        ]
+                        [ text "Update" ]
+                    , button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-warning"
+                        , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
+                        ]
+                        [ text "Discard" ]
+                    ]
+                ]
     in
     if hasScope "recent_changes/revert" scopes then
         [ div
             [ class "list-group-item justify-content-between" ]
-            [ div
+            ([ div
                 []
-                (List.append
+                ([ p
+                    []
                     [ text "At "
-                    , text (parseTimestamp recentChange.when)
-                    , text (" " ++ TaskclusterLogin.shortUsername recentChange.who)
-                    , text " changed "
-                    , text treeLabel
-                    , em [] [ text (String.join ", " recentChange.trees) ]
-                    , text " to "
-                    , span
-                        [ class ("badge badge-" ++ treeStatusLevel recentChange.status) ]
-                        [ text recentChange.status ]
+                    , em [] [ text (parseTimestamp recentChange.when) ]
+                    , b [] [ text (" " ++ TaskclusterLogin.shortUsername recentChange.who) ]
+                    , text " changed trees:"
                     ]
-                    recentChangeReason
+                 , ul [] (List.map (viewRecentChangeTree recentChange.status) recentChange.trees)
+                 ]
+                    |> App.Utils.appendItems
+                        (if showUpdateStackForm == Just recentChange.id then
+                            [ App.TreeStatus.Form.viewUpdateStack recentChange formUpdateStack
+                                |> Html.map App.TreeStatus.Types.FormUpdateStackMsg
+                            ]
+                         else
+                            [ p []
+                                [ div []
+                                    [ text "Reason category: "
+                                    , span [ class "badge badge-default" ]
+                                        [ text
+                                            (possibleTreeTags
+                                                |> Dict.get category
+                                                |> Maybe.withDefault category
+                                            )
+                                        ]
+                                    ]
+                                , div [] [ text "Reason: ", b [] (bugzillaBugAsLink reason) ]
+                                ]
+                            ]
+                        )
                 )
-            , div
-                [ class "btn-group" ]
-                [ button
-                    [ type_ "button"
-                    , class "btn btn-sm btn-outline-success"
-                    , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
-                    ]
-                    [ text "Restore" ]
-                , button
-                    [ type_ "button"
-                    , class "btn btn-sm btn-outline-warning"
-                    , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
-                    ]
-                    [ text "Discard" ]
-                ]
-            ]
+             ]
+                |> App.Utils.appendItems buttons
+            )
         ]
     else
         []
@@ -152,9 +174,11 @@ viewRecentChange scopes plural recentChange =
 
 viewRecentChanges :
     List String
+    -> Maybe App.TreeStatus.Types.RecentChangeId
+    -> Form.Form () App.TreeStatus.Form.UpdateStack
     -> RemoteData.WebData (List App.TreeStatus.Types.RecentChange)
     -> List (Html App.TreeStatus.Types.Msg)
-viewRecentChanges scopes recentChanges =
+viewRecentChanges scopes showUpdateStackForm formUpdateStack recentChanges =
     case recentChanges of
         RemoteData.Success data ->
             let
@@ -166,7 +190,7 @@ viewRecentChanges scopes recentChanges =
 
                 recentChanges =
                     data
-                        |> List.map (viewRecentChange scopes (List.length data > 1))
+                        |> List.map (viewRecentChange scopes showUpdateStackForm formUpdateStack)
                         |> List.concat
             in
             [ div
@@ -183,12 +207,12 @@ viewRecentChanges scopes recentChanges =
             []
 
 
-viewTreesItem :
+viewTreesCategoryItem :
     List String
     -> List String
-    -> { a | reason : String, status : String, name : String }
+    -> { a | reason : String, status : String, name : String, tags : List String }
     -> Html App.TreeStatus.Types.Msg
-viewTreesItem scopes treesSelected tree =
+viewTreesCategoryItem scopes treesSelected tree =
     let
         isChecked =
             List.member tree.name treesSelected
@@ -206,7 +230,7 @@ viewTreesItem scopes treesSelected tree =
                 |> App.TreeStatus.Types.NavigateTo
 
         treeTagClass =
-            "float-xs-right badge badge-" ++ treeStatusLevel tree.status
+            "float-xs-right badge badge-" ++ App.Utils.treeStatusLevel tree.status
 
         checkboxItem =
             if hasScope "trees/update" scopes || hasScope "trees/delete" scopes then
@@ -251,6 +275,26 @@ viewTreesItem scopes treesSelected tree =
                     |> List.append
                         [ h5 [ class "list-group-item-heading" ]
                             [ text tree.name
+                            , span [ style [ ( "margin-left", "1em" ) ] ]
+                                (List.map
+                                    (\tag ->
+                                        span
+                                            [ class "badge badge-default" ]
+                                            [ App.TreeStatus.Types.possibleTreeTags
+                                                |> List.filterMap
+                                                    (\( x, y ) ->
+                                                        if x == tag then
+                                                            Just y
+                                                        else
+                                                            Nothing
+                                                    )
+                                                |> List.head
+                                                |> Maybe.withDefault tag
+                                                |> text
+                                            ]
+                                    )
+                                    tree.tags
+                                )
                             , span [ class treeTagClass ]
                                 [ text tree.status ]
                             ]
@@ -261,6 +305,126 @@ viewTreesItem scopes treesSelected tree =
         (List.append checkboxItem [ treeItem ])
 
 
+type Category
+    = Development
+    | ReleaseStabilization
+    | Try
+    | CommRepositories
+    | Other
+
+
+categoryTitle : Category -> String
+categoryTitle category =
+    case category of
+        Development ->
+            "Development"
+
+        ReleaseStabilization ->
+            "Release Stabilization"
+
+        Try ->
+            "Try"
+
+        CommRepositories ->
+            "Comm Repositories"
+
+        Other ->
+            "Other"
+
+
+categorizeTrees :
+    App.TreeStatus.Types.Trees
+    -> List ( Category, App.TreeStatus.Types.Trees )
+categorizeTrees trees =
+    let
+        ( developmentTrees, developmentTreesOther ) =
+            List.partition
+                (\tree ->
+                    List.member tree.name
+                        [ "autoland"
+                        , "mozilla-inbound"
+                        , "mozilla-central"
+                        ]
+                )
+                trees
+
+        ( releaseStabilizationTrees, releaseStabilizationTreesOther ) =
+            List.partition
+                (\tree ->
+                    List.member tree.name
+                        [ "mozilla-beta"
+                        , "mozilla-release"
+                        , "mozilla-esr60"
+                        , "mozilla-esr52"
+                        ]
+                )
+                developmentTreesOther
+
+        ( tryTrees, tryTreesOther ) =
+            List.partition
+                (\tree ->
+                    List.member tree.name
+                        [ "try"
+                        , "try-comm-central"
+                        ]
+                )
+                releaseStabilizationTreesOther
+
+        ( commRepositoriesTrees, otherTrees ) =
+            List.partition
+                (\tree ->
+                    List.member tree.name
+                        [ "comm-central-thunderbird"
+                        , "comm-central-seamonkey"
+                        , "comm-beta-thunderbird"
+                        , "comm-beta-seamonkey"
+                        , "comm-release-thunderbird"
+                        , "comm-release-seamonkey"
+                        , "comm-esr60-thunderbird"
+                        , "comm-esr60-seamonkey"
+                        , "comm-esr52-thunderbird"
+                        , "comm-esr52-seamonkey"
+                        ]
+                )
+                tryTreesOther
+    in
+    [ ( Development, developmentTrees )
+    , ( ReleaseStabilization, releaseStabilizationTrees )
+    , ( Try, tryTrees )
+    , ( CommRepositories, commRepositoriesTrees )
+    , ( Other, otherTrees )
+    ]
+
+
+viewTreesCategory :
+    List String
+    -> List String
+    -> ( Category, App.TreeStatus.Types.Trees )
+    -> List (Html App.TreeStatus.Types.Msg)
+viewTreesCategory scopes treesSelected ( category, trees ) =
+    if List.isEmpty trees then
+        []
+    else
+        [ h4 [] [ text (categoryTitle category) ]
+        , div
+            [ id "treestatus-trees"
+            , class "list-group"
+            ]
+            (trees
+                |> List.sortBy .name
+                |> List.map (viewTreesCategoryItem scopes treesSelected)
+                |> (\x ->
+                        [ div
+                            [ id "treestatus-trees"
+                            , class "list-group"
+                            ]
+                            x
+                        ]
+                   )
+            )
+        ]
+
+
 viewTrees :
     List String
     -> RemoteData.WebData App.TreeStatus.Types.Trees
@@ -269,14 +433,9 @@ viewTrees :
 viewTrees scopes trees treesSelected =
     case trees of
         RemoteData.Success trees ->
-            trees
-                |> List.sortBy .name
-                |> List.map (viewTreesItem scopes treesSelected)
-                |> div
-                    [ id "treestatus-trees"
-                    , class "list-group"
-                    ]
-                |> (\x -> [ x ])
+            categorizeTrees trees
+                |> List.map (viewTreesCategory scopes treesSelected)
+                |> List.concat
 
         RemoteData.Failure message ->
             [ App.Utils.error
@@ -294,7 +453,7 @@ viewTrees scopes trees treesSelected =
 viewButtons :
     App.TreeStatus.Types.Route
     -> List String
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree App.TreeStatus.Form.UpdateStack App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
 viewButtons route scopes model =
     let
@@ -487,6 +646,33 @@ viewTreesTitle route =
             h2 [ class "float-xs-left" ] [ text ("Tree: " ++ name) ]
 
 
+treeRulesLink : String -> String
+treeRulesLink treeName =
+    case treeName of
+        "autoland" ->
+            "https://wiki.mozilla.org/Tree_Rules#autoland.2FLando"
+
+        "mozilla-inbound" ->
+            "https://wiki.mozilla.org/Tree_Rules#mozilla-inbound"
+
+        "mozilla-central" ->
+            "https://wiki.mozilla.org/Tree_Rules#mozilla-central_.28Nightly_channel.29"
+
+        "mozilla-beta" ->
+            "https://wiki.mozilla.org/Tree_Rules#mozilla-beta"
+
+        "mozilla-release" ->
+            "https://wiki.mozilla.org/Tree_Rules#mozilla-release"
+
+        _ ->
+            if String.startsWith "mozilla-esr" treeName then
+                "https://wiki.mozilla.org/Release_Management/ESR_Landing_Process"
+            else if String.startsWith "comm-" treeName then
+                "https://wiki.mozilla.org/Tree_Rules/comm-central"
+            else
+                "https://wiki.mozilla.org/Tree_Rules"
+
+
 viewTreeDetails :
     RemoteData.RemoteData a { b | message_of_the_day : String, name : String, status : String }
     -> Html App.TreeStatus.Types.Msg
@@ -500,9 +686,10 @@ viewTreeDetails remote =
                     [ text tree.name ]
                 , text " status is "
                 , span
-                    [ class ("badge badge-" ++ treeStatusLevel tree.status) ]
+                    [ class ("badge badge-" ++ App.Utils.treeStatusLevel tree.status) ]
                     [ text tree.status ]
                 , p [ class "lead" ] (bugzillaBugAsLink tree.message_of_the_day)
+                , p [] [ a [ href (treeRulesLink tree.name) ] [ text "Tree rules" ] ]
                 ]
 
         RemoteData.Failure message ->
@@ -516,9 +703,12 @@ viewTreeDetails remote =
 
 
 viewTreeLog :
-    App.TreeStatus.Types.TreeLog
+    List String
+    -> Maybe Int
+    -> Form.Form () App.TreeStatus.Form.UpdateLog
+    -> App.TreeStatus.Types.TreeLog
     -> Html App.TreeStatus.Types.Msg
-viewTreeLog log =
+viewTreeLog scopes showUpdateLog formUpdateLog log =
     let
         who2 =
             if String.startsWith "human:" log.who then
@@ -532,47 +722,74 @@ viewTreeLog log =
                 |> String.split "@"
                 |> List.head
                 |> Maybe.withDefault who2
+
+        possibleTreeTags =
+            Dict.fromList App.TreeStatus.Types.possibleTreeTags
+
+        category =
+            log.tags
+                |> List.head
+                |> Maybe.map
+                    (\tag ->
+                        possibleTreeTags
+                            |> Dict.get tag
+                            |> Maybe.withDefault tag
+                    )
+                |> Maybe.withDefault ""
+
+        view =
+            [ p []
+                [ div []
+                    [ text "Reason category: "
+                    , span [ class "badge badge-default" ] [ text category ]
+                    ]
+                , div [] [ text "Reason: ", b [] (bugzillaBugAsLink log.reason) ]
+                ]
+            , if hasScope "trees/update" scopes then
+                button
+                    [ type_ "button"
+                    , class "btn btn-sm btn-outline-info"
+                    , style [ ( "float", "left" ) ]
+                    , Utils.onClick (App.TreeStatus.Types.UpdateLogShow log.id)
+                    ]
+                    [ text "Update" ]
+              else
+                span [] []
+            , div [ class "clearfix" ] []
+            ]
+
+        form =
+            [ App.TreeStatus.Form.viewUpdateLog log.status formUpdateLog
+                |> Html.map App.TreeStatus.Types.FormUpdateLogMsg
+            ]
     in
     div [ class "timeline-item" ]
         --TODO: show status in hover of the badge
-        [ div [ class <| "timeline-badge badge-" ++ treeStatusLevel log.status ]
+        [ div [ class <| "timeline-badge badge-" ++ App.Utils.treeStatusLevel log.status ]
             [ text " " ]
         , div [ class "timeline-panel" ]
             [ div [ class "timeline-time" ]
                 [ text log.when ]
             , h5 [] [ text who ]
-            , p [] [ text log.reason ]
-            , p
-                []
-                (List.map
-                    (\tag ->
-                        span
-                            [ class "badge badge-default" ]
-                            [ App.TreeStatus.Types.possibleTreeTags
-                                |> List.filterMap
-                                    (\( x, _, y ) ->
-                                        if x == tag then
-                                            Just y
-                                        else
-                                            Nothing
-                                    )
-                                |> List.head
-                                |> Maybe.withDefault tag
-                                |> text
-                            ]
-                    )
-                    log.tags
+            , div []
+                (if showUpdateLog == Just log.id then
+                    form
+                 else
+                    view
                 )
             ]
         ]
 
 
 viewTreeLogs :
-    String
+    List String
+    -> String
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
+    -> Maybe Int
+    -> Form.Form () App.TreeStatus.Form.UpdateLog
     -> Html App.TreeStatus.Types.Msg
-viewTreeLogs name treeLogs_ treeLogsAll_ =
+viewTreeLogs scopes name treeLogs_ treeLogsAll_ showUpdateLog formUpdateLog =
     let
         ( moreButton, treeLogsAll ) =
             case treeLogsAll_ of
@@ -613,8 +830,8 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
             div [ class "timeline" ]
                 (List.append
                     (List.append
-                        (List.map viewTreeLog treeLogs)
-                        (List.map viewTreeLog treeLogsAll)
+                        (List.map (viewTreeLog scopes showUpdateLog formUpdateLog) treeLogs)
+                        (List.map (viewTreeLog scopes showUpdateLog formUpdateLog) treeLogsAll)
                     )
                     [ div [ class "timeline-item timeline-more" ]
                         [ div [ class "timeline-panel" ] moreButton ]
@@ -636,13 +853,15 @@ viewTree :
     -> RemoteData.WebData App.TreeStatus.Types.Tree
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
     -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
+    -> Maybe Int
+    -> Form.Form () App.TreeStatus.Form.UpdateLog
     -> String
     -> List (Html App.TreeStatus.Types.Msg)
-viewTree scopes tree treeLogs treeLogsAll name =
+viewTree scopes tree treeLogs treeLogsAll showUpdateLog formUpdateLog name =
     [ div
         [ id "treestatus-form" ]
         [ viewTreeDetails tree
         , hr [] []
-        , viewTreeLogs name treeLogs treeLogsAll
+        , viewTreeLogs scopes name treeLogs treeLogsAll showUpdateLog formUpdateLog
         ]
     ]
