@@ -5,7 +5,6 @@ import App.TreeStatus.Api
 import App.TreeStatus.Types
 import App.Utils
 import Form
-import Form.Error
 import Form.Field
 import Form.Input
 import Form.Validate
@@ -72,20 +71,46 @@ validateUpdateLog status =
             )
 
 
-validateUpdateTree : Form.Validate.Validation () UpdateTree
-validateUpdateTree =
-    Form.Validate.map5 UpdateTree
-        (Form.Validate.field "status" Form.Validate.string)
-        (Form.Validate.field "reason" Form.Validate.string
-            |> Form.Validate.defaultValue ""
-        )
-        (Form.Validate.field "message_of_the_day" Form.Validate.string
-            |> Form.Validate.defaultValue ""
-        )
-        (Form.Validate.field "tags" Form.Validate.string
-            |> Form.Validate.defaultValue ""
-        )
-        (Form.Validate.field "remember" Form.Validate.bool)
+validateUpdateTree : String -> Form.Validate.Validation () UpdateTree
+validateUpdateTree status =
+    if status == "closed" then
+      Form.Validate.map5 UpdateTree
+          (Form.Validate.field "status" Form.Validate.string)
+          (Form.Validate.field "reason" Form.Validate.string)
+          (Form.Validate.field "message_of_the_day"
+                (Form.Validate.oneOf
+                    [ Form.Validate.string
+                    , Form.Validate.emptyString
+                    ]
+                )
+          )
+          (Form.Validate.field "tags" Form.Validate.string)
+          (Form.Validate.field "remember" Form.Validate.bool)
+    else
+      Form.Validate.map5 UpdateTree
+          (Form.Validate.field "status" Form.Validate.string)
+          (Form.Validate.field "reason"
+                (Form.Validate.oneOf
+                    [ Form.Validate.string
+                    , Form.Validate.emptyString
+                    ]
+                )
+          )
+          (Form.Validate.field "message_of_the_day"
+                (Form.Validate.oneOf
+                    [ Form.Validate.string
+                    , Form.Validate.emptyString
+                    ]
+                )
+          )
+          (Form.Validate.field "tags"
+                (Form.Validate.oneOf
+                    [ Form.Validate.string
+                    , Form.Validate.emptyString
+                    ]
+                )
+          )
+          (Form.Validate.field "remember" Form.Validate.bool)
 
 
 initAddTreeFields : List ( String, Form.Field.Field )
@@ -132,9 +157,9 @@ initUpdateLog status =
     Form.initial (initUpdateLogFields "" "") (validateUpdateLog status)
 
 
-initUpdateTree : Form.Form () UpdateTree
-initUpdateTree =
-    Form.initial initUpdateTreeFields validateUpdateTree
+initUpdateTree : String -> Form.Form () UpdateTree
+initUpdateTree status =
+    Form.initial initUpdateTreeFields (validateUpdateTree status)
 
 
 resetAddTree : Form.Msg
@@ -260,7 +285,7 @@ updateUpdateStack model formMsg =
                                 (Http.jsonBody (App.TreeStatus.Api.encoderUpdateStack { reason = formOutput.reason, tags = [ formOutput.tags ] }))
 
                         ( alerts, hawkRequest ) =
-                            if getUpdateTreeErrors form == [] then
+                            if Form.getErrors form == [] then
                                 ( [], Just hawkRequest_ )
                             else
                                 ( model.recentChangesAlerts, Nothing )
@@ -389,8 +414,13 @@ updateUpdateTree :
     -> ( App.TreeStatus.Types.Model AddTree UpdateTree UpdateStack UpdateLog, Maybe Hawk.Request )
 updateUpdateTree route model formMsg =
     let
+        status =
+            Form.getOutput model.formUpdateTree
+                |> Maybe.map .status
+                |> Maybe.withDefault ""
+
         form =
-            Form.update validateUpdateTree formMsg model.formUpdateTree
+            Form.update (validateUpdateTree status) formMsg model.formUpdateTree
 
         createRequest data =
             Hawk.Request
@@ -422,7 +452,7 @@ updateUpdateTree route model formMsg =
         ( alerts, hawkRequest ) =
             case formMsg of
                 Form.Submit ->
-                    if getUpdateTreeErrors form /= [] then
+                    if Form.getErrors form /= [] then
                         ( [], Nothing )
                     else
                         ( []
@@ -439,31 +469,6 @@ updateUpdateTree route model formMsg =
       }
     , hawkRequest
     )
-
-
-getUpdateTreeErrors : Form.Form e o -> List ( String, Form.Error.ErrorValue e )
-getUpdateTreeErrors form =
-    let
-        requiredOnClose field =
-            let
-                status =
-                    Form.getFieldAsString "status" form
-                        |> .value
-                        |> Maybe.withDefault ""
-
-                data =
-                    Form.getFieldAsString field form
-                        |> .value
-                        |> Maybe.withDefault ""
-            in
-            if status == "closed" && data == "" then
-                [ ( field, Form.Error.Empty ) ]
-            else
-                []
-    in
-    Form.getErrors form
-        |> List.append (requiredOnClose "reason")
-        |> List.append (requiredOnClose "tags")
 
 
 fieldClass : { b | error : Maybe a } -> String
@@ -754,8 +759,7 @@ viewUpdateTree treesSelected trees form =
             , App.Form.viewButton
                 "Update"
                 [ Utils.onClick Form.Submit
-
-                -- TODO, disabled (getUpdateTreeErrors form /= [])
+                , disabled (Form.getErrors form /= [])
                 ]
             , div [ class "clearfix" ] []
             ]
