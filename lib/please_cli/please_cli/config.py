@@ -171,47 +171,6 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'mapper/api': {
-        'update': False,
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8004,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'enable': True,
-                        'url': 'https://dev.mapper.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'mapper_api_dockerflow_testing',
-                    },
-                    'staging': {
-                        'enable': True,
-                        'url': 'https://stage.mapper.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'mapper_api_dockerflow_staging',
-                    },
-                    'production': {
-                        'enable': True,
-                        'url': 'https://mapper.mozilla-releng.net',
-                        'nix_path_attribute': 'dockerflow',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'mapper_api_dockerflow_production',
-                    },
-                },
-            },
-        ],
-    },
     'tooltool/client': {
         'update': False,
     },
@@ -344,37 +303,6 @@ PROJECTS_CONFIG = {
                         'docker_registry': 'index.docker.io',
                         'docker_repo': 'mozilla/release-services',
                         'docker_stable_tag': 'treestatus_api_dockerflow_production',
-                    },
-                },
-            },
-        ],
-    },
-    'scriptworker/shipitscript': {
-        'update': False,
-        'deploys': [
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'enable': False,
-                        'nix_path_attribute': 'docker',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'scriptworker_shipitscript_docker_testing',
-                    },
-                    'staging': {
-                        'enable': False,
-                        'nix_path_attribute': 'docker',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'scriptworker_shipitscript_docker_staging',
-                    },
-                    'production': {
-                        'enable': False,
-                        'nix_path_attribute': 'docker',
-                        'docker_registry': 'index.docker.io',
-                        'docker_repo': 'mozilla/release-services',
-                        'docker_stable_tag': 'scriptworker_shipitscript_docker_production',
                     },
                 },
             },
