@@ -73,11 +73,7 @@ viewTextInput :
     -> Html Form.Msg
 viewTextInput state labelText helpNodes attributes =
     viewField
-        (if state.liveError == Nothing then
-            state.error
-         else
-            state.liveError
-        )
+        state.liveError
         (Just labelText)
         helpNodes
         (Form.Input.textInput state
@@ -99,11 +95,7 @@ viewSelectInput :
     -> Html Form.Msg
 viewSelectInput state labelText helpNodes options attributes =
     viewField
-        (if state.liveError == Nothing then
-            state.error
-         else
-            state.liveError
-        )
+        state.liveError
         (Just labelText)
         helpNodes
         (Form.Input.selectInput
@@ -130,11 +122,7 @@ viewRadioInput state labelText helpNodes options attributes =
                 ]
     in
     viewField
-        (if state.liveError == Nothing then
-            state.error
-         else
-            state.liveError
-        )
+        state.liveError
         (Just labelText)
         helpNodes
         (div [] (List.map item options))

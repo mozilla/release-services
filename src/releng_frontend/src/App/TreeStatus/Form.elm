@@ -415,9 +415,7 @@ updateUpdateTree :
 updateUpdateTree route model formMsg =
     let
         status =
-            Form.getOutput model.formUpdateTree
-                |> Maybe.map .status
-                |> Maybe.withDefault ""
+            (Form.getFieldAsString "status" model.formUpdateTree).value |> Maybe.withDefault ""
 
         form =
             Form.update (validateUpdateTree status) formMsg model.formUpdateTree
@@ -759,7 +757,6 @@ viewUpdateTree treesSelected trees form =
             , App.Form.viewButton
                 "Update"
                 [ Utils.onClick Form.Submit
-                , disabled (Form.getErrors form /= [])
                 ]
             , div [ class "clearfix" ] []
             ]
