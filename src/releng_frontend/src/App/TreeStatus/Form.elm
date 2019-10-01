@@ -757,7 +757,6 @@ viewUpdateTree treesSelected trees form =
             , App.Form.viewButton
                 "Update"
                 [ Utils.onClick Form.Submit
-                , disabled (Form.getErrors form /= [])
                 ]
             , div [ class "clearfix" ] []
             ]
