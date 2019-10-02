@@ -136,12 +136,12 @@ possibleTreeStatuses =
 
 possibleTreeTags : List ( String, String )
 possibleTreeTags =
-    [ ( "checkin_compilation", "Check-in compilation failure" )
-    , ( "checkin_test", "Check-in test failure" )
+    [ ( "checkin-compilation", "Check-in compilation failure" )
+    , ( "checkin-test", "Check-in test failure" )
     , ( "infra", "Infrastructure related" )
     , ( "backlog", "Job backlog" )
     , ( "planned", "Planned closure" )
     , ( "merges", "Merges" )
-    , ( "waiting_for_coverage", "Waiting for coverage" )
+    , ( "waiting-for-coverage", "Waiting for coverage" )
     , ( "other", "Other" )
     ]
