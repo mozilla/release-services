@@ -354,6 +354,7 @@ categorizeTrees trees =
                     List.member tree.name
                         [ "mozilla-beta"
                         , "mozilla-release"
+                        , "mozilla-esr68"
                         , "mozilla-esr60"
                         , "mozilla-esr52"
                         ]
@@ -380,6 +381,7 @@ categorizeTrees trees =
                         , "comm-beta-seamonkey"
                         , "comm-release-thunderbird"
                         , "comm-release-seamonkey"
+                        , "comm-esr68-thunderbird"
                         , "comm-esr60-thunderbird"
                         , "comm-esr60-seamonkey"
                         , "comm-esr52-thunderbird"
