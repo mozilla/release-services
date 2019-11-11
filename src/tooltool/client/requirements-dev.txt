@@ -1,6 +1,0 @@
-coverage
-coveralls
-mock
-nose
-pep8
-pyflakes
