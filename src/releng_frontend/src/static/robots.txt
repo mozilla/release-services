@@ -1,3 +1,0 @@
-# Stop all search engines from archiving this site
-User-agent: *
-Disallow: /
